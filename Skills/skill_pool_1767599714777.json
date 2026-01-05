@@ -1,0 +1,206 @@
+[
+  {
+    "key": "CUSTOM_1767595428450",
+    "name": "海啸三叠",
+    "icon": "🌊",
+    "description": "召唤一道向前推进的浪潮，最多可叠加三次，范围逐次扩大",
+    "category": "element-water",
+    "type": "attack",
+    "effect": "multi_attack",
+    "params": {
+      "cooldown": 0,
+      "duration": 0,
+      "count": 3,
+      "multiBonus": [
+        1.25,
+        1,
+        0.75
+      ]
+    },
+    "createdAt": "2026-01-05T06:43:48.451Z"
+  },
+  {
+    "key": "CUSTOM_1767599147105",
+    "name": "高压水刃",
+    "icon": "🌊",
+    "description": "将水流压缩为薄如蝉翼的利刃直线射出，具有极强穿透力",
+    "category": "element-water",
+    "type": "attack",
+    "effect": "direct_attack",
+    "params": {
+      "cooldown": 0,
+      "duration": 0,
+      "count": 1,
+      "attackBonus": 1.25
+    },
+    "createdAt": "2026-01-05T07:45:47.105Z"
+  },
+  {
+    "key": "CUSTOM_1767599206496",
+    "name": "漩涡绞杀",
+    "icon": "🌊",
+    "description": "在敌人脚下生成急速旋转的漩涡，持续造成撕裂伤害并轻微牵引",
+    "category": "element-water",
+    "type": "attack",
+    "effect": "multi_attack",
+    "params": {
+      "cooldown": 2,
+      "duration": 0,
+      "count": 3,
+      "multiBonus": [
+        1
+      ]
+    },
+    "createdAt": "2026-01-05T07:46:46.496Z"
+  },
+  {
+    "key": "CUSTOM_1767599253688",
+    "name": "水幕天华",
+    "icon": "🌊",
+    "description": "在身前展开一道流动的水幕，可吸收或偏转远程攻击",
+    "category": "element-water",
+    "type": "defense",
+    "effect": "direct_defense",
+    "params": {
+      "cooldown": 0,
+      "duration": 0,
+      "count": 1,
+      "defenseBonus": 1.5
+    },
+    "createdAt": "2026-01-05T07:47:33.688Z"
+  },
+  {
+    "key": "CUSTOM_1767599307416",
+    "name": "水牢庇护",
+    "icon": "🌊",
+    "description": "创造一个全方位的水球护罩，完全隔绝内外",
+    "category": "element-water",
+    "type": "defense",
+    "effect": "direct_defense",
+    "params": {
+      "cooldown": 2,
+      "duration": 0,
+      "count": 1,
+      "defenseBonus": 2
+    },
+    "createdAt": "2026-01-05T07:48:27.416Z"
+  },
+  {
+    "key": "CUSTOM_1767599349321",
+    "name": "镜面止水",
+    "icon": "🌊",
+    "description": "制造一片短暂静止的平整水面，如镜面般完美反射一次单体攻击",
+    "category": "element-water",
+    "type": "defense",
+    "effect": "direct_defense",
+    "params": {
+      "cooldown": 3,
+      "duration": 2,
+      "count": 1,
+      "defenseBonus": 3
+    },
+    "createdAt": "2026-01-05T07:49:09.321Z"
+  },
+  {
+    "key": "CUSTOM_1767599396527",
+    "name": "踏浪而行",
+    "icon": "🌊",
+    "description": "脚底凝聚不易散开的水团，可在任何表面（包括垂直面）短暂疾行",
+    "category": "element-water",
+    "type": "agility",
+    "effect": "direct_speed",
+    "params": {
+      "cooldown": 1,
+      "duration": 0,
+      "count": 1,
+      "speedBonus": 0.8
+    },
+    "createdAt": "2026-01-05T07:49:56.527Z",
+    "updatedAt": "2026-01-05T07:50:38.511Z"
+  },
+  {
+    "key": "CUSTOM_1767599433249",
+    "name": "流水加速",
+    "icon": "🌊",
+    "description": "在体表覆盖一层定向流动的水膜，大幅降低空气阻力，提升直线速度",
+    "category": "element-water",
+    "type": "agility",
+    "effect": "continuous_speed",
+    "params": {
+      "cooldown": 2,
+      "duration": 2,
+      "count": 1,
+      "speedBonus": 0.7
+    },
+    "createdAt": "2026-01-05T07:50:33.249Z"
+  },
+  {
+    "key": "CUSTOM_1767599517223",
+    "name": "清心活水",
+    "icon": "🌊",
+    "description": "引纯净水流洗涤目标，驱散疲乏",
+    "category": "element-water",
+    "type": "buff",
+    "effect": "buff_purify",
+    "params": {
+      "cooldown": 2,
+      "duration": 0,
+      "count": 1
+    },
+    "createdAt": "2026-01-05T07:51:57.223Z"
+  },
+  {
+    "key": "CUSTOM_1767599565248",
+    "name": "水之亲和",
+    "icon": "🌊",
+    "description": "暂时提升目标对水元素的掌控力，使其下一个水系技能效果增强",
+    "category": "element-water",
+    "type": "buff",
+    "effect": "buff_element_damage",
+    "params": {
+      "cooldown": 0,
+      "duration": 0,
+      "count": 1,
+      "target": "self",
+      "buffSource": "self-attack",
+      "buffBonus": 0.5,
+      "elementType": "water",
+      "elementBonus": 0.8
+    },
+    "createdAt": "2026-01-05T07:52:45.248Z"
+  },
+  {
+    "key": "CUSTOM_1767599602303",
+    "name": "深海重压",
+    "icon": "🌊",
+    "description": "使目标如同置身深海，承受无形水压，行动格外费力且难以跳跃",
+    "category": "element-water",
+    "type": "debuff",
+    "effect": "debuff_speed",
+    "params": {
+      "cooldown": 2,
+      "duration": 0,
+      "count": 1,
+      "speedBonus": 0.8
+    },
+    "createdAt": "2026-01-05T07:53:22.303Z"
+  },
+  {
+    "key": "CUSTOM_1767599641168",
+    "name": "生命潮汐",
+    "icon": "🌊",
+    "description": "模拟潮汐节奏，温和地推动目标体内气血循环，加速自然恢复",
+    "category": "element-water",
+    "type": "heal",
+    "effect": "heal_direct",
+    "params": {
+      "cooldown": 1,
+      "duration": 0,
+      "count": 1,
+      "healTarget": "self",
+      "healSource": "self-hp",
+      "healBonus": 0.5
+    },
+    "createdAt": "2026-01-05T07:54:01.168Z"
+  }
+]
