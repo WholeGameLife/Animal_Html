@@ -1,0 +1,1147 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>电子盆栽 - 战斗场景</title>
+    <!-- 引入 Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background-color: #111827;
+            color: #f3f4f6;
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+        }
+
+        .battle-container {
+            width: 100%;
+            max-width: 1200px;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 2rem;
+        }
+
+        .battle-arena {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            flex-grow: 1;
+            position: relative;
+        }
+
+        .animal-card {
+            background: rgba(31, 41, 55, 0.8);
+            backdrop-filter: blur(10px);
+            border: 1px solid #4b5563;
+            border-radius: 1rem;
+            padding: 1.5rem;
+            width: 300px;
+            text-align: center;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+            transition: transform 0.3s ease;
+        }
+
+        /* 攻击抖动效果 */
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+            20%, 40%, 60%, 80% { transform: translateX(5px); }
+        }
+        .animate-shake {
+            animation: shake 0.3s ease-in-out;
+        }
+
+        /* 防御发光效果 */
+        @keyframes defend-glow {
+            0%, 100% { box-shadow: 0 0 10px rgba(59, 130, 246, 0.5); }
+            50% { box-shadow: 0 0 30px rgba(59, 130, 246, 1); }
+        }
+        .animate-defend {
+            animation: defend-glow 0.5s ease-in-out;
+            border-color: #3b82f6 !important;
+        }
+
+        /* 技能激活效果 */
+        @keyframes skill-activate {
+            0% { transform: scale(1); box-shadow: 0 0 0 rgba(167, 139, 250, 0); }
+            50% { transform: scale(1.1); box-shadow: 0 0 25px rgba(167, 139, 250, 1); }
+            100% { transform: scale(1); box-shadow: 0 0 0 rgba(167, 139, 250, 0); }
+        }
+        .skill-triggered {
+            animation: skill-activate 0.6s ease-in-out;
+            border-color: #a78bfa !important;
+            border-width: 3px !important;
+            background: linear-gradient(135deg, rgba(167, 139, 250, 0.6) 0%, rgba(236, 72, 153, 0.6) 100%) !important;
+        }
+        
+        /* 持续生效的技能高亮 */
+        @keyframes skill-active-glow {
+            0%, 100% { box-shadow: 0 0 10px rgba(34, 197, 94, 0.6); }
+            50% { box-shadow: 0 0 20px rgba(34, 197, 94, 1); }
+        }
+        .skill-active {
+            animation: skill-active-glow 1.5s ease-in-out infinite;
+            border-color: #22c55e !important;
+            border-width: 3px !important;
+            background: linear-gradient(135deg, rgba(34, 197, 94, 0.4) 0%, rgba(16, 185, 129, 0.4) 100%) !important;
+        }
+
+        .animal-card:hover {
+            transform: translateY(-10px);
+        }
+
+        .animal-avatar {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            margin: 0 auto 1rem;
+            border: 4px solid;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 2rem;
+            font-weight: bold;
+        }
+
+        .health-bar-container {
+            background-color: #4b5563;
+            border-radius: 9999px;
+            height: 1rem;
+            width: 100%;
+            margin-top: 0.5rem;
+            overflow: hidden;
+        }
+
+        .health-bar {
+            background-color: #22c55e;
+            height: 100%;
+            border-radius: 9999px;
+            transition: width 0.5s ease-in-out;
+        }
+
+        .opponent .animal-avatar {
+            border-color: #ef4444;
+        }
+
+        .player .animal-avatar {
+            border-color: #3b82f6;
+        }
+
+        .action-panel {
+            background: rgba(17, 24, 39, 0.9);
+            padding: 1rem;
+            border-radius: 1rem;
+            border-top: 1px solid #374151;
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+        }
+
+        .action-button {
+            background-color: #3b82f6;
+            color: white;
+            font-weight: bold;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            min-width: 120px;
+        }
+
+        .action-button:hover:not(:disabled) {
+            background-color: #2563eb;
+        }
+
+        .action-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .flee-button {
+            background-color: #6b7280;
+        }
+
+        .flee-button:hover {
+            background-color: #4b5563;
+        }
+
+        .vs-text {
+            font-size: 4rem;
+            font-weight: bold;
+            color: #ef4444;
+            text-shadow: 0 0 15px #ef4444;
+        }
+
+        .return-button {
+            background-color: #22c55e;
+            color: white;
+            font-weight: bold;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            min-width: 240px;
+        }
+
+        /* 回合指示器 */
+        .turn-indicator {
+            position: absolute;
+            top: -2rem;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(59, 130, 246, 0.9);
+            color: white;
+            padding: 0.5rem 1.5rem;
+            border-radius: 9999px;
+            font-weight: bold;
+            font-size: 0.875rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="battle-container">
+        <!-- 战斗日志 (顶部) - 滚动日志面板 -->
+        <div class="bg-gray-900/80 rounded-lg border border-gray-700 mb-4" style="height: 150px; overflow-y: auto;">
+            <div id="battle-log" class="text-sm space-y-1 font-mono p-4">
+                <div class="text-yellow-300">⚔️ 战斗准备中...</div>
+            </div>
+        </div>
+
+        <!-- 战斗区域 -->
+        <div class="battle-arena">
+            <!-- 我方动物 -->
+            <div id="player-card" class="animal-card player" style="position: relative;">
+                <div id="player-turn-indicator" class="turn-indicator" style="display: none;">我的回合</div>
+                <div id="player-avatar" class="animal-avatar"></div>
+                <h2 id="player-name" class="text-2xl font-bold">玩家动物</h2>
+                <p id="player-level" class="text-sm text-gray-400">Lv. 1</p>
+                <div class="health-bar-container">
+                    <div id="player-health-bar" class="health-bar"></div>
+                </div>
+                <p id="player-health-text" class="text-xs mt-1">100 / 100</p>
+                <div class="mt-2 text-xs text-gray-400">
+                    <span>⚔️ <span id="player-atk">10</span></span>
+                    <span class="ml-2">🛡️ <span id="player-def">5</span></span>
+                    <span class="ml-2">⚡ <span id="player-agi">8</span></span>
+                </div>
+                
+                <!-- 技能槽显示 -->
+                <div class="mt-3 pt-3 border-t border-gray-600">
+                    <p class="text-xs text-gray-400 mb-2">装备技能</p>
+                    <div id="player-skill-slots" class="grid grid-cols-2 gap-2">
+                        <!-- 动态生成 -->
+                    </div>
+                </div>
+            </div>
+
+            <div class="vs-text">VS</div>
+
+            <!-- 敌方动物 -->
+            <div id="opponent-card" class="animal-card opponent" style="position: relative;">
+                <div id="opponent-turn-indicator" class="turn-indicator" style="display: none;">敌方回合</div>
+                <div id="opponent-avatar" class="animal-avatar"></div>
+                <h2 id="opponent-name" class="text-2xl font-bold">野生动物</h2>
+                <p id="opponent-level" class="text-sm text-gray-400">Lv. 1</p>
+                <div class="health-bar-container">
+                    <div id="opponent-health-bar" class="health-bar bg-red-500"></div>
+                </div>
+                <p id="opponent-health-text" class="text-xs mt-1">100 / 100</p>
+                <div class="mt-2 text-xs text-gray-400">
+                    <span>⚔️ <span id="opponent-atk">10</span></span>
+                    <span class="ml-2">🛡️ <span id="opponent-def">5</span></span>
+                    <span class="ml-2">⚡ <span id="opponent-agi">8</span></span>
+                </div>
+                
+                <!-- 技能槽显示 -->
+                <div class="mt-3 pt-3 border-t border-gray-600">
+                    <p class="text-xs text-gray-400 mb-2">装备技能</p>
+                    <div id="opponent-skill-slots" class="grid grid-cols-2 gap-2">
+                        <!-- 动态生成 -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 操作面板 -->
+        <div class="action-panel">
+            <button id="btn-start-battle" class="action-button bg-green-600 hover:bg-green-700">开始自动战斗</button>
+            <button id="btn-flee" class="action-button flee-button">逃跑</button>
+        </div>
+    </div>
+
+    <script>
+        // 战斗技能配置 (从 animal_management.html 复制)
+        const COMBAT_SKILLS = {
+            'POWER_STRIKE': { name: '力量打击', icon: '💥', type: 'attack', desc: '造成150%攻击力的伤害', effect: 'damage', value: 1.5, cooldown: 3 },
+            'SHIELD_BASH': { name: '盾击', icon: '🛡️', type: 'defense', desc: '提升50%防御并反击', effect: 'defense_counter', value: 0.5, cooldown: 4 },
+            'QUICK_SLASH': { name: '疾风斩', icon: '⚡', type: 'agility', desc: '连续攻击2次，每次70%伤害', effect: 'multi_attack', value: 0.7, count: 2, cooldown: 2 },
+            'BERSERKER': { name: '狂暴', icon: '😡', type: 'buff', desc: '攻击力提升30%，持续3回合', effect: 'buff_attack', value: 0.3, duration: 3, cooldown: 5 },
+            'IRON_WALL': { name: '铁壁', icon: '🏰', type: 'defense', desc: '防御力提升50%，持续2回合', effect: 'buff_defense', value: 0.5, duration: 2, cooldown: 4 },
+            'DODGE': { name: '闪避', icon: '💨', type: 'agility', desc: '下次攻击必定闪避', effect: 'guaranteed_dodge', value: 1, cooldown: 3 },
+            'CRITICAL_HIT': { name: '致命一击', icon: '🎯', type: 'attack', desc: '造成200%暴击伤害', effect: 'critical', value: 2.0, cooldown: 5 },
+            'LIFE_STEAL': { name: '生命汲取', icon: '🩸', type: 'attack', desc: '攻击回复50%伤害的生命', effect: 'lifesteal', value: 0.5, cooldown: 4 },
+            'COUNTER': { name: '反击', icon: '↩️', type: 'defense', desc: '受到攻击时反击100%伤害', effect: 'counter', value: 1.0, cooldown: 3 },
+            'SPEED_BOOST': { name: '加速', icon: '🚀', type: 'agility', desc: '敏捷提升40%，持续2回合', effect: 'buff_agility', value: 0.4, duration: 2, cooldown: 3 }
+        };
+        
+        // 变异技能配置
+        const MUTATION_SKILLS = {
+            'MUT_DARK_POWER': { name: '暗黑之力', icon: '🖤', desc: '攻击力+15%', effect: 'passive_attack', value: 0.15 },
+            'MUT_LIGHT_HEAL': { name: '光明治愈', icon: '🤍', desc: '每回合恢复5%生命', effect: 'regen', value: 0.05 },
+            'MUT_CRYSTAL_SHIELD': { name: '晶体护盾', icon: '💎', desc: '防御力+20%', effect: 'passive_defense', value: 0.2 },
+            'MUT_SHADOW_SPEED': { name: '影之疾行', icon: '👤', desc: '敏捷+25%', effect: 'passive_agility', value: 0.25 },
+            'MUT_THUNDER_STRIKE': { name: '雷霆一击', icon: '⚡', desc: '攻击附加30%雷电伤害', effect: 'bonus_damage', value: 0.3 },
+            'MUT_LIGHTNING_SPEED': { name: '闪电疾驰', icon: '⚡', desc: '敏捷+30%', effect: 'passive_agility', value: 0.3 },
+            'MUT_HOLY_HEAL': { name: '圣光治疗', icon: '✨', desc: '每回合恢复8%生命', effect: 'regen', value: 0.08 },
+            'MUT_HEAL_REDUCE': { name: '治疗削弱', icon: '✨', desc: '敌方治疗效果-50%', effect: 'heal_reduce', value: 0.5 },
+            'MUT_DAMAGE_AMP': { name: '伤害增幅', icon: '🔮', desc: '造成伤害+25%', effect: 'damage_amp', value: 0.25 },
+            'MUT_DEFENSE_AMP': { name: '防御增幅', icon: '🔮', desc: '受到伤害-20%', effect: 'damage_reduction', value: 0.2 },
+            'MUT_PERCENT_DAMAGE': { name: '百分比伤害', icon: '🌑', desc: '攻击造成敌方5%最大生命伤害', effect: 'percent_damage', value: 0.05 },
+            'MUT_LIFE_DRAIN': { name: '生命汲取', icon: '🌑', desc: '攻击回复50%伤害生命', effect: 'lifesteal', value: 0.5 },
+            'MUT_ANNIHILATE': { name: '湮灭打击', icon: '💀', desc: '攻击力+40%，无视30%防御', effect: 'armor_pierce', value: 0.3, attackBonus: 0.4 },
+            'MUT_VOID_PIERCE': { name: '虚空穿刺', icon: '💀', desc: '攻击附加20%真实伤害', effect: 'true_damage', value: 0.2 },
+            'MUT_VOID_STRIKE': { name: '虚空打击', icon: '🌀', desc: '攻击无视50%防御', effect: 'armor_pierce', value: 0.5 },
+            'MUT_TEAM_SHIELD': { name: '团队护盾', icon: '🌀', desc: '队伍全体防御+20%', effect: 'passive_defense', value: 0.2 },
+            'MUT_REBIRTH': { name: '轮回重生', icon: '♻️', desc: '濒死时恢复30%生命(一次)', effect: 'rebirth', value: 0.3 },
+            'MUT_PHOENIX_FLAME': { name: '凤凰之焰', icon: '♻️', desc: '攻击附加灼烧效果，持续3回合', effect: 'burn', value: 0.1, duration: 3 }
+        };
+
+        window.onload = function() {
+            const opponentData = JSON.parse(localStorage.getItem('battleOpponent'));
+            const playerData = JSON.parse(localStorage.getItem('battlePlayerAnimal'));
+
+            if (!opponentData || !playerData) {
+                alert("战斗数据加载失败！将返回主场景。");
+                window.location.href = 'game3d.html';
+                return;
+            }
+
+            // 初始化战斗系统
+            const battleSystem = new BattleSystem(playerData, opponentData);
+            battleSystem.init();
+        };
+
+        // 战斗系统类
+        class BattleSystem {
+            constructor(playerData, opponentData) {
+                this.playerData = playerData;
+                this.opponentData = opponentData;
+                
+                // 初始化战斗状态
+                this.playerCurrentHealth = playerData.stamina;
+                this.opponentCurrentHealth = opponentData.stamina;
+                
+                // 战斗属性 (包含buff加成)
+                this.playerStats = {
+                    attack: playerData.abilities.combat.attack,
+                    defense: playerData.abilities.combat.defense,
+                    agility: playerData.abilities.combat.agility,
+                    buffs: {}, // 存储buff效果
+                    activeSkills: [], // 存储当前生效的技能key
+                    skillCooldowns: {} // 存储技能冷却时间 {skillKey: remainingTurns}
+                };
+                
+                this.opponentStats = {
+                    attack: opponentData.abilities.combat.attack || 10,
+                    defense: opponentData.abilities.combat.defense || 5,
+                    agility: opponentData.abilities.combat.agility || 8,
+                    buffs: {},
+                    activeSkills: [],
+                    skillCooldowns: {}
+                };
+                
+                // 被动技能
+                this.playerPassiveSkills = this.getPassiveSkills(playerData);
+                this.opponentPassiveSkills = this.getPassiveSkills(opponentData);
+                
+                // 战斗状态
+                this.battleInProgress = false;
+                this.turnCount = 0;
+                
+                // UI元素
+                this.ui = {
+                    battleLog: document.getElementById('battle-log'),
+                    playerCard: document.getElementById('player-card'),
+                    opponentCard: document.getElementById('opponent-card'),
+                    btnStartBattle: document.getElementById('btn-start-battle'),
+                    btnFlee: document.getElementById('btn-flee'),
+                    playerTurnIndicator: document.getElementById('player-turn-indicator'),
+                    opponentTurnIndicator: document.getElementById('opponent-turn-indicator')
+                };
+            }
+
+            init() {
+                this.renderPlayerInfo();
+                this.renderOpponentInfo();
+                this.renderPlayerSkillSlots();
+                this.renderOpponentSkillSlots();
+                this.setupEventListeners();
+            }
+
+            renderPlayerInfo() {
+                document.getElementById('player-name').textContent = this.playerData.name;
+                document.getElementById('player-level').textContent = `Lv. ${this.playerData.level}`;
+                const playerAvatar = document.getElementById('player-avatar');
+                playerAvatar.style.backgroundColor = '#' + this.playerData.color.toString(16).padStart(6, '0');
+                playerAvatar.textContent = this.playerData.name.charAt(0).toUpperCase();
+                document.getElementById('player-health-bar').style.width = '100%';
+                document.getElementById('player-health-text').textContent = `${this.playerCurrentHealth} / ${this.playerData.stamina}`;
+                document.getElementById('player-atk').textContent = this.playerStats.attack;
+                document.getElementById('player-def').textContent = this.playerStats.defense;
+                document.getElementById('player-agi').textContent = this.playerStats.agility;
+            }
+
+            renderOpponentInfo() {
+                document.getElementById('opponent-name').textContent = this.opponentData.name;
+                document.getElementById('opponent-level').textContent = `Lv. ${this.opponentData.level}`;
+                const opponentAvatar = document.getElementById('opponent-avatar');
+                opponentAvatar.style.backgroundColor = '#' + this.opponentData.color.toString(16).padStart(6, '0');
+                opponentAvatar.textContent = this.opponentData.name.charAt(0).toUpperCase();
+                document.getElementById('opponent-health-bar').style.width = '100%';
+                document.getElementById('opponent-health-text').textContent = `${this.opponentCurrentHealth} / ${this.opponentData.stamina}`;
+                document.getElementById('opponent-atk').textContent = this.opponentStats.attack;
+                document.getElementById('opponent-def').textContent = this.opponentStats.defense;
+                document.getElementById('opponent-agi').textContent = this.opponentStats.agility;
+            }
+            
+            renderPlayerSkillSlots() {
+                this.renderSkillSlots('player-skill-slots', this.playerData);
+            }
+            
+            renderOpponentSkillSlots() {
+                this.renderSkillSlots('opponent-skill-slots', this.opponentData);
+            }
+            
+            renderSkillSlots(containerId, animalData) {
+                const container = document.getElementById(containerId);
+                if (!container) return;
+                
+                container.innerHTML = '';
+                
+                // 获取对应的stats来检查冷却
+                const isPlayer = containerId.includes('player');
+                const stats = isPlayer ? this.playerStats : this.opponentStats;
+                
+                // 读取技能池以获取自定义技能信息
+                const skillPool = JSON.parse(localStorage.getItem('SKILL_POOL') || '[]');
+                
+                // 获取装备的技能
+                let equippedSkills = [];
+                if (animalData.combatSkills) {
+                    if (Array.isArray(animalData.combatSkills)) {
+                        equippedSkills = animalData.combatSkills;
+                    } else if (animalData.combatSkills.equipped) {
+                        equippedSkills = animalData.combatSkills.equipped;
+                    }
+                }
+                
+                // 渲染4个技能槽
+                for (let i = 0; i < 4; i++) {
+                    const skillKey = equippedSkills[i];
+                    let skill = COMBAT_SKILLS[skillKey] || MUTATION_SKILLS[skillKey];
+                    
+                    // 如果不是预定义技能，从技能池中查找
+                    if (!skill && skillKey) {
+                        const customSkill = skillPool.find(s => s.key === skillKey);
+                        if (customSkill) {
+                            skill = {
+                                name: customSkill.name,
+                                icon: customSkill.icon,
+                                desc: customSkill.desc,
+                                cooldown: customSkill.cooldown || 0
+                            };
+                        }
+                    }
+                    
+                    const slotDiv = document.createElement('div');
+                    
+                    if (skill) {
+                        const isMutationSkill = !!MUTATION_SKILLS[skillKey];
+                        const cooldownRemaining = stats.skillCooldowns[skillKey] || 0;
+                        const isOnCooldown = cooldownRemaining > 0;
+                        
+                        // 冷却中显示灰色，否则正常颜色
+                        const bgColor = isOnCooldown ? 'bg-gray-800/50' : (isMutationSkill ? 'bg-pink-900/20' : 'bg-purple-900/20');
+                        const borderColor = isOnCooldown ? 'border-gray-700' : 'border-gray-600';
+                        
+                        slotDiv.className = `${bgColor} border-2 ${borderColor} rounded p-2 text-center min-h-[70px] flex flex-col items-center justify-center transition-all duration-300`;
+                        slotDiv.id = `${containerId}-slot-${i}`; // 添加ID以便触发动画
+                        
+                        let cdDisplay = '';
+                        if (skill.cooldown) {
+                            if (isOnCooldown) {
+                                cdDisplay = `<div class="text-xs text-red-400 font-bold">冷却:${cooldownRemaining}</div>`;
+                            } else {
+                                cdDisplay = `<div class="text-xs text-gray-400">CD:${skill.cooldown}</div>`;
+                            }
+                        }
+                        
+                        slotDiv.innerHTML = `
+                            <div class="text-xl mb-1 ${isOnCooldown ? 'opacity-50' : ''}">${skill.icon}</div>
+                            <div class="text-xs font-bold ${isOnCooldown ? 'text-gray-500' : (isMutationSkill ? 'text-pink-300' : 'text-purple-300')}">${skill.name}</div>
+                            ${cdDisplay}
+                        `;
+                    } else {
+                        slotDiv.className = 'bg-gray-700/50 border-2 border-gray-600 rounded p-2 text-center min-h-[70px] flex items-center justify-center';
+                        slotDiv.innerHTML = '<span class="text-xs text-gray-500">空</span>';
+                    }
+                    
+                    container.appendChild(slotDiv);
+                }
+            }
+
+            getPassiveSkills(animalData) {
+                // 从装备的战斗技能中提取被动技能
+                const skills = [];
+                
+                // 读取技能池以获取自定义技能信息
+                const skillPool = JSON.parse(localStorage.getItem('SKILL_POOL') || '[]');
+                
+                // 兼容两种数据格式
+                let equippedSkills = [];
+                if (animalData.combatSkills) {
+                    if (Array.isArray(animalData.combatSkills)) {
+                        equippedSkills = animalData.combatSkills;
+                    } else if (animalData.combatSkills.equipped) {
+                        equippedSkills = animalData.combatSkills.equipped;
+                    }
+                }
+                
+                equippedSkills.forEach(skillKey => {
+                    let skill = COMBAT_SKILLS[skillKey] || MUTATION_SKILLS[skillKey];
+                    
+                    // 如果不是预定义技能，从技能池中查找
+                    if (!skill && skillKey) {
+                        const customSkill = skillPool.find(s => s.key === skillKey);
+                        if (customSkill) {
+                            skill = {
+                                name: customSkill.name,
+                                icon: customSkill.icon,
+                                desc: customSkill.desc,
+                                type: customSkill.type,
+                                effect: customSkill.effect,
+                                value: customSkill.value,
+                                cooldown: customSkill.cooldown || 0,
+                                duration: customSkill.duration
+                            };
+                        }
+                    }
+                    
+                    if (skill) {
+                        skills.push({
+                            key: skillKey,
+                            ...skill
+                        });
+                    }
+                });
+                
+                return skills;
+            }
+
+            setupEventListeners() {
+                this.ui.btnStartBattle.addEventListener('click', () => this.startBattle());
+                this.ui.btnFlee.addEventListener('click', () => this.flee());
+            }
+
+            async startBattle() {
+                if (this.battleInProgress) return;
+                
+                this.battleInProgress = true;
+                this.ui.btnStartBattle.disabled = true;
+                this.ui.btnStartBattle.textContent = '战斗中...';
+                this.addLog('⚔️ 战斗开始！双方进入战斗状态！');
+                
+                await this.sleep(2000);
+                await this.battleLoop();
+            }
+
+            async battleLoop() {
+                while (this.battleInProgress) {
+                    this.turnCount++;
+                    
+                    // 根据敏捷值决定出手顺序
+                    const playerAgi = this.getEffectiveStat(this.playerStats, 'agility');
+                    const opponentAgi = this.getEffectiveStat(this.opponentStats, 'agility');
+                    
+                    let firstAttacker, secondAttacker;
+                    if (playerAgi >= opponentAgi) {
+                        firstAttacker = 'player';
+                        secondAttacker = 'opponent';
+                    } else {
+                        firstAttacker = 'opponent';
+                        secondAttacker = 'player';
+                    }
+                    
+                    this.addLog(`\n━━━ 第 ${this.turnCount} 回合 ━━━`, 'text-cyan-400 font-bold');
+                    await this.sleep(1000);
+                    
+                    // 第一个攻击者行动
+                    const firstName = firstAttacker === 'player' ? this.playerData.name : this.opponentData.name;
+                    this.addLog(`${firstName} 先手出击！`, 'text-blue-300');
+                    await this.sleep(800);
+                    
+                    await this.executeTurn(firstAttacker);
+                    if (!this.battleInProgress) break;
+                    
+                    await this.sleep(1500);
+                    
+                    // 第二个攻击者行动
+                    const secondName = secondAttacker === 'player' ? this.playerData.name : this.opponentData.name;
+                    this.addLog(`${secondName} 反击！`, 'text-orange-300');
+                    await this.sleep(800);
+                    
+                    await this.executeTurn(secondAttacker);
+                    if (!this.battleInProgress) break;
+                    
+                    // 更新buff持续时间
+                    this.updateBuffs();
+                    
+                    await this.sleep(2000);
+                }
+            }
+
+            async executeTurn(attacker) {
+                const isPlayer = attacker === 'player';
+                const attackerData = isPlayer ? this.playerData : this.opponentData;
+                const attackerStats = isPlayer ? this.playerStats : this.opponentStats;
+                const defenderStats = isPlayer ? this.opponentStats : this.playerStats;
+                
+                // 显示回合指示器
+                this.showTurnIndicator(isPlayer);
+                
+                // 只执行攻击，防御改为技能触发
+                await this.executeAttack(isPlayer);
+                
+                // 隐藏回合指示器
+                this.hideTurnIndicator(isPlayer);
+            }
+
+            async executeAttack(isPlayer) {
+                const attackerName = isPlayer ? this.playerData.name : this.opponentData.name;
+                const defenderName = isPlayer ? this.opponentData.name : this.playerData.name;
+                const attackerStats = isPlayer ? this.playerStats : this.opponentStats;
+                const defenderStats = isPlayer ? this.opponentStats : this.playerStats;
+                
+                // 触发防御方的防御技能（被动触发）
+                await this.triggerDefenseSkills(!isPlayer);
+                
+                // 检查是否有保证闪避buff（仅通过技能触发）
+                if (defenderStats.buffs.guaranteed_dodge) {
+                    this.addLog(`${defenderName} 使用闪避技能，完美躲开了攻击！💨`, 'text-cyan-300');
+                    delete defenderStats.buffs.guaranteed_dodge;
+                    await this.sleep(800);
+                    return;
+                }
+                
+                // 触发所有攻击型装备技能
+                let damageMultiplier = 1.0;
+                let isCriticalHit = false; // 标记是否触发暴击技能
+                const attackerSkills = isPlayer ? this.playerPassiveSkills : this.opponentPassiveSkills;
+                
+                // 触发所有攻击相关的技能（检查冷却）
+                for (const skill of attackerSkills) {
+                    if (skill.type === 'attack' || skill.effect === 'damage' || skill.effect === 'critical' ||
+                        skill.effect === 'lifesteal' || skill.effect === 'bonus_damage' ||
+                        skill.effect === 'armor_pierce' || skill.effect === 'true_damage' ||
+                        skill.effect === 'damage_amp' || skill.effect === 'percent_damage') {
+                        
+                        // 检查技能是否在冷却中
+                        if (this.isSkillOnCooldown(skill.key, isPlayer)) {
+                            continue; // 跳过冷却中的技能
+                        }
+                        
+                        await this.triggerSkillEffect(skill, isPlayer);
+                        
+                        // 应用技能效果
+                        if (skill.effect === 'critical' && skill.value) {
+                            // 暴击技能触发
+                            isCriticalHit = true;
+                            damageMultiplier = Math.max(damageMultiplier, skill.value);
+                        } else if (skill.value && skill.value > 1.0) {
+                            damageMultiplier = Math.max(damageMultiplier, skill.value);
+                        }
+                        
+                        // 设置冷却
+                        if (skill.cooldown) {
+                            this.setSkillCooldown(skill.key, skill.cooldown, isPlayer);
+                        }
+                    }
+                }
+                
+                // 计算伤害
+                const baseAttack = this.getEffectiveStat(attackerStats, 'attack');
+                const defense = this.getEffectiveStat(defenderStats, 'defense');
+                let damage = Math.max(1, Math.floor((baseAttack - defense * 0.5) * damageMultiplier));
+                
+                // 应用伤害
+                if (isPlayer) {
+                    this.opponentCurrentHealth = Math.max(0, this.opponentCurrentHealth - damage);
+                    this.shakeCard(false);
+                } else {
+                    this.playerCurrentHealth = Math.max(0, this.playerCurrentHealth - damage);
+                    this.shakeCard(true);
+                }
+                
+                // 显示伤害信息
+                const critText = isCriticalHit ? '💥 暴击！' : '';
+                this.addLog(`${critText}${attackerName} 对 ${defenderName} 造成 ${damage} 点伤害！`, isCriticalHit ? 'text-red-400 font-bold' : 'text-red-300');
+                await this.sleep(1000);
+                
+                // 生命汲取效果
+                if (attackerStats.buffs.lifesteal) {
+                    const heal = Math.floor(damage * 0.5);
+                    if (isPlayer) {
+                        this.playerCurrentHealth = Math.min(this.playerData.stamina, this.playerCurrentHealth + heal);
+                    } else {
+                        this.opponentCurrentHealth = Math.min(this.opponentData.stamina, this.opponentCurrentHealth + heal);
+                    }
+                    this.addLog(`${attackerName} 汲取了 ${heal} 点生命值！🩸`, 'text-pink-300');
+                    await this.sleep(800);
+                }
+                
+                // 反击效果
+                if (defenderStats.buffs.counter) {
+                    // 高亮反击技能
+                    await this.highlightSkillByEffect(isPlayer ? 'opponent' : 'player', 'counter');
+                    
+                    const counterDamage = Math.floor(damage * 0.5);
+                    if (isPlayer) {
+                        this.opponentCurrentHealth = Math.max(0, this.opponentCurrentHealth - counterDamage);
+                    } else {
+                        this.playerCurrentHealth = Math.max(0, this.playerCurrentHealth - counterDamage);
+                    }
+                    this.addLog(`${defenderName} 发动反击，造成 ${counterDamage} 点伤害！↩️`, 'text-purple-300');
+                    await this.sleep(800);
+                }
+                
+                this.updateHealthUI();
+                await this.checkBattleEnd();
+            }
+
+            async triggerDefenseSkills(isDefender) {
+                const defenderName = isDefender ? this.playerData.name : this.opponentData.name;
+                const defenderStats = isDefender ? this.playerStats : this.opponentStats;
+                const defenderCard = isDefender ? this.ui.playerCard : this.ui.opponentCard;
+                const defenderSkills = isDefender ? this.playerPassiveSkills : this.opponentPassiveSkills;
+                
+                let hasDefenseSkill = false;
+                
+                // 触发所有防御相关的技能（检查冷却）
+                for (const skill of defenderSkills) {
+                    if (skill.type === 'defense' || skill.effect === 'defense_counter' ||
+                        skill.effect === 'buff_defense' || skill.effect === 'counter' ||
+                        skill.effect === 'passive_defense' || skill.effect === 'damage_reduction') {
+                        
+                        // 检查技能是否在冷却中
+                        if (this.isSkillOnCooldown(skill.key, isDefender)) {
+                            continue; // 跳过冷却中的技能
+                        }
+                        
+                        hasDefenseSkill = true;
+                        await this.triggerSkillEffect(skill, isDefender);
+                        
+                        // 应用防御加成
+                        if (skill.value) {
+                            defenderStats.buffs.defense_boost = { value: skill.value, duration: 1 };
+                        }
+                        
+                        // 显示防御效果
+                        defenderCard.classList.add('animate-defend');
+                        await this.sleep(500);
+                        defenderCard.classList.remove('animate-defend');
+                        
+                        // 设置冷却
+                        if (skill.cooldown) {
+                            this.setSkillCooldown(skill.key, skill.cooldown, isDefender);
+                        }
+                    }
+                }
+                
+                // 如果有防御技能，显示防御姿态
+                if (hasDefenseSkill) {
+                    defenderStats.buffs.defending = { value: 0.3, duration: 1 };
+                }
+            }
+
+            async triggerSkillEffect(skill, isPlayer) {
+                // 显示日志
+                this.addLog(`✨ ${isPlayer ? '我方' : '敌方'}技能 [${skill.name}] 触发！`, 'text-purple-300');
+                
+                // 找到并高亮对应的技能槽
+                const containerId = isPlayer ? 'player-skill-slots' : 'opponent-skill-slots';
+                const stats = isPlayer ? this.playerStats : this.opponentStats;
+                const container = document.getElementById(containerId);
+                if (!container) return;
+                
+                // 获取装备的技能列表
+                const animalData = isPlayer ? this.playerData : this.opponentData;
+                let equippedSkills = [];
+                if (animalData.combatSkills) {
+                    if (Array.isArray(animalData.combatSkills)) {
+                        equippedSkills = animalData.combatSkills;
+                    } else if (animalData.combatSkills.equipped) {
+                        equippedSkills = animalData.combatSkills.equipped;
+                    }
+                }
+                
+                // 找到技能在槽位中的索引
+                const skillIndex = equippedSkills.indexOf(skill.key);
+                if (skillIndex !== -1) {
+                    const slotElement = document.getElementById(`${containerId}-slot-${skillIndex}`);
+                    if (slotElement) {
+                        // 触发动画
+                        slotElement.classList.add('skill-triggered');
+                        await this.sleep(600);
+                        slotElement.classList.remove('skill-triggered');
+                        
+                        // 如果是有持续时间的buff技能，添加持续高亮
+                        if (skill.duration && skill.duration > 0) {
+                            // 记录技能生效
+                            if (!stats.activeSkills.includes(skill.key)) {
+                                stats.activeSkills.push(skill.key);
+                            }
+                            slotElement.classList.add('skill-active');
+                            
+                            // 在buff中记录技能key和槽位索引，用于后续移除高亮
+                            const buffKey = `buff_${skill.effect.split('_')[1] || skill.effect}`;
+                            if (stats.buffs[buffKey]) {
+                                stats.buffs[buffKey].skillKey = skill.key;
+                                stats.buffs[buffKey].slotIndex = skillIndex;
+                                stats.buffs[buffKey].containerId = containerId;
+                            }
+                        }
+                    }
+                }
+            }
+
+            getEffectiveStat(stats, statName) {
+                let value = stats[statName];
+                
+                // 应用buff加成
+                if (stats.buffs[`buff_${statName}`]) {
+                    value = Math.floor(value * (1 + stats.buffs[`buff_${statName}`].value));
+                }
+                
+                if (stats.buffs.defending && statName === 'defense') {
+                    value = Math.floor(value * 1.3);
+                }
+                
+                if (stats.buffs.defense_boost && statName === 'defense') {
+                    value = Math.floor(value * (1 + stats.buffs.defense_boost.value));
+                }
+                
+                return value;
+            }
+
+            updateBuffs() {
+                // 更新玩家buff
+                for (const [key, buff] of Object.entries(this.playerStats.buffs)) {
+                    if (buff.duration !== undefined) {
+                        buff.duration--;
+                        if (buff.duration <= 0) {
+                            // buff结束时，移除对应技能的高亮
+                            if (buff.skillKey && buff.slotIndex !== undefined && buff.containerId) {
+                                const slotElement = document.getElementById(`${buff.containerId}-slot-${buff.slotIndex}`);
+                                if (slotElement) {
+                                    slotElement.classList.remove('skill-active');
+                                }
+                                // 从activeSkills中移除
+                                const index = this.playerStats.activeSkills.indexOf(buff.skillKey);
+                                if (index > -1) {
+                                    this.playerStats.activeSkills.splice(index, 1);
+                                }
+                            }
+                            delete this.playerStats.buffs[key];
+                        }
+                    }
+                }
+                
+                // 更新对手buff
+                for (const [key, buff] of Object.entries(this.opponentStats.buffs)) {
+                    if (buff.duration !== undefined) {
+                        buff.duration--;
+                        if (buff.duration <= 0) {
+                            // buff结束时，移除对应技能的高亮
+                            if (buff.skillKey && buff.slotIndex !== undefined && buff.containerId) {
+                                const slotElement = document.getElementById(`${buff.containerId}-slot-${buff.slotIndex}`);
+                                if (slotElement) {
+                                    slotElement.classList.remove('skill-active');
+                                }
+                                // 从activeSkills中移除
+                                const index = this.opponentStats.activeSkills.indexOf(buff.skillKey);
+                                if (index > -1) {
+                                    this.opponentStats.activeSkills.splice(index, 1);
+                                }
+                            }
+                            delete this.opponentStats.buffs[key];
+                        }
+                    }
+                }
+                
+                // 更新技能冷却
+                this.updateSkillCooldowns();
+            }
+            
+            updateSkillCooldowns() {
+                // 更新玩家技能冷却
+                for (const [skillKey, cooldown] of Object.entries(this.playerStats.skillCooldowns)) {
+                    this.playerStats.skillCooldowns[skillKey]--;
+                    if (this.playerStats.skillCooldowns[skillKey] <= 0) {
+                        delete this.playerStats.skillCooldowns[skillKey];
+                    }
+                }
+                
+                // 更新对手技能冷却
+                for (const [skillKey, cooldown] of Object.entries(this.opponentStats.skillCooldowns)) {
+                    this.opponentStats.skillCooldowns[skillKey]--;
+                    if (this.opponentStats.skillCooldowns[skillKey] <= 0) {
+                        delete this.opponentStats.skillCooldowns[skillKey];
+                    }
+                }
+                
+                // 刷新技能槽显示
+                this.renderPlayerSkillSlots();
+                this.renderOpponentSkillSlots();
+            }
+            
+            isSkillOnCooldown(skillKey, isPlayer) {
+                const stats = isPlayer ? this.playerStats : this.opponentStats;
+                return (stats.skillCooldowns[skillKey] || 0) > 0;
+            }
+            
+            setSkillCooldown(skillKey, cooldown, isPlayer) {
+                const stats = isPlayer ? this.playerStats : this.opponentStats;
+                stats.skillCooldowns[skillKey] = cooldown;
+            }
+
+            showTurnIndicator(isPlayer) {
+                if (isPlayer) {
+                    this.ui.playerTurnIndicator.style.display = 'block';
+                } else {
+                    this.ui.opponentTurnIndicator.style.display = 'block';
+                }
+            }
+
+            hideTurnIndicator(isPlayer) {
+                if (isPlayer) {
+                    this.ui.playerTurnIndicator.style.display = 'none';
+                } else {
+                    this.ui.opponentTurnIndicator.style.display = 'none';
+                }
+            }
+
+            shakeCard(isPlayer) {
+                const card = isPlayer ? this.ui.playerCard : this.ui.opponentCard;
+                card.classList.add('animate-shake');
+                setTimeout(() => {
+                    card.classList.remove('animate-shake');
+                }, 300);
+            }
+
+            updateHealthUI() {
+                // 更新玩家血条
+                const playerHealthPercent = Math.max(0, (this.playerCurrentHealth / this.playerData.stamina) * 100);
+                document.getElementById('player-health-bar').style.width = `${playerHealthPercent}%`;
+                document.getElementById('player-health-text').textContent = `${this.playerCurrentHealth} / ${this.playerData.stamina}`;
+
+                // 更新对手血条
+                const opponentHealthPercent = Math.max(0, (this.opponentCurrentHealth / this.opponentData.stamina) * 100);
+                document.getElementById('opponent-health-bar').style.width = `${opponentHealthPercent}%`;
+                document.getElementById('opponent-health-text').textContent = `${this.opponentCurrentHealth} / ${this.opponentData.stamina}`;
+            }
+
+            async checkBattleEnd() {
+                if (this.opponentCurrentHealth <= 0) {
+                    this.battleInProgress = false;
+                    await this.handleVictory();
+                    return true;
+                }
+                if (this.playerCurrentHealth <= 0) {
+                    this.battleInProgress = false;
+                    await this.handleDefeat();
+                    return true;
+                }
+                return false;
+            }
+
+            async handleVictory() {
+                this.addLog(`\n🎉 胜利！你击败了 ${this.opponentData.name}！`, 'text-green-400 font-bold text-lg');
+                
+                // 检查是否是通缉任务
+                const activeBountyId = localStorage.getItem('activeBountyId');
+                if (activeBountyId) {
+                    localStorage.setItem('bountyBattleResult', 'won');
+                }
+                
+                await this.sleep(2000);
+                
+                // 如果是野生动物，显示捕获选项
+                if (this.opponentData.isWild) {
+                    this.showCaptureOptions();
+                } else {
+                    this.processXpAndLevelUp();
+                }
+            }
+
+            async handleDefeat() {
+                this.addLog(`\n💀 战败...你被 ${this.opponentData.name} 击败了...`, 'text-red-400 font-bold text-lg');
+                await this.sleep(2000);
+                this.showReturnButton("战斗失败，返回主场景");
+            }
+
+            showCaptureOptions() {
+                const actionPanel = document.querySelector('.action-panel');
+                actionPanel.innerHTML = '';
+                
+                this.addLog(`要尝试捕获 ${this.opponentData.name} 吗？`, 'text-yellow-300');
+                
+                const captureButton = document.createElement('button');
+                captureButton.textContent = '✅ 捕获';
+                captureButton.className = 'action-button bg-green-600 hover:bg-green-700';
+                captureButton.onclick = () => {
+                    localStorage.setItem('capturedAnimal', JSON.stringify(this.opponentData));
+                    this.addLog(`成功捕获了 ${this.opponentData.name}！它将被传送回你的栖息地。`, 'text-green-400');
+                    actionPanel.querySelectorAll('button').forEach(btn => btn.disabled = true);
+                    setTimeout(() => this.showReturnButton("捕获成功，返回主场景"), 1500);
+                };
+                
+                const releaseButton = document.createElement('button');
+                releaseButton.textContent = '❌ 放走';
+                releaseButton.className = 'action-button flee-button';
+                releaseButton.onclick = () => {
+                    this.addLog(`你放走了 ${this.opponentData.name}。`, 'text-gray-400');
+                    actionPanel.querySelectorAll('button').forEach(btn => btn.disabled = true);
+                    setTimeout(() => this.processXpAndLevelUp(), 1000);
+                };
+                
+                actionPanel.appendChild(captureButton);
+                actionPanel.appendChild(releaseButton);
+            }
+
+            processXpAndLevelUp() {
+                const xpGained = this.opponentData.level * 15;
+                this.playerData.xp = (this.playerData.xp || 0) + xpGained;
+                this.addLog(`你获得了 ${xpGained} 点经验值！`, 'text-yellow-300');
+                
+                let leveledUp = false;
+                const xpToNextLevel = this.playerData.xpToNextLevel || this.playerData.level * 100;
+                
+                while (this.playerData.xp >= xpToNextLevel) {
+                    leveledUp = true;
+                    this.playerData.level++;
+                    this.playerData.xp -= xpToNextLevel;
+                    this.playerData.stamina += 20;
+                    this.playerData.xpToNextLevel = this.playerData.level * 100;
+                }
+                
+                localStorage.setItem('playerAnimal', JSON.stringify(this.playerData));
+                
+                setTimeout(() => {
+                    if (leveledUp) {
+                        this.addLog(`🎉 恭喜！${this.playerData.name} 升到了 ${this.playerData.level} 级！`, 'text-green-400 font-bold');
+                    }
+                    this.showReturnButton("战斗胜利，返回主场景");
+                }, 1500);
+            }
+
+            showReturnButton(message) {
+                const actionPanel = document.querySelector('.action-panel');
+                actionPanel.innerHTML = '';
+                
+                const returnButton = document.createElement('button');
+                returnButton.textContent = message;
+                returnButton.className = 'return-button';
+                returnButton.onclick = () => {
+                    const returnUrl = localStorage.getItem('battleReturnUrl') || 'game3d.html';
+                    localStorage.removeItem('battleOpponent');
+                    localStorage.removeItem('battlePlayerAnimal');
+                    localStorage.removeItem('battleReturnUrl');
+                    window.location.href = returnUrl;
+                };
+                
+                actionPanel.appendChild(returnButton);
+            }
+
+            flee() {
+                if (confirm("确定要从战斗中逃跑吗？")) {
+                    localStorage.removeItem('battleOpponent');
+                    localStorage.removeItem('battlePlayerAnimal');
+                    window.location.href = 'game3d.html';
+                }
+            }
+
+            addLog(message, className = 'text-gray-300') {
+                const logContainer = this.ui.battleLog;
+                const logEntry = document.createElement('div');
+                logEntry.className = className;
+                logEntry.textContent = message;
+                logContainer.appendChild(logEntry);
+                
+                // 自动滚动到底部
+                logContainer.parentElement.scrollTop = logContainer.parentElement.scrollHeight;
+            }
+
+            sleep(ms) {
+                return new Promise(resolve => setTimeout(resolve, ms));
+            }
+            
+            // 新增：根据效果类型高亮技能
+            async highlightSkillByEffect(side, effectType) {
+                const containerId = side === 'player' ? 'player-skill-slots' : 'opponent-skill-slots';
+                const animalData = side === 'player' ? this.playerData : this.opponentData;
+                
+                // 读取技能池以获取自定义技能信息
+                const skillPool = JSON.parse(localStorage.getItem('SKILL_POOL') || '[]');
+                
+                // 获取装备的技能列表
+                let equippedSkills = [];
+                if (animalData.combatSkills) {
+                    if (Array.isArray(animalData.combatSkills)) {
+                        equippedSkills = animalData.combatSkills;
+                    } else if (animalData.combatSkills.equipped) {
+                        equippedSkills = animalData.combatSkills.equipped;
+                    }
+                }
+                
+                // 查找具有该效果的技能
+                equippedSkills.forEach((skillKey, index) => {
+                    let skill = COMBAT_SKILLS[skillKey] || MUTATION_SKILLS[skillKey];
+                    
+                    // 如果不是预定义技能，从技能池中查找
+                    if (!skill && skillKey) {
+                        const customSkill = skillPool.find(s => s.key === skillKey);
+                        if (customSkill) {
+                            skill = {
+                                effect: customSkill.effect
+                            };
+                        }
+                    }
+                    
+                    if (skill && skill.effect === effectType) {
+                        const slotElement = document.getElementById(`${containerId}-slot-${index}`);
+                        if (slotElement) {
+                            slotElement.classList.add('skill-triggered');
+                            setTimeout(() => {
+                                slotElement.classList.remove('skill-triggered');
+                            }, 600);
+                        }
+                    }
+                });
+            }
+        }
+    </script>
+
+</body>
+</html>

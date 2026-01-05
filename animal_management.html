@@ -1,0 +1,2825 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>电子盆栽 - 动物管理中心</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background-color: #111827;
+            color: #f3f4f6;
+            font-family: 'Inter', sans-serif;
+        }
+        .control-panel {
+            background: rgba(17, 24, 39, 0.9);
+            backdrop-filter: blur(5px);
+            border: 1px solid #374151;
+            /* Needed for progress bar positioning */
+            position: relative; 
+            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.5);
+        }
+        .action-button {
+            transition: all 0.15s ease-in-out;
+            box-shadow: 0 4px #047857;
+        }
+        .action-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px #047857;
+        }
+        .action-button:active {
+            transform: translateY(2px);
+            box-shadow: 0 2px #065f46;
+        }
+        .clear-button {
+             box-shadow: 0 4px #475569;
+             background-color: #4b5563;
+        }
+        .clear-button:hover {
+            box-shadow: 0 6px #475569;
+             background-color: #6b7280;
+        }
+        .clear-button:active {
+            box-shadow: 0 2px #374151;
+             background-color: #374151;
+        }
+        .selected-for-breeding {
+            background-color: #1e3a8a !important;
+            border: 2px solid #60a5fa;
+        }
+        .roster-item.selected-detail {
+            background-color: #4338ca !important; /* Indigo 700 */
+            border: 2px solid #818cf8; /* Indigo 400 */
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+
+    <div class="max-w-7xl mx-auto">
+        <!-- 页面标题和返回按钮 -->
+        <div class="flex justify-between items-center mb-6">
+            <h1 class="text-3xl font-bold text-cyan-400">动物管理中心</h1>
+            <button id="btn-save-and-return" class="action-button bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg">
+                保存并返回栖息地
+            </button>
+        </div>
+
+        <!-- 主容器 -->
+        <div id="main-container" class="flex flex-col md:flex-row gap-6">
+            <!-- 左侧主菜单 -->
+            <div id="animal-system-main-menu" class="control-panel p-4 rounded-lg text-white w-full md:w-72">
+                <h3 class="text-xl font-bold mb-4 text-cyan-400 border-b border-gray-700 pb-2">
+                    功能菜单
+                </h3>
+                <div class="flex flex-col space-y-3">
+                    <button id="btn-open-cultivation-from-menu" class="action-button bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg text-center">
+                        📖 动物养成
+                    </button>
+                    <button id="btn-open-breeding-panel" class="action-button bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-lg text-center">
+                        🥚 动物繁殖
+                    </button>
+                    <button id="btn-open-fusion-panel" class="action-button bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-lg text-center">
+                        🧬 动物融合
+                    </button>
+                    <button id="btn-open-mutation-panel" class="action-button bg-pink-600 hover:bg-pink-700 text-white font-bold py-3 px-4 rounded-lg text-center">
+                        ☣️ 动物变异
+                    </button>
+                </div>
+                <!-- 新增：资源显示面板 -->
+                <div id="resource-panel" class="mt-6 pt-4 border-t border-gray-700">
+                     <h3 class="text-lg font-bold mb-3 text-green-400">
+                        养成资源
+                    </h3>
+                    <div id="stat-food" class="text-sm mb-2">🍎 食物: <span class="font-mono text-yellow-300">0</span></div>
+                    <div id="stat-gems" class="text-sm mb-2">💎 宝石: <span class="font-mono text-pink-400">0</span></div>
+                    <div id="stat-animal-count" class="text-sm mb-2">🐾 动物数量: <span class="font-mono text-indigo-300">0 / 0</span></div>
+                </div>
+                 <div id="status-message" class="text-xs mt-4 h-8 text-gray-400 text-center"></div>
+                 <!-- 新增：重置游戏按钮 -->
+                 <div class="mt-6 pt-4 border-t border-gray-700">
+                     <button id="btn-reset-game" class="w-full bg-red-700 hover:bg-red-800 text-white font-bold py-2 px-4 rounded-lg text-center text-sm transition-colors">
+                        ⚠️ 强制重置游戏
+                    </button>
+                </div>
+            </div>
+
+            <!-- 右侧内容面板 -->
+            <div id="content-panels" class="flex-1">
+                <!-- 动物养成面板 -->
+                <div id="animal-cultivation-panel" class="control-panel p-4 rounded-lg text-white hidden h-full">
+                    <h3 class="text-xl font-bold mb-3 text-cyan-400 border-b border-gray-700 pb-2">动物养成</h3>
+                    <div id="animal-list" class="w-full space-y-2 max-h-[calc(100vh-200px)] overflow-y-auto pr-2"></div>
+                </div>
+
+                <!-- 动物繁殖面板 -->
+                <div id="animal-breeding-panel" class="control-panel p-4 rounded-lg text-white hidden h-full">
+                    <h3 class="text-xl font-bold mb-3 text-green-400 border-b border-gray-700 pb-2">动物繁殖</h3>
+                    <div class="grid grid-cols-2 gap-3 mb-3">
+                        <div id="parent-display-1" class="h-24 flex items-center justify-center text-center text-gray-500 border-2 border-dashed border-gray-600 rounded-lg cursor-pointer hover:bg-gray-800 hover:border-gray-500">
+                            点击下方列表<br>选择父代 1
+                        </div>
+                        <div id="parent-display-2" class="h-24 flex items-center justify-center text-center text-gray-500 border-2 border-dashed border-gray-600 rounded-lg cursor-pointer hover:bg-gray-800 hover:border-gray-500">
+                            点击下方列表<br>选择父代 2
+                        </div>
+                    </div>
+                    <div class="flex space-x-2 mb-3">
+                        <button id="btn-execute-breed" class="action-button flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-3 rounded-lg text-center text-sm" disabled>选择父母</button>
+                        <button id="btn-clear-breed-selection" class="action-button flex-1 clear-button hover:bg-gray-600 text-white font-bold py-2 px-3 rounded-lg text-center text-sm">清空选择</button>
+                    </div>
+                    <div>
+                        <h4 class="text-md font-semibold mb-2 text-cyan-300">可选动物列表</h4>
+                        <div id="breeding-animal-list" class="space-y-2 max-h-[calc(100vh-400px)] overflow-y-auto"></div>
+                    </div>
+                    <!-- Breeding Progress Overlay -->
+                    <div id="breeding-progress-container" class="hidden absolute inset-0 bg-gray-900 bg-opacity-80 flex flex-col items-center justify-center rounded-lg">
+                        <p id="breeding-progress-text" class="text-lg text-white mb-2">正在繁殖...</p>
+                        <div class="w-3/4 bg-gray-600 rounded-full h-4">
+                            <div id="breeding-progress-bar" class="bg-green-500 h-4 rounded-full transition-all duration-500 ease-linear" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 动物融合面板 -->
+                <div id="animal-fusion-panel" class="control-panel p-4 rounded-lg text-white hidden h-full">
+                    <h3 class="text-xl font-bold mb-3 text-purple-400 border-b border-gray-700 pb-2">动物融合 (消耗父母)</h3>
+                    <div class="grid grid-cols-2 gap-3 mb-3">
+                        <div id="fusion-material-display-1" class="h-24 flex items-center justify-center text-center text-gray-500 border-2 border-dashed border-gray-600 rounded-lg cursor-pointer hover:bg-gray-800 hover:border-gray-500">
+                            点击下方列表<br>选择材料 1
+                        </div>
+                        <div id="fusion-material-display-2" class="h-24 flex items-center justify-center text-center text-gray-500 border-2 border-dashed border-gray-600 rounded-lg cursor-pointer hover:bg-gray-800 hover:border-gray-500">
+                            点击下方列表<br>选择材料 2
+                        </div>
+                    </div>
+                    <div class="flex space-x-2 mb-3">
+                        <button id="btn-execute-fusion" class="action-button flex-1 bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-3 rounded-lg text-center text-sm" disabled>选择材料</button>
+                        <button id="btn-clear-fusion-selection" class="action-button flex-1 clear-button hover:bg-gray-600 text-white font-bold py-2 px-3 rounded-lg text-center text-sm">清空选择</button>
+                    </div>
+                    <div>
+                        <h4 class="text-md font-semibold mb-2 text-cyan-300">可选材料列表</h4>
+                        <div id="fusion-animal-list" class="space-y-2 max-h-[calc(100vh-400px)] overflow-y-auto"></div>
+                    </div>
+                    <!-- Fusion Progress Overlay -->
+                    <div id="fusion-progress-container" class="hidden absolute inset-0 bg-gray-900 bg-opacity-80 flex flex-col items-center justify-center rounded-lg">
+                        <p id="fusion-progress-text" class="text-lg text-white mb-2">正在融合...</p>
+                        <div class="w-3/4 bg-gray-600 rounded-full h-4">
+                            <div id="fusion-progress-bar" class="bg-purple-500 h-4 rounded-full transition-all duration-500 ease-linear" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 动物变异面板 - 优化版 -->
+                <div id="animal-mutation-panel" class="control-panel p-6 rounded-lg text-white hidden h-full">
+                    <!-- 标题栏 -->
+                    <div class="mb-6">
+                        <div class="flex justify-between items-center mb-3">
+                            <h3 class="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-pink-400 to-purple-400">
+                                🧬 动物变异实验室
+                            </h3>
+                            <div class="flex gap-2">
+                                <button id="btn-mutation-tier1" class="px-4 py-2 rounded-lg font-semibold transition-all bg-gradient-to-r from-pink-600 to-pink-500 text-white shadow-lg hover:shadow-pink-500/50">
+                                    一级变异
+                                </button>
+                                <button id="btn-mutation-tier2" class="px-4 py-2 rounded-lg font-semibold transition-all bg-gray-700 text-gray-300 hover:bg-gray-600">
+                                    二级变异
+                                </button>
+                            </div>
+                        </div>
+                        <p class="text-sm text-gray-400">⚠️ 需要等级 > 10 的动物才能进行变异</p>
+                    </div>
+                    
+                    <!-- 一级变异内容 -->
+                    <div id="mutation-tier1-content" class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                        <!-- 左侧：动物列表 -->
+                        <div class="lg:col-span-1 bg-gray-800/50 rounded-lg p-4">
+                            <h4 class="text-sm font-bold mb-3 text-pink-400 flex items-center gap-2">
+                                <span>🐾</span>
+                                <span>可变异动物</span>
+                            </h4>
+                            <div id="mutation-animal-list" class="space-y-2 max-h-[500px] overflow-y-auto pr-2"></div>
+                        </div>
+                        
+                        <!-- 右侧：变异操作区 -->
+                        <div class="lg:col-span-2 flex flex-col gap-4">
+                            <!-- 选中的动物显示 -->
+                            <div class="bg-gradient-to-br from-pink-900/30 to-purple-900/30 border-2 border-pink-500/30 rounded-xl p-6" style="min-height: 160px;">
+                                <div id="mutation-target-display" class="flex items-center justify-center" style="min-height: 112px;">
+                                    <p class="text-gray-400 text-center">
+                                        <span class="text-4xl block mb-2">🧬</span>
+                                        请从左侧选择一只动物
+                                    </p>
+                                </div>
+                            </div>
+                            
+                            <!-- 变异信息和按钮 -->
+                            <div id="mutation-stats" class="hidden bg-gray-800/80 rounded-lg p-4 border border-gray-700" style="min-height: 180px;">
+                                <div class="grid grid-cols-2 gap-4 mb-4">
+                                    <div class="bg-gray-900/50 rounded-lg p-3 text-center">
+                                        <p class="text-xs text-gray-400 mb-1">消耗材料</p>
+                                        <p id="mut-cost" class="font-mono text-sm"></p>
+                                    </div>
+                                    <div class="bg-gray-900/50 rounded-lg p-3 text-center">
+                                        <p class="text-xs text-gray-400 mb-1">变异概率</p>
+                                        <p class="font-mono text-xs">
+                                            <span class="text-gray-400">基础 80%</span> |
+                                            <span class="text-purple-400">精英 18%</span> |
+                                            <span class="text-pink-400">传说 2%</span>
+                                        </p>
+                                    </div>
+                                </div>
+                                <button id="btn-execute-mutation" class="action-button w-full bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-500 hover:to-purple-500 text-white font-bold py-4 px-6 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-pink-500/50 transition-all" disabled>
+                                    🧬 开始一级变异
+                                </button>
+                            </div>
+                            
+                            <!-- 变异日志 -->
+                            <div class="bg-black/40 rounded-lg p-4 border border-gray-700" style="min-height: 200px;">
+                                <h5 class="text-xs font-bold text-gray-400 mb-2 flex items-center gap-2">
+                                    <span>📋</span>
+                                    <span>变异日志</span>
+                                </h5>
+                                <div id="mutation-result-log" class="text-xs font-mono text-gray-300 whitespace-pre-wrap overflow-y-auto" style="height: 150px;">
+                                    等待开始变异...
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 二级变异内容 -->
+                    <div id="mutation-tier2-content" class="hidden grid grid-cols-1 lg:grid-cols-3 gap-4">
+                        <!-- 左侧：动物列表 -->
+                        <div class="lg:col-span-1 bg-gray-800/50 rounded-lg p-4">
+                            <h4 class="text-sm font-bold mb-3 text-yellow-400 flex items-center gap-2">
+                                <span>⚡</span>
+                                <span>可二级变异动物</span>
+                            </h4>
+                            <div id="mutation-tier2-animal-list" class="space-y-2 max-h-[500px] overflow-y-auto pr-2"></div>
+                        </div>
+                        
+                        <!-- 右侧：变异操作区 -->
+                        <div class="lg:col-span-2 flex flex-col gap-4">
+                            <!-- 选中的动物显示 -->
+                            <div class="bg-gradient-to-br from-yellow-900/30 to-orange-900/30 border-2 border-yellow-500/30 rounded-xl p-6" style="min-height: 160px;">
+                                <div id="mutation-tier2-target-display" class="flex items-center justify-center" style="min-height: 112px;">
+                                    <p class="text-gray-400 text-center">
+                                        <span class="text-4xl block mb-2">⚡</span>
+                                        请从左侧选择一只动物
+                                    </p>
+                                </div>
+                            </div>
+                            
+                            <!-- 变异信息和按钮 -->
+                            <div id="mutation-tier2-stats" class="hidden bg-gray-800/80 rounded-lg p-4 border border-gray-700" style="min-height: 180px;">
+                                <div class="grid grid-cols-2 gap-4 mb-4">
+                                    <div class="bg-gray-900/50 rounded-lg p-3 text-center">
+                                        <p class="text-xs text-gray-400 mb-1">消耗材料</p>
+                                        <p id="mut-tier2-cost" class="font-mono text-sm"></p>
+                                    </div>
+                                    <div class="bg-gray-900/50 rounded-lg p-3 text-center">
+                                        <p class="text-xs text-gray-400 mb-1">成功率</p>
+                                        <p class="font-mono text-lg text-green-400">60%</p>
+                                    </div>
+                                </div>
+                                <button id="btn-execute-tier2-mutation" class="action-button w-full bg-gradient-to-r from-yellow-600 to-orange-600 hover:from-yellow-500 hover:to-orange-500 text-white font-bold py-4 px-6 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-yellow-500/50 transition-all" disabled>
+                                    ⚡ 开始二级变异
+                                </button>
+                            </div>
+                            
+                            <!-- 变异日志 -->
+                            <div class="bg-black/40 rounded-lg p-4 border border-gray-700" style="min-height: 200px;">
+                                <h5 class="text-xs font-bold text-gray-400 mb-2 flex items-center gap-2">
+                                    <span>📋</span>
+                                    <span>变异日志</span>
+                                </h5>
+                                <div id="mutation-tier2-result-log" class="text-xs font-mono text-gray-300 whitespace-pre-wrap overflow-y-auto" style="height: 150px;">
+                                    等待开始变异...
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 变异结果模态框 (新增) -->
+            <div id="mutation-result-modal" class="fixed inset-0 bg-black/90 hidden z-50 flex items-center justify-center">
+                <div class="bg-gray-800 rounded-xl p-6 max-w-md w-full border border-pink-500 shadow-2xl transform transition-all scale-100 relative">
+                    <div id="mutation-result-header" class="text-center mb-6">
+                        <div id="mutation-result-icon" class="text-6xl mb-2">🧬</div>
+                        <h3 id="mutation-result-title" class="text-2xl font-bold text-white">变异结果</h3>
+                    </div>
+                    
+                    <div id="mutation-result-content" class="space-y-4 text-sm text-gray-300">
+                        <!-- 动态内容 -->
+                    </div>
+
+                    <div class="mt-8 text-center">
+                        <button id="btn-close-mutation-result" class="px-8 py-3 bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-500 hover:to-purple-500 text-white rounded-lg font-bold shadow-lg transform transition hover:scale-105">
+                            确定
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 右侧详情面板 (独立出来) -->
+            <div id="animal-details" class="control-panel p-4 rounded-lg text-white w-full md:w-96">
+                            <div id="animal-detail-content" class="hidden">
+                                <h4 class="text-lg font-bold text-fuchsia-400 flex justify-between items-center">
+                                    <span class="flex items-center">
+                                        <span id="animal-detail-name"></span>
+                                        <button id="btn-rename-animal" class="text-sm ml-2 p-1 rounded hover:bg-gray-600" title="重命名">✏️</button>
+                                    </span>
+                                    <div class="flex items-center space-x-2">
+                                        <span id="animal-detail-element-tag" class="text-sm font-normal bg-cyan-600 px-2 py-1 rounded"></span>
+                                        <span id="animal-detail-gender" class="text-sm font-normal px-2 py-1 rounded"></span>
+                                        <span id="animal-detail-level" class="text-sm font-normal bg-purple-600 px-2 py-1 rounded"></span>
+                                    </div>
+                                </h4>
+                                <div class="my-2">
+                                    <div class="flex justify-between text-xs text-gray-400 mb-1">
+                                        <span>经验</span>
+                                        <span id="animal-detail-exp-text"></span>
+                                    </div>
+                                    <div class="w-full bg-gray-700 rounded-full h-2">
+                                        <div id="animal-detail-exp-bar" class="bg-yellow-400 h-2 rounded-full"></div>
+                                    </div>
+                                </div>
+                                <div class="flex border-b border-gray-600 mb-2">
+                                    <button id="btn-tab-attributes" class="flex-1 text-sm py-1 text-center">属性</button>
+                                    <button id="btn-tab-abilities" class="flex-1 text-sm py-1 text-center">能力</button>
+                                    <button id="btn-tab-items" class="flex-1 text-sm py-1 text-center text-gray-400">道具</button>
+                                </div>
+                                <div id="panel-attributes" class="text-sm space-y-1">
+                                    <p class="cursor-help" title="点击查看详细加成">❤️ 体力: <span id="animal-detail-stamina" class="font-mono text-green-300"></span></p>
+                                    <div id="stamina-breakdown" class="hidden text-xs text-gray-400 ml-6 mb-2 bg-gray-800/50 p-2 rounded"></div>
+                                    
+                                    <p>😊 好感度: <span id="animal-detail-favorability" class="font-mono text-pink-300"></span></p>
+                                    <p>✨ 潜力: <span id="animal-detail-potential" class="font-mono"></span></p>
+                                    <p>🌱 发育: <span id="animal-detail-development" class="font-mono text-yellow-300"></span></p>
+                                    
+                                    <!-- 稀有度显示 -->
+                                    <div id="rarity-display" class="mt-3 pt-3 border-t border-gray-700">
+                                        <p class="text-xs text-gray-400 mb-2">⭐ 稀有度</p>
+                                        <div id="rarity-info" class="space-y-1">
+                                            <p id="rarity-text" class="text-sm font-bold">普通</p>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- 变异类型显示 -->
+                                    <div id="mutation-types-display" class="mt-3 pt-3 border-t border-gray-700">
+                                        <p class="text-xs text-gray-400 mb-2">🧬 变异状态</p>
+                                        <div id="mutation-types-list" class="space-y-1">
+                                            <p class="text-xs text-gray-500">未进行变异</p>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- 传说级机制显示 -->
+                                    <div id="legendary-mechanism-display" class="mt-3 pt-3 border-t border-gray-700 hidden">
+                                        <p class="text-xs text-gray-400 mb-2">⚙️ 特殊机制</p>
+                                        <div id="legendary-mechanism-content" class="space-y-1">
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- 喂养操作区域 -->
+                                    <div class="mt-4 pt-3 border-t border-gray-700 space-y-2">
+                                        <button id="btn-feed-animal" class="action-button w-full bg-orange-600 hover:bg-orange-700 text-white font-bold py-2 px-4 rounded-lg">喂养</button>
+                                        <button id="btn-feed-animal-10" class="action-button w-full bg-orange-800 hover:bg-orange-900 text-white font-bold py-2 px-4 rounded-lg">连升10级</button>
+                                    </div>
+                                </div>
+                                <div id="panel-abilities" class="text-sm space-y-2 hidden">
+                                    <!-- 战斗能力栏 -->
+                                    <div class="bg-gray-800 rounded-lg p-3 space-y-3">
+                                        <p class="font-semibold text-red-400 text-center border-b border-gray-700 pb-2">⚔️ 战斗能力</p>
+                                        
+                                        <!-- 三个属性值 -->
+                                        <div class="grid grid-cols-3 gap-2 text-center">
+                                            <div class="bg-gray-700 rounded p-2 cursor-help" title="点击查看详细加成">
+                                                <div class="text-xs text-gray-400">攻击</div>
+                                                <div id="ability-combat-atk" class="font-mono text-red-400 font-bold text-lg"></div>
+                                            </div>
+                                            <div class="bg-gray-700 rounded p-2 cursor-help" title="点击查看详细加成">
+                                                <div class="text-xs text-gray-400">防御</div>
+                                                <div id="ability-combat-def" class="font-mono text-blue-400 font-bold text-lg"></div>
+                                            </div>
+                                            <div class="bg-gray-700 rounded p-2 cursor-help" title="点击查看详细加成">
+                                                <div class="text-xs text-gray-400">敏捷</div>
+                                                <div id="ability-combat-agi" class="font-mono text-yellow-400 font-bold text-lg"></div>
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- 战斗能力详细加成 -->
+                                        <div id="combat-breakdown" class="hidden text-xs text-gray-400 bg-gray-900/50 p-3 rounded space-y-1">
+                                            <div id="attack-breakdown"></div>
+                                            <div id="defense-breakdown"></div>
+                                            <div id="agility-breakdown"></div>
+                                        </div>
+
+                                        <!-- 四个技能槽 -->
+                                        <div class="border-t border-gray-700 pt-2">
+                                            <p class="text-xs text-gray-400 mb-2">战斗技能槽</p>
+                                            <div class="grid grid-cols-2 gap-2">
+                                                <div id="skill-slot-1" class="bg-gray-700 rounded p-2 text-center cursor-pointer hover:bg-gray-600 transition-colors min-h-[60px] flex flex-col items-center justify-center">
+                                                    <span class="text-gray-500 text-xs">空槽位</span>
+                                                </div>
+                                                <div id="skill-slot-2" class="bg-gray-700 rounded p-2 text-center cursor-pointer hover:bg-gray-600 transition-colors min-h-[60px] flex flex-col items-center justify-center">
+                                                    <span class="text-gray-500 text-xs">空槽位</span>
+                                                </div>
+                                                <div id="skill-slot-3" class="bg-gray-700 rounded p-2 text-center cursor-pointer hover:bg-gray-600 transition-colors min-h-[60px] flex flex-col items-center justify-center">
+                                                    <span class="text-gray-500 text-xs">空槽位</span>
+                                                </div>
+                                                <div id="skill-slot-4" class="bg-gray-700 rounded p-2 text-center cursor-pointer hover:bg-gray-600 transition-colors min-h-[60px] flex flex-col items-center justify-center">
+                                                    <span class="text-gray-500 text-xs">空槽位</span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- 技能选择列表（包含变异技能和战斗技能） -->
+                                        <div class="border-t border-gray-700 pt-2">
+                                            <div class="flex justify-between items-center mb-2">
+                                                <p class="text-xs text-gray-400">可用技能</p>
+                                                <button id="btn-manage-skills" class="text-xs bg-purple-600 hover:bg-purple-700 px-2 py-1 rounded">管理技能</button>
+                                            </div>
+                                            
+                                            <!-- 变异技能区域 -->
+                                            <div id="mutation-skills-in-abilities" class="mb-2">
+                                                <!-- 由JS动态生成 -->
+                                            </div>
+                                            
+                                            <!-- 战斗技能区域 -->
+                                            <div id="available-skills-list" class="space-y-1 max-h-[150px] overflow-y-auto">
+                                                <p class="text-xs text-gray-500 text-center py-2">暂无可用技能</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div id="panel-items" class="text-sm space-y-2 hidden">
+                                    <p id="items-empty-msg" class="text-gray-400 text-center py-4">暂无可用道具</p>
+                                    <!-- 道具栏占位符 -->
+                                    <div id="item-grid" class="grid grid-cols-4 gap-2 min-h-[50px]"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="animal-detail-placeholder" class="text-center text-gray-500 pt-10">
+                            <p>点击左侧列表中的动物<br>以查看详情</p>
+                        </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 调试对象将由 debug.js 提供
+
+        // --- 全局变量和配置 ---
+        let gameState = {};
+        let selectedAnimalId = null;
+        let lastSelectedAnimalIdInCultivation = null; // 新增：记录养成面板的最后选择
+        let currentActivePanel = 'cultivation'; // 追踪当前激活的面板
+        let isActionInProgress = false; // 防止在繁殖/融合期间进行其他操作
+
+        // 等级和成长配置 (与 game3d.html 保持一致)
+        const LEVEL_CONFIG = {
+            baseExperience: 100,
+            experienceMultiplier: 1.5,
+            feedAmount: 20,
+            potentialMultipliers: { '平庸': { stamina: 1.0, combat: 1.0 }, '超常': { stamina: 1.2, combat: 1.3 }, '璀璨': { stamina: 1.5, combat: 1.8 } },
+            baseGrowth: { stamina: 10, attack: 3, defense: 2, agility: 2, favorability: 5 }
+        };
+        const ACTION_DURATION = 15000; // 15 seconds for breeding/fusion
+
+        const ELEMENT_ICONS = {
+            '水': '💧',
+            '火': '🔥',
+            '土': '🌍',
+            '风': '💨',
+            '雷': '⚡️',
+            '木': '🌳',
+            '光': '☀️',
+            '暗': '🌙',
+            '默认': '❔'
+        };
+        const ELEMENT_COLORS = {
+            '水': 'bg-blue-500',
+            '火': 'bg-red-600',
+            '土': 'bg-amber-700',
+            '风': 'bg-teal-400 text-black',
+            '雷': 'bg-yellow-400 text-black',
+            '木': 'bg-green-600',
+            '光': 'bg-yellow-200 text-black',
+            '暗': 'bg-indigo-800',
+            '默认': 'bg-gray-500'
+        };
+        const ANIMAL_NAMES = ['Ami', 'Bao', 'Cai', 'Duo', 'Fei', 'Gui', 'Hao', 'Jing', 'Kai', 'Ling'];
+        // 新增：道具配置
+        const ITEMS = {
+            'exp_potion_s': { name: '小经验药水', icon: '🧪', type: 'exp', value: 50, desc: '增加50点经验' },
+            'exp_potion_l': { name: '大经验药水', icon: '⚗️', type: 'exp', value: 200, desc: '增加200点经验' },
+            'stamina_potion': { name: '体力药剂', icon: '⚡', type: 'stamina', value: 50, desc: '恢复50点体力' },
+            'mutation_serum': { name: '变异血清', icon: '💉', type: 'material', desc: '诱发动物基因突变的关键道具' }
+        };
+
+        // 战斗技能配置
+        const COMBAT_SKILLS = {
+            'POWER_STRIKE': { name: '力量打击', icon: '💥', type: 'attack', desc: '造成150%攻击力的伤害', cooldown: 3 },
+            'SHIELD_BASH': { name: '盾击', icon: '🛡️', type: 'defense', desc: '提升50%防御并反击', cooldown: 4 },
+            'QUICK_SLASH': { name: '疾风斩', icon: '⚡', type: 'agility', desc: '连续攻击2次，每次70%伤害', cooldown: 2 },
+            'BERSERKER': { name: '狂暴', icon: '😡', type: 'buff', desc: '攻击力提升30%，持续3回合', cooldown: 5 },
+            'IRON_WALL': { name: '铁壁', icon: '🏰', type: 'defense', desc: '防御力提升50%，持续2回合', cooldown: 4 },
+            'DODGE': { name: '闪避', icon: '💨', type: 'agility', desc: '下次攻击必定闪避', cooldown: 3 },
+            'CRITICAL_HIT': { name: '致命一击', icon: '🎯', type: 'attack', desc: '造成200%暴击伤害', cooldown: 5 },
+            'LIFE_STEAL': { name: '生命汲取', icon: '🩸', type: 'attack', desc: '攻击回复50%伤害的生命', cooldown: 4 },
+            'COUNTER': { name: '反击', icon: '↩️', type: 'defense', desc: '受到攻击时反击100%伤害', cooldown: 3 },
+            'SPEED_BOOST': { name: '加速', icon: '🚀', type: 'agility', desc: '敏捷提升40%，持续2回合', cooldown: 3 }
+        };
+
+        // 变异系统配置
+        const MUTATION_CONFIG = {
+            tier1: {
+                basic: {
+                    '黑化': { icon: '🖤', rarity: 'basic', skills: ['MUT_DARK_POWER'], stats: { attack: 5 } },
+                    '白化': { icon: '🤍', rarity: 'basic', skills: ['MUT_LIGHT_HEAL'], stats: { stamina: 10 } },
+                    '晶化': { icon: '💎', rarity: 'basic', skills: ['MUT_CRYSTAL_SHIELD'], stats: { defense: 5 } },
+                    '影化': { icon: '👤', rarity: 'basic', skills: ['MUT_SHADOW_SPEED'], stats: { agility: 5 } }
+                },
+                elite: {
+                    '极电': { icon: '⚡', rarity: 'elite', skills: ['MUT_THUNDER_STRIKE', 'MUT_LIGHTNING_SPEED'], stats: { attack: 8, agility: 8 } },
+                    '圣辉': { icon: '✨', rarity: 'elite', skills: ['MUT_HOLY_HEAL', 'MUT_HEAL_REDUCE'], stats: { stamina: 15, defense: 5 } },
+                    '异能': { icon: '🔮', rarity: 'elite', skills: ['MUT_DAMAGE_AMP', 'MUT_DEFENSE_AMP'], stats: { attack: 6, defense: 6 } },
+                    '暗蚀': { icon: '🌑', rarity: 'elite', skills: ['MUT_PERCENT_DAMAGE', 'MUT_LIFE_DRAIN'], stats: { attack: 10 } }
+                },
+                legendary: {
+                    '湮灭': { icon: '💀', rarity: 'legendary', skills: ['MUT_ANNIHILATE', 'MUT_VOID_PIERCE'], stats: { attack: 15, defense: 10 }, mechanism: 'production' },
+                    '虚无': { icon: '🌀', rarity: 'legendary', skills: ['MUT_VOID_STRIKE', 'MUT_TEAM_SHIELD'], stats: { defense: 15, agility: 10 }, mechanism: 'team_defense' },
+                    '轮回': { icon: '♻️', rarity: 'legendary', skills: ['MUT_REBIRTH', 'MUT_PHOENIX_FLAME'], stats: { stamina: 20, attack: 10 }, mechanism: 'exploration' }
+                }
+            },
+            tier2: {
+                '阴': { icon: '☯️', stats: { agility: 10, stamina: 15 } },
+                '阳': { icon: '☀️', stats: { attack: 10, defense: 10 } },
+                '玄': { icon: '🔯', stats: { attack: 5, defense: 5, agility: 5, stamina: 10 } }
+            }
+        };
+
+        // 变异技能配置
+        const MUTATION_SKILLS = {
+            'MUT_DARK_POWER': { name: '暗黑之力', icon: '🖤', desc: '攻击力+15%' },
+            'MUT_LIGHT_HEAL': { name: '光明治愈', icon: '🤍', desc: '每回合恢复5%生命' },
+            'MUT_CRYSTAL_SHIELD': { name: '晶体护盾', icon: '💎', desc: '防御力+20%' },
+            'MUT_SHADOW_SPEED': { name: '影之疾行', icon: '👤', desc: '敏捷+25%' },
+            'MUT_THUNDER_STRIKE': { name: '雷霆一击', icon: '⚡', desc: '攻击附加30%雷电伤害' },
+            'MUT_LIGHTNING_SPEED': { name: '闪电疾驰', icon: '⚡', desc: '敏捷+30%' },
+            'MUT_HOLY_HEAL': { name: '圣光治疗', icon: '✨', desc: '每回合恢复8%生命' },
+            'MUT_HEAL_REDUCE': { name: '治疗削弱', icon: '✨', desc: '敌方治疗效果-50%' },
+            'MUT_DAMAGE_AMP': { name: '伤害增幅', icon: '🔮', desc: '造成伤害+25%' },
+            'MUT_DEFENSE_AMP': { name: '防御增幅', icon: '🔮', desc: '受到伤害-20%' },
+            'MUT_PERCENT_DAMAGE': { name: '百分比伤害', icon: '🌑', desc: '攻击造成敌方5%最大生命伤害' },
+            'MUT_LIFE_DRAIN': { name: '生命汲取', icon: '🌑', desc: '攻击回复50%伤害生命' },
+            'MUT_ANNIHILATE': { name: '湮灭打击', icon: '💀', desc: '攻击力+40%，无视30%防御' },
+            'MUT_VOID_PIERCE': { name: '虚空穿刺', icon: '💀', desc: '攻击附加20%真实伤害' },
+            'MUT_VOID_STRIKE': { name: '虚空打击', icon: '🌀', desc: '攻击无视50%防御' },
+            'MUT_TEAM_SHIELD': { name: '团队护盾', icon: '🌀', desc: '队伍全体防御+20%' },
+            'MUT_REBIRTH': { name: '轮回重生', icon: '♻️', desc: '濒死时恢复30%生命(一次)' },
+            'MUT_PHOENIX_FLAME': { name: '凤凰之焰', icon: '♻️', desc: '攻击附加灼烧效果，持续3回合' }
+        };
+
+        // UI 元素引用
+        const ui = {
+            statusMessage: document.getElementById('status-message'),
+            btnSaveAndReturn: document.getElementById('btn-save-and-return'),
+            mainMenu: document.getElementById('animal-system-main-menu'),
+            cultivationPanel: document.getElementById('animal-cultivation-panel'),
+            breedingPanel: document.getElementById('animal-breeding-panel'),
+            fusionPanel: document.getElementById('animal-fusion-panel'),
+            mutationPanel: document.getElementById('animal-mutation-panel'), // 新增
+            btnOpenCultivation: document.getElementById('btn-open-cultivation-from-menu'),
+            btnOpenBreeding: document.getElementById('btn-open-breeding-panel'),
+            btnOpenFusion: document.getElementById('btn-open-fusion-panel'),
+            btnOpenMutation: document.getElementById('btn-open-mutation-panel'), // 新增
+            animalList: document.getElementById('animal-list'),
+            animalDetailContent: document.getElementById('animal-detail-content'),
+            animalDetailPlaceholder: document.getElementById('animal-detail-placeholder'),
+            animalDetailName: document.getElementById('animal-detail-name'),
+            animalDetailLevel: document.getElementById('animal-detail-level'),
+            btnRenameAnimal: document.getElementById('btn-rename-animal'), // 新增
+            animalDetailElementTag: document.getElementById('animal-detail-element-tag'), // 新增
+            animalDetailGender: document.getElementById('animal-detail-gender'),
+            animalDetailExpText: document.getElementById('animal-detail-exp-text'),
+            animalDetailExpBar: document.getElementById('animal-detail-exp-bar'),
+            animalDetailStamina: document.getElementById('animal-detail-stamina'),
+            animalDetailFavorability: document.getElementById('animal-detail-favorability'),
+            animalDetailPotential: document.getElementById('animal-detail-potential'),
+            animalDetailDevelopment: document.getElementById('animal-detail-development'),
+            btnTabAttributes: document.getElementById('btn-tab-attributes'),
+            btnTabAbilities: document.getElementById('btn-tab-abilities'),
+            btnTabItems: document.getElementById('btn-tab-items'), // 新增
+            panelAttributes: document.getElementById('panel-attributes'),
+            panelAbilities: document.getElementById('panel-abilities'),
+            panelItems: document.getElementById('panel-items'), // 新增
+            abilityCombatAtk: document.getElementById('ability-combat-atk'),
+            abilityCombatDef: document.getElementById('ability-combat-def'),
+            abilityCombatAgi: document.getElementById('ability-combat-agi'),
+            btnFeedAnimal: document.getElementById('btn-feed-animal'),
+            // 战斗技能相关UI
+            skillSlot1: document.getElementById('skill-slot-1'),
+            skillSlot2: document.getElementById('skill-slot-2'),
+            skillSlot3: document.getElementById('skill-slot-3'),
+            skillSlot4: document.getElementById('skill-slot-4'),
+            availableSkillsList: document.getElementById('available-skills-list'),
+            btnManageSkills: document.getElementById('btn-manage-skills'),
+            btnFeedAnimal10: document.getElementById('btn-feed-animal-10'), // 新增
+            breedingAnimalList: document.getElementById('breeding-animal-list'),
+            parentDisplay1: document.getElementById('parent-display-1'),
+            parentDisplay2: document.getElementById('parent-display-2'),
+            btnExecuteBreed: document.getElementById('btn-execute-breed'),
+            btnClearBreedSelection: document.getElementById('btn-clear-breed-selection'),
+            fusionAnimalList: document.getElementById('fusion-animal-list'),
+            fusionMaterialDisplay1: document.getElementById('fusion-material-display-1'),
+            fusionMaterialDisplay2: document.getElementById('fusion-material-display-2'),
+            btnExecuteFusion: document.getElementById('btn-execute-fusion'),
+            btnClearFusionSelection: document.getElementById('btn-clear-fusion-selection'),
+            breedingProgressContainer: document.getElementById('breeding-progress-container'),
+            breedingProgressBar: document.getElementById('breeding-progress-bar'),
+            fusionProgressContainer: document.getElementById('fusion-progress-container'),
+            fusionProgressBar: document.getElementById('fusion-progress-bar'),
+            // 新增：资源UI元素
+            food: document.querySelector('#stat-food span'),
+            gems: document.querySelector('#stat-gems span'),
+            animalCount: document.querySelector('#stat-animal-count span'),
+            // 新增：变异UI元素
+            mutationAnimalList: document.getElementById('mutation-animal-list'),
+            mutationTargetDisplay: document.getElementById('mutation-target-display'),
+            mutationStats: document.getElementById('mutation-stats'),
+            mutRate: document.getElementById('mut-rate'),
+            mutCooldown: document.getElementById('mut-cooldown'),
+            mutReq: document.getElementById('mut-req'),
+            mutCost: document.getElementById('mut-cost'),
+            btnExecuteMutation: document.getElementById('btn-execute-mutation'),
+            mutationResultLog: document.getElementById('mutation-result-log'),
+            // 新增：变异结果模态框UI
+            mutationResultModal: document.getElementById('mutation-result-modal'),
+            mutationResultTitle: document.getElementById('mutation-result-title'),
+            mutationResultContent: document.getElementById('mutation-result-content'),
+            mutationResultIcon: document.getElementById('mutation-result-icon'),
+            btnCloseMutationResult: document.getElementById('btn-close-mutation-result'),
+        };
+
+        // --- 核心功能 ---
+
+        window.onload = function() {
+            loadGameState();
+            setupEventListeners();
+            updateResourceUI();
+            // 默认打开养成面板并选择第一只动物
+            switchPanel('cultivation');
+            // 如果有动物，自动选择第一只
+            if (gameState.animals && gameState.animals.length > 0) {
+                showAnimalDetails(gameState.animals[0].id);
+            }
+        };
+
+        function loadGameState() {
+            const stateJSON = localStorage.getItem('gameState');
+            if (stateJSON) {
+                gameState = JSON.parse(stateJSON);
+                // 确保嵌套对象存在
+                gameState.selectedAnimalsForBreeding = gameState.selectedAnimalsForBreeding || [];
+                gameState.selectedAnimalsForFusion = gameState.selectedAnimalsForFusion || [];
+                // 新增：初始化背包
+                if (!gameState.inventory || Object.keys(gameState.inventory).length === 0) {
+                    gameState.inventory = {
+                        'exp_potion_s': 5,
+                        'exp_potion_l': 2,
+                        'stamina_potion': 5,
+                        'mutation_serum': 2
+                    };
+                }
+                if (gameState.inventory && typeof gameState.inventory['mutation_serum'] === 'undefined') {
+                    gameState.inventory['mutation_serum'] = 1; // 为旧存档补充道具
+                }
+            } else {
+                alert("游戏状态加载失败！将返回主场景。");
+                window.location.href = 'game3d.html';
+            }
+        }
+
+        function saveAndReturn() {
+            // 清理掉临时的选择状态再保存
+            const stateToSave = { ...gameState };
+            delete stateToSave.selectedAnimalsForBreeding;
+            delete stateToSave.selectedAnimalsForFusion;
+
+            localStorage.setItem('gameState', JSON.stringify(stateToSave));
+            window.location.href = 'game3d.html';
+        }
+
+        function setupEventListeners() {
+            if (isActionInProgress) {
+                showStatus("正在进行操作，请稍候...", 3000);
+                return;
+            }
+
+            ui.btnSaveAndReturn.addEventListener('click', saveAndReturn);
+            ui.btnOpenCultivation.addEventListener('click', () => switchPanel('cultivation'));
+            ui.btnOpenBreeding.addEventListener('click', () => switchPanel('breeding'));
+            ui.btnOpenFusion.addEventListener('click', () => switchPanel('fusion'));
+            ui.btnOpenMutation.addEventListener('click', () => switchPanel('mutation')); // 新增
+
+            ui.btnExecuteBreed.addEventListener('click', breedAnimal);
+            ui.btnClearBreedSelection.addEventListener('click', clearBreedingSelection);
+            ui.btnExecuteFusion.addEventListener('click', fuseAnimals);
+            ui.btnClearFusionSelection.addEventListener('click', clearFusionSelection);
+
+            ui.parentDisplay1.addEventListener('click', () => clearParentSelection(0));
+            ui.parentDisplay2.addEventListener('click', () => clearParentSelection(1));
+
+            ui.fusionMaterialDisplay1.addEventListener('click', () => clearFusionMaterialSelection(0));
+            ui.fusionMaterialDisplay2.addEventListener('click', () => clearFusionMaterialSelection(1));
+
+            ui.btnExecuteMutation.addEventListener('click', executeMutation);
+            document.getElementById('btn-execute-tier2-mutation').addEventListener('click', executeTier2Mutation);
+            ui.btnCloseMutationResult.addEventListener('click', () => ui.mutationResultModal.classList.add('hidden'));
+            document.getElementById('btn-mutation-tier1').addEventListener('click', () => switchMutationTab('tier1'));
+            document.getElementById('btn-mutation-tier2').addEventListener('click', () => switchMutationTab('tier2'));
+
+            ui.btnTabAttributes.addEventListener('click', () => switchDetailTab('attributes'));
+            ui.btnTabAbilities.addEventListener('click', () => switchDetailTab('abilities'));
+            ui.btnTabItems.addEventListener('click', () => switchDetailTab('items')); // 新增
+
+            ui.btnRenameAnimal.addEventListener('click', renameAnimal);
+            document.getElementById('btn-reset-game').addEventListener('click', resetGameData);
+            ui.btnManageSkills.addEventListener('click', openSkillManagementModal);
+        }
+
+        // 渲染战斗技能槽和可用技能列表（支持变异技能）
+        function renderCombatSkills(animal) {
+            if (!animal) return;
+            
+            // 初始化技能系统
+            animal.combatSkills = animal.combatSkills || { equipped: [], available: [] };
+            
+            // 读取技能池以获取自定义技能信息
+            const skillPool = JSON.parse(localStorage.getItem('SKILL_POOL') || '[]');
+            
+            // 渲染已装备的技能槽（支持战斗技能和变异技能）
+            const slots = [ui.skillSlot1, ui.skillSlot2, ui.skillSlot3, ui.skillSlot4];
+            slots.forEach((slot, index) => {
+                const skillKey = animal.combatSkills.equipped[index];
+                
+                // 检查是战斗技能、变异技能还是自定义技能
+                let skill = COMBAT_SKILLS[skillKey] || MUTATION_SKILLS[skillKey];
+                
+                // 如果不是预定义技能，从技能池中查找
+                if (!skill && skillKey) {
+                    const customSkill = skillPool.find(s => s.key === skillKey);
+                    if (customSkill) {
+                        skill = {
+                            name: customSkill.name,
+                            icon: customSkill.icon,
+                            desc: customSkill.description || customSkill.desc || '无描述',
+                            cooldown: customSkill.cooldown || 0
+                        };
+                    }
+                }
+                
+                if (skillKey && skill) {
+                    const isMutationSkill = !!MUTATION_SKILLS[skillKey];
+                    slot.innerHTML = `
+                        <div class="text-2xl mb-1">${skill.icon}</div>
+                        <div class="text-xs font-bold text-white">${skill.name}</div>
+                        ${skill.cooldown ? `<div class="text-xs text-gray-400">CD: ${skill.cooldown}</div>` : ''}
+                    `;
+                    // 变异技能使用粉色边框，普通技能使用紫色边框
+                    const borderColor = isMutationSkill ? 'border-pink-400' : 'border-purple-400';
+                    const bgColor = isMutationSkill ? 'bg-pink-700 hover:bg-pink-600' : 'bg-purple-700 hover:bg-purple-600';
+                    slot.className = `${bgColor} rounded p-2 text-center cursor-pointer transition-colors min-h-[60px] flex flex-col items-center justify-center border-2 ${borderColor}`;
+                    slot.onclick = () => unequipSkill(animal, index);
+                } else {
+                    slot.innerHTML = '<span class="text-gray-500 text-xs">空槽位</span>';
+                    slot.className = 'bg-gray-700 rounded p-2 text-center cursor-pointer hover:bg-gray-600 transition-colors min-h-[60px] flex flex-col items-center justify-center';
+                    slot.onclick = null;
+                }
+            });
+
+            // 渲染可用技能列表
+            ui.availableSkillsList.innerHTML = '';
+            const availableSkills = animal.combatSkills.available || [];
+            
+            if (availableSkills.length === 0) {
+                ui.availableSkillsList.innerHTML = '<p class="text-xs text-gray-500 text-center py-2">暂无可用技能<br>每5级解锁新技能</p>';
+            } else {
+                // 读取技能池以获取自定义技能信息
+                const skillPool = JSON.parse(localStorage.getItem('SKILL_POOL') || '[]');
+                
+                availableSkills.forEach(skillKey => {
+                    // 先从预定义技能中查找
+                    let skill = COMBAT_SKILLS[skillKey];
+                    
+                    // 如果不是预定义技能，从技能池中查找
+                    if (!skill) {
+                        const customSkill = skillPool.find(s => s.key === skillKey);
+                        if (customSkill) {
+                            skill = {
+                                name: customSkill.name,
+                                icon: customSkill.icon,
+                                desc: customSkill.description || customSkill.desc || '无描述',
+                                type: customSkill.type,
+                                cooldown: customSkill.params?.cooldown || 0
+                            };
+                        }
+                    }
+                    
+                    if (!skill) {
+                        console.warn('技能未找到:', skillKey);
+                        return;
+                    }
+                    
+                    const isEquipped = animal.combatSkills.equipped.includes(skillKey);
+                    const div = document.createElement('div');
+                    div.className = `p-2 rounded cursor-pointer transition-colors ${
+                        isEquipped ? 'bg-purple-800 opacity-50' : 'bg-gray-700 hover:bg-gray-600'
+                    }`;
+                    div.innerHTML = `
+                        <div class="flex items-center space-x-2 mb-1">
+                            <span class="text-lg flex-shrink-0">${skill.icon}</span>
+                            <div class="flex-1 min-w-0">
+                                <div class="text-xs font-bold">${skill.name}</div>
+                                <div class="text-xs text-gray-400 line-clamp-2">${skill.desc}</div>
+                            </div>
+                            <span class="text-xs text-gray-400 flex-shrink-0 ml-2">CD:${skill.cooldown || 0}</span>
+                        </div>
+                    `;
+                    
+                    if (!isEquipped) {
+                        div.onclick = () => equipSkill(animal, skillKey);
+                    }
+                    
+                    ui.availableSkillsList.appendChild(div);
+                });
+            }
+        }
+
+        // 新增：计算体力详细加成
+        function calculateStaminaBreakdown(animal) {
+            const baseStamina = 70; // 初始体力
+            const rarityMultiplier = getRarityMultiplier(animal.rarity);
+            const potentialMultiplier = LEVEL_CONFIG.potentialMultipliers[animal.potential]?.stamina || 1.0;
+            const levelGrowth = (animal.level - 1) * LEVEL_CONFIG.baseGrowth.stamina;
+            
+            let breakdown = `<div class="font-semibold text-green-300 mb-2">体力加成详情：</div>`;
+            breakdown += `<div>• 基础体力: ${baseStamina}</div>`;
+            
+            if (rarityMultiplier > 1.0) {
+                const rarityBonus = Math.floor(baseStamina * (rarityMultiplier - 1.0));
+                breakdown += `<div>• 稀有度加成 (${animal.rarity || '普通'}): +${rarityBonus} (×${rarityMultiplier})</div>`;
+            }
+            
+            if (potentialMultiplier > 1.0) {
+                const potentialBonus = Math.floor(levelGrowth * (potentialMultiplier - 1.0));
+                breakdown += `<div>• 潜力加成 (${animal.potential}): +${potentialBonus} (×${potentialMultiplier})</div>`;
+            }
+            
+            if (levelGrowth > 0) {
+                breakdown += `<div>• 等级成长 (Lv.${animal.level}): +${Math.floor(levelGrowth * potentialMultiplier)}</div>`;
+            }
+            
+            // 变异加成
+            if (animal.mutations?.tier1) {
+                const mutConfig = getMutationConfig(animal.mutations.tier1);
+                if (mutConfig?.stats?.stamina) {
+                    breakdown += `<div>• 一级变异 (${animal.mutations.tier1}): +${mutConfig.stats.stamina}</div>`;
+                }
+            }
+            
+            if (animal.mutations?.tier2) {
+                const tier2Config = MUTATION_CONFIG.tier2[animal.mutations.tier2];
+                if (tier2Config?.stats?.stamina) {
+                    breakdown += `<div>• 二级变异 (${animal.mutations.tier2}): +${tier2Config.stats.stamina}</div>`;
+                }
+            }
+            
+            breakdown += `<div class="mt-2 pt-2 border-t border-gray-700 font-bold text-green-400">总计: ${animal.maxStamina}</div>`;
+            return breakdown;
+        }
+        
+        // 新增：计算战斗能力详细加成
+        function calculateCombatBreakdown(animal) {
+            const baseStats = { attack: 10, defense: 5, agility: 8 };
+            const rarityMultiplier = getRarityMultiplier(animal.rarity);
+            const potentialMultiplier = LEVEL_CONFIG.potentialMultipliers[animal.potential]?.combat || 1.0;
+            const levelGrowth = (animal.level - 1);
+            
+            const breakdown = {
+                attack: [],
+                defense: [],
+                agility: []
+            };
+            
+            // 攻击力
+            breakdown.attack.push(`基础: ${baseStats.attack}`);
+            if (rarityMultiplier > 1.0) {
+                const bonus = Math.floor(baseStats.attack * (rarityMultiplier - 1.0));
+                breakdown.attack.push(`稀有度 (${animal.rarity}): +${bonus}`);
+            }
+            if (levelGrowth > 0) {
+                const growth = Math.ceil(levelGrowth * LEVEL_CONFIG.baseGrowth.attack * potentialMultiplier);
+                breakdown.attack.push(`等级成长: +${growth}`);
+            }
+            if (animal.mutations?.tier1) {
+                const mutConfig = getMutationConfig(animal.mutations.tier1);
+                if (mutConfig?.stats?.attack) {
+                    breakdown.attack.push(`一级变异: +${mutConfig.stats.attack}`);
+                }
+            }
+            if (animal.mutations?.tier2) {
+                const tier2Config = MUTATION_CONFIG.tier2[animal.mutations.tier2];
+                if (tier2Config?.stats?.attack) {
+                    breakdown.attack.push(`二级变异: +${tier2Config.stats.attack}`);
+                }
+            }
+            
+            // 防御力
+            breakdown.defense.push(`基础: ${baseStats.defense}`);
+            if (rarityMultiplier > 1.0) {
+                const bonus = Math.floor(baseStats.defense * (rarityMultiplier - 1.0));
+                breakdown.defense.push(`稀有度 (${animal.rarity}): +${bonus}`);
+            }
+            if (levelGrowth > 0) {
+                const growth = Math.ceil(levelGrowth * LEVEL_CONFIG.baseGrowth.defense * potentialMultiplier);
+                breakdown.defense.push(`等级成长: +${growth}`);
+            }
+            if (animal.mutations?.tier1) {
+                const mutConfig = getMutationConfig(animal.mutations.tier1);
+                if (mutConfig?.stats?.defense) {
+                    breakdown.defense.push(`一级变异: +${mutConfig.stats.defense}`);
+                }
+            }
+            if (animal.mutations?.tier2) {
+                const tier2Config = MUTATION_CONFIG.tier2[animal.mutations.tier2];
+                if (tier2Config?.stats?.defense) {
+                    breakdown.defense.push(`二级变异: +${tier2Config.stats.defense}`);
+                }
+            }
+            
+            // 敏捷
+            breakdown.agility.push(`基础: ${baseStats.agility}`);
+            if (rarityMultiplier > 1.0) {
+                const bonus = Math.floor(baseStats.agility * (rarityMultiplier - 1.0));
+                breakdown.agility.push(`稀有度 (${animal.rarity}): +${bonus}`);
+            }
+            if (levelGrowth > 0) {
+                const growth = Math.ceil(levelGrowth * LEVEL_CONFIG.baseGrowth.agility * potentialMultiplier);
+                breakdown.agility.push(`等级成长: +${growth}`);
+            }
+            if (animal.mutations?.tier1) {
+                const mutConfig = getMutationConfig(animal.mutations.tier1);
+                if (mutConfig?.stats?.agility) {
+                    breakdown.agility.push(`一级变异: +${mutConfig.stats.agility}`);
+                }
+            }
+            if (animal.mutations?.tier2) {
+                const tier2Config = MUTATION_CONFIG.tier2[animal.mutations.tier2];
+                if (tier2Config?.stats?.agility) {
+                    breakdown.agility.push(`二级变异: +${tier2Config.stats.agility}`);
+                }
+            }
+            
+            return breakdown;
+        }
+        
+        // 新增：获取稀有度倍率
+        function getRarityMultiplier(rarity) {
+            const multipliers = {
+                '普通': 1.0,
+                '闪光': 1.25,
+                '幻彩': 1.5,
+                '星芒': 2.0
+            };
+            return multipliers[rarity] || 1.0;
+        }
+        
+        // 新增：切换战斗能力详细信息显示
+        function toggleCombatBreakdown(breakdown) {
+            const breakdownDiv = document.getElementById('combat-breakdown');
+            if (breakdownDiv.classList.contains('hidden')) {
+                let html = '<div class="font-semibold text-red-300 mb-2">战斗能力加成详情：</div>';
+                html += `<div class="mb-2"><span class="text-red-400">⚔️ 攻击:</span> ${breakdown.attack.join(' | ')}</div>`;
+                html += `<div class="mb-2"><span class="text-blue-400">🛡️ 防御:</span> ${breakdown.defense.join(' | ')}</div>`;
+                html += `<div><span class="text-yellow-400">⚡ 敏捷:</span> ${breakdown.agility.join(' | ')}</div>`;
+                breakdownDiv.innerHTML = html;
+                breakdownDiv.classList.remove('hidden');
+            } else {
+                breakdownDiv.classList.add('hidden');
+            }
+        }
+
+        // 新增：渲染稀有度信息
+        function renderRarityInfo(animal) {
+            const rarityText = document.getElementById('rarity-text');
+            if (!rarityText) return;
+            
+            const rarity = animal.rarity || '普通';
+            const rarityColors = {
+                '普通': 'text-gray-400',
+                '闪光': 'text-yellow-400',
+                '幻彩': 'text-pink-400',
+                '星芒': 'text-purple-500'
+            };
+            
+            const rarityIcons = {
+                '普通': '',
+                '闪光': '✨',
+                '幻彩': '🌈',
+                '星芒': '⭐'
+            };
+            
+            rarityText.textContent = `${rarityIcons[rarity] || ''} ${rarity}`;
+            rarityText.className = `text-sm font-bold ${rarityColors[rarity] || 'text-gray-400'}`;
+        }
+
+        // 渲染变异类型（在属性标签页）
+        function renderMutationTypes(animal) {
+            const typesList = document.getElementById('mutation-types-list');
+            if (!typesList) return;
+            
+            typesList.innerHTML = '';
+            
+            if (!animal.mutations || (!animal.mutations.tier1 && !animal.mutations.tier2 && (!animal.mutations.history || animal.mutations.history.length === 0))) {
+                typesList.innerHTML = '<p class="text-xs text-gray-500">未进行变异</p>';
+                return;
+            }
+            
+            // 显示二级变异
+            if (animal.mutations.tier2) {
+                const tier2Config = MUTATION_CONFIG.tier2[animal.mutations.tier2];
+                const div = document.createElement('div');
+                div.className = 'bg-yellow-900/20 border border-yellow-500/40 rounded px-2 py-1 flex items-center gap-2';
+                div.innerHTML = `
+                    <span class="text-lg">${tier2Config.icon}</span>
+                    <span class="text-xs font-bold text-yellow-300">${animal.mutations.tier2}级变异</span>
+                `;
+                typesList.appendChild(div);
+            }
+            
+            // 显示当前一级变异
+            if (animal.mutations.tier1) {
+                const tier1Config = getMutationConfig(animal.mutations.tier1);
+                if (tier1Config) {
+                    const rarityColors = {
+                        basic: 'bg-gray-700/40 border-gray-500/40 text-gray-300',
+                        elite: 'bg-purple-900/20 border-purple-500/40 text-purple-300',
+                        legendary: 'bg-pink-900/20 border-pink-500/40 text-pink-300'
+                    };
+                    const colorClass = rarityColors[tier1Config.rarity] || rarityColors.basic;
+                    
+                    const div = document.createElement('div');
+                    div.className = `${colorClass} border rounded px-2 py-1 flex items-center gap-2`;
+                    div.innerHTML = `
+                        <span class="text-lg">${tier1Config.icon}</span>
+                        <span class="text-xs font-bold">${animal.mutations.tier1}</span>
+                        <span class="text-xs text-gray-400">(当前)</span>
+                    `;
+                    typesList.appendChild(div);
+                }
+            }
+            
+            // 显示历史变异记录
+            if (animal.mutations.history && animal.mutations.history.length > 0) {
+                const historyHeader = document.createElement('div');
+                historyHeader.className = 'text-xs text-gray-500 mt-2 mb-1';
+                historyHeader.textContent = '📜 变异历史';
+                typesList.appendChild(historyHeader);
+                
+                animal.mutations.history.forEach(historyItem => {
+                    const rarityColors = {
+                        basic: 'bg-gray-800/40 border-gray-600/40 text-gray-400',
+                        elite: 'bg-purple-900/10 border-purple-600/40 text-purple-400',
+                        legendary: 'bg-pink-900/10 border-pink-600/40 text-pink-400'
+                    };
+                    const colorClass = rarityColors[historyItem.rarity] || rarityColors.basic;
+                    
+                    const div = document.createElement('div');
+                    div.className = `${colorClass} border rounded px-2 py-1 flex items-center gap-2 opacity-70`;
+                    div.innerHTML = `
+                        <span class="text-sm">${historyItem.icon}</span>
+                        <span class="text-xs">${historyItem.name}</span>
+                    `;
+                    typesList.appendChild(div);
+                });
+            }
+            
+            // 渲染传说级机制
+            renderLegendaryMechanism(animal);
+        }
+        
+        // 渲染传说级机制（在属性标签页）
+        function renderLegendaryMechanism(animal) {
+            const mechanismDisplay = document.getElementById('legendary-mechanism-display');
+            const mechanismContent = document.getElementById('legendary-mechanism-content');
+            
+            if (!mechanismDisplay || !mechanismContent) return;
+            
+            mechanismContent.innerHTML = '';
+            
+            // 检查是否有传说级变异
+            if (!animal.mutations || !animal.mutations.tier1) {
+                mechanismDisplay.classList.add('hidden');
+                return;
+            }
+            
+            const tier1Config = getMutationConfig(animal.mutations.tier1);
+            if (!tier1Config || tier1Config.rarity !== 'legendary' || !tier1Config.mechanism) {
+                mechanismDisplay.classList.add('hidden');
+                return;
+            }
+            
+            // 显示机制
+            mechanismDisplay.classList.remove('hidden');
+            
+            const mechanismDescriptions = {
+                'production': '📦 生产加速：基建生产速度+50%',
+                'team_defense': '🛡️ 团队护盾：队伍全体防御+20%',
+                'exploration': '🗺️ 探索加速：探索效率+100%'
+            };
+            
+            const mechanismDesc = mechanismDescriptions[tier1Config.mechanism] || tier1Config.mechanism;
+            
+            const div = document.createElement('div');
+            div.className = 'bg-gradient-to-r from-pink-900/30 to-purple-900/30 border-2 border-pink-500/50 rounded px-3 py-2';
+            div.innerHTML = `
+                <div class="flex items-center gap-2">
+                    <span class="text-lg">${tier1Config.icon}</span>
+                    <div class="flex-1">
+                        <div class="text-xs font-bold text-pink-300">${animal.mutations.tier1} - 特殊机制</div>
+                        <div class="text-xs text-gray-300 mt-1">${mechanismDesc}</div>
+                    </div>
+                </div>
+            `;
+            mechanismContent.appendChild(div);
+        }
+
+        // 渲染变异技能（在能力标签页，与战斗技能合并）
+        function renderMutationSkills(animal) {
+            const mutationSkillsContainer = document.getElementById('mutation-skills-in-abilities');
+            if (!mutationSkillsContainer) return;
+            
+            mutationSkillsContainer.innerHTML = '';
+            
+            if (!animal.mutations || !animal.mutations.skills || animal.mutations.skills.length === 0) {
+                return; // 没有变异技能就不显示
+            }
+            
+            // 创建变异技能标题
+            const header = document.createElement('div');
+            header.className = 'text-xs text-pink-400 font-semibold mb-1 flex items-center gap-1';
+            header.innerHTML = '🧬 变异战斗技能';
+            mutationSkillsContainer.appendChild(header);
+            
+            // 读取技能池以获取自定义技能信息
+            const skillPool = JSON.parse(localStorage.getItem('SKILL_POOL') || '[]');
+            
+            // 显示所有变异技能（可装备）
+            animal.mutations.skills.forEach(skillKey => {
+                // 先从预定义变异技能中查找
+                let skill = MUTATION_SKILLS[skillKey];
+                
+                // 如果不是预定义技能，从技能池中查找
+                if (!skill) {
+                    const customSkill = skillPool.find(s => s.key === skillKey);
+                    if (customSkill) {
+                        skill = {
+                            name: customSkill.name,
+                            icon: customSkill.icon,
+                            desc: customSkill.description || customSkill.desc || '无描述'
+                        };
+                    }
+                }
+                
+                if (!skill) {
+                    console.warn('变异技能未找到:', skillKey);
+                    return;
+                }
+                
+                // 检查是否已装备
+                const isEquipped = animal.combatSkills.equipped.includes(skillKey);
+                
+                const skillDiv = document.createElement('div');
+                skillDiv.className = `p-2 rounded cursor-pointer transition-colors border-2 border-pink-500/50 mb-1 flex items-center justify-between ${
+                    isEquipped ? 'bg-purple-800 opacity-50' : 'bg-gradient-to-r from-pink-900/40 to-purple-900/40 hover:from-pink-800/50 hover:to-purple-800/50'
+                }`;
+                skillDiv.innerHTML = `
+                    <div class="flex items-center space-x-2">
+                        <span class="text-lg">${skill.icon}</span>
+                        <div class="flex-1">
+                            <div class="text-xs font-bold text-pink-200">${skill.name}</div>
+                            <div class="text-xs text-gray-400">${skill.desc}</div>
+                        </div>
+                    </div>
+                    ${isEquipped ? '<span class="text-xs text-purple-300">已装备</span>' : '<span class="text-xs text-gray-500">点击装备</span>'}
+                `;
+                
+                // 如果未装备，允许点击装备
+                if (!isEquipped) {
+                    skillDiv.onclick = () => equipSkill(animal, skillKey);
+                }
+                
+                mutationSkillsContainer.appendChild(skillDiv);
+            });
+            
+            // 添加分隔线
+            const divider = document.createElement('div');
+            divider.className = 'border-t border-gray-600 my-2';
+            mutationSkillsContainer.appendChild(divider);
+            
+            // 添加战斗技能标题
+            const combatHeader = document.createElement('div');
+            combatHeader.className = 'text-xs text-gray-400 font-semibold mb-1';
+            combatHeader.innerHTML = '⚔️ 战斗技能';
+            mutationSkillsContainer.appendChild(combatHeader);
+        }
+
+        // 装备技能（支持战斗技能和变异技能）
+        function equipSkill(animal, skillKey) {
+            if (!animal || !skillKey) return;
+            
+            // 检查是否已装备
+            if (animal.combatSkills.equipped.includes(skillKey)) {
+                showStatus('该技能已装备', 1500);
+                return;
+            }
+            
+            // 找到第一个空槽位
+            const emptySlotIndex = animal.combatSkills.equipped.findIndex((s, i) => !s || s === null);
+            
+            // 获取技能名称（可能是战斗技能或变异技能）
+            const skillInfo = COMBAT_SKILLS[skillKey] || MUTATION_SKILLS[skillKey];
+            const skillName = skillInfo ? skillInfo.name : '未知技能';
+            
+            if (emptySlotIndex !== -1) {
+                animal.combatSkills.equipped[emptySlotIndex] = skillKey;
+                showStatus(`✅ 已装备技能：${skillName}`, 2000);
+            } else if (animal.combatSkills.equipped.length < 4) {
+                animal.combatSkills.equipped.push(skillKey);
+                showStatus(`✅ 已装备技能：${skillName}`, 2000);
+            } else {
+                showStatus('❌ 技能槽已满，请先卸下一个技能', 2000);
+                return;
+            }
+            
+            renderCombatSkills(animal);
+            renderMutationSkills(animal); // 刷新变异技能显示状态
+        }
+
+        // 卸下技能（支持战斗技能和变异技能）
+        function unequipSkill(animal, slotIndex) {
+            if (!animal || slotIndex < 0 || slotIndex >= 4) return;
+            
+            const skillKey = animal.combatSkills.equipped[slotIndex];
+            if (skillKey) {
+                const skillInfo = COMBAT_SKILLS[skillKey] || MUTATION_SKILLS[skillKey];
+                const skillName = skillInfo ? skillInfo.name : '未知技能';
+                
+                animal.combatSkills.equipped[slotIndex] = null;
+                showStatus(`🔓 已卸下技能：${skillName}`, 2000);
+                renderCombatSkills(animal);
+                renderMutationSkills(animal); // 刷新变异技能显示状态
+            }
+        }
+
+        // 打开技能管理模态框（预留功能）
+        function openSkillManagementModal() {
+            if (!selectedAnimalId) {
+                showStatus('⚠️ 请先选择一只动物', 2000);
+                return;
+            }
+            showStatus('💡 点击技能槽可卸下技能，点击下方列表可装备技能', 3000);
+        }
+
+        function switchPanel(panelName) {
+            if (isActionInProgress) {
+                showStatus("正在进行操作，无法切换面板。", 2000);
+                return;
+            }
+
+            ui.breedingPanel.classList.add('hidden');
+            ui.fusionPanel.classList.add('hidden');
+            ui.cultivationPanel.classList.add('hidden');
+            ui.mutationPanel.classList.add('hidden'); // 新增
+
+            // 如果我们正在从繁殖面板切换走，清空繁殖选择
+            if (currentActivePanel === 'breeding' && panelName !== 'breeding') {
+                gameState.selectedAnimalsForBreeding = [];
+            }
+            // 如果我们正在从融合面板切换走，清空融合选择
+            if (currentActivePanel === 'fusion' && panelName !== 'fusion') {
+                gameState.selectedAnimalsForFusion = [];
+            }
+
+            // 如果我们正在从养成面板切换走，记录当前选中的动物
+            if (currentActivePanel === 'cultivation' && panelName !== 'cultivation') {
+                lastSelectedAnimalIdInCultivation = selectedAnimalId;
+            }
+
+            // 隐藏所有面板
+            ui.breedingPanel.classList.add('hidden');
+            ui.fusionPanel.classList.add('hidden');
+            ui.cultivationPanel.classList.add('hidden');
+
+            // 显示目标面板并更新其内容
+            if (panelName === 'cultivation') {
+                ui.cultivationPanel.classList.remove('hidden');
+                renderAnimalList();
+                // 恢复养成面板的选择
+                showAnimalDetails(lastSelectedAnimalIdInCultivation);
+            } else if (panelName === 'breeding') {
+                ui.breedingPanel.classList.remove('hidden');
+                renderBreedingPanel();
+                showAnimalDetails(null); // 清空详情面板，等待在繁殖列表中选择
+            } else if (panelName === 'fusion') {
+                showAnimalDetails(null); // 清空详情面板
+                ui.fusionPanel.classList.remove('hidden');
+                renderFusionPanel();
+            } else if (panelName === 'mutation') { // 新增
+                showAnimalDetails(null);
+                ui.mutationPanel.classList.remove('hidden');
+                renderMutationPanel();
+            }
+
+            // 更新当前激活的面板
+            currentActivePanel = panelName;
+        }
+
+        function switchDetailTab(tabName) {
+            const activeClass = 'text-white border-b-2 border-cyan-400';
+            const inactiveClass = 'text-gray-400';
+
+            ui.panelAttributes.classList.add('hidden');
+            ui.panelAbilities.classList.add('hidden');
+            ui.panelItems.classList.add('hidden'); // 新增
+            ui.btnTabAttributes.className = `flex-1 text-sm py-1 text-center ${inactiveClass}`;
+            ui.btnTabAbilities.className = `flex-1 text-sm py-1 text-center ${inactiveClass}`;
+            ui.btnTabItems.className = `flex-1 text-sm py-1 text-center ${inactiveClass}`; // 新增
+
+            let tabButton = ui.btnTabAttributes;
+            let panel = ui.panelAttributes;
+            if (tabName === 'abilities') { 
+                tabButton = ui.btnTabAbilities; 
+                panel = ui.panelAbilities; 
+            } else if (tabName === 'items') { 
+                tabButton = ui.btnTabItems; 
+                panel = ui.panelItems; 
+                renderItemPanel(); // 新增：渲染道具面板
+            } 
+
+            tabButton.className = `flex-1 text-sm py-1 text-center ${activeClass}`;
+            panel.classList.remove('hidden');
+        }
+
+        function showStatus(message, duration = 2500) {
+            ui.statusMessage.textContent = message;
+            setTimeout(() => {
+                ui.statusMessage.textContent = '';
+            }, duration);
+        }
+
+        // 新增：更新资源UI的函数
+        function updateResourceUI() {
+            ui.food.textContent = Math.floor(gameState.food).toLocaleString();
+            ui.gems.textContent = gameState.gems;
+            ui.animalCount.textContent = `${gameState.animalCount} / ${gameState.maxAnimals}`;
+        }
+        // --- 渲染函数 ---
+
+        function renderAnimalList() {
+            ui.animalList.innerHTML = '';
+            if (gameState.animals.length === 0) {
+                ui.animalList.innerHTML = '<p class="text-sm text-gray-500 p-2">栖息地中还没有动物。</p>';
+                return;
+            }
+            gameState.animals.forEach(animal => {
+                const colorHex = '#' + animal.color.toString(16).padStart(6, '0');
+                const listItem = document.createElement('div');
+                let itemClass = 'roster-item flex items-center justify-between p-2 rounded-md hover:bg-gray-700 cursor-pointer transition-colors duration-150';
+                if (animal.id === selectedAnimalId) {
+                    itemClass += ' selected-detail';
+                }
+                listItem.className = itemClass;
+                listItem.innerHTML = `
+                    <div class="flex items-center space-x-2">
+                        <div style="background-color: ${colorHex};" class="w-4 h-4 rounded-full border border-gray-400"></div>
+                        <span class="font-medium text-indigo-300">${animal.name}</span>
+                        <span title="${animal.element}" class="w-5 text-center">${ELEMENT_ICONS[animal.element] || ELEMENT_ICONS['默认']}</span>
+                        <span class="text-xs text-gray-400">${animal.isPlaced ? ' (已放置)' : ''}</span>
+                    </div>
+                    <span class="text-sm text-yellow-400">Lv. ${animal.level}</span>`;
+                listItem.addEventListener('click', () => {
+                    selectedAnimalId = animal.id;
+                    showAnimalDetails(animal.id);
+                    renderAnimalList(); // 重绘列表以更新高亮
+                });
+                ui.animalList.appendChild(listItem);
+            });
+        }
+
+        function showAnimalDetails(animalId) {
+            selectedAnimalId = animalId; // 统一更新 selectedAnimalId
+            const animal = gameState.animals.find(a => a.id === animalId);
+            if (!animal) {
+                ui.animalDetailContent.classList.add('hidden');
+                ui.animalDetailPlaceholder.classList.remove('hidden');
+                selectedAnimalId = null; // 如果找不到动物，清空选择
+                return;
+            }
+
+            ui.animalDetailName.textContent = animal.name;
+            ui.animalDetailLevel.textContent = `Lv. ${animal.level}`;
+            ui.animalDetailElementTag.innerHTML = ELEMENT_ICONS[animal.element] || ELEMENT_ICONS['默认'];
+            ui.animalDetailElementTag.title = animal.element;
+            ui.animalDetailGender.textContent = animal.gender;
+            ui.animalDetailElementTag.className = `text-sm font-normal px-2 py-1 rounded ${ELEMENT_COLORS[animal.element] || ELEMENT_COLORS['默认']}`;
+            ui.animalDetailGender.className = `text-sm font-normal px-2 py-1 rounded ${animal.gender === '雄' ? 'bg-blue-500' : 'bg-pink-500'}`;
+
+            const expPercent = Math.min(100, (animal.experience / animal.experienceToNextLevel) * 100);
+            ui.animalDetailExpText.textContent = `${Math.floor(animal.experience)} / ${animal.experienceToNextLevel}`;
+            ui.animalDetailExpBar.style.width = `${expPercent}%`;
+
+            // 计算并显示详细的属性加成
+            const staminaBreakdown = calculateStaminaBreakdown(animal);
+            ui.animalDetailStamina.textContent = `${animal.stamina} / ${animal.maxStamina}`;
+            
+            // 添加点击事件显示/隐藏详细信息
+            ui.animalDetailStamina.parentElement.onclick = () => {
+                const breakdownDiv = document.getElementById('stamina-breakdown');
+                if (breakdownDiv.classList.contains('hidden')) {
+                    breakdownDiv.innerHTML = staminaBreakdown;
+                    breakdownDiv.classList.remove('hidden');
+                } else {
+                    breakdownDiv.classList.add('hidden');
+                }
+            };
+            
+            ui.animalDetailFavorability.textContent = animal.favorability;
+            ui.animalDetailPotential.textContent = animal.potential;
+            ui.animalDetailDevelopment.textContent = animal.developmentStage;
+
+            // 填充战斗能力数据
+            const combatBreakdown = calculateCombatBreakdown(animal);
+            ui.abilityCombatAtk.textContent = animal.abilities.combat.attack;
+            ui.abilityCombatDef.textContent = animal.abilities.combat.defense;
+            ui.abilityCombatAgi.textContent = animal.abilities.combat.agility;
+            
+            // 添加点击事件显示/隐藏战斗能力详细信息
+            ui.abilityCombatAtk.parentElement.onclick = () => toggleCombatBreakdown(combatBreakdown);
+            ui.abilityCombatDef.parentElement.onclick = () => toggleCombatBreakdown(combatBreakdown);
+            ui.abilityCombatAgi.parentElement.onclick = () => toggleCombatBreakdown(combatBreakdown);
+
+            // 渲染稀有度信息
+            renderRarityInfo(animal);
+
+            // 渲染战斗技能槽、变异技能和变异类型
+            renderCombatSkills(animal);
+            renderMutationSkills(animal);
+            renderMutationTypes(animal);
+
+            // 喂养按钮逻辑
+            const feedCost = animal.level * 10;
+            const canFeed = gameState.food >= feedCost;
+            ui.btnFeedAnimal.disabled = !canFeed;
+            ui.btnFeedAnimal.textContent = canFeed ? `喂养 (${feedCost} 食物)` : `食物不足 (${feedCost})`;
+            ui.btnFeedAnimal.onclick = () => feedAnimal(animal.id);
+
+            // 连升10级按钮逻辑
+            const cost10 = calculateLevelUpCost(animal, 10);
+            const canFeed10 = gameState.food >= cost10;
+            ui.btnFeedAnimal10.disabled = !canFeed10;
+            ui.btnFeedAnimal10.textContent = canFeed10 ? `连升10级 (${cost10})` : `食物不足 (${cost10})`;
+            ui.btnFeedAnimal10.onclick = () => feedAnimalPlus10(animal.id);
+
+            ui.btnRenameAnimal.style.display = 'inline-block'; // 确保按钮可见
+
+            ui.animalDetailContent.classList.remove('hidden');
+            ui.animalDetailPlaceholder.classList.add('hidden');
+
+            // 如果当前在道具页签，刷新道具列表以更新状态
+            if (!ui.panelItems.classList.contains('hidden')) {
+                renderItemPanel();
+            }
+        }
+
+        function renderSelectionList(listElement, selectionArray, onSelectCallback) {
+            listElement.innerHTML = '';
+            if (gameState.animals.length === 0) {
+                listElement.innerHTML = '<p class="text-sm text-gray-500 p-2">没有可用的动物。</p>';
+                return;
+            }
+            gameState.animals.forEach(animal => {
+                const isSelected = selectionArray.includes(animal.id);
+                const colorHex = '#' + animal.color.toString(16).padStart(6, '0');
+                let listItemClass = 'roster-item flex items-center justify-between p-2 rounded-md hover:bg-gray-700 cursor-pointer transition-colors duration-150';
+                if (isSelected) {
+                    listItemClass += ' selected-for-breeding';
+                }
+                const listItem = document.createElement('div');
+                listItem.className = listItemClass;
+                listItem.innerHTML = `
+                    <div class="flex-1">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center space-x-2">
+                                <div style="background-color: ${colorHex};" class="w-4 h-4 rounded-full border border-gray-400"></div>
+                                <span class="font-medium text-indigo-300">${animal.name}</span>
+                                <span title="${animal.element}" class="w-5 text-center">${ELEMENT_ICONS[animal.element] || ELEMENT_ICONS['默认']}</span>
+                                <span class="text-xs ${animal.gender === '雄' ? 'text-blue-400' : 'text-pink-400'}">${animal.gender === '雄' ? '♂' : '♀'}</span>
+                            </div>
+                            <span class="text-sm text-yellow-400">Lv. ${animal.level}</span>
+                        </div>
+                        <div class="text-xs text-gray-400 mt-1 pl-6">
+                            <span>${animal.developmentStage}</span> | <span>潜力: ${animal.potential}</span>
+                        </div>
+                    </div>
+                    `;
+                listItem.addEventListener('click', () => onSelectCallback(animal));
+                listElement.appendChild(listItem);
+            });
+        }
+
+        function renderBreedingPanel() {
+            // 渲染两个父框
+            const parentSlots = [ui.parentDisplay1, ui.parentDisplay2];
+            const placeholderTexts = ['点击下方列表<br>选择父代 1', '点击下方列表<br>选择父代 2'];
+
+            for (let i = 0; i < 2; i++) {
+                const parentId = gameState.selectedAnimalsForBreeding[i];
+                const parentAnimal = parentId ? gameState.animals.find(a => a.id === parentId) : null;
+                const slot = parentSlots[i];
+
+                if (parentAnimal) {
+                    const colorHex = '#' + parentAnimal.color.toString(16).padStart(6, '0');
+                    slot.innerHTML = `
+                        <div class="p-2 text-left w-full">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center space-x-2">
+                                    <div style="background-color: ${colorHex};" class="w-5 h-5 rounded-full border border-gray-400"></div>
+                                    <span class="font-bold text-indigo-300">${parentAnimal.name}</span>
+                                    <span class="text-sm ${parentAnimal.gender === '雄' ? 'text-blue-400' : 'text-pink-400'}">${parentAnimal.gender === '雄' ? '♂' : '♀'}</span>
+                                </div>
+                                <span class="text-md text-yellow-400">Lv. ${parentAnimal.level}</span>
+                            </div>
+                            <div class="text-xs text-gray-400 mt-2 pl-7">
+                                <span>${parentAnimal.developmentStage}</span> | <span>潜力: ${parentAnimal.potential}</span>
+                            </div>
+                        </div>`;
+                    slot.classList.remove('border-dashed', 'items-center', 'justify-center');
+                } else {
+                    slot.innerHTML = placeholderTexts[i];
+                    slot.classList.add('border-dashed', 'items-center', 'justify-center');
+                }
+            }
+
+            // 渲染下方可选列表
+            renderSelectionList(ui.breedingAnimalList, gameState.selectedAnimalsForBreeding, toggleBreedingSelection);
+            updateBreedingButton(); // 统一更新按钮状态
+        }
+
+        function clearParentSelection(index) {
+            if (gameState.selectedAnimalsForBreeding[index]) {
+                gameState.selectedAnimalsForBreeding.splice(index, 1);
+                showStatus('已清空一个父代选择。', 1500);
+                renderBreedingPanel();
+            }
+        }
+
+        function renderFusionPanel() {
+            // 渲染两个材料框
+            const materialSlots = [ui.fusionMaterialDisplay1, ui.fusionMaterialDisplay2];
+            const placeholderTexts = ['点击下方列表<br>选择材料 1', '点击下方列表<br>选择材料 2'];
+
+            for (let i = 0; i < 2; i++) {
+                const materialId = gameState.selectedAnimalsForFusion[i];
+                const materialAnimal = materialId ? gameState.animals.find(a => a.id === materialId) : null;
+                const slot = materialSlots[i];
+
+                if (materialAnimal) {
+                    const colorHex = '#' + materialAnimal.color.toString(16).padStart(6, '0');
+                    slot.innerHTML = `
+                        <div class="p-2 text-left w-full">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center space-x-2">
+                                    <div style="background-color: ${colorHex};" class="w-5 h-5 rounded-full border border-gray-400"></div>
+                                    <span class="font-bold text-indigo-300">${materialAnimal.name}</span>
+                                    <span class="text-sm ${materialAnimal.gender === '雄' ? 'text-blue-400' : 'text-pink-400'}">${materialAnimal.gender === '雄' ? '♂' : '♀'}</span>
+                                </div>
+                                <span class="text-md text-yellow-400">Lv. ${materialAnimal.level}</span>
+                            </div>
+                            <div class="text-xs text-gray-400 mt-2 pl-7">
+                                <span>${materialAnimal.developmentStage}</span> | <span>潜力: ${materialAnimal.potential}</span>
+                            </div>
+                        </div>`;
+                    slot.classList.remove('border-dashed', 'items-center', 'justify-center');
+                } else {
+                    slot.innerHTML = placeholderTexts[i];
+                    slot.classList.add('border-dashed', 'items-center', 'justify-center');
+                }
+            }
+
+            // 渲染下方可选列表
+            renderSelectionList(ui.fusionAnimalList, gameState.selectedAnimalsForFusion, toggleFusionSelection);
+            updateFusionButton();
+        }
+
+        function clearFusionMaterialSelection(index) {
+            if (gameState.selectedAnimalsForFusion[index]) {
+                gameState.selectedAnimalsForFusion.splice(index, 1);
+                showStatus('已清空一个材料选择。', 1500);
+                renderFusionPanel();
+            }
+        }
+
+        // --- 变异系统逻辑 ---
+
+        function renderMutationPanel() {
+            ui.mutationAnimalList.innerHTML = '';
+            ui.mutationResultLog.textContent = '';
+            
+            const eligibleAnimals = gameState.animals.filter(a => a.level > 10);
+
+            if (eligibleAnimals.length === 0) {
+                ui.mutationAnimalList.innerHTML = '<p class="text-gray-500 text-center p-4">没有等级 > 10 的动物。</p>';
+                return;
+            }
+
+            eligibleAnimals.forEach(animal => {
+                const div = document.createElement('div');
+                div.className = 'p-2 bg-gray-700 rounded cursor-pointer hover:bg-gray-600 flex justify-between items-center';
+                if (selectedAnimalId === animal.id) div.classList.add('border', 'border-pink-500');
+                
+                // 显示当前变异状态
+                const mutationDisplay = getMutationDisplay(animal);
+                
+                div.innerHTML = `
+                    <div>
+                        <div>${animal.name} ${mutationDisplay}</div>
+                        <div class="text-xs text-gray-400">变异: ${animal.mutationCount || 0}次</div>
+                    </div>
+                    <span class="text-xs text-yellow-400">Lv.${animal.level}</span>
+                `;
+                div.onclick = () => selectMutationTarget(animal);
+                ui.mutationAnimalList.appendChild(div);
+            });
+        }
+
+        function getMutationDisplay(animal) {
+            if (!animal.mutations) return '';
+            let display = '';
+            if (animal.mutations.tier2) {
+                display += MUTATION_CONFIG.tier2[animal.mutations.tier2].icon;
+            }
+            if (animal.mutations.tier1) {
+                const config = getMutationConfig(animal.mutations.tier1);
+                if (config) display += config.icon;
+            }
+            return display;
+        }
+
+        function getMutationConfig(mutationName) {
+            for (const tier of Object.values(MUTATION_CONFIG.tier1)) {
+                if (tier[mutationName]) return tier[mutationName];
+            }
+            return null;
+        }
+
+        function selectMutationTarget(animal) {
+            selectedAnimalId = animal.id;
+            showAnimalDetails(animal.id);
+            renderMutationPanel();
+
+            const colorHex = '#' + animal.color.toString(16).padStart(6, '0');
+            const mutationDisplay = getMutationDisplay(animal);
+            
+            ui.mutationTargetDisplay.innerHTML = `
+                <div class="flex flex-col items-center">
+                    <div style="background-color: ${colorHex};" class="w-12 h-12 rounded-full border-2 border-pink-400 mb-2"></div>
+                    <div class="font-bold text-lg">${animal.name} ${mutationDisplay}</div>
+                    <div class="text-xs text-gray-400">变异次数: ${animal.mutationCount || 0}</div>
+                </div>
+            `;
+            ui.mutationTargetDisplay.classList.remove('border-dashed');
+
+            ui.mutationStats.classList.remove('hidden');
+            
+            const serumCount = (gameState.inventory && gameState.inventory['mutation_serum']) || 0;
+            ui.mutCost.innerHTML = `💉 变异血清 x1 <span class="text-xs text-gray-400">(拥有: ${serumCount})</span>`;
+            const hasSerum = serumCount >= 1;
+            ui.mutCost.className = hasSerum ? 'font-mono text-green-400' : 'font-mono text-red-400';
+
+            ui.btnExecuteMutation.disabled = isActionInProgress || !hasSerum;
+            ui.btnExecuteMutation.textContent = hasSerum ? "开始一级变异" : "缺少变异血清";
+        }
+
+        function executeMutation() {
+            if (!selectedAnimalId || isActionInProgress) return;
+            const animal = gameState.animals.find(a => a.id === selectedAnimalId);
+            if (!animal) return;
+            if ((gameState.inventory['mutation_serum'] || 0) < 1) return showStatus("❌ 缺少变异血清！", 2000);
+
+            // 初始化变异对象
+            if (!animal.mutations) {
+                animal.mutations = { tier1: null, tier2: null, skills: [] };
+            }
+
+            isActionInProgress = true;
+            ui.btnExecuteMutation.disabled = true;
+            ui.btnExecuteMutation.textContent = "变异中...";
+            ui.mutationResultLog.textContent = "正在注入变异因子...\n";
+
+            gameState.inventory['mutation_serum']--;
+            updateResourceUI();
+
+            setTimeout(() => {
+                const result = performTier1Mutation(animal, animal.mutations?.tier1, animal.mutations?.tier1 ? getMutationConfig(animal.mutations.tier1)?.rarity : null);
+                
+                ui.mutationResultLog.textContent += result.log;
+                ui.mutationResultIcon.textContent = result.success ? "🧬" : "💥";
+                ui.mutationResultTitle.textContent = "一级变异" + (result.success ? "成功！" : "失败");
+                ui.mutationResultTitle.className = result.success ? "text-2xl font-bold text-green-400" : "text-2xl font-bold text-red-500";
+                ui.mutationResultContent.innerHTML = result.changeDesc;
+
+                // 重置状态并刷新UI（必须在setTimeout内部）
+                isActionInProgress = false;
+                selectMutationTarget(animal);
+                showAnimalDetails(animal.id);
+                updateResourceUI();
+                
+                ui.mutationResultModal.classList.remove('hidden');
+            }, 2000);
+        }
+        
+        function executeTier2Mutation() {
+            if (!selectedAnimalId || isActionInProgress) return;
+            const animal = gameState.animals.find(a => a.id === selectedAnimalId);
+            if (!animal) return;
+            if ((gameState.inventory['mutation_serum'] || 0) < 1) return showStatus("❌ 缺少变异血清！", 2000);
+            
+            isActionInProgress = true;
+            const btn = document.getElementById('btn-execute-tier2-mutation');
+            const log = document.getElementById('mutation-tier2-result-log');
+            btn.disabled = true;
+            btn.textContent = "变异中...";
+            log.textContent = "正在注入二级变异因子...\n";
+            
+            gameState.inventory['mutation_serum']--;
+            
+            setTimeout(() => {
+                const result = performTier2Mutation(animal);
+                
+                log.textContent += result.log;
+                ui.mutationResultIcon.textContent = result.success ? "🧬" : "💥";
+                ui.mutationResultTitle.textContent = "二级变异" + (result.success ? "成功！" : "失败");
+                ui.mutationResultTitle.className = result.success ? "text-2xl font-bold text-green-400" : "text-2xl font-bold text-red-500";
+                ui.mutationResultContent.innerHTML = result.changeDesc;
+                
+                isActionInProgress = false;
+                selectTier2MutationTarget(animal);
+                showAnimalDetails(animal.id);
+                updateResourceUI();
+                ui.mutationResultModal.classList.remove('hidden');
+            }, 2000);
+        }
+                
+
+        function switchMutationTab(tab) {
+            const tier1Content = document.getElementById('mutation-tier1-content');
+            const tier2Content = document.getElementById('mutation-tier2-content');
+            const btn1 = document.getElementById('btn-mutation-tier1');
+            const btn2 = document.getElementById('btn-mutation-tier2');
+            
+            if (tab === 'tier1') {
+                tier1Content.classList.remove('hidden');
+                tier2Content.classList.add('hidden');
+                btn1.className = 'px-4 py-2 rounded-lg font-semibold transition-all bg-gradient-to-r from-pink-600 to-pink-500 text-white shadow-lg hover:shadow-pink-500/50';
+                btn2.className = 'px-4 py-2 rounded-lg font-semibold transition-all bg-gray-700 text-gray-300 hover:bg-gray-600';
+                renderMutationPanel();
+            } else {
+                tier1Content.classList.add('hidden');
+                tier2Content.classList.remove('hidden');
+                btn1.className = 'px-4 py-2 rounded-lg font-semibold transition-all bg-gray-700 text-gray-300 hover:bg-gray-600';
+                btn2.className = 'px-4 py-2 rounded-lg font-semibold transition-all bg-gradient-to-r from-yellow-600 to-orange-600 text-white shadow-lg hover:shadow-yellow-500/50';
+                renderTier2MutationPanel();
+            }
+        }
+
+        function renderTier2MutationPanel() {
+            const list = document.getElementById('mutation-tier2-animal-list');
+            const log = document.getElementById('mutation-tier2-result-log');
+            list.innerHTML = '';
+            log.textContent = '';
+            
+            const eligibleAnimals = gameState.animals.filter(a => a.level > 10 && a.mutations && a.mutations.tier1);
+            
+            if (eligibleAnimals.length === 0) {
+                list.innerHTML = '<p class="text-gray-500 text-center p-4">没有已进行一级变异的动物。</p>';
+                return;
+            }
+            
+            eligibleAnimals.forEach(animal => {
+                const div = document.createElement('div');
+                div.className = 'p-2 bg-gray-700 rounded cursor-pointer hover:bg-gray-600 flex justify-between items-center';
+                if (selectedAnimalId === animal.id) div.classList.add('border', 'border-yellow-500');
+                
+                const mutationDisplay = getMutationDisplay(animal);
+                div.innerHTML = `
+                    <div>
+                        <div>${animal.name} ${mutationDisplay}</div>
+                        <div class="text-xs text-gray-400">二级: ${animal.mutations.tier2 || '未变异'}</div>
+                    </div>
+                    <span class="text-xs text-yellow-400">Lv.${animal.level}</span>
+                `;
+                div.onclick = () => selectTier2MutationTarget(animal);
+                list.appendChild(div);
+            });
+        }
+
+        function selectTier2MutationTarget(animal) {
+            selectedAnimalId = animal.id;
+            showAnimalDetails(animal.id);
+            renderTier2MutationPanel();
+            
+            const colorHex = '#' + animal.color.toString(16).padStart(6, '0');
+            const mutationDisplay = getMutationDisplay(animal);
+            const targetDisplay = document.getElementById('mutation-tier2-target-display');
+            
+            targetDisplay.innerHTML = `
+                <div class="flex flex-col items-center">
+                    <div style="background-color: ${colorHex};" class="w-12 h-12 rounded-full border-2 border-yellow-400 mb-2"></div>
+                    <div class="font-bold text-lg">${animal.name} ${mutationDisplay}</div>
+                    <div class="text-xs text-gray-400">当前二级: ${animal.mutations.tier2 || '无'}</div>
+                </div>
+            `;
+            targetDisplay.classList.remove('border-dashed');
+            
+            const stats = document.getElementById('mutation-tier2-stats');
+            stats.classList.remove('hidden');
+            
+            const serumCount = (gameState.inventory && gameState.inventory['mutation_serum']) || 0;
+            document.getElementById('mut-tier2-cost').innerHTML = `💉 变异血清 x1 <span class="text-xs text-gray-400">(拥有: ${serumCount})</span>`;
+            
+            const btn = document.getElementById('btn-execute-tier2-mutation');
+            const hasSerum = serumCount >= 1;
+            btn.disabled = isActionInProgress || !hasSerum;
+            btn.textContent = hasSerum ? "开始二级变异" : "缺少变异血清";
+        }
+
+        function executeTier2Mutation() {
+            if (!selectedAnimalId || isActionInProgress) return;
+            const animal = gameState.animals.find(a => a.id === selectedAnimalId);
+            if (!animal) return;
+            if ((gameState.inventory['mutation_serum'] || 0) < 1) return showStatus("❌ 缺少变异血清！", 2000);
+            
+            isActionInProgress = true;
+            const btn = document.getElementById('btn-execute-tier2-mutation');
+            const log = document.getElementById('mutation-tier2-result-log');
+            btn.disabled = true;
+            btn.textContent = "变异中...";
+            log.textContent = "正在注入二级变异因子...\n";
+            
+            gameState.inventory['mutation_serum']--;
+            
+            setTimeout(() => {
+                const result = performTier2Mutation(animal);
+                
+                log.textContent += result.log;
+                ui.mutationResultIcon.textContent = result.success ? "🧬" : "💥";
+                ui.mutationResultTitle.textContent = result.success ? "二级变异成功！" : "二级变异失败";
+                ui.mutationResultTitle.className = result.success ? "text-2xl font-bold text-green-400" : "text-2xl font-bold text-red-500";
+                ui.mutationResultContent.innerHTML = result.changeDesc;
+                
+                isActionInProgress = false;
+                btn.textContent = "开始二级变异";
+                selectTier2MutationTarget(animal);
+                showAnimalDetails(animal.id);
+                updateResourceUI();
+                ui.mutationResultModal.classList.remove('hidden');
+            }, 2000);
+        }
+
+        function performTier1Mutation(animal, currentMutation, currentRarity) {
+            let targetRarity, mutationName, config;
+            
+            if (!currentMutation) {
+                // 首次变异
+                const roll = Math.random() * 100;
+                if (roll < 80) {
+                    targetRarity = 'basic';
+                    const options = Object.keys(MUTATION_CONFIG.tier1.basic);
+                    mutationName = options[Math.floor(Math.random() * options.length)];
+                } else if (roll < 98) {
+                    targetRarity = 'elite';
+                    const options = Object.keys(MUTATION_CONFIG.tier1.elite);
+                    mutationName = options[Math.floor(Math.random() * options.length)];
+                } else {
+                    targetRarity = 'legendary';
+                    const options = Object.keys(MUTATION_CONFIG.tier1.legendary);
+                    mutationName = options[Math.floor(Math.random() * options.length)];
+                }
+            } else if (currentRarity === 'basic') {
+                // 从基础级变异
+                const roll = Math.random() * 100;
+                if (roll < 70) {
+                    // 同级转换
+                    targetRarity = 'basic';
+                    const options = Object.keys(MUTATION_CONFIG.tier1.basic).filter(m => m !== currentMutation);
+                    mutationName = options[Math.floor(Math.random() * options.length)];
+                } else if (roll < 95) {
+                    // 进阶到精英
+                    targetRarity = 'elite';
+                    const options = Object.keys(MUTATION_CONFIG.tier1.elite);
+                    mutationName = options[Math.floor(Math.random() * options.length)];
+                } else {
+                    // 越级到传说
+                    targetRarity = 'legendary';
+                    const options = Object.keys(MUTATION_CONFIG.tier1.legendary);
+                    mutationName = options[Math.floor(Math.random() * options.length)];
+                }
+            } else if (currentRarity === 'elite') {
+                // 从精英级变异
+                const roll = Math.random() * 100;
+                if (roll < 88) {
+                    // 同级转换
+                    targetRarity = 'elite';
+                    const options = Object.keys(MUTATION_CONFIG.tier1.elite).filter(m => m !== currentMutation);
+                    mutationName = options[Math.floor(Math.random() * options.length)];
+                } else {
+                    // 进阶到传说
+                    targetRarity = 'legendary';
+                    const options = Object.keys(MUTATION_CONFIG.tier1.legendary);
+                    mutationName = options[Math.floor(Math.random() * options.length)];
+                }
+            } else {
+                // 传说级只能同级转换
+                targetRarity = 'legendary';
+                const options = Object.keys(MUTATION_CONFIG.tier1.legendary).filter(m => m !== currentMutation);
+                mutationName = options[Math.floor(Math.random() * options.length)];
+            }
+            
+            config = MUTATION_CONFIG.tier1[targetRarity][mutationName];
+            
+            // 初始化变异历史数组
+            if (!animal.mutations.history) {
+                animal.mutations.history = [];
+            }
+            
+            // 应用变异
+            const oldMutation = animal.mutations.tier1;
+            const oldRarity = currentRarity;
+            
+            // 判断是否为稀有度提升
+            const isRarityUpgrade = oldMutation && getRarityLevel(targetRarity) > getRarityLevel(oldRarity);
+            
+            // 如果是进阶（稀有度提升），保留旧变异到历史，并保留旧技能
+            if (isRarityUpgrade) {
+                const oldConfig = getMutationConfig(oldMutation);
+                if (oldConfig && !animal.mutations.history.some(h => h.name === oldMutation)) {
+                    animal.mutations.history.push({
+                        name: oldMutation,
+                        rarity: oldRarity,
+                        icon: oldConfig.icon
+                    });
+                }
+                // 稀有度提升时，保留所有旧技能，不移除
+            } else if (oldMutation) {
+                // 如果是同级转换或降级，移除旧技能
+                const oldConfig = getMutationConfig(oldMutation);
+                if (oldConfig) {
+                    // 从变异技能列表中移除
+                    animal.mutations.skills = animal.mutations.skills.filter(s => !oldConfig.skills.includes(s));
+                    
+                    // 从装备槽中移除旧的变异技能
+                    if (animal.combatSkills && animal.combatSkills.equipped) {
+                        animal.combatSkills.equipped = animal.combatSkills.equipped.map(skillKey => {
+                            // 如果装备的是旧变异技能，则清空该槽位
+                            if (skillKey && oldConfig.skills.includes(skillKey)) {
+                                return null;
+                            }
+                            return skillKey;
+                        });
+                    }
+                }
+            }
+            
+            // 更新当前变异
+            animal.mutations.tier1 = mutationName;
+            
+            // 添加新技能
+            config.skills.forEach(skill => {
+                if (!animal.mutations.skills.includes(skill)) {
+                    animal.mutations.skills.push(skill);
+                }
+            });
+            
+            // 应用属性加成
+            applyMutationStats(animal, config.stats);
+            
+            // 增加变异次数
+            animal.mutationCount = (animal.mutationCount || 0) + 1;
+            
+            const rarityText = { basic: '基础', elite: '精英', legendary: '传说' }[targetRarity];
+            const isUpgrade = oldMutation && getRarityLevel(targetRarity) > getRarityLevel(oldRarity);
+            let log = `✅ 一级变异成功！\n[${rarityText}级] ${oldMutation || '无'} → ${mutationName}\n`;
+            if (isUpgrade) {
+                log += `🎉 稀有度提升！旧变异已保留到历史记录\n`;
+            }
+            log += `获得技能: ${config.skills.map(s => MUTATION_SKILLS[s].name).join(', ')}`;
+            
+            const changeDesc = `
+                <div class="space-y-2">
+                    <div class="flex justify-between items-center bg-gray-700 p-3 rounded">
+                        <span class="text-gray-400">变异类型</span>
+                        <span class="text-yellow-400 font-bold">${config.icon} ${mutationName}</span>
+                    </div>
+                    <div class="flex justify-between items-center bg-gray-700 p-3 rounded">
+                        <span class="text-gray-400">稀有度</span>
+                        <span class="text-purple-400 font-bold">${rarityText}级</span>
+                    </div>
+                    ${isUpgrade ? `
+                    <div class="bg-green-900/20 border border-green-500/40 p-3 rounded">
+                        <div class="text-green-400 mb-1">🎉 稀有度提升！</div>
+                        <div class="text-xs text-gray-400">旧变异 "${oldMutation}" 已保留到历史记录</div>
+                    </div>
+                    ` : ''}
+                    <div class="bg-gray-700 p-3 rounded">
+                        <div class="text-gray-400 mb-2">新增技能:</div>
+                        ${config.skills.map(s => `<div class="text-sm">${MUTATION_SKILLS[s].icon} ${MUTATION_SKILLS[s].name}</div>`).join('')}
+                    </div>
+                </div>
+            `;
+            
+            return { success: true, log, changeDesc };
+        }
+
+        function performTier2Mutation(animal) {
+            const roll = Math.random() * 100;
+            
+            if (roll > 60) {
+                return {
+                    success: false,
+                    log: '❌ 二级变异失败！基因序列不稳定。\n进入24小时冷却修养期。',
+                    changeDesc: '<p class="text-center text-gray-400">二级变异失败，动物需要休息。</p>'
+                };
+            }
+            
+            let mutationName;
+            const tierRoll = Math.random() * 100;
+            if (tierRoll < 40) {
+                mutationName = '阴';
+            } else if (tierRoll < 80) {
+                mutationName = '阳';
+            } else {
+                mutationName = '玄';
+            }
+            
+            const config = MUTATION_CONFIG.tier2[mutationName];
+            const oldTier2 = animal.mutations.tier2;
+            animal.mutations.tier2 = mutationName;
+            
+            applyMutationStats(animal, config.stats);
+            
+            let log = `✅ 二级变异成功！\n${oldTier2 || '无'} → ${mutationName}\n`;
+            log += `属性提升: ${Object.entries(config.stats).map(([k, v]) => `${k}+${v}`).join(', ')}`;
+            
+            const changeDesc = `
+                <div class="space-y-2">
+                    <div class="flex justify-between items-center bg-gray-700 p-3 rounded">
+                        <span class="text-gray-400">二级变异</span>
+                        <span class="text-yellow-400 font-bold">${config.icon} ${mutationName}</span>
+                    </div>
+                    <div class="bg-gray-700 p-3 rounded">
+                        <div class="text-gray-400 mb-2">属性加成:</div>
+                        ${Object.entries(config.stats).map(([k, v]) => `<div class="text-sm">${k}: +${v}</div>`).join('')}
+                    </div>
+                </div>
+            `;
+            
+            return { success: true, log, changeDesc };
+        }
+
+        function applyMutationStats(animal, stats) {
+            if (stats.attack) animal.abilities.combat.attack += stats.attack;
+            if (stats.defense) animal.abilities.combat.defense += stats.defense;
+            if (stats.agility) animal.abilities.combat.agility += stats.agility;
+            if (stats.stamina) {
+                animal.stamina += stats.stamina;
+                animal.maxStamina += stats.stamina;
+            }
+        }
+
+        function getRarityLevel(rarity) {
+            const levels = { basic: 1, elite: 2, legendary: 3 };
+            return levels[rarity] || 0;
+        }
+
+        // --- 逻辑处理函数 ---
+
+        function feedAnimal(animalId) {
+            const animal = gameState.animals.find(a => a.id === animalId);
+            if (!animal) return;
+            const cost = animal.level * 10;
+            if (gameState.food < cost) {
+                showStatus('❌ 食物不足，无法喂养。', 2000);
+                return;
+            }
+            gameState.food -= cost;
+            animal.experience += LEVEL_CONFIG.feedAmount;
+            showStatus(`🍖 喂养了 ${animal.name}，经验 +${LEVEL_CONFIG.feedAmount}!`, 1500);
+            
+            // 处理可能的连续升级
+            while (animal.experience >= animal.experienceToNextLevel) {
+                levelUpAnimal(animal);
+            }
+            
+            updateResourceUI();
+            showAnimalDetails(animal.id);
+        }
+
+        // 新增：计算升级成本
+        function calculateLevelUpCost(animal, levels) {
+            let totalCost = 0;
+            let tempLevel = animal.level;
+            let tempExp = animal.experience;
+            let tempExpToNext = animal.experienceToNextLevel;
+
+            for (let i = 0; i < levels; i++) {
+                const expNeeded = Math.max(0, tempExpToNext - tempExp);
+                const feedsNeeded = Math.ceil(expNeeded / LEVEL_CONFIG.feedAmount);
+                // 每次喂养成本 = 当前等级 * 10
+                totalCost += feedsNeeded * (tempLevel * 10);
+
+                // 模拟升级
+                tempLevel++;
+                // 溢出的经验
+                tempExp = (feedsNeeded * LEVEL_CONFIG.feedAmount) - expNeeded;
+                tempExpToNext = Math.floor(tempExpToNext * LEVEL_CONFIG.experienceMultiplier);
+            }
+            return totalCost;
+        }
+
+        // 新增：连升10级
+        function feedAnimalPlus10(animalId) {
+            const animal = gameState.animals.find(a => a.id === animalId);
+            if (!animal) return;
+
+            const totalCost = calculateLevelUpCost(animal, 10);
+            if (gameState.food < totalCost) {
+                showStatus(`❌ 食物不足，需要 ${totalCost} 食物。`, 2000);
+                return;
+            }
+
+            gameState.food -= totalCost;
+            for (let i = 0; i < 10; i++) {
+                levelUpAnimal(animal);
+            }
+            
+            showStatus(`🚀 ${animal.name} 连升10级！消耗了 ${totalCost} 食物。`, 3000);
+            updateResourceUI();
+            showAnimalDetails(animal.id);
+        }
+
+        // 新增：渲染道具面板
+        function renderItemPanel() {
+            const grid = document.getElementById('item-grid');
+            const emptyMsg = document.getElementById('items-empty-msg');
+            grid.innerHTML = '';
+            if (!gameState.inventory) gameState.inventory = {}; // 确保 inventory 存在
+            
+            const inventory = gameState.inventory || {};
+            let hasItems = false;
+
+            for (const [itemId, count] of Object.entries(inventory)) {
+                if (count > 0 && ITEMS[itemId]) {
+                    hasItems = true;
+                    const item = ITEMS[itemId];
+                    const el = document.createElement('div');
+                    el.className = 'bg-gray-700 p-2 rounded flex flex-col items-center cursor-pointer hover:bg-gray-600 transition-colors relative group';
+                    el.innerHTML = `
+                        <div class="text-2xl mb-1">${item.icon}</div>
+                        <div class="text-xs text-center font-bold">${item.name}</div>
+                        <div class="text-xs text-gray-400">x${count}</div>
+                        <div class="absolute bottom-full mb-2 hidden group-hover:block w-32 bg-black text-white text-xs rounded p-1 z-10 text-center shadow-lg">
+                            ${item.desc}
+                        </div>
+                    `;
+                    el.onclick = () => useItem(itemId);
+                    grid.appendChild(el);
+                }
+            }
+
+            if (emptyMsg) emptyMsg.style.display = hasItems ? 'none' : 'block';
+        }
+
+        // 新增：使用道具
+        function useItem(itemId) {
+            if (!selectedAnimalId) return showStatus('⚠️ 请先选择一只动物', 2000);
+            const animal = gameState.animals.find(a => a.id === selectedAnimalId);
+            if (!animal) return;
+
+            const item = ITEMS[itemId];
+            if (!item || !gameState.inventory[itemId] || gameState.inventory[itemId] <= 0) return;
+
+            if (item.type === 'exp') {
+                animal.experience += item.value;
+                showStatus(`🧪 使用了${item.name}，经验 +${item.value}`, 2000);
+                
+                // 处理可能的连续升级
+                while (animal.experience >= animal.experienceToNextLevel) {
+                    levelUpAnimal(animal);
+                }
+            } else if (item.type === 'stamina') {
+                if (animal.stamina >= animal.maxStamina) return showStatus('⚠️ 体力已满，无需使用。', 2000);
+                animal.stamina = Math.min(animal.maxStamina, animal.stamina + item.value);
+                showStatus(`⚡ 使用了${item.name}，体力恢复 +${item.value}`, 2000);
+            }
+
+            gameState.inventory[itemId]--;
+            renderItemPanel();
+            showAnimalDetails(animal.id); // 刷新界面
+        }
+
+        function levelUpAnimal(animal) {
+            // 确保经验值不会变成负数
+            const currentExp = animal.experience;
+            const expNeeded = animal.experienceToNextLevel;
+            
+            // 减去升级所需经验，保留溢出部分
+            animal.experience = Math.max(0, currentExp - expNeeded);
+            animal.level++;
+            animal.experienceToNextLevel = Math.floor(expNeeded * LEVEL_CONFIG.experienceMultiplier);
+            
+            const potential = animal.potential;
+            const multipliers = LEVEL_CONFIG.potentialMultipliers[potential] || { stamina: 1.0, combat: 1.0 };
+            const growth = LEVEL_CONFIG.baseGrowth;
+            const staminaGrowth = Math.ceil(growth.stamina * (multipliers.stamina || 1.0));
+            animal.stamina += staminaGrowth;
+            animal.maxStamina += staminaGrowth;
+            animal.abilities.combat.attack += Math.ceil(growth.attack * (multipliers.combat || 1.0));
+            animal.abilities.combat.defense += Math.ceil(growth.defense * (multipliers.combat || 1.0));
+            animal.abilities.combat.agility += Math.ceil(growth.agility * (multipliers.combat || 1.0));
+            
+            showStatus(`🎉 恭喜！${animal.name} 升级到了 Lv.${animal.level}！`, 4000);
+            
+            // 战斗技能解锁逻辑
+            animal.combatSkills = animal.combatSkills || { equipped: [], available: [] };
+            
+            // 检查模板技能解锁（优先级最高）
+            if (animal.templateKey) {
+                console.log(`[升级] ${animal.name} 升到 Lv.${animal.level}，templateKey:`, animal.templateKey);
+                checkTemplateSkillUnlock(animal);
+                console.log('[升级] 解锁后可用技能:', animal.combatSkills.available);
+            } else {
+                console.log(`[升级] ${animal.name} 没有 templateKey`);
+            }
+            
+            // 每5级解锁一个新技能（作为备用）
+            if (animal.level % 5 === 0 && animal.level <= 50) {
+                const allSkillKeys = Object.keys(COMBAT_SKILLS);
+                const unlockedSkills = animal.combatSkills.available || [];
+                const availableToUnlock = allSkillKeys.filter(key => !unlockedSkills.includes(key));
+                
+                if (availableToUnlock.length > 0) {
+                    const newSkill = availableToUnlock[Math.floor(Math.random() * availableToUnlock.length)];
+                    animal.combatSkills.available.push(newSkill);
+                    const skillInfo = COMBAT_SKILLS[newSkill];
+                    showStatus(`🔓 ${animal.name} 学会了新技能：${skillInfo.icon} ${skillInfo.name}！`, 5000);
+                }
+            }
+            
+            // 检查继承技能解锁
+            if (animal.mutations?.inheritedSkills) {
+                animal.mutations.inheritedSkills.forEach(inheritedSkill => {
+                    if (animal.level === inheritedSkill.unlockLevel && !animal.mutations.skills.includes(inheritedSkill.skillKey)) {
+                        // 解锁继承的技能
+                        animal.mutations.skills.push(inheritedSkill.skillKey);
+                        const skillInfo = MUTATION_SKILLS[inheritedSkill.skillKey];
+                        showStatus(`🧬 继承技能解锁！${animal.name} 学会了 ${skillInfo.icon} ${skillInfo.name}！`, 5000);
+                    }
+                });
+            }
+
+            renderAnimalList(); // 刷新列表显示等级
+        }
+
+        // 新增：检查模板技能解锁
+        function checkTemplateSkillUnlock(animal) {
+            // 读取动物模板池和技能池
+            const animalPool = JSON.parse(localStorage.getItem('ANIMAL_POOL') || '[]');
+            const skillPool = JSON.parse(localStorage.getItem('SKILL_POOL') || '[]');
+            
+            console.log('[技能解锁] 模板池:', animalPool.length, '技能池:', skillPool.length);
+            
+            // 查找动物的模板
+            const template = animalPool.find(t => t.key === animal.templateKey);
+            if (!template) {
+                console.warn('[技能解锁] 未找到模板:', animal.templateKey);
+                return;
+            }
+            
+            console.log('[技能解锁] 找到模板:', template.name, '配置技能数:', template.skills?.length || 0);
+            
+            if (!template.skills || template.skills.length === 0) {
+                console.log('[技能解锁] 模板没有配置技能');
+                return; // 没有模板或模板没有配置技能
+            }
+            
+            // 初始化模板技能解锁记录
+            if (!animal.templateSkillsUnlocked) {
+                animal.templateSkillsUnlocked = [];
+            }
+            
+            console.log('[技能解锁] 当前等级:', animal.level, '已解锁:', animal.templateSkillsUnlocked);
+            
+            // 检查是否有技能在当前等级解锁
+            template.skills.forEach(skillConfig => {
+                console.log('[技能解锁] 检查技能:', skillConfig.skillKey, '解锁等级:', skillConfig.unlockLevel);
+                
+                if (skillConfig.unlockLevel === animal.level) {
+                    console.log('[技能解锁] 等级匹配！');
+                    
+                    // 检查是否已经解锁过
+                    if (animal.templateSkillsUnlocked.includes(skillConfig.skillKey)) {
+                        console.log('[技能解锁] 已解锁，跳过');
+                        return; // 已解锁，跳过
+                    }
+                    
+                    // 查找技能信息
+                    const skill = skillPool.find(s => s.key === skillConfig.skillKey);
+                    if (!skill) {
+                        console.warn('[技能解锁] 技能不存在:', skillConfig.skillKey);
+                        return;
+                    }
+                    
+                    console.log('[技能解锁] 找到技能:', skill.name, '类别:', skill.category);
+                    
+                    // 解锁技能
+                    animal.templateSkillsUnlocked.push(skillConfig.skillKey);
+                    
+                    // 根据技能类别添加到对应的技能列表
+                    if (skill.category && skill.category.startsWith('mutation-')) {
+                        // 变异技能
+                        if (!animal.mutations) {
+                            animal.mutations = { tier1: null, tier2: null, skills: [], inheritedSkills: [] };
+                        }
+                        if (!animal.mutations.skills.includes(skillConfig.skillKey)) {
+                            animal.mutations.skills.push(skillConfig.skillKey);
+                        }
+                        
+                        // 将自定义技能添加到 MUTATION_SKILLS 以便渲染
+                        if (!MUTATION_SKILLS[skillConfig.skillKey]) {
+                            MUTATION_SKILLS[skillConfig.skillKey] = {
+                                name: skill.name,
+                                icon: skill.icon,
+                                desc: skill.description || skill.desc || '无描述'
+                            };
+                        }
+                        
+                        console.log('[技能解锁] 解锁变异技能:', skill.name);
+                        showStatus(`🧬 模板技能解锁！${animal.name} 学会了 ${skill.icon} ${skill.name}！`, 5000);
+                    } else {
+                        // 战斗技能
+                        if (!animal.combatSkills.available.includes(skillConfig.skillKey)) {
+                            animal.combatSkills.available.push(skillConfig.skillKey);
+                        }
+                        
+                        // 将自定义技能添加到 COMBAT_SKILLS 以便渲染
+                        if (!COMBAT_SKILLS[skillConfig.skillKey]) {
+                            COMBAT_SKILLS[skillConfig.skillKey] = {
+                                name: skill.name,
+                                icon: skill.icon,
+                                desc: skill.description || skill.desc || '无描述',
+                                type: skill.type,
+                                cooldown: skill.params?.cooldown || 0
+                            };
+                        }
+                        
+                        console.log('[技能解锁] 解锁战斗技能:', skill.name);
+                        showStatus(`🔓 模板技能解锁！${animal.name} 学会了 ${skill.icon} ${skill.name}！`, 5000);
+                    }
+                }
+            });
+            
+            console.log('[技能解锁] 解锁完成，当前可用技能:', animal.combatSkills.available);
+        }
+
+        function renameAnimal() {
+            if (!selectedAnimalId) return;
+            const animal = gameState.animals.find(a => a.id === selectedAnimalId);
+            if (!animal) return;
+
+            const newName = prompt(`为 "${animal.name}" 输入新名字:`, animal.name);
+
+            if (newName && newName.trim() !== '') {
+                animal.name = newName.trim();
+                showStatus(`名字已更新为 "${animal.name}"`, 2000);
+                // 刷新UI
+                showAnimalDetails(selectedAnimalId);
+                renderAnimalList();
+            } else if (newName !== null) { // 用户点击了确定但输入为空
+                showStatus('❌ 名字不能为空。', 2000);
+            }
+        }
+
+        function toggleBreedingSelection(animal) {
+            if (isActionInProgress) {
+                showStatus("正在繁殖中，无法更改选择。", 2000);
+                return;
+            }
+
+            const id = animal.id;
+            const index = gameState.selectedAnimalsForBreeding.indexOf(id);
+
+            if (index > -1) {
+                // 如果动物已被选中，则取消选择
+                gameState.selectedAnimalsForBreeding.splice(index, 1);
+                // 如果取消的是当前正在查看详情的动物，则尝试显示另一个父代，否则清空
+                if (selectedAnimalId === id) {
+                    const otherParentId = gameState.selectedAnimalsForBreeding[0] || null;
+                    showAnimalDetails(otherParentId);
+                }
+            } else {
+                if (gameState.selectedAnimalsForBreeding.length >= 2) {
+                    showStatus(`❌ 父母栏已满，请先清空一个位置。`, 2000);
+                    return;
+                }
+
+                // 检查性别冲突
+                if (gameState.selectedAnimalsForBreeding.length === 1) {
+                    const existingParent = gameState.animals.find(a => a.id === gameState.selectedAnimalsForBreeding[0]);
+                    if (animal.gender === existingParent.gender) {
+                        showStatus(`❌ 必须选择一只雄性和一只雌性进行繁殖。`, 2000);
+                        return;
+                    }
+                }
+
+                // 添加到第一个空位
+                gameState.selectedAnimalsForBreeding.push(id);
+            }
+
+            // 无论选择还是取消，都显示当前点击的动物详情
+            showAnimalDetails(animal.id);
+            renderBreedingPanel();
+        }
+
+        function toggleFusionSelection(animal) {
+            if (isActionInProgress) {
+                showStatus("正在融合中，无法更改选择。", 2000);
+                return;
+            }
+
+            const id = animal.id;
+            const index = gameState.selectedAnimalsForFusion.indexOf(id);
+
+            if (index > -1) {
+                // 如果动物已被选中，则取消选择
+                gameState.selectedAnimalsForFusion.splice(index, 1);
+                // 如果取消的是当前正在查看详情的动物，则尝试显示另一个材料，否则清空
+                if (selectedAnimalId === id) {
+                    const otherMaterialId = gameState.selectedAnimalsForFusion[0] || null;
+                    showAnimalDetails(otherMaterialId);
+                }
+            } else {
+                if (gameState.selectedAnimalsForFusion.length >= 2) {
+                    showStatus(`❌ 材料栏已满，请先清空一个位置。`, 2000);
+                    return;
+                }
+                // 添加到空位
+                gameState.selectedAnimalsForFusion.push(id);
+            }
+            showAnimalDetails(animal.id); // 显示当前点击的动物详情
+            renderFusionPanel();
+        }
+
+        function clearBreedingSelection() {
+            if (isActionInProgress) return;
+            gameState.selectedAnimalsForBreeding = [];
+            renderBreedingPanel();
+        }
+
+        function clearFusionSelection() {
+            if (isActionInProgress) return;
+            gameState.selectedAnimalsForFusion = [];
+            renderFusionPanel();
+        }
+
+        function updateBreedingButton() {
+            const cost = 100;
+            const parents = gameState.selectedAnimalsForBreeding.map(id => gameState.animals.find(a => a.id === id));
+            const hasTwoParents = parents.length === 2;
+            const isMaleFemalePair = hasTwoParents && parents[0].gender !== parents[1].gender;
+
+            const canBreed = !isActionInProgress && hasTwoParents && isMaleFemalePair && gameState.food >= cost && gameState.animalCount < gameState.maxAnimals;
+            ui.btnExecuteBreed.disabled = !canBreed;
+
+            if (gameState.animalCount >= gameState.maxAnimals) {
+                ui.btnExecuteBreed.textContent = '❌ 容量已满';
+            } else if (hasTwoParents && !isMaleFemalePair) {
+                ui.btnExecuteBreed.textContent = '❌ 需一雄一雌';
+            } else if (gameState.selectedAnimalsForBreeding.length < 2) {
+                ui.btnExecuteBreed.textContent = `选择父母 (${gameState.selectedAnimalsForBreeding.length}/2)`;
+            } else if (gameState.food < cost) {
+                ui.btnExecuteBreed.textContent = `食物不足 (${cost})`;
+            } else if (isActionInProgress) {
+                ui.btnExecuteBreed.textContent = '操作进行中...';
+            } else {
+                ui.btnExecuteBreed.textContent = `繁殖! (${cost} 食物)`;
+            }
+            updateResourceUI(); // 每次选择都可能影响按钮状态，顺便刷新资源
+        }
+
+        function updateFusionButton() {
+            const cost = 50;
+            const canFuse = !isActionInProgress && gameState.selectedAnimalsForFusion.length === 2 && gameState.food >= cost;
+            ui.btnExecuteFusion.disabled = !canFuse;
+            if (gameState.selectedAnimalsForFusion.length < 2) {
+                ui.btnExecuteFusion.textContent = `选择材料 (${gameState.selectedAnimalsForFusion.length}/2)`;
+            } else if (gameState.food < cost) {
+                ui.btnExecuteFusion.textContent = `食物不足 (${cost})`;
+            } else if (isActionInProgress) {
+                ui.btnExecuteFusion.textContent = '操作进行中...';
+            } else {
+                ui.btnExecuteFusion.textContent = `融合! (${cost} 食物)`;
+            }
+            updateResourceUI(); // 每次选择都可能影响按钮状态，顺便刷新资源
+        }
+
+        function createNewAnimal(color = 0xffffff, type = 'sphere') {
+            const animalId = crypto.randomUUID();
+            const nameIndex = Math.floor(Math.random() * ANIMAL_NAMES.length);
+            const animalData = {
+                id: animalId,
+                type: type,
+                name: `${ANIMAL_NAMES[nameIndex]}${gameState.animals.length + 1}`,
+                originalName: `${ANIMAL_NAMES[nameIndex]}${gameState.animals.length + 1}`,
+                color: color,
+                isWild: false,
+                isPlaced: false,
+                level: 1,
+                gender: Math.random() > 0.5 ? '雄' : '雌',
+                experience: 0,
+                experienceToNextLevel: LEVEL_CONFIG.baseExperience,
+                stamina: 70,
+                maxStamina: 70,
+                potential: '平庸',
+                favorability: 0,
+                element: '水',
+                developmentStage: '幼年期',
+                abilities: {
+                    combat: { attack: 10, defense: 5, agility: 8 }
+                },
+                isInjured: false,
+                injuryTimer: 0,
+                combatSkills: { equipped: [], available: [] },
+                mutations: { tier1: null, tier2: null, skills: [] }, // 初始化变异系统
+                mutationCount: 0 // 变异次数
+            };
+            gameState.animals.push(animalData);
+            gameState.animalCount++;
+        }
+
+        function breedAnimal() {
+            if (isActionInProgress) return;
+
+            const cost = 100;
+            const parents = gameState.selectedAnimalsForBreeding.map(id => gameState.animals.find(a => a.id === id)).filter(Boolean);
+            if (parents.length !== 2 || gameState.food < cost || gameState.animalCount >= gameState.maxAnimals) {
+                showStatus('❌ 不满足繁殖条件。', 2000);
+                return;
+            }
+
+            isActionInProgress = true;
+            gameState.food -= cost;
+            updateResourceUI();
+            updateBreedingButton();
+
+            // 显示进度条
+            ui.breedingProgressContainer.classList.remove('hidden');
+            let progress = 0;
+            const interval = setInterval(() => {
+                progress += 100 / (ACTION_DURATION / 100);
+                ui.breedingProgressBar.style.width = `${Math.min(progress, 100)}%`;
+            }, 100);
+
+            setTimeout(() => {
+                clearInterval(interval);
+                const [p1, p2] = parents;
+                const newColor = (p1.color & 0xfefefe) / 2 + (p2.color & 0xfefefe) / 2;
+                
+                // 创建子代
+                const offspring = createOffspringWithInheritance(p1, p2, newColor);
+                
+                showStatus(`🥚 繁殖成功！诞生了新的小动物！`, 3000);
+
+                // 重置状态
+                isActionInProgress = false;
+                gameState.selectedAnimalsForBreeding = [];
+                ui.breedingProgressContainer.classList.add('hidden');
+                ui.breedingProgressBar.style.width = '0%';
+                updateResourceUI(); // 更新食物和动物数量
+                renderBreedingPanel();
+            }, ACTION_DURATION);
+        }
+        
+        // 新增：创建带技能继承的子代
+        function createOffspringWithInheritance(parent1, parent2, color) {
+            const animalId = crypto.randomUUID();
+            const nameIndex = Math.floor(Math.random() * ANIMAL_NAMES.length);
+            
+            // 基础属性
+            const offspring = {
+                id: animalId,
+                type: 'sphere',
+                name: `${ANIMAL_NAMES[nameIndex]}${gameState.animals.length + 1}`,
+                originalName: `${ANIMAL_NAMES[nameIndex]}${gameState.animals.length + 1}`,
+                color: color,
+                isWild: false,
+                isPlaced: false,
+                level: 1,
+                gender: Math.random() > 0.5 ? '雄' : '雌',
+                experience: 0,
+                experienceToNextLevel: LEVEL_CONFIG.baseExperience,
+                stamina: 70,
+                maxStamina: 70,
+                potential: '平庸',
+                favorability: 0,
+                element: '水',
+                developmentStage: '幼年期',
+                abilities: {
+                    combat: { attack: 10, defense: 5, agility: 8 }
+                },
+                isInjured: false,
+                injuryTimer: 0,
+                combatSkills: { equipped: [], available: [] },
+                mutations: { tier1: null, tier2: null, skills: [], inheritedSkills: [] },
+                mutationCount: 0
+            };
+            
+            // 技能继承逻辑
+            const inheritedSkills = calculateSkillInheritance(parent1, parent2, offspring);
+            if (inheritedSkills.length > 0) {
+                offspring.mutations.inheritedSkills = inheritedSkills;
+                showStatus(`✨ 子代继承了 ${inheritedSkills.length} 个技能！`, 4000);
+            }
+            
+            gameState.animals.push(offspring);
+            gameState.animalCount++;
+            
+            return offspring;
+        }
+        
+        // 新增：计算技能继承
+        function calculateSkillInheritance(parent1, parent2, offspring) {
+            const inheritedSkills = [];
+            
+            // 获取父母的变异信息
+            const p1Mutation = parent1.mutations?.tier1;
+            const p2Mutation = parent2.mutations?.tier1;
+            
+            if (!p1Mutation && !p2Mutation) {
+                return []; // 父母都没有变异，无法继承
+            }
+            
+            const p1Config = p1Mutation ? getMutationConfig(p1Mutation) : null;
+            const p2Config = p2Mutation ? getMutationConfig(p2Mutation) : null;
+            const p1Rarity = p1Config?.rarity;
+            const p2Rarity = p2Config?.rarity;
+            
+            // 规则1: 父母其中一方是高稀有度变异个体
+            if ((p1Rarity && !p2Rarity) || (!p1Rarity && p2Rarity)) {
+                const mutatedParent = p1Rarity ? parent1 : parent2;
+                const mutatedConfig = p1Rarity ? p1Config : p2Config;
+                const mutatedRarity = p1Rarity || p2Rarity;
+                
+                // 子代需要达到对应等级才能使用
+                const unlockLevel = mutatedRarity === 'basic' ? 5 : (mutatedRarity === 'elite' ? 10 : 15);
+                
+                mutatedConfig.skills.forEach(skillKey => {
+                    inheritedSkills.push({
+                        skillKey: skillKey,
+                        unlockLevel: unlockLevel,
+                        source: 'single_parent',
+                        rarity: mutatedRarity
+                    });
+                });
+                
+                return inheritedSkills;
+            }
+            
+            // 规则2: 父母均为相同高稀有度变异个体
+            if (p1Rarity && p2Rarity && p1Rarity === p2Rarity && p1Mutation === p2Mutation) {
+                const rarity = p1Rarity;
+                const unlockLevel = rarity === 'basic' ? 5 : (rarity === 'elite' ? 10 : 15);
+                
+                // 可选择继承技能
+                const allParentSkills = [...new Set([...p1Config.skills, ...p2Config.skills])];
+                
+                // 基础级：选择1个，精英/传说级：选择2个
+                const maxInherit = rarity === 'basic' ? 1 : 2;
+                const selectedSkills = allParentSkills.slice(0, maxInherit);
+                
+                selectedSkills.forEach(skillKey => {
+                    inheritedSkills.push({
+                        skillKey: skillKey,
+                        unlockLevel: unlockLevel,
+                        source: 'both_parents_same',
+                        rarity: rarity
+                    });
+                });
+                
+                return inheritedSkills;
+            }
+            
+            // 规则3: 父母均为不同稀有度变异个体
+            if (p1Rarity && p2Rarity && p1Rarity !== p2Rarity) {
+                // 子代只能继承低稀有度的技能
+                const rarityLevels = { basic: 1, elite: 2, legendary: 3 };
+                const lowerRarity = rarityLevels[p1Rarity] < rarityLevels[p2Rarity] ? p1Rarity : p2Rarity;
+                const lowerParent = rarityLevels[p1Rarity] < rarityLevels[p2Rarity] ? parent1 : parent2;
+                const lowerConfig = rarityLevels[p1Rarity] < rarityLevels[p2Rarity] ? p1Config : p2Config;
+                
+                const unlockLevel = lowerRarity === 'basic' ? 5 : (lowerRarity === 'elite' ? 10 : 15);
+                
+                // 从父母双方的低稀有度技能中选择2个
+                const p1LowerSkills = p1Rarity === lowerRarity ? p1Config.skills : [];
+                const p2LowerSkills = p2Rarity === lowerRarity ? p2Config.skills : [];
+                const allLowerSkills = [...new Set([...p1LowerSkills, ...p2LowerSkills])];
+                
+                const selectedSkills = allLowerSkills.slice(0, 2);
+                
+                selectedSkills.forEach(skillKey => {
+                    inheritedSkills.push({
+                        skillKey: skillKey,
+                        unlockLevel: unlockLevel,
+                        source: 'both_parents_different',
+                        rarity: lowerRarity
+                    });
+                });
+                
+                return inheritedSkills;
+            }
+            
+            return inheritedSkills;
+        }
+
+        function fuseAnimals() {
+            if (isActionInProgress) return;
+
+            const cost = 50;
+            const parents = gameState.selectedAnimalsForFusion.map(id => gameState.animals.find(a => a.id === id)).filter(Boolean);
+            if (parents.length !== 2 || gameState.food < cost) {
+                showStatus('❌ 不满足融合条件。', 2000);
+                return;
+            }
+
+            isActionInProgress = true;
+            gameState.food -= cost;
+            updateResourceUI();
+            updateFusionButton();
+
+            // 显示进度条
+            ui.fusionProgressContainer.classList.remove('hidden');
+            let progress = 0;
+            const interval = setInterval(() => {
+                progress += 100 / (ACTION_DURATION / 100);
+                ui.fusionProgressBar.style.width = `${Math.min(progress, 100)}%`;
+            }, 100);
+
+            setTimeout(() => {
+                clearInterval(interval);
+                const [p1, p2] = parents;
+                const r = ((p1.color >> 16) + (p2.color >> 16)) / 2;
+                const g = (((p1.color >> 8) & 0xFF) + ((p2.color >> 8) & 0xFF)) / 2;
+                const b = ((p1.color & 0xFF) + (p2.color & 0xFF)) / 2;
+                const newColor = (Math.floor(r) << 16) | (Math.floor(g) << 8) | Math.floor(b);
+                
+                gameState.animals = gameState.animals.filter(a => a.id !== p1.id && a.id !== p2.id);
+                gameState.animalCount = gameState.animals.length;
+                createNewAnimal(newColor, 'cube');
+                showStatus(`🧬 融合成功! ${p1.name} 和 ${p2.name} 创造了新的变异生命!`, 4000);
+
+                isActionInProgress = false;
+                gameState.selectedAnimalsForFusion = [];
+                ui.fusionProgressContainer.classList.add('hidden');
+                ui.fusionProgressBar.style.width = '0%';
+                updateResourceUI();
+                renderFusionPanel();
+            }, ACTION_DURATION);
+        }
+
+        // 新增：强制重置游戏数据
+        function resetGameData() {
+            const isConfirmed = confirm("警告：此操作将删除所有游戏进度和动物数据，且无法恢复。您确定要重新开始游戏吗？");
+            if (isConfirmed) {
+                showStatus("正在清除数据...", 2000);
+                localStorage.clear();
+                setTimeout(() => {
+                    window.location.href = 'game3d.html';
+                }, 1000);
+            }
+        }
+    </script>
+    
+    <!-- 引入调试工具 -->
+    <script src="debug.js"></script>
+</body>
+</html>

@@ -1,0 +1,1924 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>动物设计器 - 电子盆栽</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+    <style>
+        body {
+            background: linear-gradient(135deg, #065f46 0%, #064e3b 100%);
+            min-height: 100vh;
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .animal-card {
+            transition: all 0.3s ease;
+        }
+        
+        .animal-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+        
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: bold;
+        }
+        
+        /* 系别颜色 */
+        .element-water { background: linear-gradient(135deg, #3b82f6, #1d4ed8); }
+        .element-fire { background: linear-gradient(135deg, #ef4444, #dc2626); }
+        .element-grass { background: linear-gradient(135deg, #22c55e, #16a34a); }
+        .element-wind { background: linear-gradient(135deg, #06b6d4, #0891b2); }
+        .element-electric { background: linear-gradient(135deg, #eab308, #ca8a04); }
+        .element-earth { background: linear-gradient(135deg, #a16207, #854d0e); }
+        
+        /* 稀有度颜色 */
+        .rarity-common { background: linear-gradient(135deg, #6b7280, #4b5563); }
+        .rarity-shiny { background: linear-gradient(135deg, #fbbf24, #f59e0b); }
+        .rarity-prismatic { background: linear-gradient(135deg, #ec4899, #8b5cf6, #3b82f6); }
+        .rarity-stellar { background: linear-gradient(135deg, #fef3c7, #fde68a, #fbbf24); color: #92400e; }
+        
+        .color-preview {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            border: 3px solid white;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        }
+        
+        #model-preview-canvas {
+            width: 100%;
+            height: 300px;
+            border-radius: 0.5rem;
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+        }
+        
+        .model-controls {
+            display: flex;
+            gap: 0.5rem;
+            justify-content: center;
+            margin-top: 0.5rem;
+        }
+        
+        .model-control-btn {
+            background: rgba(59, 130, 246, 0.2);
+            border: 1px solid rgba(59, 130, 246, 0.5);
+            color: #60a5fa;
+            padding: 0.25rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .model-control-btn:hover {
+            background: rgba(59, 130, 246, 0.3);
+            border-color: #60a5fa;
+        }
+        
+        .model-control-btn.active {
+            background: rgba(59, 130, 246, 0.5);
+            border-color: #3b82f6;
+            color: white;
+        }
+    </style>
+</head>
+<body class="p-6">
+    <div class="max-w-7xl mx-auto">
+        <!-- 标题 -->
+        <div class="text-center mb-8">
+            <h1 class="text-4xl font-bold text-white mb-2">🦁 动物设计器 🦁</h1>
+            <p class="text-green-200">设计和管理动物模板池</p>
+            <div class="mt-4 bg-green-900/50 border border-green-700 rounded-lg p-4 max-w-3xl mx-auto text-left">
+                <p class="text-sm text-green-200 font-bold mb-2">💡 动物生成机制：</p>
+                <div class="text-xs text-green-100">
+                    <div class="mb-2">• 游戏会从动物模板池中随机选择模板生成野生动物</div>
+                    <div class="mb-2">• 每个模板定义了动物的基础属性、系别、稀有度等</div>
+                    <div>• 生成的动物会在模板基础上添加随机变化</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- 左侧：动物设计表单 -->
+            <div class="lg:col-span-2 bg-gray-900/80 backdrop-blur-lg rounded-xl p-6 border border-gray-700">
+                <h2 class="text-2xl font-bold text-white mb-6">🎨 创建动物模板</h2>
+                
+                <form id="animal-form" class="space-y-4">
+                    <!-- 基础信息 -->
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">动物名称</label>
+                            <input type="text" id="animal-name" required
+                                class="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-green-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">颜色 (十六进制)</label>
+                            <div class="flex gap-2">
+                                <input type="color" id="animal-color" required
+                                    class="w-16 h-10 bg-gray-800 border border-gray-600 rounded-lg cursor-pointer">
+                                <input type="text" id="animal-color-hex" required pattern="^#[0-9A-Fa-f]{6}$"
+                                    class="flex-1 bg-gray-800 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-green-500"
+                                    placeholder="#FF5733">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 系别和稀有度 -->
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">系别</label>
+                            <select id="animal-element" required
+                                class="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-green-500">
+                                <option value="">选择系别</option>
+                                <option value="水系">💧 水系</option>
+                                <option value="火系">🔥 火系</option>
+                                <option value="草系">🌿 草系</option>
+                                <option value="风系">💨 风系</option>
+                                <option value="电系">⚡ 电系</option>
+                                <option value="土系">🪨 土系</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">稀有度</label>
+                            <select id="animal-rarity" required
+                                class="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-green-500">
+                                <option value="">选择稀有度</option>
+                                <option value="common">⚪ 普通</option>
+                                <option value="shiny">✨ 闪光</option>
+                                <option value="prismatic">🌈 幻彩</option>
+                                <option value="stellar">⭐ 星芒</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- 基础属性 -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-2">📊 基础属性</label>
+                        <div class="grid grid-cols-3 gap-4">
+                            <div>
+                                <label class="text-xs text-gray-400">初始等级</label>
+                                <input type="number" id="animal-level" min="1" max="100" value="1" required
+                                    class="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-green-500">
+                            </div>
+                            <div>
+                                <label class="text-xs text-gray-400">基础经验值</label>
+                                <input type="number" id="animal-base-exp" min="10" max="1000" value="100" required
+                                    class="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-green-500">
+                                <p class="text-xs text-gray-500 mt-1">Lv1→Lv2所需经验</p>
+                            </div>
+                            <div>
+                                <label class="text-xs text-gray-400">经验增长系数</label>
+                                <input type="number" id="animal-exp-growth" min="1.0" max="2.0" step="0.1" value="1.2" required
+                                    class="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-green-500">
+                                <p class="text-xs text-gray-500 mt-1">每级经验倍率</p>
+                            </div>
+                            <div>
+                                <label class="text-xs text-gray-400">生命值</label>
+                                <input type="number" id="animal-health" min="50" max="1000" value="100" required
+                                    class="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-green-500">
+                            </div>
+                            <div>
+                                <label class="text-xs text-gray-400">体力</label>
+                                <input type="number" id="animal-stamina" min="50" max="500" value="100" required
+                                    class="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-green-500">
+                            </div>
+                            <div>
+                                <label class="text-xs text-gray-400">好感度</label>
+                                <input type="number" id="animal-favorability" min="0" max="100" value="50" required
+                                    class="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-green-500">
+                            </div>
+                        </div>
+                        <p class="text-xs text-gray-400 mt-2">💡 升级经验公式：Lv N→N+1 = 基础经验 × (增长系数 ^ (N-1))</p>
+                    </div>
+
+                    <!-- 战斗能力 -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-2">⚔️ 战斗能力</label>
+                        <div class="grid grid-cols-3 gap-4">
+                            <div>
+                                <label class="text-xs text-gray-400">攻击</label>
+                                <input type="number" id="animal-attack" min="5" max="100" value="10" required
+                                    class="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-green-500">
+                            </div>
+                            <div>
+                                <label class="text-xs text-gray-400">防御</label>
+                                <input type="number" id="animal-defense" min="5" max="100" value="5" required
+                                    class="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-green-500">
+                            </div>
+                            <div>
+                                <label class="text-xs text-gray-400">敏捷</label>
+                                <input type="number" id="animal-agility" min="5" max="100" value="8" required
+                                    class="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-green-500">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 三种成长配置 -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-2">📈 成长配置 (每级增长)</label>
+                        <p class="text-xs text-gray-400 mb-3">💡 配置三种成长类型，在地图中生成时选择使用哪种</p>
+                        
+                        <!-- 平庸成长 -->
+                        <div class="bg-gray-800/50 rounded-lg p-3 border border-gray-600 mb-3">
+                            <div class="flex items-center gap-2 mb-2">
+                                <span class="text-sm font-bold text-gray-300">⭐ 平庸成长 (1.0x)</span>
+                            </div>
+                            <div class="grid grid-cols-3 gap-3">
+                                <div>
+                                    <label class="text-xs text-gray-400">生命值</label>
+                                    <input type="number" id="growth-mediocre-health" min="1" max="100" value="10" required
+                                        class="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1 text-white text-sm focus:outline-none focus:border-green-500">
+                                </div>
+                                <div>
+                                    <label class="text-xs text-gray-400">体力</label>
+                                    <input type="number" id="growth-mediocre-stamina" min="1" max="50" value="8" required
+                                        class="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1 text-white text-sm focus:outline-none focus:border-green-500">
+                                </div>
+                                <div>
+                                    <label class="text-xs text-gray-400">好感度</label>
+                                    <input type="number" id="growth-mediocre-favorability" min="1" max="10" value="3" required
+                                        class="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1 text-white text-sm focus:outline-none focus:border-green-500">
+                                </div>
+                                <div>
+                                    <label class="text-xs text-gray-400">攻击</label>
+                                    <input type="number" id="growth-mediocre-attack" min="1" max="10" value="2" required
+                                        class="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1 text-white text-sm focus:outline-none focus:border-green-500">
+                                </div>
+                                <div>
+                                    <label class="text-xs text-gray-400">防御</label>
+                                    <input type="number" id="growth-mediocre-defense" min="1" max="10" value="1" required
+                                        class="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1 text-white text-sm focus:outline-none focus:border-green-500">
+                                </div>
+                                <div>
+                                    <label class="text-xs text-gray-400">敏捷</label>
+                                    <input type="number" id="growth-mediocre-agility" min="1" max="10" value="1" required
+                                        class="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1 text-white text-sm focus:outline-none focus:border-green-500">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 超常成长 -->
+                        <div class="bg-gray-800/50 rounded-lg p-3 border border-gray-600 mb-3">
+                            <div class="flex items-center gap-2 mb-2">
+                                <span class="text-sm font-bold text-blue-300">⭐⭐ 超常成长 (1.5x)</span>
+                            </div>
+                            <div class="grid grid-cols-3 gap-3">
+                                <div>
+                                    <label class="text-xs text-gray-400">生命值</label>
+                                    <input type="number" id="growth-extraordinary-health" min="1" max="100" value="15" required
+                                        class="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1 text-white text-sm focus:outline-none focus:border-blue-500">
+                                </div>
+                                <div>
+                                    <label class="text-xs text-gray-400">体力</label>
+                                    <input type="number" id="growth-extraordinary-stamina" min="1" max="50" value="12" required
+                                        class="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1 text-white text-sm focus:outline-none focus:border-blue-500">
+                                </div>
+                                <div>
+                                    <label class="text-xs text-gray-400">好感度</label>
+                                    <input type="number" id="growth-extraordinary-favorability" min="1" max="10" value="5" required
+                                        class="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1 text-white text-sm focus:outline-none focus:border-blue-500">
+                                </div>
+                                <div>
+                                    <label class="text-xs text-gray-400">攻击</label>
+                                    <input type="number" id="growth-extraordinary-attack" min="1" max="10" value="3" required
+                                        class="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1 text-white text-sm focus:outline-none focus:border-blue-500">
+                                </div>
+                                <div>
+                                    <label class="text-xs text-gray-400">防御</label>
+                                    <input type="number" id="growth-extraordinary-defense" min="1" max="10" value="2" required
+                                        class="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1 text-white text-sm focus:outline-none focus:border-blue-500">
+                                </div>
+                                <div>
+                                    <label class="text-xs text-gray-400">敏捷</label>
+                                    <input type="number" id="growth-extraordinary-agility" min="1" max="10" value="2" required
+                                        class="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1 text-white text-sm focus:outline-none focus:border-blue-500">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 璀璨成长 -->
+                        <div class="bg-gray-800/50 rounded-lg p-3 border border-gray-600">
+                            <div class="flex items-center gap-2 mb-2">
+                                <span class="text-sm font-bold text-purple-300">⭐⭐⭐ 璀璨成长 (2.0x)</span>
+                            </div>
+                            <div class="grid grid-cols-3 gap-3">
+                                <div>
+                                    <label class="text-xs text-gray-400">生命值</label>
+                                    <input type="number" id="growth-brilliant-health" min="1" max="100" value="20" required
+                                        class="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1 text-white text-sm focus:outline-none focus:border-purple-500">
+                                </div>
+                                <div>
+                                    <label class="text-xs text-gray-400">体力</label>
+                                    <input type="number" id="growth-brilliant-stamina" min="1" max="50" value="16" required
+                                        class="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1 text-white text-sm focus:outline-none focus:border-purple-500">
+                                </div>
+                                <div>
+                                    <label class="text-xs text-gray-400">好感度</label>
+                                    <input type="number" id="growth-brilliant-favorability" min="1" max="10" value="7" required
+                                        class="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1 text-white text-sm focus:outline-none focus:border-purple-500">
+                                </div>
+                                <div>
+                                    <label class="text-xs text-gray-400">攻击</label>
+                                    <input type="number" id="growth-brilliant-attack" min="1" max="10" value="4" required
+                                        class="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1 text-white text-sm focus:outline-none focus:border-purple-500">
+                                </div>
+                                <div>
+                                    <label class="text-xs text-gray-400">防御</label>
+                                    <input type="number" id="growth-brilliant-defense" min="1" max="10" value="3" required
+                                        class="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1 text-white text-sm focus:outline-none focus:border-purple-500">
+                                </div>
+                                <div>
+                                    <label class="text-xs text-gray-400">敏捷</label>
+                                    <input type="number" id="growth-brilliant-agility" min="1" max="10" value="3" required
+                                        class="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1 text-white text-sm focus:outline-none focus:border-purple-500">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 特殊属性 -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-2">技能槽位数</label>
+                        <input type="number" id="animal-skill-slots" min="1" max="10" value="4" required
+                            class="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-green-500">
+                        <p class="text-xs text-gray-400 mt-1">可配置的技能数量</p>
+                    </div>
+
+                    <!-- 技能配置 -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-2">🎯 技能配置</label>
+                        <div class="bg-gray-800/50 rounded-lg p-4 border border-gray-600">
+                            <div class="flex justify-between items-center mb-3">
+                                <span class="text-sm text-gray-300">已配置技能 (<span id="skill-count-display">0</span>/<span id="skill-slots-display">4</span>)</span>
+                                <button type="button" id="add-skill-btn"
+                                    class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold py-1 px-3 rounded transition-colors">
+                                    + 添加技能
+                                </button>
+                            </div>
+                            <div id="skills-config-list" class="space-y-2">
+                                <div class="text-center text-gray-500 text-sm py-4">
+                                    点击"添加技能"从技能池中选择
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 描述 -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-2">动物描述</label>
+                        <textarea id="animal-desc" rows="2"
+                            class="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-green-500"
+                            placeholder="描述这个动物的特点..."></textarea>
+                    </div>
+
+                    <!-- 按钮 -->
+                    <div class="flex gap-4 pt-4">
+                        <button type="submit" id="submit-btn"
+                            class="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg transition-colors">
+                            <span id="submit-text">✨ 创建动物模板</span>
+                        </button>
+                        <button type="button" id="cancel-edit-btn" class="hidden bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-3 px-6 rounded-lg transition-colors">
+                            ❌ 取消编辑
+                        </button>
+                        <button type="button" id="clear-btn"
+                            class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-3 px-6 rounded-lg transition-colors">
+                            🔄 清空
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- 右侧：动物预览和列表 -->
+            <div class="space-y-6">
+                <!-- 3D模型预览 -->
+                <div class="bg-gray-900/80 backdrop-blur-lg rounded-xl p-6 border border-gray-700">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-xl font-bold text-white">🎨 3D模型预览</h3>
+                        <label for="model-file-input" class="bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold py-2 px-3 rounded-lg transition-colors cursor-pointer">
+                            📁 导入GLB
+                        </label>
+                        <input type="file" id="model-file-input" accept=".glb,.gltf" class="hidden">
+                    </div>
+                    <div id="model-preview-container" class="relative">
+                        <canvas id="model-preview-canvas"></canvas>
+                        <div class="model-controls">
+                            <button class="model-control-btn active" data-shape="sphere" title="球体">🔵 球体</button>
+                            <button class="model-control-btn" data-shape="cube" title="立方体">🟦 立方体</button>
+                            <button class="model-control-btn" data-shape="cone" title="锥体">🔺 锥体</button>
+                            <button class="model-control-btn" data-shape="torus" title="环体">🍩 环体</button>
+                            <button class="model-control-btn" data-shape="octahedron" title="八面体">💎 八面体</button>
+                            <button class="model-control-btn" data-shape="custom" title="自定义模型" id="custom-model-btn" style="display:none;">📦 自定义</button>
+                        </div>
+                        <div class="text-xs text-gray-400 text-center mt-2">
+                            拖动旋转 | 滚轮缩放 | 支持导入GLB/GLTF模型
+                        </div>
+                        <div id="model-info" class="text-xs text-green-400 text-center mt-1" style="display:none;"></div>
+                    </div>
+                </div>
+                
+                <!-- 动物属性预览 -->
+                <div class="bg-gray-900/80 backdrop-blur-lg rounded-xl p-6 border border-gray-700">
+                    <h3 class="text-xl font-bold text-white mb-4">📋 属性预览</h3>
+                    <div id="animal-preview" class="animal-card bg-gray-800 rounded-lg p-4 border-2 border-gray-600">
+                        <div class="text-center text-gray-500">
+                            <div class="text-4xl mb-2">❓</div>
+                            <div class="text-sm">填写表单查看预览</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 动物模板池 -->
+                <div class="bg-gray-900/80 backdrop-blur-lg rounded-xl p-6 border border-gray-700">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-xl font-bold text-white">🦁 动物模板池 (<span id="animal-count">0</span>)</h3>
+                        <div class="flex gap-2">
+                            <label for="import-file" 
+                                class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold py-2 px-4 rounded-lg transition-colors cursor-pointer">
+                                📤 导入
+                            </label>
+                            <input type="file" id="import-file" accept=".json" class="hidden">
+                            <button id="export-btn"
+                                class="bg-green-600 hover:bg-green-700 text-white text-sm font-bold py-2 px-4 rounded-lg transition-colors">
+                                📥 导出
+                            </button>
+                            <button id="apply-to-game-btn"
+                                class="bg-purple-600 hover:bg-purple-700 text-white text-sm font-bold py-2 px-4 rounded-lg transition-colors">
+                                🎮 应用
+                            </button>
+                        </div>
+                    </div>
+                    <div id="animals-list" class="space-y-3 max-h-96 overflow-y-auto">
+                        <div class="text-center text-gray-500 text-sm py-8">
+                            暂无动物模板
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 技能选择模态框 -->
+    <div id="skill-select-modal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+        <div class="bg-gray-900 rounded-xl p-6 max-w-2xl w-full mx-4 border border-gray-700 max-h-[80vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-bold text-white">从技能池选择技能</h3>
+                <button id="close-skill-modal" class="text-gray-400 hover:text-white text-2xl">×</button>
+            </div>
+            <div id="skill-pool-list" class="space-y-2">
+                <!-- 技能列表 -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 动物模板池存储
+        let animals = JSON.parse(localStorage.getItem('ANIMAL_POOL') || '[]');
+        // 技能池
+        let skillPool = JSON.parse(localStorage.getItem('SKILL_POOL') || '[]');
+        // 当前配置的技能
+        let configuredSkills = [];
+        // 当前编辑的动物索引
+        let editingIndex = -1;
+        
+        // 3D模型相关
+        let scene, camera, renderer, animalMesh, currentShape = 'sphere';
+        let isMouseDown = false;
+        let mouseX = 0, mouseY = 0;
+        let customModelData = null; // 存储自定义模型的Base64数据
+        let gltfLoader = null; // GLTF加载器
+
+        // DOM元素
+        const form = document.getElementById('animal-form');
+        const preview = document.getElementById('animal-preview');
+        const animalsList = document.getElementById('animals-list');
+        const clearBtn = document.getElementById('clear-btn');
+        const cancelEditBtn = document.getElementById('cancel-edit-btn');
+        const submitBtn = document.getElementById('submit-btn');
+        const submitText = document.getElementById('submit-text');
+        const exportBtn = document.getElementById('export-btn');
+        const colorInput = document.getElementById('animal-color');
+        const colorHexInput = document.getElementById('animal-color-hex');
+
+        // 初始化
+        function init() {
+            renderAnimalsList();
+            setupFormListeners();
+            updateAnimalCount();
+            syncColorInputs();
+            setupSkillModal();
+            updateSkillSlotsDisplay();
+            init3DPreview(); // 初始化3D预览
+        }
+        
+        // 初始化3D预览
+        function init3DPreview() {
+            const canvas = document.getElementById('model-preview-canvas');
+            const container = document.getElementById('model-preview-container');
+            
+            // 创建场景
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x0f172a);
+            
+            // 创建相机
+            camera = new THREE.PerspectiveCamera(75, canvas.clientWidth / 300, 0.1, 1000);
+            camera.position.z = 3;
+            
+            // 创建渲染器
+            renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
+            renderer.setSize(canvas.clientWidth, 300);
+            renderer.setPixelRatio(window.devicePixelRatio);
+            
+            // 添加光源
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+            scene.add(ambientLight);
+            
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            directionalLight.position.set(5, 5, 5);
+            scene.add(directionalLight);
+            
+            const directionalLight2 = new THREE.DirectionalLight(0xffffff, 0.4);
+            directionalLight2.position.set(-5, -5, -5);
+            scene.add(directionalLight2);
+            
+            // 初始化GLTFLoader（使用轮询确保加载完成）
+            const initGLTFLoader = () => {
+                if (typeof THREE !== 'undefined' && THREE.GLTFLoader) {
+                    gltfLoader = new THREE.GLTFLoader();
+                    console.log('✅ GLTFLoader已初始化');
+                } else {
+                    console.log('⏳ 等待GLTFLoader加载...');
+                    setTimeout(initGLTFLoader, 100);
+                }
+            };
+            initGLTFLoader();
+            
+            // 创建初始动物模型
+            createAnimalModel('#3b82f6', 'sphere');
+            
+            // 设置形状切换按钮
+            document.querySelectorAll('.model-control-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    document.querySelectorAll('.model-control-btn').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    currentShape = this.dataset.shape;
+                    const color = document.getElementById('animal-color-hex').value || '#3b82f6';
+                    if (currentShape === 'custom' && customModelData) {
+                        loadCustomModel(customModelData);
+                    } else {
+                        createAnimalModel(color, currentShape);
+                    }
+                });
+            });
+            
+            // 设置GLB文件导入
+            const modelFileInput = document.getElementById('model-file-input');
+            modelFileInput.addEventListener('change', handleModelFileUpload);
+            
+            // 鼠标交互
+            canvas.addEventListener('mousedown', (e) => {
+                isMouseDown = true;
+                mouseX = e.clientX;
+                mouseY = e.clientY;
+            });
+            
+            canvas.addEventListener('mousemove', (e) => {
+                if (!isMouseDown || !animalMesh) return;
+                
+                const deltaX = e.clientX - mouseX;
+                const deltaY = e.clientY - mouseY;
+                
+                animalMesh.rotation.y += deltaX * 0.01;
+                animalMesh.rotation.x += deltaY * 0.01;
+                
+                mouseX = e.clientX;
+                mouseY = e.clientY;
+            });
+            
+            canvas.addEventListener('mouseup', () => {
+                isMouseDown = false;
+            });
+            
+            canvas.addEventListener('mouseleave', () => {
+                isMouseDown = false;
+            });
+            
+            // 滚轮缩放
+            canvas.addEventListener('wheel', (e) => {
+                e.preventDefault();
+                camera.position.z += e.deltaY * 0.01;
+                camera.position.z = Math.max(1.5, Math.min(5, camera.position.z));
+            });
+            
+            // 窗口大小调整
+            window.addEventListener('resize', () => {
+                const width = canvas.clientWidth;
+                camera.aspect = width / 300;
+                camera.updateProjectionMatrix();
+                renderer.setSize(width, 300);
+            });
+            
+            // 动画循环
+            animate3D();
+        }
+        
+        // 处理GLB文件上传
+        function handleModelFileUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            console.log('📁 开始加载文件:', file.name);
+            
+            // 检查GLTFLoader是否已初始化
+            const tryLoadModel = () => {
+                if (!gltfLoader) {
+                    console.log('⏳ GLTFLoader未就绪，等待初始化...');
+                    setTimeout(tryLoadModel, 100);
+                    return;
+                }
+                
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    try {
+                        const arrayBuffer = e.target.result;
+                        console.log('📦 文件读取完成，大小:', arrayBuffer.byteLength, 'bytes');
+                        
+                        // 转换为Base64以便存储
+                        const base64 = arrayBufferToBase64(arrayBuffer);
+                        customModelData = base64;
+                        console.log('✅ Base64转换完成');
+                        
+                        // 加载模型
+                        loadCustomModel(base64, file.name);
+                        
+                        // 显示自定义模型按钮
+                        const customBtn = document.getElementById('custom-model-btn');
+                        customBtn.style.display = 'inline-block';
+                        
+                        // 自动切换到自定义模型
+                        document.querySelectorAll('.model-control-btn').forEach(b => b.classList.remove('active'));
+                        customBtn.classList.add('active');
+                        currentShape = 'custom';
+                        
+                    } catch (error) {
+                        console.error('❌ 文件处理失败:', error);
+                        alert('❌ 文件处理失败: ' + error.message);
+                    }
+                };
+                
+                reader.onerror = function(error) {
+                    console.error('❌ 文件读取失败:', error);
+                    alert('❌ 文件读取失败！');
+                };
+                
+                reader.readAsArrayBuffer(file);
+            };
+            
+            tryLoadModel();
+            
+            // 清空input以允许重复选择同一文件
+            event.target.value = '';
+        }
+        
+        // 加载自定义GLB模型
+        function loadCustomModel(base64Data, fileName = '自定义模型') {
+            if (!gltfLoader) {
+                console.error('❌ GLTFLoader未初始化');
+                alert('❌ GLTFLoader未初始化，请刷新页面重试');
+                return;
+            }
+            
+            console.log('🔄 开始解析GLB模型...');
+            
+            // 移除旧模型
+            if (animalMesh) {
+                scene.remove(animalMesh);
+                if (animalMesh.geometry) animalMesh.geometry.dispose();
+                if (animalMesh.material) {
+                    if (Array.isArray(animalMesh.material)) {
+                        animalMesh.material.forEach(m => m.dispose());
+                    } else {
+                        animalMesh.material.dispose();
+                    }
+                }
+                animalMesh = null;
+            }
+            
+            try {
+                // 将Base64转回ArrayBuffer
+                const arrayBuffer = base64ToArrayBuffer(base64Data);
+                console.log('📦 ArrayBuffer大小:', arrayBuffer.byteLength, 'bytes');
+                
+                // 使用GLTFLoader加载
+                gltfLoader.parse(arrayBuffer, '',
+                    function(gltf) {
+                        console.log('✅ GLTF解析成功');
+                        const model = gltf.scene;
+                        
+                        // 计算模型边界并调整大小
+                        const box = new THREE.Box3().setFromObject(model);
+                        const size = box.getSize(new THREE.Vector3());
+                        const maxDim = Math.max(size.x, size.y, size.z);
+                        
+                        console.log('📏 模型尺寸:', size.x.toFixed(2), size.y.toFixed(2), size.z.toFixed(2));
+                        
+                        if (maxDim > 0) {
+                            const scale = 2 / maxDim; // 缩放到合适大小
+                            model.scale.setScalar(scale);
+                            console.log('🔍 缩放比例:', scale.toFixed(3));
+                        }
+                        
+                        // 居中模型
+                        const center = box.getCenter(new THREE.Vector3());
+                        model.position.sub(center.multiplyScalar(model.scale.x));
+                        
+                        // 应用颜色（如果可能）
+                        const color = document.getElementById('animal-color-hex').value || '#3b82f6';
+                        applyColorToModel(model, color);
+                        
+                        // 添加到场景
+                        animalMesh = model;
+                        scene.add(animalMesh);
+                        
+                        // 调整相机位置以确保模型可见
+                        camera.position.z = 3;
+                        camera.lookAt(0, 0, 0);
+                        
+                        console.log('✅ GLB模型加载成功');
+                        
+                        // 显示成功信息
+                        const modelInfo = document.getElementById('model-info');
+                        modelInfo.textContent = `✅ 已加载: ${fileName}`;
+                        modelInfo.style.display = 'block';
+                        modelInfo.className = 'text-xs text-green-400 text-center mt-1';
+                        
+                    },
+                    function(error) {
+                        console.error('❌ 加载GLB模型失败:', error);
+                        alert('❌ 加载模型失败: ' + error.message + '\n\n请确保文件是有效的GLB/GLTF格式！');
+                        
+                        // 显示错误信息
+                        const modelInfo = document.getElementById('model-info');
+                        modelInfo.textContent = `❌ 加载失败: ${error.message}`;
+                        modelInfo.style.display = 'block';
+                        modelInfo.className = 'text-xs text-red-400 text-center mt-1';
+                        
+                        // 回退到默认形状
+                        currentShape = 'sphere';
+                        const color = document.getElementById('animal-color-hex').value || '#3b82f6';
+                        createAnimalModel(color, 'sphere');
+                    }
+                );
+            } catch (error) {
+                console.error('❌ 模型加载异常:', error);
+                alert('❌ 模型加载异常: ' + error.message);
+                
+                // 回退到默认形状
+                currentShape = 'sphere';
+                const color = document.getElementById('animal-color-hex').value || '#3b82f6';
+                createAnimalModel(color, 'sphere');
+            }
+        }
+        
+        // 应用颜色到模型
+        function applyColorToModel(model, colorHex) {
+            const color = new THREE.Color(colorHex);
+            model.traverse((child) => {
+                if (child.isMesh && child.material) {
+                    if (Array.isArray(child.material)) {
+                        child.material.forEach(mat => {
+                            if (mat.color) mat.color.set(color);
+                        });
+                    } else {
+                        if (child.material.color) {
+                            child.material.color.set(color);
+                        }
+                    }
+                }
+            });
+        }
+        
+        // ArrayBuffer转Base64
+        function arrayBufferToBase64(buffer) {
+            let binary = '';
+            const bytes = new Uint8Array(buffer);
+            const len = bytes.byteLength;
+            for (let i = 0; i < len; i++) {
+                binary += String.fromCharCode(bytes[i]);
+            }
+            return btoa(binary);
+        }
+        
+        // Base64转ArrayBuffer
+        function base64ToArrayBuffer(base64) {
+            const binaryString = atob(base64);
+            const len = binaryString.length;
+            const bytes = new Uint8Array(len);
+            for (let i = 0; i < len; i++) {
+                bytes[i] = binaryString.charCodeAt(i);
+            }
+            return bytes.buffer;
+        }
+        
+        // 创建动物3D模型
+        function createAnimalModel(colorHex, shape = 'sphere') {
+            // 如果是自定义模型，使用加载的模型
+            if (shape === 'custom' && customModelData) {
+                loadCustomModel(customModelData);
+                return;
+            }
+            
+            // 移除旧模型
+            if (animalMesh) {
+                scene.remove(animalMesh);
+                if (animalMesh.geometry) animalMesh.geometry.dispose();
+                if (animalMesh.material) {
+                    if (Array.isArray(animalMesh.material)) {
+                        animalMesh.material.forEach(m => m.dispose());
+                    } else {
+                        animalMesh.material.dispose();
+                    }
+                }
+            }
+            
+            // 创建几何体
+            let geometry;
+            switch(shape) {
+                case 'cube':
+                    geometry = new THREE.BoxGeometry(1.5, 1.5, 1.5);
+                    break;
+                case 'cone':
+                    geometry = new THREE.ConeGeometry(0.8, 1.8, 32);
+                    break;
+                case 'torus':
+                    geometry = new THREE.TorusGeometry(0.8, 0.3, 16, 100);
+                    break;
+                case 'octahedron':
+                    geometry = new THREE.OctahedronGeometry(1.2, 0);
+                    break;
+                case 'sphere':
+                default:
+                    geometry = new THREE.SphereGeometry(1, 32, 32);
+                    break;
+            }
+            
+            // 创建材质
+            const color = new THREE.Color(colorHex);
+            const material = new THREE.MeshPhongMaterial({
+                color: color,
+                shininess: 100,
+                specular: 0x444444,
+                emissive: color.clone().multiplyScalar(0.1)
+            });
+            
+            // 创建网格
+            animalMesh = new THREE.Mesh(geometry, material);
+            scene.add(animalMesh);
+        }
+        
+        // 3D动画循环
+        function animate3D() {
+            requestAnimationFrame(animate3D);
+            
+            // 自动旋转（当不拖动时）
+            if (!isMouseDown && animalMesh) {
+                animalMesh.rotation.y += 0.005;
+            }
+            
+            renderer.render(scene, camera);
+        }
+        
+        // 更新3D模型颜色
+        function update3DModelColor(colorHex) {
+            if (!animalMesh) return;
+            
+            if (currentShape === 'custom') {
+                // 自定义模型：遍历所有材质
+                applyColorToModel(animalMesh, colorHex);
+            } else {
+                // 基础几何体：直接设置材质颜色
+                if (animalMesh.material) {
+                    const color = new THREE.Color(colorHex);
+                    animalMesh.material.color.set(color);
+                    animalMesh.material.emissive.set(color.clone().multiplyScalar(0.1));
+                }
+            }
+        }
+
+        // 更新技能槽位显示
+        function updateSkillSlotsDisplay() {
+            const slots = parseInt(document.getElementById('animal-skill-slots').value) || 4;
+            document.getElementById('skill-slots-display').textContent = slots;
+        }
+
+        // 设置技能选择模态框
+        function setupSkillModal() {
+            const modal = document.getElementById('skill-select-modal');
+            const addSkillBtn = document.getElementById('add-skill-btn');
+            const closeBtn = document.getElementById('close-skill-modal');
+
+            addSkillBtn.onclick = () => {
+                const maxSlots = parseInt(document.getElementById('animal-skill-slots').value) || 4;
+                if (configuredSkills.length >= maxSlots) {
+                    alert(`最多只能配置${maxSlots}个技能！\n可以在"技能槽位数"中调整上限。`);
+                    return;
+                }
+                renderSkillPool();
+                modal.classList.remove('hidden');
+            };
+
+            closeBtn.onclick = () => modal.classList.add('hidden');
+            modal.onclick = (e) => {
+                if (e.target === modal) modal.classList.add('hidden');
+            };
+        }
+
+        // 渲染技能池列表
+        function renderSkillPool() {
+            const skillPoolList = document.getElementById('skill-pool-list');
+            
+            if (skillPool.length === 0) {
+                skillPoolList.innerHTML = `
+                    <div class="text-center text-gray-500 py-8">
+                        <p class="mb-2">技能池为空</p>
+                        <p class="text-sm">请先在技能设计器中创建技能</p>
+                    </div>
+                `;
+                return;
+            }
+
+            // 过滤已配置的技能
+            const configuredKeys = new Set(configuredSkills.map(s => s.skillKey));
+            const availableSkills = skillPool.filter(s => !configuredKeys.has(s.key));
+
+            if (availableSkills.length === 0) {
+                skillPoolList.innerHTML = `
+                    <div class="text-center text-gray-500 py-8">
+                        所有技能都已配置
+                    </div>
+                `;
+                return;
+            }
+
+            const typeIcons = {
+                'attack': '⚔️',
+                'defense': '🛡️',
+                'agility': '⚡',
+                'buff': '💪',
+                'debuff': '🔻',
+                'heal': '💚',
+                'passive': '🌟'
+            };
+
+            skillPoolList.innerHTML = availableSkills.map(skill => {
+                const typeIcon = typeIcons[skill.type] || '';
+                const typeName = getTypeName(skill.type);
+                
+                return `
+                    <div class="bg-gray-800 rounded-lg p-3 border border-gray-600 hover:border-blue-500 cursor-pointer transition-colors"
+                         onclick="selectSkill('${skill.key}')">
+                        <div class="flex items-start gap-3">
+                            <div class="text-2xl">${skill.icon}</div>
+                            <div class="flex-1">
+                                <div class="flex items-center gap-2 mb-1 flex-wrap">
+                                    <h5 class="text-sm font-bold text-white">${skill.name}</h5>
+                                    <span class="category-badge ${skill.category} text-xs">${getCategoryName(skill.category)}</span>
+                                    <span class="bg-blue-600/30 text-blue-300 px-2 py-0.5 rounded text-xs">${typeIcon} ${typeName}</span>
+                                </div>
+                                <p class="text-xs text-gray-400">${skill.desc}</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // 获取技能类型名称
+        function getTypeName(type) {
+            const names = {
+                'attack': '攻击',
+                'defense': '防御',
+                'agility': '敏捷',
+                'buff': '增益',
+                'debuff': '减益',
+                'heal': '治疗',
+                'passive': '被动'
+            };
+            return names[type] || type;
+        }
+
+        // 选择技能
+        function selectSkill(skillKey) {
+            const skill = skillPool.find(s => s.key === skillKey);
+            if (!skill) return;
+
+            // 添加到配置列表，默认等级1解锁
+            configuredSkills.push({
+                skillKey: skill.key,
+                unlockLevel: 1
+            });
+
+            renderConfiguredSkills();
+            document.getElementById('skill-select-modal').classList.add('hidden');
+        }
+
+        // 渲染已配置的技能
+        function renderConfiguredSkills() {
+            const list = document.getElementById('skills-config-list');
+            document.getElementById('skill-count-display').textContent = configuredSkills.length;
+
+            if (configuredSkills.length === 0) {
+                list.innerHTML = `
+                    <div class="text-center text-gray-500 text-sm py-4">
+                        点击"添加技能"从技能池中选择
+                    </div>
+                `;
+                return;
+            }
+
+            const typeIcons = {
+                'attack': '⚔️',
+                'defense': '🛡️',
+                'agility': '⚡',
+                'buff': '💪',
+                'debuff': '🔻',
+                'heal': '💚',
+                'passive': '🌟'
+            };
+
+            list.innerHTML = configuredSkills.map((config, index) => {
+                const skill = skillPool.find(s => s.key === config.skillKey);
+                if (!skill) return '';
+
+                const typeIcon = typeIcons[skill.type] || '';
+                const typeName = getTypeName(skill.type);
+                const effectName = getEffectName(skill.effect);
+                
+                // 生成技能描述
+                const skillDesc = skill.description || skill.desc || getEffectDescription(skill);
+
+                // 获取技能参数
+                const params = skill.params || {};
+                const paramTags = [];
+                
+                // CD和持续时间
+                if (params.cooldown > 0) {
+                    paramTags.push(`<span class="bg-red-600/30 text-red-300 px-2 py-0.5 rounded">CD: ${params.cooldown}回合</span>`);
+                }
+                if (params.duration > 0) {
+                    paramTags.push(`<span class="bg-yellow-600/30 text-yellow-300 px-2 py-0.5 rounded">持续: ${params.duration}回合</span>`);
+                }
+                if (params.count > 1) {
+                    paramTags.push(`<span class="bg-orange-600/30 text-orange-300 px-2 py-0.5 rounded">${params.count}次</span>`);
+                }
+                
+                // 伤害/效果加成
+                if (params.attackBonus !== undefined) {
+                    paramTags.push(`<span class="bg-green-600/30 text-green-300 px-2 py-0.5 rounded">攻击: ${params.attackBonus}×</span>`);
+                }
+                if (params.defenseBonus !== undefined) {
+                    paramTags.push(`<span class="bg-blue-600/30 text-blue-300 px-2 py-0.5 rounded">防御: ${params.defenseBonus}×</span>`);
+                }
+                if (params.speedBonus !== undefined) {
+                    paramTags.push(`<span class="bg-cyan-600/30 text-cyan-300 px-2 py-0.5 rounded">速度: +${(params.speedBonus * 100).toFixed(0)}%</span>`);
+                }
+                if (params.buffBonus !== undefined) {
+                    paramTags.push(`<span class="bg-purple-600/30 text-purple-300 px-2 py-0.5 rounded">加成: ${(params.buffBonus * 100).toFixed(0)}%</span>`);
+                }
+                if (params.healBonus !== undefined) {
+                    paramTags.push(`<span class="bg-green-600/30 text-green-300 px-2 py-0.5 rounded">治疗: ${params.healBonus}×</span>`);
+                }
+                if (params.damagePercent !== undefined) {
+                    paramTags.push(`<span class="bg-red-600/30 text-red-300 px-2 py-0.5 rounded">伤害: ${(params.damagePercent * 100).toFixed(0)}%</span>`);
+                }
+                if (params.healPercent !== undefined) {
+                    paramTags.push(`<span class="bg-green-600/30 text-green-300 px-2 py-0.5 rounded">恢复: ${(params.healPercent * 100).toFixed(0)}%</span>`);
+                }
+                if (params.counterBonus !== undefined) {
+                    paramTags.push(`<span class="bg-orange-600/30 text-orange-300 px-2 py-0.5 rounded">反击: ${params.counterBonus}×</span>`);
+                }
+                if (params.lifestealBonus !== undefined) {
+                    paramTags.push(`<span class="bg-pink-600/30 text-pink-300 px-2 py-0.5 rounded">吸血: ${(params.lifestealBonus * 100).toFixed(0)}%</span>`);
+                }
+                
+                // 异常状态
+                if (params.statusType) {
+                    const statusName = getStatusName(params.statusType);
+                    const chance = params.statusChance || 100;
+                    paramTags.push(`<span class="bg-purple-600/30 text-purple-300 px-2 py-0.5 rounded">${statusName}: ${chance}%</span>`);
+                }
+                
+                // 多段攻击
+                if (params.multiBonus && Array.isArray(params.multiBonus)) {
+                    paramTags.push(`<span class="bg-orange-600/30 text-orange-300 px-2 py-0.5 rounded">多段: ${params.multiBonus.join('×, ')}×</span>`);
+                }
+
+                return `
+                    <div class="bg-gray-700/50 rounded-lg p-3 border border-gray-600">
+                        <div class="flex items-start gap-2">
+                            <div class="text-2xl flex-shrink-0">${skill.icon}</div>
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-center gap-2 mb-1 flex-wrap">
+                                    <span class="text-sm font-bold text-white">${skill.name}</span>
+                                    <span class="category-badge ${skill.category} text-xs">${getCategoryName(skill.category)}</span>
+                                    <span class="bg-blue-600/30 text-blue-300 px-2 py-0.5 rounded text-xs">${typeIcon} ${typeName}</span>
+                                </div>
+                                <p class="text-xs text-gray-400 mb-2">${skillDesc}</p>
+                                ${paramTags.length > 0 ? `<div class="flex flex-wrap gap-1 text-xs mb-2">
+                                    ${paramTags.join('')}
+                                </div>` : ''}
+                                <div class="text-xs text-gray-500">
+                                    <span class="bg-gray-600/30 text-gray-400 px-2 py-0.5 rounded">${effectName}</span>
+                                </div>
+                            </div>
+                            <div class="flex flex-col items-end gap-2 flex-shrink-0">
+                                <button onclick="removeSkill(${index})"
+                                    class="text-red-400 hover:text-red-300 text-xl">
+                                    ×
+                                </button>
+                                <div class="flex items-center gap-1">
+                                    <label class="text-xs text-gray-400">Lv</label>
+                                    <input type="number" min="1" max="100" value="${config.unlockLevel}"
+                                        onchange="updateSkillLevel(${index}, this.value)"
+                                        class="w-16 bg-gray-800 border border-gray-600 rounded px-2 py-1 text-white text-sm focus:outline-none focus:border-blue-500">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // 获取效果名称
+        function getEffectName(effect) {
+            const names = {
+                'direct_attack': '直接攻击',
+                'multi_attack': '多段攻击',
+                'dot_damage': '持续伤害',
+                'percent_damage': '百分比伤害',
+                'direct_defense': '直接防御',
+                'continuous_defense': '持续防御',
+                'defense_counter': '防御反击',
+                'direct_speed': '直接增速',
+                'continuous_speed': '持续增速',
+                'buff_attack_damage': '攻击增伤',
+                'buff_attack_defense': '攻击增防',
+                'buff_attack_speed': '攻击增速',
+                'buff_attack_status': '攻击增益',
+                'buff_defense_damage': '防御增伤',
+                'buff_defense_speed': '防御增速',
+                'buff_defense_defense': '防御增防',
+                'buff_defense_status': '防御增益',
+                'buff_speed': '增速',
+                'buff_status_enemy': '施加异常',
+                'buff_purify': '净化',
+                'buff_heal_amp': '增加治疗',
+                'buff_element_damage': '属性增伤',
+                'debuff_attack_damage': '攻击减伤',
+                'debuff_attack_defense': '攻击减防',
+                'debuff_attack_speed': '攻击减速',
+                'debuff_attack_status': '攻击减益',
+                'debuff_defense_damage': '防御减伤',
+                'debuff_defense_defense': '防御减防',
+                'debuff_defense_speed': '防御减速',
+                'debuff_defense_status': '防御减益',
+                'debuff_speed': '减速',
+                'debuff_status_self': '自身异常',
+                'debuff_no_heal': '禁疗',
+                'debuff_heal_reduce': '减疗',
+                'debuff_element_damage': '属性减伤',
+                'heal_direct': '直接恢复',
+                'heal_continuous': '持续恢复',
+                'heal_percent': '百分比恢复',
+                'heal_rebirth': '重生',
+                'heal_lifesteal': '生命汲取',
+                // 旧版兼容
+                'damage': '伤害',
+                'critical': '暴击',
+                'lifesteal': '吸血',
+                'buff_attack': '攻击+',
+                'buff_defense': '防御+',
+                'buff_agility': '敏捷+',
+                'guaranteed_dodge': '闪避',
+                'counter': '反击',
+                'passive_attack': '被动攻击',
+                'passive_defense': '被动防御',
+                'passive_agility': '被动敏捷',
+                'regen': '回复',
+                'bonus_damage': '附加伤害',
+                'armor_pierce': '穿透',
+                'true_damage': '真伤',
+                'damage_amp': '伤害增幅',
+                'damage_reduction': '减伤',
+                'burn': '灼烧',
+                'freeze': '冰冻',
+                'poison': '中毒',
+                'stun': '眩晕',
+                'rebirth': '重生'
+            };
+            return names[effect] || effect;
+        }
+        
+        // 获取技能效果描述
+        function getEffectDescription(skill) {
+            const effect = skill.effect;
+            const params = skill.params || {};
+            
+            const descriptions = {
+                'direct_attack': `造成 ${params.attackBonus || 1}× 攻击力的伤害`,
+                'multi_attack': `进行 ${params.count || 1} 段攻击，每段伤害不同`,
+                'dot_damage': `每回合造成 ${params.attackBonus || 1}× 攻击力的持续伤害`,
+                'percent_damage': `造成目标 ${(params.damagePercent || 0.1) * 100}% 生命的伤害`,
+                'direct_defense': `抵挡 ${params.defenseBonus || 1}× 防御力的伤害`,
+                'continuous_defense': `持续抵挡 ${params.defenseBonus || 1}× 防御力的伤害`,
+                'defense_counter': `防御并反击 ${params.counterBonus || 0.5}× 伤害`,
+                'direct_speed': `增加 ${(params.speedBonus || 0.2) * 100}% 速度`,
+                'continuous_speed': `持续增加 ${(params.speedBonus || 0.2) * 100}% 速度`,
+                'buff_attack_damage': `增加 ${(params.buffBonus || 0.2) * 100}% 攻击伤害`,
+                'buff_attack_defense': `增加 ${(params.buffBonus || 0.2) * 100}% 防御力`,
+                'buff_attack_speed': `增加 ${(params.buffBonus || 0.2) * 100}% 速度`,
+                'debuff_attack_damage': `降低敌方 ${(params.buffBonus || 0.2) * 100}% 攻击伤害`,
+                'debuff_attack_defense': `降低敌方 ${(params.buffBonus || 0.2) * 100}% 防御力`,
+                'heal_direct': `恢复 ${params.healBonus || 0.5}× 生命`,
+                'heal_continuous': `每回合恢复 ${params.healBonus || 0.5}× 生命`,
+                'heal_percent': `恢复 ${(params.healPercent || 0.3) * 100}% 生命`,
+                'heal_lifesteal': `汲取 ${(params.lifestealBonus || 0.2) * 100}% 伤害转化为生命`
+            };
+            
+            return descriptions[effect] || getEffectName(effect);
+        }
+        
+        // 获取异常状态名称
+        function getStatusName(status) {
+            const names = {
+                'stun': '眩晕',
+                'poison': '中毒',
+                'bleed': '流血',
+                'frostbite': '冻伤',
+                'burn': '烧伤',
+                'paralyze': '麻痹'
+            };
+            return names[status] || status;
+        }
+
+        // 更新技能解锁等级
+        function updateSkillLevel(index, level) {
+            configuredSkills[index].unlockLevel = parseInt(level) || 1;
+        }
+
+        // 移除技能
+        function removeSkill(index) {
+            configuredSkills.splice(index, 1);
+            renderConfiguredSkills();
+        }
+
+        // 获取类别名称
+        function getCategoryName(category) {
+            const names = {
+                'element-water': '水系',
+                'element-fire': '火系',
+                'element-grass': '草系',
+                'element-wind': '风系',
+                'element-electric': '电系',
+                'element-earth': '土系',
+                'mutation-dark': '黑化',
+                'mutation-light': '白化',
+                'mutation-crystal': '晶化',
+                'mutation-shadow': '影化',
+                'mutation-thunder': '极电',
+                'mutation-holy': '圣辉',
+                'mutation-psychic': '异能',
+                'mutation-void': '虚无',
+                'mutation-annihilate': '湮灭',
+                'mutation-chaos': '暗蚀',
+                'mutation-rebirth': '轮回',
+                'rarity-shiny': '闪光',
+                'rarity-prismatic': '幻彩',
+                'rarity-stellar': '星芒'
+            };
+            return names[category] || '未知';
+        }
+
+        // 同步颜色输入
+        function syncColorInputs() {
+            colorInput.addEventListener('input', (e) => {
+                colorHexInput.value = e.target.value.toUpperCase();
+                update3DModelColor(e.target.value);
+                updatePreview();
+            });
+
+            colorHexInput.addEventListener('input', (e) => {
+                const hex = e.target.value;
+                if (/^#[0-9A-Fa-f]{6}$/.test(hex)) {
+                    colorInput.value = hex;
+                    update3DModelColor(hex);
+                    updatePreview();
+                }
+            });
+        }
+
+        // 更新动物数量显示
+        function updateAnimalCount() {
+            document.getElementById('animal-count').textContent = animals.length;
+        }
+
+        // 设置表单监听器
+        function setupFormListeners() {
+            // 技能槽位数变化时更新显示
+            document.getElementById('animal-skill-slots').addEventListener('input', updateSkillSlotsDisplay);
+            
+            // 实时预览
+            form.querySelectorAll('input, select, textarea').forEach(input => {
+                input.addEventListener('input', updatePreview);
+            });
+
+            // 提交表单
+            form.onsubmit = (e) => {
+                e.preventDefault();
+                if (editingIndex >= 0) {
+                    updateAnimal();
+                } else {
+                    createAnimal();
+                }
+            };
+
+            // 清空按钮
+            clearBtn.onclick = () => {
+                form.reset();
+                configuredSkills = [];
+                cancelEdit();
+                renderConfiguredSkills();
+                updatePreview();
+            };
+
+            // 取消编辑按钮
+            cancelEditBtn.onclick = () => {
+                form.reset();
+                configuredSkills = [];
+                cancelEdit();
+                renderConfiguredSkills();
+                updatePreview();
+            };
+
+            // 导出按钮
+            exportBtn.onclick = exportAnimals;
+
+            // 导入按钮
+            document.getElementById('import-file').onchange = importAnimals;
+
+            // 应用到游戏按钮
+            document.getElementById('apply-to-game-btn').onclick = applyToGame;
+        }
+
+        // 更新预览
+        function updatePreview() {
+            const data = getFormData();
+            if (!data.name) {
+                preview.innerHTML = `
+                    <div class="text-center text-gray-500">
+                        <div class="text-4xl mb-2">❓</div>
+                        <div class="text-sm">填写表单查看预览</div>
+                    </div>
+                `;
+                return;
+            }
+
+            const elementClass = data.element ? `element-${data.element}` : 'bg-gray-700';
+            const rarityClass = data.rarity ? `rarity-${data.rarity}` : 'bg-gray-700';
+
+            preview.innerHTML = `
+                <div class="flex items-start gap-3">
+                    <div class="color-preview" style="background-color: ${data.color}"></div>
+                    <div class="flex-1">
+                        <div class="flex items-center gap-2 mb-2">
+                            <h4 class="text-lg font-bold text-white">${data.name}</h4>
+                            <span class="badge ${elementClass}">${getElementName(data.element)}</span>
+                            <span class="badge ${rarityClass}">${getRarityName(data.rarity)}</span>
+                        </div>
+                        <p class="text-xs text-gray-300 mb-2">${data.desc || '暂无描述'}</p>
+                        <div class="grid grid-cols-3 gap-2 text-xs">
+                            <div class="bg-orange-600/20 text-orange-300 px-2 py-1 rounded">📊 Lv.${data.level}</div>
+                            <div class="bg-cyan-600/20 text-cyan-300 px-2 py-1 rounded">📈 ${data.baseExp}×${data.expGrowth}</div>
+                            <div class="bg-pink-600/20 text-pink-300 px-2 py-1 rounded">💗 ${data.health}</div>
+                            <div class="bg-green-600/20 text-green-300 px-2 py-1 rounded">💪 ${data.stamina}</div>
+                            <div class="bg-red-600/20 text-red-300 px-2 py-1 rounded">⚔️ ${data.attack}</div>
+                            <div class="bg-blue-600/20 text-blue-300 px-2 py-1 rounded">🛡️ ${data.defense}</div>
+                            <div class="bg-yellow-600/20 text-yellow-300 px-2 py-1 rounded">⚡ ${data.agility}</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // 获取表单数据
+        function getFormData() {
+            return {
+                name: document.getElementById('animal-name').value,
+                color: document.getElementById('animal-color-hex').value,
+                element: document.getElementById('animal-element').value,
+                rarity: document.getElementById('animal-rarity').value,
+                level: parseInt(document.getElementById('animal-level').value) || 1,
+                baseExp: parseInt(document.getElementById('animal-base-exp').value) || 100,
+                expGrowth: parseFloat(document.getElementById('animal-exp-growth').value) || 1.2,
+                health: parseInt(document.getElementById('animal-health').value) || 100,
+                stamina: parseInt(document.getElementById('animal-stamina').value) || 100,
+                attack: parseInt(document.getElementById('animal-attack').value) || 10,
+                defense: parseInt(document.getElementById('animal-defense').value) || 5,
+                agility: parseInt(document.getElementById('animal-agility').value) || 8,
+                favorability: parseInt(document.getElementById('animal-favorability').value) || 50,
+                growthTypes: {
+                    mediocre: {
+                        health: parseInt(document.getElementById('growth-mediocre-health').value) || 10,
+                        stamina: parseInt(document.getElementById('growth-mediocre-stamina').value) || 8,
+                        attack: parseInt(document.getElementById('growth-mediocre-attack').value) || 2,
+                        defense: parseInt(document.getElementById('growth-mediocre-defense').value) || 1,
+                        agility: parseInt(document.getElementById('growth-mediocre-agility').value) || 1,
+                        favorability: parseInt(document.getElementById('growth-mediocre-favorability').value) || 3
+                    },
+                    extraordinary: {
+                        health: parseInt(document.getElementById('growth-extraordinary-health').value) || 15,
+                        stamina: parseInt(document.getElementById('growth-extraordinary-stamina').value) || 12,
+                        attack: parseInt(document.getElementById('growth-extraordinary-attack').value) || 3,
+                        defense: parseInt(document.getElementById('growth-extraordinary-defense').value) || 2,
+                        agility: parseInt(document.getElementById('growth-extraordinary-agility').value) || 2,
+                        favorability: parseInt(document.getElementById('growth-extraordinary-favorability').value) || 5
+                    },
+                    brilliant: {
+                        health: parseInt(document.getElementById('growth-brilliant-health').value) || 20,
+                        stamina: parseInt(document.getElementById('growth-brilliant-stamina').value) || 16,
+                        attack: parseInt(document.getElementById('growth-brilliant-attack').value) || 4,
+                        defense: parseInt(document.getElementById('growth-brilliant-defense').value) || 3,
+                        agility: parseInt(document.getElementById('growth-brilliant-agility').value) || 3,
+                        favorability: parseInt(document.getElementById('growth-brilliant-favorability').value) || 7
+                    }
+                },
+                skillSlots: parseInt(document.getElementById('animal-skill-slots').value) || 4,
+                desc: document.getElementById('animal-desc').value
+            };
+        }
+
+        // 创建动物模板
+        function createAnimal() {
+            const data = getFormData();
+            const animalKey = `ANIMAL_${Date.now()}`;
+            
+            // 检查模型数据大小
+            let modelData = null;
+            if (currentShape === 'custom' && customModelData) {
+                const sizeInMB = (customModelData.length * 0.75) / (1024 * 1024); // Base64大约是原始大小的1.33倍
+                if (sizeInMB > 2) {
+                    if (!confirm(`⚠️ 警告：自定义模型较大（约${sizeInMB.toFixed(2)}MB）\n\n保存大模型可能导致localStorage配额超限。\n建议使用较小的模型文件（<2MB）。\n\n是否继续保存？（不保存模型数据）`)) {
+                        // 用户选择不保存模型数据
+                        console.log('⚠️ 用户取消保存大模型数据');
+                    } else {
+                        modelData = customModelData;
+                    }
+                } else {
+                    modelData = customModelData;
+                }
+            }
+            
+            const animal = {
+                key: animalKey,
+                ...data,
+                skills: configuredSkills.map(s => ({...s})), // 复制技能配置
+                modelData: modelData, // 保存自定义模型数据（如果不太大）
+                modelShape: currentShape, // 保存模型形状
+                createdAt: new Date().toISOString()
+            };
+
+            try {
+                animals.push(animal);
+                saveAnimalPool();
+                
+                renderAnimalsList();
+                updateAnimalCount();
+                form.reset();
+                configuredSkills = []; // 清空技能配置
+                renderConfiguredSkills();
+                updatePreview();
+                
+                const modelMsg = animal.modelData ? '\n✅ 包含自定义3D模型' : (currentShape === 'custom' ? '\n⚠️ 模型未保存（过大）' : '');
+                alert(`✅ 动物模板 "${data.name}" 已添加到模板池！\n配置了 ${animal.skills.length} 个技能${modelMsg}`);
+            } catch (error) {
+                // 回滚
+                animals.pop();
+                if (error.name === 'QuotaExceededError') {
+                    alert('❌ 保存失败：存储空间不足！\n\n建议：\n1. 使用更小的GLB模型文件（<2MB）\n2. 删除一些旧的动物模板\n3. 导出并清空当前模板池');
+                } else {
+                    alert('❌ 保存失败：' + error.message);
+                }
+                console.error('保存失败:', error);
+            }
+        }
+
+        // 更新动物模板
+        function updateAnimal() {
+            const data = getFormData();
+            
+            // 检查模型数据大小
+            let modelData = null;
+            if (currentShape === 'custom' && customModelData) {
+                const sizeInMB = (customModelData.length * 0.75) / (1024 * 1024);
+                if (sizeInMB > 2) {
+                    if (!confirm(`⚠️ 警告：自定义模型较大（约${sizeInMB.toFixed(2)}MB）\n\n保存大模型可能导致localStorage配额超限。\n建议使用较小的模型文件（<2MB）。\n\n是否继续保存？（不保存模型数据）`)) {
+                        console.log('⚠️ 用户取消保存大模型数据');
+                    } else {
+                        modelData = customModelData;
+                    }
+                } else {
+                    modelData = customModelData;
+                }
+            }
+            
+            // 保存原始数据以便回滚
+            const originalAnimal = {...animals[editingIndex]};
+            
+            // 保留原有的key和创建时间
+            const animal = {
+                key: animals[editingIndex].key,
+                ...data,
+                skills: configuredSkills.map(s => ({...s})),
+                modelData: modelData,
+                modelShape: currentShape,
+                createdAt: animals[editingIndex].createdAt,
+                updatedAt: new Date().toISOString()
+            };
+
+            try {
+                animals[editingIndex] = animal;
+                saveAnimalPool();
+                
+                renderAnimalsList();
+                updateAnimalCount();
+                form.reset();
+                configuredSkills = [];
+                cancelEdit();
+                renderConfiguredSkills();
+                updatePreview();
+                
+                const modelMsg = animal.modelData ? '\n✅ 包含自定义3D模型' : (currentShape === 'custom' ? '\n⚠️ 模型未保存（过大）' : '');
+                alert(`✅ 动物模板 "${data.name}" 已更新！${modelMsg}`);
+            } catch (error) {
+                // 回滚
+                animals[editingIndex] = originalAnimal;
+                if (error.name === 'QuotaExceededError') {
+                    alert('❌ 更新失败：存储空间不足！\n\n建议：\n1. 使用更小的GLB模型文件（<2MB）\n2. 删除一些旧的动物模板\n3. 导出并清空当前模板池');
+                } else {
+                    alert('❌ 更新失败：' + error.message);
+                }
+                console.error('更新失败:', error);
+            }
+        }
+
+        // 编辑动物模板
+        function editAnimal(index) {
+            editingIndex = index;
+            const animal = animals[index];
+            
+            // 填充表单
+            document.getElementById('animal-name').value = animal.name;
+            document.getElementById('animal-color').value = animal.color;
+            document.getElementById('animal-color-hex').value = animal.color;
+            document.getElementById('animal-element').value = animal.element;
+            document.getElementById('animal-rarity').value = animal.rarity;
+            document.getElementById('animal-level').value = animal.level;
+            document.getElementById('animal-base-exp').value = animal.baseExp;
+            document.getElementById('animal-exp-growth').value = animal.expGrowth;
+            document.getElementById('animal-health').value = animal.health;
+            document.getElementById('animal-stamina').value = animal.stamina;
+            document.getElementById('animal-attack').value = animal.attack;
+            document.getElementById('animal-defense').value = animal.defense;
+            document.getElementById('animal-agility').value = animal.agility;
+            document.getElementById('animal-favorability').value = animal.favorability;
+            
+            // 填充三种成长配置（兼容旧数据）
+            if (animal.growthTypes) {
+                // 新格式：三种成长
+                document.getElementById('growth-mediocre-health').value = animal.growthTypes.mediocre.health;
+                document.getElementById('growth-mediocre-stamina').value = animal.growthTypes.mediocre.stamina;
+                document.getElementById('growth-mediocre-attack').value = animal.growthTypes.mediocre.attack;
+                document.getElementById('growth-mediocre-defense').value = animal.growthTypes.mediocre.defense;
+                document.getElementById('growth-mediocre-agility').value = animal.growthTypes.mediocre.agility;
+                document.getElementById('growth-mediocre-favorability').value = animal.growthTypes.mediocre.favorability;
+                
+                document.getElementById('growth-extraordinary-health').value = animal.growthTypes.extraordinary.health;
+                document.getElementById('growth-extraordinary-stamina').value = animal.growthTypes.extraordinary.stamina;
+                document.getElementById('growth-extraordinary-attack').value = animal.growthTypes.extraordinary.attack;
+                document.getElementById('growth-extraordinary-defense').value = animal.growthTypes.extraordinary.defense;
+                document.getElementById('growth-extraordinary-agility').value = animal.growthTypes.extraordinary.agility;
+                document.getElementById('growth-extraordinary-favorability').value = animal.growthTypes.extraordinary.favorability;
+                
+                document.getElementById('growth-brilliant-health').value = animal.growthTypes.brilliant.health;
+                document.getElementById('growth-brilliant-stamina').value = animal.growthTypes.brilliant.stamina;
+                document.getElementById('growth-brilliant-attack').value = animal.growthTypes.brilliant.attack;
+                document.getElementById('growth-brilliant-defense').value = animal.growthTypes.brilliant.defense;
+                document.getElementById('growth-brilliant-agility').value = animal.growthTypes.brilliant.agility;
+                document.getElementById('growth-brilliant-favorability').value = animal.growthTypes.brilliant.favorability;
+            } else if (animal.growth) {
+                // 旧格式：单一成长，转换为三种成长
+                const baseGrowth = animal.growth;
+                const potential = animal.potential || '超常';
+                const multipliers = { '平庸': 1.0, '超常': 1.5, '璀璨': 2.0 };
+                const mult = multipliers[potential] || 1.5;
+                
+                // 平庸 = 基础成长 / 倍率
+                document.getElementById('growth-mediocre-health').value = Math.round(baseGrowth.health / mult);
+                document.getElementById('growth-mediocre-stamina').value = Math.round(baseGrowth.stamina / mult);
+                document.getElementById('growth-mediocre-attack').value = Math.round(baseGrowth.attack / mult);
+                document.getElementById('growth-mediocre-defense').value = Math.round(baseGrowth.defense / mult);
+                document.getElementById('growth-mediocre-agility').value = Math.round(baseGrowth.agility / mult);
+                document.getElementById('growth-mediocre-favorability').value = Math.round(baseGrowth.favorability / mult);
+                
+                // 超常 = 基础成长 / 倍率 * 1.5
+                document.getElementById('growth-extraordinary-health').value = Math.round(baseGrowth.health / mult * 1.5);
+                document.getElementById('growth-extraordinary-stamina').value = Math.round(baseGrowth.stamina / mult * 1.5);
+                document.getElementById('growth-extraordinary-attack').value = Math.round(baseGrowth.attack / mult * 1.5);
+                document.getElementById('growth-extraordinary-defense').value = Math.round(baseGrowth.defense / mult * 1.5);
+                document.getElementById('growth-extraordinary-agility').value = Math.round(baseGrowth.agility / mult * 1.5);
+                document.getElementById('growth-extraordinary-favorability').value = Math.round(baseGrowth.favorability / mult * 1.5);
+                
+                // 璀璨 = 基础成长 / 倍率 * 2.0
+                document.getElementById('growth-brilliant-health').value = Math.round(baseGrowth.health / mult * 2.0);
+                document.getElementById('growth-brilliant-stamina').value = Math.round(baseGrowth.stamina / mult * 2.0);
+                document.getElementById('growth-brilliant-attack').value = Math.round(baseGrowth.attack / mult * 2.0);
+                document.getElementById('growth-brilliant-defense').value = Math.round(baseGrowth.defense / mult * 2.0);
+                document.getElementById('growth-brilliant-agility').value = Math.round(baseGrowth.agility / mult * 2.0);
+                document.getElementById('growth-brilliant-favorability').value = Math.round(baseGrowth.favorability / mult * 2.0);
+            }
+            
+            document.getElementById('animal-skill-slots').value = animal.skillSlots;
+            document.getElementById('animal-desc').value = animal.desc || '';
+            
+            // 恢复技能配置
+            configuredSkills = animal.skills ? animal.skills.map(s => ({...s})) : [];
+            renderConfiguredSkills();
+            updateSkillSlotsDisplay();
+            
+            // 恢复3D模型
+            if (animal.modelData) {
+                customModelData = animal.modelData;
+                currentShape = animal.modelShape || 'custom';
+                
+                // 等待GLTFLoader初始化后再加载
+                const tryLoad = () => {
+                    if (gltfLoader) {
+                        loadCustomModel(customModelData);
+                        
+                        // 显示自定义模型按钮
+                        const customBtn = document.getElementById('custom-model-btn');
+                        customBtn.style.display = 'inline-block';
+                        
+                        // 激活对应按钮
+                        document.querySelectorAll('.model-control-btn').forEach(b => b.classList.remove('active'));
+                        const activeBtn = document.querySelector(`[data-shape="${currentShape}"]`);
+                        if (activeBtn) activeBtn.classList.add('active');
+                        
+                        document.getElementById('model-info').textContent = '✅ 已加载保存的自定义模型';
+                        document.getElementById('model-info').style.display = 'block';
+                    } else {
+                        setTimeout(tryLoad, 100);
+                    }
+                };
+                tryLoad();
+            } else {
+                currentShape = animal.modelShape || 'sphere';
+                createAnimalModel(animal.color, currentShape);
+                document.querySelectorAll('.model-control-btn').forEach(b => b.classList.remove('active'));
+                const activeBtn = document.querySelector(`[data-shape="${currentShape}"]`);
+                if (activeBtn) activeBtn.classList.add('active');
+            }
+            
+            // 更新UI
+            submitText.textContent = '💾 保存修改';
+            submitBtn.classList.remove('bg-green-600', 'hover:bg-green-700');
+            submitBtn.classList.add('bg-blue-600', 'hover:bg-blue-700');
+            cancelEditBtn.classList.remove('hidden');
+            
+            updatePreview();
+            
+            // 滚动到表单顶部
+            form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        // 取消编辑
+        function cancelEdit() {
+            editingIndex = -1;
+            submitText.textContent = '✨ 创建动物模板';
+            submitBtn.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+            submitBtn.classList.add('bg-green-600', 'hover:bg-green-700');
+            cancelEditBtn.classList.add('hidden');
+        }
+
+        // 保存动物模板池
+        function saveAnimalPool() {
+            try {
+                const jsonStr = JSON.stringify(animals);
+                const sizeInMB = (jsonStr.length / (1024 * 1024)).toFixed(2);
+                console.log(`💾 保存动物模板池，大小: ${sizeInMB}MB`);
+                
+                localStorage.setItem('ANIMAL_POOL', jsonStr);
+            } catch (error) {
+                if (error.name === 'QuotaExceededError') {
+                    console.error('❌ localStorage配额超限');
+                    throw error; // 重新抛出以便上层处理
+                } else {
+                    console.error('❌ 保存失败:', error);
+                    throw error;
+                }
+            }
+        }
+
+        // 渲染动物列表
+        function renderAnimalsList() {
+            if (animals.length === 0) {
+                animalsList.innerHTML = `
+                    <div class="text-center text-gray-500 text-sm py-8">
+                        暂无动物模板
+                    </div>
+                `;
+                return;
+            }
+
+            animalsList.innerHTML = animals.map((animal, index) => {
+                const elementClass = `element-${animal.element}`;
+                const rarityClass = `rarity-${animal.rarity}`;
+                return `
+                    <div class="animal-card bg-gray-800 rounded-lg p-3 border border-gray-600">
+                        <div class="flex items-start gap-2">
+                            <div class="w-12 h-12 rounded-full border-2 border-white" style="background-color: ${animal.color}"></div>
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-center gap-2 mb-1 flex-wrap">
+                                    <h5 class="text-sm font-bold text-white">${animal.name}</h5>
+                                    <span class="badge ${elementClass} text-xs">${getElementName(animal.element)}</span>
+                                    <span class="badge ${rarityClass} text-xs">${getRarityName(animal.rarity)}</span>
+                                </div>
+                                <div class="flex gap-2 text-xs flex-wrap">
+                                    <span class="text-orange-400">📊Lv.${animal.level}</span>
+                                    <span class="text-pink-400">💗${animal.health}</span>
+                                    <span class="text-red-400">⚔️${animal.attack}</span>
+                                    <span class="text-blue-400">🛡️${animal.defense}</span>
+                                    <span class="text-yellow-400">⚡${animal.agility}</span>
+                                    <span class="text-gray-400">⚖️${animal.weight}</span>
+                                </div>
+                            </div>
+                            <div class="flex gap-1 flex-shrink-0">
+                                <button onclick="editAnimal(${index})"
+                                    class="text-blue-400 hover:text-blue-300 text-lg px-2"
+                                    title="编辑">
+                                    ✏️
+                                </button>
+                                <button onclick="deleteAnimal(${index})"
+                                    class="text-red-400 hover:text-red-300 text-xl"
+                                    title="删除">
+                                    ×
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // 删除动物模板
+        function deleteAnimal(index) {
+            if (confirm('确定要从模板池中删除这个动物吗？')) {
+                animals.splice(index, 1);
+                saveAnimalPool();
+                renderAnimalsList();
+                updateAnimalCount();
+            }
+        }
+
+        // 导出动物模板池
+        function exportAnimals() {
+            if (animals.length === 0) {
+                alert('模板池为空！');
+                return;
+            }
+
+            const dataStr = JSON.stringify(animals, null, 2);
+            const blob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `animal_pool_${Date.now()}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        // 导入动物模板
+        function importAnimals(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                try {
+                    const importedAnimals = JSON.parse(event.target.result);
+                    
+                    if (!Array.isArray(importedAnimals)) {
+                        alert('❌ 无效的JSON格式！');
+                        return;
+                    }
+
+                    // 合并动物（避免重复）
+                    const existingKeys = new Set(animals.map(a => a.key));
+                    const newAnimals = importedAnimals.filter(a => !existingKeys.has(a.key));
+                    
+                    animals = [...animals, ...newAnimals];
+                    saveAnimalPool();
+                    
+                    renderAnimalsList();
+                    updateAnimalCount();
+                    alert(`✅ 成功导入 ${newAnimals.length} 个新动物模板！`);
+                } catch (error) {
+                    alert('❌ 导入失败：' + error.message);
+                }
+            };
+            reader.readAsText(file);
+            
+            e.target.value = '';
+        }
+
+        // 应用到游戏
+        function applyToGame() {
+            if (animals.length === 0) {
+                alert('❌ 动物模板池为空！');
+                return;
+            }
+
+            // 统计各系别和稀有度数量
+            const stats = {
+                elements: {},
+                rarities: {}
+            };
+            
+            animals.forEach(animal => {
+                stats.elements[animal.element] = (stats.elements[animal.element] || 0) + 1;
+                stats.rarities[animal.rarity] = (stats.rarities[animal.rarity] || 0) + 1;
+            });
+            
+            const elementStats = Object.entries(stats.elements)
+                .map(([k, v]) => `${getElementName(k)}: ${v}`)
+                .join('\n• ');
+            
+            const rarityStats = Object.entries(stats.rarities)
+                .map(([k, v]) => `${getRarityName(k)}: ${v}`)
+                .join('\n• ');
+            
+            alert(`✅ 动物模板池已就绪！\n\n` +
+                  `📊 模板池统计：\n` +
+                  `总计：${animals.length} 个模板\n\n` +
+                  `系别分布：\n• ${elementStats}\n\n` +
+                  `稀有度分布：\n• ${rarityStats}\n\n` +
+                  `游戏会根据权重从模板池中随机生成野生动物！`);
+        }
+
+        // 辅助函数
+        function getElementName(element) {
+            const names = {
+                'water': '水系',
+                'fire': '火系',
+                'grass': '草系',
+                'wind': '风系',
+                'electric': '电系',
+                'earth': '土系'
+            };
+            return names[element] || '未知';
+        }
+
+        function getRarityName(rarity) {
+            const names = {
+                'common': '普通',
+                'uncommon': '罕见',
+                'rare': '稀有',
+                'epic': '史诗',
+                'legendary': '传说',
+                'mythic': '神话'
+            };
+            return names[rarity] || '未知';
+        }
+
+        function getPotentialName(potential) {
+            const names = {
+                'low': '低',
+                'medium': '中',
+                'high': '高',
+                'exceptional': '卓越'
+            };
+            return names[potential] || '中';
+        }
+
+        // 初始化应用
+        init();
+    </script>
+</body>
+</html>

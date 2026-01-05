@@ -1,0 +1,1478 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>地图配置器 - 电子盆栽</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background: linear-gradient(135deg, #7c2d12 0%, #991b1b 100%);
+            min-height: 100vh;
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .map-card {
+            transition: all 0.3s ease;
+        }
+        
+        .map-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+        
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: bold;
+        }
+        
+        /* 系别颜色 */
+        .element-water { background: linear-gradient(135deg, #3b82f6, #1d4ed8); }
+        .element-fire { background: linear-gradient(135deg, #ef4444, #dc2626); }
+        .element-grass { background: linear-gradient(135deg, #22c55e, #16a34a); }
+        .element-wind { background: linear-gradient(135deg, #06b6d4, #0891b2); }
+        .element-electric { background: linear-gradient(135deg, #eab308, #ca8a04); }
+        .element-earth { background: linear-gradient(135deg, #a16207, #854d0e); }
+        
+        /* 稀有度颜色 */
+        .rarity-common { background: linear-gradient(135deg, #6b7280, #4b5563); }
+        .rarity-shiny { background: linear-gradient(135deg, #fbbf24, #f59e0b); }
+        .rarity-prismatic { background: linear-gradient(135deg, #ec4899, #8b5cf6, #3b82f6); }
+        .rarity-stellar { background: linear-gradient(135deg, #fef3c7, #fde68a, #fbbf24); color: #92400e; }
+    </style>
+</head>
+<body class="p-6">
+    <div class="max-w-7xl mx-auto">
+        <!-- 标题 -->
+        <div class="text-center mb-8">
+            <h1 class="text-4xl font-bold text-white mb-2">🗺️ 地图配置器 🗺️</h1>
+            <p class="text-orange-200">配置每个地图的动物生成规则</p>
+            <div class="mt-4 bg-orange-900/50 border border-orange-700 rounded-lg p-4 max-w-3xl mx-auto text-left">
+                <p class="text-sm text-orange-200 font-bold mb-2">💡 地图生成机制：</p>
+                <div class="text-xs text-orange-100">
+                    <div class="mb-2">• 每个地图可以配置专属的动物生成池</div>
+                    <div class="mb-2">• 从动物模板池中选择该地图可以生成的动物</div>
+                    <div>• 可以为每个动物设置在该地图的生成权重</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- 左侧：地图配置表单 -->
+            <div class="lg:col-span-2 bg-gray-900/80 backdrop-blur-lg rounded-xl p-6 border border-gray-700">
+                <h2 class="text-2xl font-bold text-white mb-6">🎨 配置地图</h2>
+                
+                <form id="map-form" class="space-y-4">
+                    <!-- 基础信息 -->
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">地图名称</label>
+                            <input type="text" id="map-name" required
+                                class="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-orange-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">地图图标</label>
+                            <input type="text" id="map-icon" required maxlength="2" value="🗺️"
+                                class="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-2 text-white text-center text-2xl focus:outline-none focus:border-orange-500">
+                        </div>
+                    </div>
+
+                    <!-- 地图属性 -->
+                    <div class="grid grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">地图等级</label>
+                            <input type="number" id="map-level" min="1" max="100" value="1" required
+                                class="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-orange-500">
+                            <p class="text-xs text-gray-400 mt-1">推荐动物等级</p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">生成间隔(秒)</label>
+                            <input type="number" id="map-spawn-interval" min="1" max="3600" value="60" required
+                                class="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-orange-500">
+                            <p class="text-xs text-gray-400 mt-1">动物生成间隔</p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">最大数量</label>
+                            <input type="number" id="map-max-animals" min="1" max="50" value="10" required
+                                class="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-orange-500">
+                            <p class="text-xs text-gray-400 mt-1">地图动物上限</p>
+                        </div>
+                    </div>
+
+                    <!-- 地图描述 -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-2">地图描述</label>
+                        <textarea id="map-desc" rows="2"
+                            class="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-orange-500"
+                            placeholder="描述这个地图的特点..."></textarea>
+                    </div>
+
+                    <!-- 子地图配置 -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-2">🗺️ 子地图配置</label>
+                        <div class="bg-gray-800/50 rounded-lg p-4 border border-gray-600">
+                            <div class="flex justify-between items-center mb-3">
+                                <span class="text-sm text-gray-300">已配置子地图 (<span id="submap-count-display">0</span>)</span>
+                                <button type="button" id="add-submap-btn"
+                                    class="bg-purple-600 hover:bg-purple-700 text-white text-sm font-bold py-1 px-3 rounded transition-colors">
+                                    + 添加子地图
+                                </button>
+                            </div>
+                            <div id="submaps-config-list" class="space-y-2 max-h-48 overflow-y-auto">
+                                <div class="text-center text-gray-500 text-sm py-4">
+                                    点击"添加子地图"选择已创建的地图
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 动物生成配置 -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-2">🦁 动物生成配置</label>
+                        <div class="bg-gray-800/50 rounded-lg p-4 border border-gray-600">
+                            <div class="flex justify-between items-center mb-3">
+                                <span class="text-sm text-gray-300">已配置动物 (<span id="animal-count-display">0</span>)</span>
+                                <button type="button" id="add-animal-btn"
+                                    class="bg-green-600 hover:bg-green-700 text-white text-sm font-bold py-1 px-3 rounded transition-colors">
+                                    + 添加动物
+                                </button>
+                            </div>
+                            <div id="animals-config-list" class="space-y-2 max-h-64 overflow-y-auto">
+                                <div class="text-center text-gray-500 text-sm py-4">
+                                    点击"添加动物"从动物模板池中选择
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 按钮 -->
+                    <div class="flex gap-4 pt-4">
+                        <button type="submit" id="submit-btn"
+                            class="flex-1 bg-orange-600 hover:bg-orange-700 text-white font-bold py-3 px-6 rounded-lg transition-colors">
+                            <span id="submit-text">✨ 保存地图配置</span>
+                        </button>
+                        <button type="button" id="cancel-edit-btn" class="hidden bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-3 px-6 rounded-lg transition-colors">
+                            ❌ 取消编辑
+                        </button>
+                        <button type="button" id="clear-btn"
+                            class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-3 px-6 rounded-lg transition-colors">
+                            🔄 清空
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- 右侧：地图预览和列表 -->
+            <div class="space-y-6">
+                <!-- 地图预览 -->
+                <div class="bg-gray-900/80 backdrop-blur-lg rounded-xl p-6 border border-gray-700">
+                    <h3 class="text-xl font-bold text-white mb-4">👁️ 地图预览</h3>
+                    <div id="map-preview" class="map-card bg-gray-800 rounded-lg p-4 border-2 border-gray-600">
+                        <div class="text-center text-gray-500">
+                            <div class="text-4xl mb-2">❓</div>
+                            <div class="text-sm">填写表单查看预览</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 地图配置列表 -->
+                <div class="bg-gray-900/80 backdrop-blur-lg rounded-xl p-6 border border-gray-700">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-xl font-bold text-white">🗺️ 地图配置 (<span id="map-count">0</span>)</h3>
+                        <div class="flex gap-2">
+                            <label for="import-file" 
+                                class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold py-2 px-4 rounded-lg transition-colors cursor-pointer">
+                                📤 导入
+                            </label>
+                            <input type="file" id="import-file" accept=".json" class="hidden">
+                            <button id="export-btn"
+                                class="bg-green-600 hover:bg-green-700 text-white text-sm font-bold py-2 px-4 rounded-lg transition-colors">
+                                📥 导出
+                            </button>
+                            <button id="apply-to-game-btn"
+                                class="bg-purple-600 hover:bg-purple-700 text-white text-sm font-bold py-2 px-4 rounded-lg transition-colors">
+                                🎮 应用
+                            </button>
+                        </div>
+                    </div>
+                    <div id="maps-list" class="space-y-3 max-h-96 overflow-y-auto">
+                        <div class="text-center text-gray-500 text-sm py-8">
+                            暂无地图配置
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 子地图选择模态框 -->
+    <div id="submap-select-modal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+        <div class="bg-gray-900 rounded-xl p-6 max-w-2xl w-full mx-4 border border-gray-700 max-h-[80vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-bold text-white">选择子地图</h3>
+                <button id="close-submap-modal" class="text-gray-400 hover:text-white text-2xl">×</button>
+            </div>
+            <div id="submap-pool-list" class="space-y-2">
+                <!-- 子地图列表 -->
+            </div>
+        </div>
+    </div>
+
+    <!-- 动物选择模态框 -->
+    <div id="animal-select-modal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+        <div class="bg-gray-900 rounded-xl p-6 max-w-2xl w-full mx-4 border border-gray-700 max-h-[80vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-bold text-white">从动物模板池选择</h3>
+                <button id="close-animal-modal" class="text-gray-400 hover:text-white text-2xl">×</button>
+            </div>
+            <div id="animal-pool-list" class="space-y-2">
+                <!-- 动物列表 -->
+            </div>
+        </div>
+    </div>
+
+    <!-- 变体模板选择模态框 -->
+    <div id="variant-template-modal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+        <div class="bg-gray-900 rounded-xl p-6 max-w-2xl w-full mx-4 border border-gray-700 max-h-[80vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-bold text-white">为 <span id="variant-rarity-label"></span> 选择模板</h3>
+                <button id="close-variant-modal" class="text-gray-400 hover:text-white text-2xl">×</button>
+            </div>
+            <div id="variant-template-list" class="space-y-2">
+                <!-- 模板列表 -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 地图配置存储
+        let maps = JSON.parse(localStorage.getItem('MAP_CONFIGS') || '[]');
+        // 动物模板池
+        let animalPool = JSON.parse(localStorage.getItem('ANIMAL_POOL') || '[]');
+        // 当前配置的动物
+        let configuredAnimals = [];
+        // 当前配置的子地图
+        let configuredSubmaps = [];
+        // 当前正在编辑的地图key（用于避免循环引用）
+        let currentEditingMapKey = null;
+        // 当前编辑的地图索引
+        let editingIndex = -1;
+
+        // DOM元素
+        const form = document.getElementById('map-form');
+        const preview = document.getElementById('map-preview');
+        const mapsList = document.getElementById('maps-list');
+        const clearBtn = document.getElementById('clear-btn');
+        const cancelEditBtn = document.getElementById('cancel-edit-btn');
+        const submitBtn = document.getElementById('submit-btn');
+        const submitText = document.getElementById('submit-text');
+        const exportBtn = document.getElementById('export-btn');
+
+        // 初始化
+        function init() {
+            renderMapsList();
+            setupFormListeners();
+            updateMapCount();
+            setupAnimalModal();
+            setupSubmapModal();
+            setupVariantTemplateModal();
+        }
+
+        // 设置子地图选择模态框
+        function setupSubmapModal() {
+            const modal = document.getElementById('submap-select-modal');
+            const addSubmapBtn = document.getElementById('add-submap-btn');
+            const closeBtn = document.getElementById('close-submap-modal');
+
+            addSubmapBtn.onclick = () => {
+                renderSubmapPool();
+                modal.classList.remove('hidden');
+            };
+
+            closeBtn.onclick = () => modal.classList.add('hidden');
+            modal.onclick = (e) => {
+                if (e.target === modal) modal.classList.add('hidden');
+            };
+        }
+
+        // 设置动物选择模态框
+        function setupAnimalModal() {
+            const modal = document.getElementById('animal-select-modal');
+            const addAnimalBtn = document.getElementById('add-animal-btn');
+            const closeBtn = document.getElementById('close-animal-modal');
+
+            addAnimalBtn.onclick = () => {
+                renderAnimalPool();
+                modal.classList.remove('hidden');
+            };
+
+            closeBtn.onclick = () => modal.classList.add('hidden');
+            modal.onclick = (e) => {
+                if (e.target === modal) modal.classList.add('hidden');
+            };
+        }
+
+        // 渲染子地图池列表
+        function renderSubmapPool() {
+            const submapPoolList = document.getElementById('submap-pool-list');
+            
+            if (maps.length === 0) {
+                submapPoolList.innerHTML = `
+                    <div class="text-center text-gray-500 py-8">
+                        <p class="mb-2">暂无可用地图</p>
+                        <p class="text-sm">请先创建其他地图</p>
+                    </div>
+                `;
+                return;
+            }
+
+            // 过滤已配置的子地图和当前编辑的地图（避免循环引用）
+            const configuredKeys = new Set(configuredSubmaps.map(s => s.mapKey));
+            const availableMaps = maps.filter(m =>
+                !configuredKeys.has(m.key) && m.key !== currentEditingMapKey
+            );
+
+            if (availableMaps.length === 0) {
+                submapPoolList.innerHTML = `
+                    <div class="text-center text-gray-500 py-8">
+                        所有地图都已配置或不可用
+                    </div>
+                `;
+                return;
+            }
+
+            submapPoolList.innerHTML = availableMaps.map(map => `
+                <div class="bg-gray-800 rounded-lg p-3 border border-gray-600 hover:border-purple-500 cursor-pointer transition-colors"
+                     onclick="selectSubmap('${map.key}')">
+                    <div class="flex items-start gap-3">
+                        <div class="text-3xl">${map.icon}</div>
+                        <div class="flex-1">
+                            <div class="flex items-center gap-2 mb-1">
+                                <h5 class="text-sm font-bold text-white">${map.name}</h5>
+                                <span class="bg-orange-600/30 text-orange-300 px-2 py-0.5 rounded text-xs">Lv.${map.level}</span>
+                            </div>
+                            <div class="flex gap-2 text-xs">
+                                <span class="text-blue-400">⏱️${map.spawnInterval}s</span>
+                                <span class="text-green-400">🦁${map.maxAnimals}只</span>
+                                <span class="text-gray-400">🎲${map.animals?.length || 0}种</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // 选择子地图
+        function selectSubmap(mapKey) {
+            const map = maps.find(m => m.key === mapKey);
+            if (!map) return;
+
+            configuredSubmaps.push({
+                mapKey: map.key
+            });
+
+            renderConfiguredSubmaps();
+            document.getElementById('submap-select-modal').classList.add('hidden');
+        }
+
+        // 渲染已配置的子地图
+        function renderConfiguredSubmaps() {
+            const list = document.getElementById('submaps-config-list');
+            document.getElementById('submap-count-display').textContent = configuredSubmaps.length;
+
+            if (configuredSubmaps.length === 0) {
+                list.innerHTML = `
+                    <div class="text-center text-gray-500 text-sm py-4">
+                        点击"添加子地图"选择已创建的地图
+                    </div>
+                `;
+                return;
+            }
+
+            list.innerHTML = configuredSubmaps.map((config, index) => {
+                const map = maps.find(m => m.key === config.mapKey);
+                if (!map) return '';
+
+                return `
+                    <div class="bg-gray-700/50 rounded-lg p-2 border border-gray-600">
+                        <div class="flex items-center gap-2">
+                            <div class="text-2xl flex-shrink-0">${map.icon}</div>
+                            <div class="flex-1 min-w-0">
+                                <div class="text-sm font-bold text-white truncate">${map.name}</div>
+                                <div class="flex gap-2 text-xs">
+                                    <span class="text-orange-400">Lv.${map.level}</span>
+                                    <span class="text-gray-400">🎲${map.animals?.length || 0}种动物</span>
+                                </div>
+                            </div>
+                            <button onclick="removeSubmap(${index})"
+                                class="text-red-400 hover:text-red-300 text-xl flex-shrink-0">
+                                ×
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // 移除子地图
+        function removeSubmap(index) {
+            configuredSubmaps.splice(index, 1);
+            renderConfiguredSubmaps();
+            updatePreview();
+        }
+
+        // 渲染动物模板池列表
+        function renderAnimalPool() {
+            const animalPoolList = document.getElementById('animal-pool-list');
+            
+            if (animalPool.length === 0) {
+                animalPoolList.innerHTML = `
+                    <div class="text-center text-gray-500 py-8">
+                        <p class="mb-2">动物模板池为空</p>
+                        <p class="text-sm">请先在动物设计器中创建动物模板</p>
+                    </div>
+                `;
+                return;
+            }
+
+            // 过滤已配置的动物
+            // 对于普通动物，如果已经有组存在则不显示
+            // 对于其他稀有度，如果已经单独添加则不显示
+            const configuredKeys = new Set();
+            configuredAnimals.forEach(config => {
+                const animal = animalPool.find(a => a.key === config.animalKey);
+                if (animal) {
+                    if (config.groupId) {
+                        // 如果是组的一部分，标记整个动物key
+                        configuredKeys.add(config.animalKey);
+                    } else {
+                        // 如果是独立配置，标记 key+稀有度
+                        configuredKeys.add(`${config.animalKey}_${config.rarityType}`);
+                    }
+                }
+            });
+            
+            const availableAnimals = animalPool.filter(animal => {
+                // 如果动物已经作为组存在，不显示
+                if (configuredKeys.has(animal.key)) {
+                    return false;
+                }
+                // 如果是非普通稀有度且已单独添加，不显示
+                if (animal.rarity !== 'common' && configuredKeys.has(`${animal.key}_${animal.rarity}`)) {
+                    return false;
+                }
+                return true;
+            });
+
+            if (availableAnimals.length === 0) {
+                animalPoolList.innerHTML = `
+                    <div class="text-center text-gray-500 py-8">
+                        所有动物都已配置
+                    </div>
+                `;
+                return;
+            }
+
+            animalPoolList.innerHTML = availableAnimals.map(animal => {
+                const elementClass = `element-${animal.element}`;
+                const rarityClass = `rarity-${animal.rarity}`;
+                
+                return `
+                    <div class="bg-gray-800 rounded-lg p-3 border border-gray-600 hover:border-green-500 cursor-pointer transition-colors"
+                         onclick="selectAnimal('${animal.key}')">
+                        <div class="flex items-start gap-3">
+                            <div class="w-12 h-12 rounded-full border-2 border-white flex-shrink-0" style="background-color: ${animal.color}"></div>
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-center gap-2 mb-1 flex-wrap">
+                                    <h5 class="text-sm font-bold text-white">${animal.name}</h5>
+                                    <span class="badge ${elementClass} text-xs">${getElementName(animal.element)}</span>
+                                    <span class="badge ${rarityClass} text-xs">${getRarityName(animal.rarity)}</span>
+                                </div>
+                                <div class="flex gap-2 text-xs">
+                                    <span class="text-orange-400">📊Lv.${animal.level}</span>
+                                    <span class="text-pink-400">💗${animal.health}</span>
+                                    <span class="text-red-400">⚔️${animal.attack}</span>
+                                    <span class="text-blue-400">🛡️${animal.defense}</span>
+                                    <span class="text-yellow-400">⚡${animal.agility}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // 选择动物
+        function selectAnimal(animalKey) {
+            const animal = animalPool.find(a => a.key === animalKey);
+            if (!animal) return;
+
+            // 默认潜力比例根据稀有度设置
+            const defaultGrowthByRarity = {
+                'common': { mediocre: 60, extraordinary: 35, brilliant: 5 },
+                'shiny': { mediocre: 30, extraordinary: 50, brilliant: 20 },
+                'prismatic': { mediocre: 10, extraordinary: 40, brilliant: 50 },
+                'stellar': { mediocre: 0, extraordinary: 20, brilliant: 80 }
+            };
+            
+            const defaultWeightByRarity = {
+                'common': 85,
+                'shiny': 12,
+                'prismatic': 2.5,
+                'stellar': 0.5
+            };
+            
+            // 如果是普通动物，自动创建四个稀有度栏位（普通、闪光、幻彩、星芒）
+            if (animal.rarity === 'common') {
+                const rarityTypes = ['common', 'shiny', 'prismatic', 'stellar'];
+                const groupId = `GROUP_${Date.now()}`;
+                
+                rarityTypes.forEach(rarityType => {
+                    configuredAnimals.push({
+                        animalKey: animal.key,
+                        rarityType: rarityType,
+                        weight: defaultWeightByRarity[rarityType] || 10,
+                        growthRatios: defaultGrowthByRarity[rarityType] || { mediocre: 20, extraordinary: 50, brilliant: 30 },
+                        groupId: groupId // 标记为同一组
+                    });
+                });
+            } else {
+                // 非普通动物，只添加单个配置
+                configuredAnimals.push({
+                    animalKey: animal.key,
+                    rarityType: animal.rarity,
+                    weight: defaultWeightByRarity[animal.rarity] || 10,
+                    growthRatios: defaultGrowthByRarity[animal.rarity] || { mediocre: 20, extraordinary: 50, brilliant: 30 }
+                });
+            }
+
+            renderConfiguredAnimals();
+            document.getElementById('animal-select-modal').classList.add('hidden');
+        }
+
+        // 渲染已配置的动物
+        function renderConfiguredAnimals() {
+            const list = document.getElementById('animals-config-list');
+            
+            // 统计独立动物和组的数量
+            const groups = new Set(configuredAnimals.filter(a => a.groupId).map(a => a.groupId));
+            const independentAnimals = configuredAnimals.filter(a => !a.groupId).length;
+            const totalCount = groups.size + independentAnimals;
+            
+            document.getElementById('animal-count-display').textContent = totalCount;
+
+            if (configuredAnimals.length === 0) {
+                list.innerHTML = `
+                    <div class="text-center text-gray-500 text-sm py-4">
+                        点击"添加动物"从动物模板池中选择
+                    </div>
+                `;
+                return;
+            }
+
+            // 按组分类动物
+            const groupedAnimals = {};
+            const independentAnimalsList = [];
+            
+            configuredAnimals.forEach((config, index) => {
+                if (config.groupId) {
+                    if (!groupedAnimals[config.groupId]) {
+                        groupedAnimals[config.groupId] = [];
+                    }
+                    groupedAnimals[config.groupId].push({ config, index });
+                } else {
+                    independentAnimalsList.push({ config, index });
+                }
+            });
+
+            let html = '';
+
+            // 渲染分组的动物（四个稀有度一组）
+            Object.entries(groupedAnimals).forEach(([groupId, items]) => {
+                const firstAnimal = animalPool.find(a => a.key === items[0].config.animalKey);
+                if (!firstAnimal) return;
+
+                const elementClass = `element-${firstAnimal.element}`;
+                
+                // 计算组的权重总和
+                const groupWeightSum = items.reduce((sum, item) => sum + (item.config.weight || 0), 0);
+                const isWeightValid = Math.abs(groupWeightSum - 100) < 0.01;
+                
+                html += `
+                    <div class="bg-gray-800/70 rounded-lg p-3 border-2 border-blue-600/50 mb-3">
+                        <div class="flex items-center gap-2 mb-3 cursor-pointer hover:bg-gray-700/30 rounded p-2 -m-2" onclick="toggleVariantGroup('${groupId}')">
+                            <span id="toggle-icon-${groupId}" class="text-blue-400 text-lg flex-shrink-0">▼</span>
+                            <div class="flex-1">
+                                <div class="flex items-center gap-2 mb-1 flex-wrap">
+                                    <span class="text-base font-bold text-white">${firstAnimal.name}</span>
+                                    <span class="badge ${elementClass} text-xs">${getElementName(firstAnimal.element)}</span>
+                                    <span class="bg-blue-600/30 text-blue-300 px-2 py-0.5 rounded text-xs">🎲 稀有度组 (${items.length}个变体)</span>
+                                    <span class="text-xs px-2 py-0.5 rounded ${isWeightValid ? 'bg-green-600/30 text-green-300' : 'bg-red-600/30 text-red-300'}">
+                                        ⚖️ ${groupWeightSum.toFixed(1)}% ${isWeightValid ? '✓' : '✗'}
+                                    </span>
+                                </div>
+                            </div>
+                            <button type="button" onclick="event.stopPropagation(); removeAnimalGroup('${groupId}')"
+                                class="text-red-400 hover:text-red-300 text-xl flex-shrink-0"
+                                title="删除整组">
+                                ×
+                            </button>
+                        </div>
+                        
+                        <!-- 稀有度变体列表 -->
+                        <div id="variant-list-${groupId}" class="space-y-2">
+                            ${items.map(({ config, index }) => {
+                                const rarityType = config.rarityType || 'common';
+                                const rarityClass = `rarity-${rarityType}`;
+                                
+                                const growthRatios = config.growthRatios || { mediocre: 20, extraordinary: 50, brilliant: 30 };
+                                const growthTotal = growthRatios.mediocre + growthRatios.extraordinary + growthRatios.brilliant;
+                                const isValid = Math.abs(growthTotal - 100) < 0.01;
+                                
+                                const rarityLabels = {
+                                    'common': '⚪ 普通',
+                                    'shiny': '✨ 闪光',
+                                    'prismatic': '🌈 幻彩',
+                                    'stellar': '⭐ 星芒'
+                                };
+                                const rarityLabel = rarityLabels[rarityType] || '⚪ 普通';
+                                
+                                const colorThemes = {
+                                    'common': 'gray',
+                                    'shiny': 'yellow',
+                                    'prismatic': 'pink',
+                                    'stellar': 'orange'
+                                };
+                                const colorTheme = colorThemes[rarityType] || 'gray';
+                                
+                                // 获取当前选择的模板（普通栏位使用原始animalKey，其他使用selectedAnimalKey）
+                                const selectedAnimal = rarityType === 'common' ?
+                                    animalPool.find(a => a.key === config.animalKey) :
+                                    (config.selectedAnimalKey ? animalPool.find(a => a.key === config.selectedAnimalKey) : null);
+
+                                return `
+                                    <div class="bg-gray-700/50 rounded-lg p-2 border border-${colorTheme}-600/50">
+                                        <div class="flex items-start gap-2">
+                                            <div class="flex-1 min-w-0">
+                                                <div class="flex items-center gap-2 mb-2 flex-wrap">
+                                                    <span class="badge ${rarityClass} text-xs">${rarityLabel}</span>
+                                                    ${rarityType !== 'common' ? `
+                                                        <button type="button" onclick="selectTemplateForVariant('${config.groupId}', '${rarityType}')"
+                                                            class="bg-${colorTheme}-600/30 hover:bg-${colorTheme}-600/50 text-${colorTheme}-300 text-xs px-2 py-1 rounded transition-colors">
+                                                            ${selectedAnimal ? '✏️ 更换模板' : '➕ 选择模板'}
+                                                        </button>
+                                                        ${selectedAnimal ? `
+                                                            <button type="button" onclick="clearTemplateForVariant('${config.groupId}', '${rarityType}')"
+                                                                class="text-red-400 hover:text-red-300 text-xs"
+                                                                title="清除模板">
+                                                                ×
+                                                            </button>
+                                                        ` : ''}
+                                                    ` : `
+                                                        <span class="text-xs text-gray-400">（基础模板）</span>
+                                                    `}
+                                                    <div class="flex items-center gap-1">
+                                                        <label class="text-xs text-gray-500">权重</label>
+                                                        <input type="number" min="0" max="100" step="0.1" value="${config.weight}"
+                                                            onchange="updateAnimalWeight(${index}, this.value)"
+                                                            class="w-16 bg-gray-700 border border-gray-600 rounded px-2 py-1 text-white text-xs focus:outline-none focus:border-${colorTheme}-500">
+                                                    </div>
+                                                </div>
+                                                
+                                                ${selectedAnimal ? `
+                                                    <div class="bg-gray-800/50 rounded p-2 mb-2 border border-${colorTheme}-600/30">
+                                                        <div class="flex items-center gap-2">
+                                                            <div class="w-8 h-8 rounded-full border border-white flex-shrink-0" style="background-color: ${selectedAnimal.color}"></div>
+                                                            <div class="flex-1 min-w-0">
+                                                                <div class="text-xs font-bold text-white truncate">${selectedAnimal.name}</div>
+                                                                <div class="text-xs text-gray-400">
+                                                                    ⚔️${selectedAnimal.attack} 🛡️${selectedAnimal.defense} ⚡${selectedAnimal.agility}
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                ` : ''}
+                                                
+                                                <div class="bg-gray-800/50 rounded p-2 border ${isValid ? 'border-gray-600' : 'border-red-500'}">
+                                                    <div class="text-xs text-gray-400 mb-1">📈 潜力比例</div>
+                                                    <div class="grid grid-cols-3 gap-1">
+                                                        <div>
+                                                            <label class="text-xs text-gray-500">⭐</label>
+                                                            <div class="flex items-center gap-1">
+                                                                <input type="number" min="0" max="100" step="1" value="${growthRatios.mediocre}"
+                                                                    onchange="updateGrowthRatio(${index}, 'mediocre', this.value)"
+                                                                    class="w-full bg-gray-700 border border-gray-600 rounded px-1 py-0.5 text-white text-xs focus:outline-none">
+                                                                <span class="text-xs text-gray-500">%</span>
+                                                            </div>
+                                                        </div>
+                                                        <div>
+                                                            <label class="text-xs text-blue-400">⭐⭐</label>
+                                                            <div class="flex items-center gap-1">
+                                                                <input type="number" min="0" max="100" step="1" value="${growthRatios.extraordinary}"
+                                                                    onchange="updateGrowthRatio(${index}, 'extraordinary', this.value)"
+                                                                    class="w-full bg-gray-700 border border-gray-600 rounded px-1 py-0.5 text-white text-xs focus:outline-none">
+                                                                <span class="text-xs text-gray-500">%</span>
+                                                            </div>
+                                                        </div>
+                                                        <div>
+                                                            <label class="text-xs text-purple-400">⭐⭐⭐</label>
+                                                            <div class="flex items-center gap-1">
+                                                                <input type="number" min="0" max="100" step="1" value="${growthRatios.brilliant}"
+                                                                    onchange="updateGrowthRatio(${index}, 'brilliant', this.value)"
+                                                                    class="w-full bg-gray-700 border border-gray-600 rounded px-1 py-0.5 text-white text-xs focus:outline-none">
+                                                                <span class="text-xs text-gray-500">%</span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="text-xs mt-1 text-center ${isValid ? 'text-green-400' : 'text-red-400'}">
+                                                        ${growthTotal.toFixed(1)}% ${isValid ? '✓' : '✗'}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                    </div>
+                `;
+            });
+
+            // 渲染独立的动物（非普通稀有度或单独添加的）
+            independentAnimalsList.forEach(({ config, index }) => {
+                const animal = animalPool.find(a => a.key === config.animalKey);
+                if (!animal) return;
+
+                const elementClass = `element-${animal.element}`;
+                const rarityType = config.rarityType || 'common';
+                const rarityClass = `rarity-${rarityType}`;
+                
+                const growthRatios = config.growthRatios || { mediocre: 20, extraordinary: 50, brilliant: 30 };
+                const growthTotal = growthRatios.mediocre + growthRatios.extraordinary + growthRatios.brilliant;
+                const isValid = Math.abs(growthTotal - 100) < 0.01;
+                
+                const rarityLabels = {
+                    'common': '⚪ 普通',
+                    'shiny': '✨ 闪光',
+                    'prismatic': '🌈 幻彩',
+                    'stellar': '⭐ 星芒'
+                };
+                const rarityLabel = rarityLabels[rarityType] || '⚪ 普通';
+                
+                const colorThemes = {
+                    'common': 'gray',
+                    'shiny': 'yellow',
+                    'prismatic': 'pink',
+                    'stellar': 'orange'
+                };
+                const colorTheme = colorThemes[rarityType] || 'gray';
+
+                html += `
+                    <div class="bg-gray-700/50 rounded-lg p-3 border border-${colorTheme}-600/50 mb-2">
+                        <div class="flex items-start gap-2">
+                            <div class="w-10 h-10 rounded-full border-2 border-white flex-shrink-0" style="background-color: ${animal.color}"></div>
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-center gap-1 mb-2 flex-wrap">
+                                    <span class="text-sm font-bold text-white truncate">${animal.name}</span>
+                                    <span class="badge ${elementClass} text-xs">${getElementName(animal.element)}</span>
+                                    <span class="badge ${rarityClass} text-xs">${rarityLabel}</span>
+                                </div>
+                                <div class="flex gap-2 text-xs mb-2">
+                                    <span class="text-orange-400">📊Lv.${animal.level}</span>
+                                    <span class="text-red-400">⚔️${animal.attack}</span>
+                                    <span class="text-blue-400">🛡️${animal.defense}</span>
+                                    <div class="flex items-center gap-1">
+                                        <label class="text-gray-500">权重</label>
+                                        <input type="number" min="0" max="100" step="0.1" value="${config.weight}"
+                                            onchange="updateAnimalWeight(${index}, this.value)"
+                                            class="w-16 bg-gray-700 border border-gray-600 rounded px-2 py-1 text-white text-xs focus:outline-none focus:border-${colorTheme}-500">
+                                    </div>
+                                </div>
+                                
+                                <div class="bg-gray-800/50 rounded p-2 border ${isValid ? 'border-gray-600' : 'border-red-500'}">
+                                    <div class="text-xs text-gray-400 mb-1">📈 潜力比例 (总和需100%)</div>
+                                    <div class="grid grid-cols-3 gap-1">
+                                        <div>
+                                            <label class="text-xs text-gray-500">⭐</label>
+                                            <div class="flex items-center gap-1">
+                                                <input type="number" min="0" max="100" step="1" value="${growthRatios.mediocre}"
+                                                    onchange="updateGrowthRatio(${index}, 'mediocre', this.value)"
+                                                    class="w-full bg-gray-700 border border-gray-600 rounded px-1 py-0.5 text-white text-xs focus:outline-none">
+                                                <span class="text-xs text-gray-500">%</span>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <label class="text-xs text-blue-400">⭐⭐</label>
+                                            <div class="flex items-center gap-1">
+                                                <input type="number" min="0" max="100" step="1" value="${growthRatios.extraordinary}"
+                                                    onchange="updateGrowthRatio(${index}, 'extraordinary', this.value)"
+                                                    class="w-full bg-gray-700 border border-gray-600 rounded px-1 py-0.5 text-white text-xs focus:outline-none">
+                                                <span class="text-xs text-gray-500">%</span>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <label class="text-xs text-purple-400">⭐⭐⭐</label>
+                                            <div class="flex items-center gap-1">
+                                                <input type="number" min="0" max="100" step="1" value="${growthRatios.brilliant}"
+                                                    onchange="updateGrowthRatio(${index}, 'brilliant', this.value)"
+                                                    class="w-full bg-gray-700 border border-gray-600 rounded px-1 py-0.5 text-white text-xs focus:outline-none">
+                                                <span class="text-xs text-gray-500">%</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="text-xs mt-1 text-center ${isValid ? 'text-green-400' : 'text-red-400'}">
+                                        总和: ${growthTotal.toFixed(1)}% ${isValid ? '✓' : '✗'}
+                                    </div>
+                                </div>
+                            </div>
+                            <button onclick="removeAnimal(${index})"
+                                class="text-red-400 hover:text-red-300 text-xl flex-shrink-0">
+                                ×
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+
+            list.innerHTML = html;
+        }
+
+        // 更新动物权重
+        function updateAnimalWeight(index, weight) {
+            const newWeight = parseFloat(weight) || 0;
+            const config = configuredAnimals[index];
+            
+            // 如果是组的一部分，需要联动调整其他稀有度的权重，保证总和为100
+            if (config.groupId) {
+                // 找到同组的所有配置
+                const groupConfigs = configuredAnimals
+                    .map((c, i) => ({ config: c, index: i }))
+                    .filter(item => item.config.groupId === config.groupId);
+                
+                if (groupConfigs.length > 1) {
+                    // 限制新权重不超过100
+                    const limitedWeight = Math.min(newWeight, 100);
+                    
+                    // 计算其他配置的当前权重总和
+                    const otherConfigs = groupConfigs.filter(item => item.index !== index);
+                    const otherWeightsSum = otherConfigs.reduce((sum, item) => sum + (item.config.weight || 0), 0);
+                    
+                    // 计算剩余权重
+                    const remainingWeight = 100 - limitedWeight;
+                    
+                    if (remainingWeight >= 0) {
+                        if (otherWeightsSum > 0) {
+                            // 按比例分配剩余权重给其他配置
+                            otherConfigs.forEach(item => {
+                                const ratio = item.config.weight / otherWeightsSum;
+                                configuredAnimals[item.index].weight = parseFloat((remainingWeight * ratio).toFixed(2));
+                            });
+                        } else {
+                            // 如果其他权重都是0，平均分配
+                            const avgWeight = parseFloat((remainingWeight / otherConfigs.length).toFixed(2));
+                            otherConfigs.forEach(item => {
+                                configuredAnimals[item.index].weight = avgWeight;
+                            });
+                        }
+                    }
+                    
+                    // 更新当前配置的权重
+                    configuredAnimals[index].weight = limitedWeight;
+                } else {
+                    // 只有一个配置，直接设置
+                    configuredAnimals[index].weight = newWeight;
+                }
+            } else {
+                // 不是组的一部分，直接更新
+                configuredAnimals[index].weight = newWeight;
+            }
+            
+            renderConfiguredAnimals();
+            updatePreview();
+        }
+        
+        // 更新潜力比例
+        function updateGrowthRatio(index, growthType, value) {
+            if (!configuredAnimals[index].growthRatios) {
+                configuredAnimals[index].growthRatios = {
+                    mediocre: 0,
+                    extraordinary: 0,
+                    brilliant: 0
+                };
+            }
+            configuredAnimals[index].growthRatios[growthType] = parseFloat(value) || 0;
+            renderConfiguredAnimals();
+            updatePreview();
+        }
+
+        // 移除动物
+        function removeAnimal(index) {
+            configuredAnimals.splice(index, 1);
+            renderConfiguredAnimals();
+            updatePreview();
+        }
+        
+        // 移除整组动物
+        function removeAnimalGroup(groupId) {
+            if (confirm('确定要删除这个动物的所有稀有度变体吗？')) {
+                configuredAnimals = configuredAnimals.filter(a => a.groupId !== groupId);
+                renderConfiguredAnimals();
+                updatePreview();
+            }
+        }
+        
+        // 切换变体组的展开/折叠状态
+        function toggleVariantGroup(groupId) {
+            const variantList = document.getElementById(`variant-list-${groupId}`);
+            const toggleIcon = document.getElementById(`toggle-icon-${groupId}`);
+            
+            if (variantList && toggleIcon) {
+                if (variantList.style.display === 'none') {
+                    variantList.style.display = 'block';
+                    toggleIcon.textContent = '▼';
+                } else {
+                    variantList.style.display = 'none';
+                    toggleIcon.textContent = '▶';
+                }
+            }
+        }
+        
+        // 当前正在选择模板的变体信息
+        let selectingVariantGroupId = '';
+        let selectingVariantRarity = '';
+        
+        // 为变体选择模板
+        function selectTemplateForVariant(groupId, rarityType) {
+            selectingVariantGroupId = groupId;
+            selectingVariantRarity = rarityType;
+            
+            const rarityLabels = {
+                'shiny': '✨ 闪光',
+                'prismatic': '🌈 幻彩',
+                'stellar': '⭐ 星芒'
+            };
+            
+            document.getElementById('variant-rarity-label').textContent = rarityLabels[rarityType] || rarityType;
+            
+            // 渲染可选模板列表（只显示对应稀有度的模板）
+            renderVariantTemplateList(rarityType);
+            
+            document.getElementById('variant-template-modal').classList.remove('hidden');
+        }
+        
+        // 渲染变体模板列表
+        function renderVariantTemplateList(rarityType) {
+            const list = document.getElementById('variant-template-list');
+            
+            // 过滤出对应稀有度的模板
+            const availableTemplates = animalPool.filter(a => a.rarity === rarityType);
+            
+            if (availableTemplates.length === 0) {
+                list.innerHTML = `
+                    <div class="text-center text-gray-500 py-8">
+                        <p class="mb-2">暂无${rarityType}稀有度的模板</p>
+                        <p class="text-sm">请先在动物设计器中创建对应稀有度的模板</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            list.innerHTML = availableTemplates.map(animal => {
+                const elementClass = `element-${animal.element}`;
+                const rarityClass = `rarity-${animal.rarity}`;
+                
+                return `
+                    <div class="bg-gray-800 rounded-lg p-3 border border-gray-600 hover:border-green-500 cursor-pointer transition-colors"
+                         onclick="confirmVariantTemplate('${animal.key}')">
+                        <div class="flex items-start gap-3">
+                            <div class="w-12 h-12 rounded-full border-2 border-white flex-shrink-0" style="background-color: ${animal.color}"></div>
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-center gap-2 mb-1 flex-wrap">
+                                    <h5 class="text-sm font-bold text-white">${animal.name}</h5>
+                                    <span class="badge ${elementClass} text-xs">${getElementName(animal.element)}</span>
+                                    <span class="badge ${rarityClass} text-xs">${getRarityName(animal.rarity)}</span>
+                                </div>
+                                <div class="flex gap-2 text-xs">
+                                    <span class="text-orange-400">📊Lv.${animal.level}</span>
+                                    <span class="text-pink-400">💗${animal.health}</span>
+                                    <span class="text-red-400">⚔️${animal.attack}</span>
+                                    <span class="text-blue-400">🛡️${animal.defense}</span>
+                                    <span class="text-yellow-400">⚡${animal.agility}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        // 确认选择变体模板
+        function confirmVariantTemplate(animalKey) {
+            if (selectingVariantGroupId && selectingVariantRarity) {
+                // 找到对应的变体配置
+                const variantIndex = configuredAnimals.findIndex(
+                    a => a.groupId === selectingVariantGroupId && a.rarityType === selectingVariantRarity
+                );
+                
+                if (variantIndex >= 0) {
+                    configuredAnimals[variantIndex].selectedAnimalKey = animalKey;
+                    renderConfiguredAnimals();
+                    document.getElementById('variant-template-modal').classList.add('hidden');
+                    selectingVariantGroupId = '';
+                    selectingVariantRarity = '';
+                }
+            }
+        }
+        
+        // 清除变体模板
+        function clearTemplateForVariant(groupId, rarityType) {
+            if (confirm('确定要清除这个变体的模板吗？')) {
+                const variantIndex = configuredAnimals.findIndex(
+                    a => a.groupId === groupId && a.rarityType === rarityType
+                );
+                
+                if (variantIndex >= 0) {
+                    delete configuredAnimals[variantIndex].selectedAnimalKey;
+                    renderConfiguredAnimals();
+                }
+            }
+        }
+        
+        // 设置变体模板选择模态框
+        function setupVariantTemplateModal() {
+            const modal = document.getElementById('variant-template-modal');
+            const closeBtn = document.getElementById('close-variant-modal');
+            
+            closeBtn.onclick = () => {
+                modal.classList.add('hidden');
+                selectingVariantIndex = -1;
+                selectingVariantRarity = '';
+            };
+            
+            modal.onclick = (e) => {
+                if (e.target === modal) {
+                    modal.classList.add('hidden');
+                    selectingVariantIndex = -1;
+                    selectingVariantRarity = '';
+                }
+            };
+        }
+
+        // 更新地图数量显示
+        function updateMapCount() {
+            document.getElementById('map-count').textContent = maps.length;
+        }
+
+        // 设置表单监听器
+        function setupFormListeners() {
+            // 实时预览
+            form.querySelectorAll('input, select, textarea').forEach(input => {
+                input.addEventListener('input', updatePreview);
+            });
+
+            // 提交表单
+            form.onsubmit = (e) => {
+                e.preventDefault();
+                if (editingIndex >= 0) {
+                    updateMap();
+                } else {
+                    createMap();
+                }
+            };
+
+            // 清空按钮
+            clearBtn.onclick = () => {
+                form.reset();
+                configuredAnimals = [];
+                configuredSubmaps = [];
+                currentEditingMapKey = null;
+                cancelEdit();
+                renderConfiguredAnimals();
+                renderConfiguredSubmaps();
+                updatePreview();
+            };
+
+            // 取消编辑按钮
+            cancelEditBtn.onclick = () => {
+                form.reset();
+                configuredAnimals = [];
+                configuredSubmaps = [];
+                currentEditingMapKey = null;
+                cancelEdit();
+                renderConfiguredAnimals();
+                renderConfiguredSubmaps();
+                updatePreview();
+            };
+
+            // 导出按钮
+            exportBtn.onclick = exportMaps;
+
+            // 导入按钮
+            document.getElementById('import-file').onchange = importMaps;
+
+            // 应用到游戏按钮
+            document.getElementById('apply-to-game-btn').onclick = applyToGame;
+        }
+
+        // 更新预览
+        function updatePreview() {
+            const data = getFormData();
+            if (!data.name) {
+                preview.innerHTML = `
+                    <div class="text-center text-gray-500">
+                        <div class="text-4xl mb-2">❓</div>
+                        <div class="text-sm">填写表单查看预览</div>
+                    </div>
+                `;
+                return;
+            }
+
+            const totalAnimals = configuredAnimals.length;
+
+            preview.innerHTML = `
+                <div class="space-y-3">
+                    <div class="flex items-center gap-3">
+                        <div class="text-4xl">${data.icon}</div>
+                        <div class="flex-1">
+                            <h4 class="text-lg font-bold text-white mb-1">${data.name}</h4>
+                            <p class="text-xs text-gray-300">${data.desc || '暂无描述'}</p>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-3 gap-2 text-xs">
+                        <div class="bg-orange-600/20 text-orange-300 px-2 py-1 rounded">📊 Lv.${data.level}</div>
+                        <div class="bg-blue-600/20 text-blue-300 px-2 py-1 rounded">⏱️ ${data.spawnInterval}s</div>
+                        <div class="bg-green-600/20 text-green-300 px-2 py-1 rounded">🦁 ${data.maxAnimals}只</div>
+                    </div>
+                    ${configuredSubmaps.length > 0 ? `
+                        <div class="border-t border-gray-600 pt-2">
+                            <div class="text-xs text-gray-400 mb-1">子地图 (${configuredSubmaps.length}个):</div>
+                            <div class="text-xs text-purple-300">
+                                ${configuredSubmaps.map(s => {
+                                    const submap = maps.find(m => m.key === s.mapKey);
+                                    return submap ? `${submap.icon} ${submap.name}` : '';
+                                }).filter(s => s).join(' | ')}
+                            </div>
+                        </div>
+                    ` : ''}
+                    <div class="border-t border-gray-600 pt-2">
+                        <div class="text-xs text-gray-400 mb-1">动物生成池 (${totalAnimals}种):</div>
+                        <div class="text-xs text-gray-300">
+                            ${totalAnimals > 0 ? '已配置动物及稀有度槽位' : '未配置动物'}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // 获取表单数据
+        function getFormData() {
+            return {
+                name: document.getElementById('map-name').value,
+                icon: document.getElementById('map-icon').value,
+                level: parseInt(document.getElementById('map-level').value) || 1,
+                spawnInterval: parseInt(document.getElementById('map-spawn-interval').value) || 60,
+                maxAnimals: parseInt(document.getElementById('map-max-animals').value) || 10,
+                desc: document.getElementById('map-desc').value
+            };
+        }
+
+        // 创建地图配置
+        function createMap() {
+            if (configuredAnimals.length === 0 && configuredSubmaps.length === 0) {
+                alert('❌ 请至少配置一个动物或子地图！');
+                return;
+            }
+
+            const data = getFormData();
+            const mapKey = `MAP_${Date.now()}`;
+            
+            const map = {
+                key: mapKey,
+                ...data,
+                submaps: configuredSubmaps.map(s => ({...s})),
+                animals: configuredAnimals.map(a => ({...a})),
+                createdAt: new Date().toISOString()
+            };
+
+            maps.push(map);
+            saveMapConfigs();
+            
+            console.log('地图已保存:', map);
+            console.log('当前所有地图:', maps);
+            console.log('localStorage中的地图:', localStorage.getItem('MAP_CONFIGS'));
+            
+            renderMapsList();
+            updateMapCount();
+            form.reset();
+            configuredAnimals = [];
+            configuredSubmaps = [];
+            currentEditingMapKey = null;
+            renderConfiguredAnimals();
+            renderConfiguredSubmaps();
+            updatePreview();
+            
+            const summary = [];
+            if (map.submaps.length > 0) summary.push(`${map.submaps.length} 个子地图`);
+            if (map.animals.length > 0) summary.push(`${map.animals.length} 种动物`);
+            
+            alert(`✅ 地图配置 "${data.name}" 已保存！\n配置了 ${summary.join('、')}`);
+        }
+
+        // 更新地图配置
+        function updateMap() {
+            if (configuredAnimals.length === 0 && configuredSubmaps.length === 0) {
+                alert('❌ 请至少配置一个动物或子地图！');
+                return;
+            }
+
+            const data = getFormData();
+            
+            // 保留原有的key和创建时间
+            const map = {
+                key: maps[editingIndex].key,
+                ...data,
+                submaps: configuredSubmaps.map(s => ({...s})),
+                animals: configuredAnimals.map(a => ({...a})),
+                createdAt: maps[editingIndex].createdAt,
+                updatedAt: new Date().toISOString()
+            };
+
+            maps[editingIndex] = map;
+            saveMapConfigs();
+            
+            renderMapsList();
+            form.reset();
+            configuredAnimals = [];
+            configuredSubmaps = [];
+            currentEditingMapKey = null;
+            cancelEdit();
+            renderConfiguredAnimals();
+            renderConfiguredSubmaps();
+            updatePreview();
+            
+            alert(`✅ 地图配置 "${data.name}" 已更新！`);
+        }
+
+        // 编辑地图配置
+        function editMap(index) {
+            editingIndex = index;
+            const map = maps[index];
+            currentEditingMapKey = map.key;
+            
+            // 填充表单
+            document.getElementById('map-name').value = map.name;
+            document.getElementById('map-icon').value = map.icon;
+            document.getElementById('map-level').value = map.level;
+            document.getElementById('map-spawn-interval').value = map.spawnInterval;
+            document.getElementById('map-max-animals').value = map.maxAnimals;
+            document.getElementById('map-desc').value = map.desc || '';
+            
+            // 恢复子地图配置
+            configuredSubmaps = map.submaps ? map.submaps.map(s => ({...s})) : [];
+            renderConfiguredSubmaps();
+            
+            // 恢复动物配置
+            configuredAnimals = map.animals ? map.animals.map(a => ({...a})) : [];
+            renderConfiguredAnimals();
+            
+            // 更新UI
+            submitText.textContent = '💾 保存修改';
+            submitBtn.classList.remove('bg-orange-600', 'hover:bg-orange-700');
+            submitBtn.classList.add('bg-blue-600', 'hover:bg-blue-700');
+            cancelEditBtn.classList.remove('hidden');
+            
+            updatePreview();
+            
+            // 滚动到表单顶部
+            form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        // 取消编辑
+        function cancelEdit() {
+            editingIndex = -1;
+            currentEditingMapKey = null;
+            submitText.textContent = '✨ 保存地图配置';
+            submitBtn.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+            submitBtn.classList.add('bg-orange-600', 'hover:bg-orange-700');
+            cancelEditBtn.classList.add('hidden');
+        }
+
+        // 保存地图配置
+        function saveMapConfigs() {
+            const jsonStr = JSON.stringify(maps);
+            localStorage.setItem('MAP_CONFIGS', jsonStr);
+            console.log('✅ 地图配置已保存到 localStorage');
+            console.log('保存的地图数量:', maps.length);
+            console.log('保存的数据:', jsonStr.substring(0, 200) + '...');
+            
+            // 验证保存
+            const saved = localStorage.getItem('MAP_CONFIGS');
+            if (saved) {
+                const parsed = JSON.parse(saved);
+                console.log('✅ 验证成功，localStorage中有', parsed.length, '个地图');
+            } else {
+                console.error('❌ 保存失败，localStorage中没有数据');
+            }
+        }
+
+        // 渲染地图列表
+        function renderMapsList() {
+            if (maps.length === 0) {
+                mapsList.innerHTML = `
+                    <div class="text-center text-gray-500 text-sm py-8">
+                        暂无地图配置
+                    </div>
+                `;
+                return;
+            }
+
+            mapsList.innerHTML = maps.map((map, index) => {
+                const submapCount = map.submaps?.length || 0;
+                const animalCount = map.animals?.length || 0;
+                
+                return `
+                    <div class="map-card bg-gray-800 rounded-lg p-3 border border-gray-600">
+                        <div class="flex items-start gap-2">
+                            <div class="text-3xl">${map.icon}</div>
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-center gap-2 mb-1">
+                                    <h5 class="text-sm font-bold text-white">${map.name}</h5>
+                                    <span class="bg-orange-600/30 text-orange-300 px-2 py-0.5 rounded text-xs">Lv.${map.level}</span>
+                                </div>
+                                <div class="flex gap-2 text-xs mb-1 flex-wrap">
+                                    <span class="text-blue-400">⏱️${map.spawnInterval}s</span>
+                                    <span class="text-green-400">🦁${map.maxAnimals}只</span>
+                                    ${submapCount > 0 ? `<span class="text-purple-400">🗺️${submapCount}个子地图</span>` : ''}
+                                    <span class="text-gray-400">🎲${animalCount}种动物</span>
+                                </div>
+                                <p class="text-xs text-gray-400">${map.desc || '暂无描述'}</p>
+                            </div>
+                            <div class="flex gap-1 flex-shrink-0">
+                                <button onclick="editMap(${index})"
+                                    class="text-blue-400 hover:text-blue-300 text-lg px-2"
+                                    title="编辑">
+                                    ✏️
+                                </button>
+                                <button onclick="deleteMap(${index})"
+                                    class="text-red-400 hover:text-red-300 text-xl"
+                                    title="删除">
+                                    ×
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // 删除地图配置
+        function deleteMap(index) {
+            if (confirm('确定要删除这个地图配置吗？')) {
+                maps.splice(index, 1);
+                saveMapConfigs();
+                renderMapsList();
+                updateMapCount();
+            }
+        }
+
+        // 导出地图配置
+        function exportMaps() {
+            if (maps.length === 0) {
+                alert('地图配置为空！');
+                return;
+            }
+
+            const dataStr = JSON.stringify(maps, null, 2);
+            const blob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `map_configs_${Date.now()}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        // 导入地图配置
+        function importMaps(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                try {
+                    const importedMaps = JSON.parse(event.target.result);
+                    
+                    if (!Array.isArray(importedMaps)) {
+                        alert('❌ 无效的JSON格式！');
+                        return;
+                    }
+
+                    // 合并地图（避免重复）
+                    const existingKeys = new Set(maps.map(m => m.key));
+                    const newMaps = importedMaps.filter(m => !existingKeys.has(m.key));
+                    
+                    maps = [...maps, ...newMaps];
+                    saveMapConfigs();
+                    
+                    renderMapsList();
+                    updateMapCount();
+                    alert(`✅ 成功导入 ${newMaps.length} 个地图配置！`);
+                } catch (error) {
+                    alert('❌ 导入失败：' + error.message);
+                }
+            };
+            reader.readAsText(file);
+            
+            e.target.value = '';
+        }
+
+        // 应用到游戏
+        function applyToGame() {
+            if (maps.length === 0) {
+                alert('❌ 地图配置为空！');
+                return;
+            }
+
+            // 统计信息
+            const totalAnimals = maps.reduce((sum, m) => sum + m.animals.length, 0);
+            const avgAnimalsPerMap = (totalAnimals / maps.length).toFixed(1);
+
+            alert(`✅ 地图配置已就绪！\n\n` +
+                  `📊 配置统计：\n` +
+                  `• 地图数量：${maps.length} 个\n` +
+                  `• 总动物种类：${totalAnimals} 种\n` +
+                  `• 平均每地图：${avgAnimalsPerMap} 种\n\n` +
+                  `🎮 游戏会根据地图配置生成对应的野生动物！`);
+        }
+
+        // 辅助函数
+        function getElementName(element) {
+            const names = {
+                'water': '水系',
+                'fire': '火系',
+                'grass': '草系',
+                'wind': '风系',
+                'electric': '电系',
+                'earth': '土系'
+            };
+            return names[element] || '未知';
+        }
+
+        function getRarityName(rarity) {
+            const names = {
+                'common': '普通',
+                'shiny': '闪光',
+                'prismatic': '幻彩',
+                'stellar': '星芒'
+            };
+            return names[rarity] || '未知';
+        }
+
+        // 初始化应用
+        init();
+    </script>
+</body>
+</html>

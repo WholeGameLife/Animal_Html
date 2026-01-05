@@ -1,0 +1,1112 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>电子盆栽 - 区域探索</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+    <style>
+        body { margin: 0; overflow: hidden; font-family: 'Inter', sans-serif; }
+        canvas { display: block; }
+        .game-ui { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
+        .control-panel { pointer-events: auto; background: rgba(17, 24, 39, 0.9); backdrop-filter: blur(5px); border: 1px solid #374151; }
+        .centered-panel { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 50; }
+        #modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.7); z-index: 40; }
+    </style>
+</head>
+<body>
+    <div id="modal-overlay" class="hidden"></div>
+    <div id="container"></div>
+
+    <div class="game-ui p-4 flex flex-col justify-between items-start">
+        <!-- Top Left: World Info & Return Button -->
+        <div class="control-panel p-4 rounded-lg text-white">
+            <h1 id="world-name" class="text-2xl font-bold text-yellow-300 mb-2">探索区域</h1>
+            <button id="btn-return-map" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg">返回世界地图</button>
+        </div>
+
+        <!-- Animal Details Panel (新增) -->
+        <div id="animal-details-panel" class="control-panel p-4 rounded-lg text-white hidden w-full md:w-96" style="position: absolute; z-index: 100;">
+            <h3 class="text-xl font-bold mb-3 text-fuchsia-400 border-b border-gray-700 pb-2 flex justify-between items-center">
+                <span>动物详情</span>
+                <button id="btn-close-animal-details" class="text-sm font-normal text-gray-400 hover:text-white">关闭</button>
+            </h3>
+            <div id="animal-detail-content">
+                <h4 class="text-lg font-bold text-fuchsia-400 flex justify-between items-center">
+                    <span id="detail-animal-name">动物名称</span>
+                    <div class="flex items-center space-x-2">
+                        <span id="detail-animal-gender" class="text-sm font-normal px-2 py-1 rounded"></span>
+                        <span id="detail-animal-level" class="text-sm font-normal bg-purple-600 px-2 py-1 rounded">Lv. 1</span>
+                    </div>
+                </h4>
+
+                <!-- 经验进度条 -->
+                <div class="my-2">
+                    <div class="flex justify-between text-xs text-gray-400 mb-1">
+                        <span>经验</span>
+                        <span id="detail-animal-exp-text">0 / 100</span>
+                    </div>
+                    <div class="w-full bg-gray-700 rounded-full h-2">
+                        <div id="detail-animal-exp-bar" class="bg-yellow-400 h-2 rounded-full" style="width: 0%"></div>
+                    </div>
+                </div>
+
+                <!-- 属性与能力统一显示 -->
+                <div class="text-sm space-y-3 mt-3">
+                    <!-- 基础属性 -->
+                    <div class="space-y-1">
+                        <p class="font-semibold text-cyan-400 mb-1">基础属性</p>
+                        <p class="ml-2">⭐ 稀有度: <span id="detail-animal-rarity" class="font-mono font-bold"></span></p>
+                        <p class="ml-2">❤️ 体力: <span id="detail-animal-stamina" class="font-mono text-green-300"></span></p>
+                        <p class="ml-2">✨ 潜力: <span id="detail-animal-potential" class="font-mono text-yellow-300"></span></p>
+                        <p class="ml-2">🌀 系别: <span id="detail-animal-element" class="font-mono text-cyan-300"></span></p>
+                    </div>
+                    
+                    <!-- 战斗能力 -->
+                    <div class="space-y-1 border-t border-gray-700 pt-2">
+                        <p class="font-semibold text-indigo-300 mb-1">战斗能力</p>
+                        <p class="ml-2 text-xs">⚔️ 攻击: <span id="detail-ability-combat-atk" class="font-mono text-red-400"></span></p>
+                        <p class="ml-2 text-xs">🛡️ 防御: <span id="detail-ability-combat-def" class="font-mono text-blue-400"></span></p>
+                        <p class="ml-2 text-xs">⚡ 敏捷: <span id="detail-ability-combat-agi" class="font-mono text-yellow-400"></span></p>
+                    </div>
+                    
+                    <!-- 战斗技能 -->
+                    <div class="border-t border-gray-700 pt-2">
+                        <p class="font-semibold text-indigo-300 mb-2">战斗技能</p>
+                        <div id="detail-combat-skills" class="grid grid-cols-4 gap-1">
+                            <!-- 技能槽位由 JS 生成 -->
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-4 border-t border-gray-700 pt-3">
+                    <button id="btn-challenge-animal" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg">
+                        ⚔️ 挑战
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Battle Setup Panel (copied from game3d.html) -->
+        <div id="battle-setup-panel" class="control-panel centered-panel p-4 rounded-lg text-white hidden w-full md:w-[450px]">
+            <h3 class="text-xl font-bold mb-3 text-red-500 border-b border-gray-700 pb-2 flex justify-center items-center">
+                <span>战斗准备</span>
+            </h3>
+            <div class="flex space-x-4 mb-4">
+                <div class="w-1/2">
+                    <p class="text-sm font-semibold text-gray-400 mb-2">选择你的勇士 (1只)</p>
+                    <div id="battle-team-selection-list" class="space-y-2 max-h-64 overflow-y-auto"></div>
+                </div>
+                <div class="w-1/2">
+                    <p class="text-sm font-semibold text-gray-400 mb-2">挑战对手</p>
+                    <div id="battle-opponent-info" class="p-2 rounded-lg bg-gray-900 flex items-center justify-between"></div>
+                </div>
+            </div>
+            <div class="flex space-x-2 mt-4">
+                <button id="btn-execute-battle" class="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-3 rounded-lg text-center text-sm" disabled>发起挑战</button>
+                <button id="btn-close-battle-setup-panel" class="flex-1 bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-3 rounded-lg text-center text-sm">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- Config ---
+        // 从地图配置器读取配置
+        const mapConfigs = JSON.parse(localStorage.getItem('MAP_CONFIGS') || '[]');
+        const animalPool = JSON.parse(localStorage.getItem('ANIMAL_POOL') || '[]');
+        
+        const WORLD_CONFIG = {
+            volcano: { name: '熔岩火山', groundColor: 0x5c1c1c, animalElement: '火', maxAnimals: 7 },
+            underwater: { name: '深海遗迹', groundColor: 0x1a3a5c, animalElement: '水', maxAnimals: 7 },
+            sky_city: { name: '天空之城', groundColor: 0x87ceeb, animalElement: '风', maxAnimals: 7 },
+            marsh: { name: '幽暗沼泽', groundColor: 0x556b2f, animalElement: '木', maxAnimals: 7 },
+        };
+        
+        // 获取当前地图的配置
+        function getCurrentMapConfig() {
+            // 尝试通过URL参数中的mapKey查找配置
+            const urlParams = new URLSearchParams(window.location.search);
+            const mapKey = urlParams.get('mapKey');
+            
+            if (mapKey) {
+                const config = mapConfigs.find(m => m.key === mapKey);
+                if (config) return config;
+            }
+            
+            // 如果没有找到，返回null使用默认配置
+            return null;
+        }
+
+        // 战斗技能配置（与game3d.html保持一致）
+        const COMBAT_SKILLS = {
+            'strike': { name: '猛击', desc: '造成120%攻击力的伤害', type: 'attack', power: 1.2, icon: '👊' },
+            'heal': { name: '治疗', desc: '恢复20%最大生命值', type: 'heal', power: 0.2, icon: '💚' },
+            'fireball': { name: '火球术', desc: '造成150%攻击力的火属性伤害', type: 'attack', power: 1.5, icon: '🔥' },
+            'shield': { name: '护盾', desc: '增加50%防御力，持续3回合', type: 'buff', power: 1.5, icon: '🛡️' },
+            'speed_up': { name: '疾风', desc: '提升30%敏捷', type: 'buff', power: 1.3, icon: '💨' },
+            'thunder': { name: '落雷', desc: '造成180%雷属性伤害', type: 'attack', power: 1.8, icon: '⚡' }
+        };
+
+        // 潜力等级配置
+        const POTENTIAL_LEVELS = ['平庸', '超常', '璀璨'];
+
+        // 稀有度配置
+        const RARITY_CONFIG = {
+            // 普通物种 95%
+            normal: {
+                probability: 0.95,
+                variants: [
+                    { name: '普通', prefix: '', color: 0xcccccc, statMultiplier: 1.0 }
+                ]
+            },
+            // 稀有化 5%
+            rare: {
+                probability: 0.05,
+                variants: [
+                    // 闪光 80% of 5% = 4%
+                    { name: '闪光', prefix: '闪光', color: 0xffd700, statMultiplier: 1.25, subProbability: 0.80 },
+                    // 幻彩 15% of 5% = 0.75%
+                    { name: '幻彩', prefix: '幻彩', color: 0xff69b4, statMultiplier: 1.5, subProbability: 0.15 },
+                    // 星芒 5% of 5% = 0.25%
+                    { name: '星芒', prefix: '星芒', color: 0x9400d3, statMultiplier: 2.0, subProbability: 0.05 }
+                ]
+            }
+        };
+
+        // 刷新间隔（毫秒）
+        const REFRESH_INTERVAL = 15000; // 15秒
+
+        // --- Global Vars ---
+        let scene, camera, renderer, worldGroup, raycaster, pointer;
+        let gameState = {};
+        let worldType = 'volcano'; // default
+        let wildAnimals = [];
+        let refreshTimer = null;
+        let animalsInBattle = new Set(); // 记录正在战斗的动物ID
+        let gltfLoader = null; // GLTFLoader实例
+
+        // --- UI Refs ---
+        const ui = {
+            modalOverlay: document.getElementById('modal-overlay'),
+            animalDetailsPanel: document.getElementById('animal-details-panel'),
+            btnCloseAnimalDetails: document.getElementById('btn-close-animal-details'),
+            btnChallengeAnimal: document.getElementById('btn-challenge-animal'),
+            battleSetupPanel: document.getElementById('battle-setup-panel'),
+            btnCloseBattleSetupPanel: document.getElementById('btn-close-battle-setup-panel'),
+            battleOpponentInfo: document.getElementById('battle-opponent-info'),
+            battleTeamSelectionList: document.getElementById('battle-team-selection-list'),
+            btnExecuteBattle: document.getElementById('btn-execute-battle'),
+        };
+
+        // --- Init ---
+        window.onload = () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            worldType = urlParams.get('world') || 'volcano';
+
+            loadGameState();
+            
+            // 检查是否有地图配置
+            const mapConfig = getCurrentMapConfig();
+            if (mapConfig) {
+                console.log('使用地图配置:', mapConfig.name);
+            } else {
+                console.log('使用默认配置:', worldType);
+            }
+            
+            initThreeJS();
+            setupEventListeners();
+            populateWorld();
+            processCapturedAnimal();
+            startRefreshTimer();
+        };
+
+        function loadGameState() {
+            const stateJSON = localStorage.getItem('gameState');
+            if (stateJSON) {
+                gameState = JSON.parse(stateJSON);
+            } else {
+                alert("数据加载失败，返回主页。");
+                window.location.href = 'game3d.html';
+            }
+        }
+
+        function setupEventListeners() {
+            document.getElementById('btn-return-map').addEventListener('click', () => {
+                localStorage.setItem('gameState', JSON.stringify(gameState));
+                window.location.href = 'world_map.html';
+            });
+            ui.btnCloseAnimalDetails.addEventListener('click', closeAnimalDetails);
+            ui.btnChallengeAnimal.addEventListener('click', () => {
+                const animalId = ui.btnChallengeAnimal.dataset.animalId;
+                if (animalId) {
+                    closeAnimalDetails();
+                    openBattleSetupPanel(animalId);
+                }
+            });
+            ui.btnCloseBattleSetupPanel.addEventListener('click', closeBattleSetupPanel);
+            ui.btnExecuteBattle.addEventListener('click', startCombat);
+            
+            window.addEventListener('resize', onWindowResize, false);
+            document.getElementById('container').addEventListener('mousedown', onPointerDown, false);
+        }
+
+        // --- 3D Scene ---
+        function initThreeJS() {
+            const mapConfig = getCurrentMapConfig();
+            const config = mapConfig || WORLD_CONFIG[worldType];
+            
+            // 使用地图配置或默认配置
+            const mapName = mapConfig ? mapConfig.name : config.name;
+            const groundColor = mapConfig ? 0x556b2f : config.groundColor; // 地图配置暂时使用默认颜色
+            
+            document.getElementById('world-name').textContent = mapName;
+
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(groundColor).multiplyScalar(0.5);
+            scene.fog = new THREE.Fog(scene.background, 20, 60);
+
+            camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.set(0, 10, 20);
+            camera.lookAt(0, 0, 0);
+
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            document.getElementById('container').appendChild(renderer.domElement);
+
+            const ambientLight = new THREE.AmbientLight(0xcccccc, 1.5);
+            scene.add(ambientLight);
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 2);
+            directionalLight.position.set(10, 20, 5);
+            scene.add(directionalLight);
+
+            worldGroup = new THREE.Group();
+            scene.add(worldGroup);
+
+            const groundGeo = new THREE.PlaneGeometry(100, 100);
+            const groundMat = new THREE.MeshLambertMaterial({ color: groundColor });
+            const ground = new THREE.Mesh(groundGeo, groundMat);
+            ground.rotation.x = -Math.PI / 2;
+            ground.userData.isGround = true;
+            worldGroup.add(ground);
+
+            raycaster = new THREE.Raycaster();
+            pointer = new THREE.Vector2();
+
+            // 初始化GLTFLoader
+            const initGLTFLoader = () => {
+                if (typeof THREE !== 'undefined' && THREE.GLTFLoader) {
+                    gltfLoader = new THREE.GLTFLoader();
+                    console.log('✅ GLTFLoader已初始化');
+                } else {
+                    console.log('⏳ 等待GLTFLoader加载...');
+                    setTimeout(initGLTFLoader, 100);
+                }
+            };
+            initGLTFLoader();
+
+            animate();
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            renderer.render(scene, camera);
+        }
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        function onPointerDown(event) {
+            const clientX = event.clientX;
+            const clientY = event.clientY;
+            const rect = renderer.domElement.getBoundingClientRect();
+            pointer.x = ((clientX - rect.left) / rect.width) * 2 - 1;
+            pointer.y = -((clientY - rect.top) / rect.height) * 2 + 1;
+
+            raycaster.setFromCamera(pointer, camera);
+            const animalMeshes = wildAnimals.map(a => a.mesh);
+            const intersects = raycaster.intersectObjects(animalMeshes);
+
+            if (intersects.length > 0) {
+                const clickedObject = intersects[0].object;
+                if (clickedObject.userData.animalId) {
+                    showAnimalDetails(clickedObject.userData.animalId);
+                }
+            } else if (event.target === renderer.domElement) {
+                // 点击空白处关闭详情面板
+                closeAnimalDetails();
+            }
+        }
+        
+        // 新增：显示动物详情
+        function showAnimalDetails(animalId) {
+            const animal = wildAnimals.find(a => a.id === animalId);
+            if (!animal) return;
+            
+            // 填充基础数据
+            document.getElementById('detail-animal-name').textContent = animal.name;
+            document.getElementById('detail-animal-level').textContent = `Lv. ${animal.level}`;
+            document.getElementById('detail-animal-gender').textContent = animal.gender || '未知';
+            document.getElementById('detail-animal-gender').className = animal.gender === '雄'
+                ? 'text-sm font-normal px-2 py-1 rounded bg-blue-500'
+                : 'text-sm font-normal px-2 py-1 rounded bg-pink-500';
+            
+            // 填充经验进度条
+            const expPercent = animal.experienceToNextLevel ? (animal.experience / animal.experienceToNextLevel) * 100 : 0;
+            document.getElementById('detail-animal-exp-text').textContent = `${Math.floor(animal.experience || 0)} / ${animal.experienceToNextLevel || 100}`;
+            document.getElementById('detail-animal-exp-bar').style.width = `${expPercent}%`;
+            
+            // 填充属性面板
+            const rarityElement = document.getElementById('detail-animal-rarity');
+            const rarityName = animal.rarity || '普通';
+            const rarityColors = {
+                '普通': 'text-gray-400',
+                '闪光': 'text-yellow-400',
+                '幻彩': 'text-pink-400',
+                '星芒': 'text-purple-500'
+            };
+            rarityElement.textContent = rarityName;
+            rarityElement.className = `font-mono font-bold ${rarityColors[rarityName] || 'text-gray-400'}`;
+            
+            document.getElementById('detail-animal-stamina').textContent = `${Math.floor(animal.stamina)} / ${animal.maxStamina || animal.stamina}`;
+            document.getElementById('detail-animal-potential').textContent = animal.potential || '平庸';
+            document.getElementById('detail-animal-element').textContent = animal.element;
+            
+            // 填充能力面板
+            document.getElementById('detail-ability-combat-atk').textContent = animal.abilities.combat.attack;
+            document.getElementById('detail-ability-combat-def').textContent = animal.abilities.combat.defense;
+            document.getElementById('detail-ability-combat-agi').textContent = animal.abilities.combat.agility;
+            
+            // 渲染战斗技能槽位
+            renderCombatSkills(animal);
+            
+            // 保存动物ID到挑战按钮
+            ui.btnChallengeAnimal.dataset.animalId = animalId;
+            
+            // 定位面板到动物旁边
+            positionDetailPanelNearAnimal(animal);
+            
+            // 显示面板
+            ui.animalDetailsPanel.classList.remove('hidden');
+        }
+        
+        // 新增：渲染战斗技能槽位
+        function renderCombatSkills(animal) {
+            const skillsContainer = document.getElementById('detail-combat-skills');
+            skillsContainer.innerHTML = '';
+            
+            // 确保动物有技能数组
+            const skills = animal.combatSkills || [null, null, null, null];
+            
+            // 渲染4个技能槽位
+            for (let i = 0; i < 4; i++) {
+                const skillKey = skills[i];
+                const skill = skillKey ? COMBAT_SKILLS[skillKey] : null;
+                
+                const slot = document.createElement('div');
+                slot.className = 'h-12 w-12 bg-gray-800 border border-gray-600 rounded flex flex-col items-center justify-center text-xs cursor-pointer hover:bg-gray-700 transition-colors relative group';
+                
+                if (skill) {
+                    slot.innerHTML = `
+                        <div class="text-lg">${skill.icon}</div>
+                        <div class="absolute bottom-full mb-2 hidden group-hover:block w-32 bg-black text-white text-xs rounded p-2 z-10 text-center shadow-lg">
+                            <div class="font-bold">${skill.name}</div>
+                            <div class="text-gray-300 mt-1">${skill.desc}</div>
+                        </div>
+                    `;
+                } else {
+                    slot.textContent = '+';
+                    slot.title = '空技能槽';
+                }
+                
+                skillsContainer.appendChild(slot);
+            }
+        }
+        
+        // 新增：关闭动物详情
+        function closeAnimalDetails() {
+            ui.animalDetailsPanel.classList.add('hidden');
+        }
+        
+        // 新增：将详情面板定位到动物旁边
+        function positionDetailPanelNearAnimal(animal) {
+            if (!animal || !animal.mesh) return;
+            
+            const panel = ui.animalDetailsPanel;
+            const mesh = animal.mesh;
+            
+            // 获取动物在屏幕上的2D位置
+            const vector = new THREE.Vector3();
+            mesh.getWorldPosition(vector);
+            vector.project(camera);
+            
+            // 转换为屏幕坐标
+            const x = (vector.x * 0.5 + 0.5) * window.innerWidth;
+            const y = (vector.y * -0.5 + 0.5) * window.innerHeight;
+            
+            // 面板尺寸
+            const panelWidth = 384; // w-96
+            const panelHeight = 400;
+            
+            // 计算位置（优先右侧）
+            let left = x + 50;
+            let top = y - panelHeight / 2;
+            
+            // 边界检查
+            if (left + panelWidth > window.innerWidth - 20) {
+                left = x - panelWidth - 50;
+            }
+            if (left < 20) left = 20;
+            if (top < 20) top = 20;
+            if (top + panelHeight > window.innerHeight - 20) {
+                top = window.innerHeight - panelHeight - 20;
+            }
+            
+            // 应用位置
+            panel.style.left = `${left}px`;
+            panel.style.top = `${top}px`;
+            panel.style.transform = 'none';
+        }
+
+        // --- Game Logic ---
+        function populateWorld() {
+            const mapConfig = getCurrentMapConfig();
+            const config = mapConfig || WORLD_CONFIG[worldType];
+            const maxAnimals = mapConfig ? mapConfig.maxAnimals : config.maxAnimals;
+            const initialCount = Math.min(3, maxAnimals); // 初始生成3只
+            
+            for (let i = 0; i < initialCount; i++) {
+                spawnAnimal();
+            }
+        }
+
+        // 生成随机稀有度
+        function getRandomRarity() {
+            const rand = Math.random();
+            
+            if (rand < 0.95) {
+                // 95% 概率为普通
+                return { rarityKey: 'normal', ...RARITY_CONFIG.normal.variants[0] };
+            } else {
+                // 5% 概率为稀有化，需要进一步细分
+                const rareRoll = Math.random();
+                let cumulative = 0;
+                
+                for (const variant of RARITY_CONFIG.rare.variants) {
+                    cumulative += variant.subProbability;
+                    if (rareRoll <= cumulative) {
+                        return { rarityKey: 'rare', ...variant };
+                    }
+                }
+                
+                // 默认返回闪光（不应该到这里）
+                return { rarityKey: 'rare', ...RARITY_CONFIG.rare.variants[0] };
+            }
+        }
+
+        // 生成一只新动物
+        function spawnAnimal() {
+            const mapConfig = getCurrentMapConfig();
+            const config = mapConfig || WORLD_CONFIG[worldType];
+            const maxAnimals = mapConfig ? mapConfig.maxAnimals : config.maxAnimals;
+            
+            if (wildAnimals.length >= maxAnimals) return;
+            
+            // 使用地图配置生成动物
+            let animalData;
+            if (mapConfig) {
+                // 如果有地图配置，必须从配置中生成
+                animalData = createAnimalFromMapConfig(mapConfig);
+                if (!animalData) {
+                    console.warn('地图配置中没有可用的动物模板');
+                    return; // 如果没有模板，不生成动物
+                }
+            } else {
+                // 没有地图配置时使用默认生成
+                animalData = createWildAnimal(config.animalElement);
+            }
+            
+            const angle = Math.random() * Math.PI * 2;
+            const radius = 5 + Math.random() * 15;
+            animalData.mesh.position.set(Math.cos(angle) * radius, 1, Math.sin(angle) * radius);
+            worldGroup.add(animalData.mesh);
+            wildAnimals.push(animalData);
+        }
+        
+        // 从地图配置生成动物
+        function createAnimalFromMapConfig(mapConfig) {
+            // 检查地图是否配置了动物
+            if (!mapConfig.animals || mapConfig.animals.length === 0) {
+                console.warn('地图未配置动物');
+                return null;
+            }
+            
+            // 1. 根据权重选择一个动物配置（可能是组中的某个稀有度变体）
+            const selectedConfig = selectAnimalConfigByWeight(mapConfig.animals);
+            
+            if (!selectedConfig) {
+                console.warn('未找到可用的动物配置');
+                return null;
+            }
+            
+            // 2. 确定使用哪个模板
+            let templateKey = selectedConfig.animalKey;
+            
+            // 如果该稀有度变体配置了自定义模板，使用自定义模板
+            if (selectedConfig.selectedAnimalKey) {
+                templateKey = selectedConfig.selectedAnimalKey;
+            }
+            
+            const template = animalPool.find(a => a.key === templateKey);
+            
+            if (!template) {
+                console.warn('未找到动物模板:', templateKey);
+                return null;
+            }
+            
+            // 3. 根据潜力比例决定成长类型
+            const growthType = rollGrowthType(selectedConfig.growthRatios);
+            
+            // 4. 基于模板和配置创建动物实例
+            return createAnimalFromTemplate(template, selectedConfig.rarityType, growthType, selectedConfig);
+        }
+        
+        // 根据权重选择动物配置
+        function selectAnimalConfigByWeight(animalConfigs) {
+            if (!animalConfigs || animalConfigs.length === 0) return null;
+            
+            // 计算总权重
+            const totalWeight = animalConfigs.reduce((sum, config) => sum + (config.weight || 0), 0);
+            
+            if (totalWeight <= 0) return animalConfigs[0]; // 如果没有权重，返回第一个
+            
+            // 根据权重随机选择
+            let random = Math.random() * totalWeight;
+            
+            for (const config of animalConfigs) {
+                random -= (config.weight || 0);
+                if (random <= 0) return config;
+            }
+            
+            return animalConfigs[0];
+        }
+        
+        // 根据潜力比例抽取成长类型
+        function rollGrowthType(growthRatios) {
+            if (!growthRatios) return 'mediocre';
+            
+            const rand = Math.random() * 100;
+            let cumulative = 0;
+            
+            const types = ['mediocre', 'extraordinary', 'brilliant'];
+            for (const type of types) {
+                cumulative += parseFloat(growthRatios[type] || 0);
+                if (rand <= cumulative) {
+                    return type;
+                }
+            }
+            
+            return 'mediocre';
+        }
+        
+        // Base64转ArrayBuffer
+        function base64ToArrayBuffer(base64) {
+            const binaryString = atob(base64);
+            const len = binaryString.length;
+            const bytes = new Uint8Array(len);
+            for (let i = 0; i < len; i++) {
+                bytes[i] = binaryString.charCodeAt(i);
+            }
+            return bytes.buffer;
+        }
+        
+        // 应用颜色到模型
+        function applyColorToModel(model, colorHex) {
+            const color = new THREE.Color(colorHex);
+            model.traverse((child) => {
+                if (child.isMesh && child.material) {
+                    if (Array.isArray(child.material)) {
+                        child.material.forEach(mat => {
+                            if (mat.color) mat.color.set(color);
+                        });
+                    } else {
+                        if (child.material.color) {
+                            child.material.color.set(color);
+                        }
+                    }
+                }
+            });
+        }
+        
+        // 基于模板创建动物实例
+        function createAnimalFromTemplate(template, rarityType, growthType, config) {
+            const id = crypto.randomUUID();
+            
+            // 稀有度颜色映射
+            const rarityColors = {
+                'common': parseInt(template.color.replace('#', ''), 16),
+                'shiny': 0xffd700,
+                'prismatic': 0xff69b4,
+                'stellar': 0x9400d3
+            };
+            
+            const rarityNames = {
+                'common': '普通',
+                'shiny': '闪光',
+                'prismatic': '幻彩',
+                'stellar': '星芒'
+            };
+            
+            const rarityMultipliers = {
+                'common': 1.0,
+                'shiny': 1.25,
+                'prismatic': 1.5,
+                'stellar': 2.0
+            };
+            
+            const growthNames = {
+                'mediocre': '平庸',
+                'extraordinary': '超常',
+                'brilliant': '璀璨'
+            };
+            
+            const color = rarityColors[rarityType] || rarityColors['common'];
+            const rarityName = rarityNames[rarityType] || '普通';
+            const multiplier = rarityMultipliers[rarityType] || 1.0;
+            const growthName = growthNames[growthType] || '平庸';
+            
+            // 创建3D模型 - 支持GLB模型
+            let mesh = null;
+            const animalData = {
+                id: id,
+                name: template.name,
+                level: template.level || 1,
+                gender: Math.random() > 0.5 ? '雄' : '雌',
+                element: template.element || '未知',
+                rarity: rarityName,
+                rarityKey: rarityType,
+                experience: 0,
+                experienceToNextLevel: template.baseExp || 100,
+                stamina: Math.floor((template.stamina || 100) * multiplier),
+                maxStamina: Math.floor((template.stamina || 100) * multiplier),
+                health: Math.floor((template.health || 100) * multiplier),
+                maxHealth: Math.floor((template.health || 100) * multiplier),
+                potential: growthName,
+                growthType: growthType,
+                color: color,
+                isWild: true,
+                abilities: {
+                    combat: {
+                        attack: Math.floor((template.attack || 10) * multiplier),
+                        defense: Math.floor((template.defense || 5) * multiplier),
+                        agility: Math.floor((template.agility || 8) * multiplier)
+                    }
+                },
+                combatSkills: [],
+                templateKey: template.key,
+                configKey: config ? `${config.animalKey}_${config.rarityType}` : null,
+                mesh: null // 稍后设置
+            };
+            
+            // 处理技能
+            if (template.skills && template.skills.length > 0) {
+                const unlockedSkills = template.skills.filter(s => s.unlockLevel <= animalData.level);
+                animalData.combatSkills = unlockedSkills.map(s => s.skillKey);
+            }
+            
+            // 检查是否有自定义GLB模型
+            if (template.modelData && template.modelShape === 'custom') {
+                console.log('🔄 加载自定义GLB模型:', template.name);
+                
+                // 创建一个临时的占位符
+                const tempGeometry = new THREE.SphereGeometry(1, 16, 16);
+                const tempMaterial = new THREE.MeshPhongMaterial({ color: color });
+                mesh = new THREE.Mesh(tempGeometry, tempMaterial);
+                mesh.userData.animalId = id;
+                animalData.mesh = mesh;
+                
+                // 异步加载GLB模型
+                loadGLBModelForAnimal(template.modelData, color, (loadedModel) => {
+                    if (loadedModel && animalData.mesh) {
+                        // 替换临时模型
+                        const oldMesh = animalData.mesh;
+                        const position = oldMesh.position.clone();
+                        
+                        // 从场景中移除旧模型
+                        worldGroup.remove(oldMesh);
+                        oldMesh.geometry.dispose();
+                        oldMesh.material.dispose();
+                        
+                        // 添加新模型
+                        loadedModel.position.copy(position);
+                        loadedModel.userData.animalId = id;
+                        animalData.mesh = loadedModel;
+                        worldGroup.add(loadedModel);
+                        
+                        console.log('✅ GLB模型加载成功:', template.name);
+                    }
+                });
+            } else {
+                // 使用默认几何体
+                const shape = template.modelShape || 'sphere';
+                let geometry;
+                
+                switch(shape) {
+                    case 'cube':
+                        geometry = new THREE.BoxGeometry(1.5, 1.5, 1.5);
+                        break;
+                    case 'cone':
+                        geometry = new THREE.ConeGeometry(0.8, 1.8, 32);
+                        break;
+                    case 'torus':
+                        geometry = new THREE.TorusGeometry(0.8, 0.3, 16, 100);
+                        break;
+                    case 'octahedron':
+                        geometry = new THREE.OctahedronGeometry(1.2, 0);
+                        break;
+                    case 'sphere':
+                    default:
+                        geometry = new THREE.SphereGeometry(1, 16, 16);
+                        break;
+                }
+                
+                const material = new THREE.MeshPhongMaterial({ color: color });
+                mesh = new THREE.Mesh(geometry, material);
+                mesh.userData.animalId = id;
+                animalData.mesh = mesh;
+            }
+            
+            return animalData;
+        }
+        
+        // 加载GLB模型
+        function loadGLBModelForAnimal(base64Data, colorHex, callback) {
+            if (!gltfLoader) {
+                console.error('❌ GLTFLoader未初始化');
+                callback(null);
+                return;
+            }
+            
+            try {
+                const arrayBuffer = base64ToArrayBuffer(base64Data);
+                
+                gltfLoader.parse(arrayBuffer, '',
+                    function(gltf) {
+                        const model = gltf.scene;
+                        
+                        // 调整模型大小
+                        const box = new THREE.Box3().setFromObject(model);
+                        const size = box.getSize(new THREE.Vector3());
+                        const maxDim = Math.max(size.x, size.y, size.z);
+                        
+                        if (maxDim > 0) {
+                            const scale = 2 / maxDim;
+                            model.scale.setScalar(scale);
+                        }
+                        
+                        // 居中模型
+                        const center = box.getCenter(new THREE.Vector3());
+                        model.position.sub(center.multiplyScalar(model.scale.x));
+                        
+                        // 应用颜色
+                        applyColorToModel(model, colorHex);
+                        
+                        callback(model);
+                    },
+                    function(error) {
+                        console.error('❌ GLB模型加载失败:', error);
+                        callback(null);
+                    }
+                );
+            } catch (error) {
+                console.error('❌ GLB模型解析异常:', error);
+                callback(null);
+            }
+        }
+
+        // 刷新动物
+        function refreshAnimals() {
+            const mapConfig = getCurrentMapConfig();
+            const config = mapConfig || WORLD_CONFIG[worldType];
+            const maxAnimals = mapConfig ? mapConfig.maxAnimals : config.maxAnimals;
+            
+            // 移除未在战斗中的动物
+            const animalsToRemove = wildAnimals.filter(a => !animalsInBattle.has(a.id));
+            animalsToRemove.forEach(animal => {
+                worldGroup.remove(animal.mesh);
+                const index = wildAnimals.indexOf(animal);
+                if (index > -1) {
+                    wildAnimals.splice(index, 1);
+                }
+            });
+            
+            // 生成新动物直到达到最大数量
+            while (wildAnimals.length < maxAnimals) {
+                spawnAnimal();
+            }
+        }
+
+        // 启动刷新定时器
+        function startRefreshTimer() {
+            refreshTimer = setInterval(refreshAnimals, REFRESH_INTERVAL);
+        }
+
+        function createWildAnimal(element) {
+            const id = crypto.randomUUID();
+            
+            // 获取随机稀有度
+            const rarity = getRandomRarity();
+            
+            const geometry = new THREE.SphereGeometry(1, 16, 16);
+            const material = new THREE.MeshPhongMaterial({ color: rarity.color });
+            const mesh = new THREE.Mesh(geometry, material);
+            mesh.userData.animalId = id;
+            
+            // 根据元素类型生成对应的战斗技能
+            const elementSkillMapping = {
+                '火': ['fireball', 'strike'],
+                '水': ['heal', 'shield'],
+                '风': ['speed_up', 'strike'],
+                '木': ['heal', 'shield']
+            };
+            
+            // 随机选择1-2个技能
+            const availableSkillKeys = elementSkillMapping[element] || ['strike'];
+            const skillCount = Math.random() > 0.5 ? 2 : 1;
+            const combatSkills = availableSkillKeys.slice(0, skillCount);
+            
+            const baseLevel = Math.floor(Math.random() * 5) + 1;
+            const level = Math.floor(baseLevel * rarity.statMultiplier);
+            const baseStamina = 50 + Math.floor(Math.random() * 20);
+            const stamina = Math.floor(baseStamina * rarity.statMultiplier);
+            
+            // 基础属性
+            const baseAttack = 10 + Math.floor(Math.random() * 5);
+            const baseDefense = 5 + Math.floor(Math.random() * 3);
+            const baseAgility = 8 + Math.floor(Math.random() * 4);
+
+            return {
+                id: id,
+                name: rarity.prefix ? `${rarity.prefix}·野生${element}兽` : `野生${element}兽`,
+                level: level,
+                gender: Math.random() > 0.5 ? '雄' : '雌',
+                element: element,
+                rarity: rarity.name,
+                rarityKey: rarity.rarityKey,
+                experience: 0,
+                experienceToNextLevel: 100,
+                stamina: stamina,
+                maxStamina: stamina,
+                potential: POTENTIAL_LEVELS[Math.floor(Math.random() * POTENTIAL_LEVELS.length)],
+                color: rarity.color,
+                isWild: true,
+                abilities: {
+                    combat: {
+                        attack: Math.floor(baseAttack * rarity.statMultiplier),
+                        defense: Math.floor(baseDefense * rarity.statMultiplier),
+                        agility: Math.floor(baseAgility * rarity.statMultiplier)
+                    }
+                },
+                combatSkills: combatSkills,
+                mesh: mesh
+            };
+        }
+        
+        // --- Combat Logic (Copied & adapted from game3d.html) ---
+        function openBattleSetupPanel(wildAnimalId) {
+            closeAnimalDetails(); // 关闭详情面板
+            const opponent = wildAnimals.find(a => a.id === wildAnimalId);
+            if (!opponent) return;
+
+            // 标记该动物正在战斗
+            animalsInBattle.add(wildAnimalId);
+            
+            gameState.battle = { opponent: opponent, playerAnimal: null };
+
+            ui.battleOpponentInfo.innerHTML = `
+                <div class="flex items-center space-x-3">
+                    <div style="background-color: #${opponent.color.toString(16).padStart(6, '0')};" class="w-5 h-5 rounded-full border-2 border-red-400"></div>
+                    <span class="font-bold text-red-400">${opponent.name}</span>
+                </div>
+                <span class="text-sm font-mono text-yellow-400">Lv. ${opponent.level}</span>
+            `;
+
+            renderBattleSelectionList();
+            ui.btnExecuteBattle.disabled = true;
+            ui.modalOverlay.classList.remove('hidden');
+            ui.battleSetupPanel.classList.remove('hidden');
+        }
+
+        function closeBattleSetupPanel() {
+            ui.battleSetupPanel.classList.add('hidden');
+            ui.modalOverlay.classList.add('hidden');
+            gameState.battle = null;
+        }
+
+        function renderBattleSelectionList() {
+            const listElement = ui.battleTeamSelectionList;
+            listElement.innerHTML = '';
+            const availableAnimals = gameState.animals.filter(a => !a.isPlaced && !a.isInjured);
+
+            if (availableAnimals.length === 0) {
+                listElement.innerHTML = '<p class="text-sm text-gray-500 p-2">没有空闲且健康的动物可出战。</p>';
+                return;
+            }
+
+            availableAnimals.forEach(animal => {
+                const isSelected = gameState.battle && gameState.battle.playerAnimal && gameState.battle.playerAnimal.id === animal.id;
+                const listItem = document.createElement('div');
+                listItem.className = `flex items-center justify-between p-2 rounded-md hover:bg-gray-700 cursor-pointer ${isSelected ? 'bg-blue-800' : ''}`;
+                listItem.innerHTML = `
+                    <span class="font-medium text-indigo-300">${animal.name}</span>
+                    <span class="text-sm text-yellow-400">Lv. ${animal.level}</span>`;
+                listItem.onclick = () => selectAnimalForCombat(animal.id);
+                listElement.appendChild(listItem);
+            });
+        }
+
+        function selectAnimalForCombat(animalId) {
+            if (!gameState.battle) return;
+            gameState.battle.playerAnimal = gameState.animals.find(a => a.id === animalId);
+            ui.btnExecuteBattle.disabled = false;
+            renderBattleSelectionList();
+        }
+
+        function startCombat() {
+            if (!gameState.battle) return;
+            const { opponent, playerAnimal } = gameState.battle;
+            if (!opponent || !playerAnimal) return;
+
+            const getSerializableAnimal = (animal) => {
+                const serializableAnimal = { ...animal };
+                delete serializableAnimal.mesh;
+                return serializableAnimal;
+            };
+
+            // 标记动物进入战斗
+            animalsInBattle.add(opponent.id);
+            
+            localStorage.setItem('battleOpponent', JSON.stringify(getSerializableAnimal(opponent)));
+            localStorage.setItem('battlePlayerAnimal', JSON.stringify(getSerializableAnimal(playerAnimal)));
+            localStorage.setItem('battleReturnUrl', window.location.href);
+            window.location.href = 'battle.html';
+        }
+        
+        function processCapturedAnimal() {
+            const capturedAnimalDataJSON = localStorage.getItem('capturedAnimal');
+            if (!capturedAnimalDataJSON) return;
+
+            const capturedAnimalData = JSON.parse(capturedAnimalDataJSON);
+
+            const wildAnimalIndex = wildAnimals.findIndex(a => a.id === capturedAnimalData.id);
+            if (wildAnimalIndex > -1) {
+                const originalWildAnimal = wildAnimals[wildAnimalIndex];
+                worldGroup.remove(originalWildAnimal.mesh);
+                wildAnimals.splice(wildAnimalIndex, 1);
+
+                // 修复：转换 combatSkills 数据结构以匹配 animal_management.html 的期望格式
+                capturedAnimalData.isWild = false;
+                capturedAnimalData.isPlaced = false;
+                
+                // 将简单数组格式转换为对象格式
+                if (Array.isArray(capturedAnimalData.combatSkills)) {
+                    const skillsArray = capturedAnimalData.combatSkills;
+                    capturedAnimalData.combatSkills = {
+                        equipped: skillsArray.slice(0, 4), // 最多4个装备槽
+                        available: skillsArray // 所有技能都可用
+                    };
+                }
+                
+                // 确保有完整的数据结构
+                if (!capturedAnimalData.combatSkills) {
+                    capturedAnimalData.combatSkills = { equipped: [], available: [] };
+                }
+                
+                // 修复：将稀有度映射到变异系统
+                if (!capturedAnimalData.mutations) {
+                    capturedAnimalData.mutations = { tier1: null, tier2: null, skills: [], history: [] };
+                }
+                
+                // 稀有化动物不映射到变异系统，保持其稀有度作为独立属性
+                // 稀有化（闪光、幻彩、星芒）在变异系统中保持不变
+                // 只需要确保 rarity 字段被保留即可
+                
+                // 初始化变异次数（如果还未设置）
+                if (typeof capturedAnimalData.mutationCount === 'undefined') {
+                    capturedAnimalData.mutationCount = 0;
+                }
+                
+                // 初始化好感度
+                if (typeof capturedAnimalData.favorability === 'undefined') {
+                    capturedAnimalData.favorability = 0;
+                }
+                
+                // 初始化发育阶段
+                if (!capturedAnimalData.developmentStage) {
+                    capturedAnimalData.developmentStage = '幼年期';
+                }
+                
+                // 初始化模板技能解锁记录
+                if (!capturedAnimalData.templateSkillsUnlocked) {
+                    capturedAnimalData.templateSkillsUnlocked = [];
+                }
+                
+                // 如果有模板，检查当前等级应该解锁的所有技能
+                if (capturedAnimalData.templateKey) {
+                    const animalPool = JSON.parse(localStorage.getItem('ANIMAL_POOL') || '[]');
+                    const skillPool = JSON.parse(localStorage.getItem('SKILL_POOL') || '[]');
+                    const template = animalPool.find(t => t.key === capturedAnimalData.templateKey);
+                    
+                    if (template && template.skills && template.skills.length > 0) {
+                        // 解锁所有等级 <= 当前等级的技能
+                        template.skills.forEach(skillConfig => {
+                            if (skillConfig.unlockLevel <= capturedAnimalData.level) {
+                                // 检查是否已经解锁过
+                                if (capturedAnimalData.templateSkillsUnlocked.includes(skillConfig.skillKey)) {
+                                    return; // 已解锁，跳过
+                                }
+                                
+                                // 查找技能信息
+                                const skill = skillPool.find(s => s.key === skillConfig.skillKey);
+                                if (!skill) {
+                                    console.warn('技能不存在:', skillConfig.skillKey);
+                                    return;
+                                }
+                                
+                                // 解锁技能
+                                capturedAnimalData.templateSkillsUnlocked.push(skillConfig.skillKey);
+                                
+                                // 根据技能类别添加到对应的技能列表
+                                if (skill.category && skill.category.startsWith('mutation-')) {
+                                    // 变异技能
+                                    if (!capturedAnimalData.mutations.skills.includes(skillConfig.skillKey)) {
+                                        capturedAnimalData.mutations.skills.push(skillConfig.skillKey);
+                                    }
+                                } else {
+                                    // 战斗技能
+                                    if (!capturedAnimalData.combatSkills.available.includes(skillConfig.skillKey)) {
+                                        capturedAnimalData.combatSkills.available.push(skillConfig.skillKey);
+                                    }
+                                }
+                            }
+                        });
+                    }
+                }
+                
+                delete capturedAnimalData.mesh;
+                gameState.animals.push(capturedAnimalData);
+                gameState.animalCount++;
+                
+                localStorage.setItem('gameState', JSON.stringify(gameState));
+                localStorage.removeItem('capturedAnimal');
+                alert(`成功捕获 ${capturedAnimalData.name}！它已被传送回你的主栖息地。`);
+            }
+        }
+
+    </script>
+</body>
+</html>
