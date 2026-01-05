@@ -2272,19 +2272,8 @@
                 console.log(`[升级] ${animal.name} 没有 templateKey`);
             }
             
-            // 每5级解锁一个新技能（作为备用）
-            if (animal.level % 5 === 0 && animal.level <= 50) {
-                const allSkillKeys = Object.keys(COMBAT_SKILLS);
-                const unlockedSkills = animal.combatSkills.available || [];
-                const availableToUnlock = allSkillKeys.filter(key => !unlockedSkills.includes(key));
-                
-                if (availableToUnlock.length > 0) {
-                    const newSkill = availableToUnlock[Math.floor(Math.random() * availableToUnlock.length)];
-                    animal.combatSkills.available.push(newSkill);
-                    const skillInfo = COMBAT_SKILLS[newSkill];
-                    showStatus(`🔓 ${animal.name} 学会了新技能：${skillInfo.icon} ${skillInfo.name}！`, 5000);
-                }
-            }
+            // 移除随机技能解锁机制
+            // 动物只能通过模板技能组解锁技能
             
             // 检查继承技能解锁
             if (animal.mutations?.inheritedSkills) {
