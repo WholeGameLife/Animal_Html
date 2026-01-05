@@ -510,6 +510,46 @@
                                 </div>
                             </div>
                         </div>
+                        
+                        <!-- 技能状态（通用，放在最后） -->
+                        <div class="bg-gray-700/50 rounded-lg p-3 border border-purple-600/30">
+                            <label class="block text-sm font-semibold text-purple-400 mb-2">✨ 技能状态（可选）</label>
+                            <div class="grid grid-cols-2 gap-4 mb-3">
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-400 mb-1">状态类型</label>
+                                    <select id="param-skill-state"
+                                        class="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white text-sm focus:outline-none focus:border-purple-500">
+                                        <option value="">无状态</option>
+                                        <option value="surge">🌊 涌动</option>
+                                        <option value="water_moon">🌙 水月</option>
+                                    </select>
+                                    <p class="text-xs text-gray-500 mt-1">技能附带的特殊状态</p>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-400 mb-1">状态持续回合</label>
+                                    <input type="number" id="param-skill-state-duration" min="0" value="0" disabled
+                                        class="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white text-sm focus:outline-none focus:border-purple-500">
+                                    <p class="text-xs text-gray-500 mt-1">0表示永久</p>
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-400 mb-1">
+                                        <input type="checkbox" id="param-skill-state-stackable" class="mr-1" disabled>
+                                        可叠加层数
+                                    </label>
+                                    <input type="number" id="param-skill-state-max-stacks" min="1" max="99" value="1" disabled
+                                        class="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white text-sm focus:outline-none focus:border-purple-500">
+                                    <p class="text-xs text-gray-500 mt-1">最大叠加层数</p>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-400 mb-1">每层效果加成</label>
+                                    <input type="number" id="param-skill-state-stack-bonus" step="0.01" min="0" value="0.1" disabled
+                                        class="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white text-sm focus:outline-none focus:border-purple-500">
+                                    <p class="text-xs text-gray-500 mt-1">每层增加的效果</p>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- 按钮 -->
@@ -703,6 +743,47 @@
                 showRelevantParams();
                 updatePreview();
             });
+            
+            // 技能状态选择控制
+            document.getElementById('param-skill-state').addEventListener('change', (e) => {
+                const hasState = e.target.value !== '';
+                const durationInput = document.getElementById('param-skill-state-duration');
+                const stackableCheckbox = document.getElementById('param-skill-state-stackable');
+                const maxStacksInput = document.getElementById('param-skill-state-max-stacks');
+                const stackBonusInput = document.getElementById('param-skill-state-stack-bonus');
+                
+                if (hasState) {
+                    durationInput.disabled = false;
+                    stackableCheckbox.disabled = false;
+                } else {
+                    durationInput.disabled = true;
+                    stackableCheckbox.disabled = true;
+                    stackableCheckbox.checked = false;
+                    maxStacksInput.disabled = true;
+                    stackBonusInput.disabled = true;
+                    durationInput.value = 0;
+                    maxStacksInput.value = 1;
+                    stackBonusInput.value = 0.1;
+                }
+                updatePreview();
+            });
+            
+            // 技能状态叠加层数复选框控制
+            document.getElementById('param-skill-state-stackable').addEventListener('change', (e) => {
+                const maxStacksInput = document.getElementById('param-skill-state-max-stacks');
+                const stackBonusInput = document.getElementById('param-skill-state-stack-bonus');
+                
+                if (e.target.checked) {
+                    maxStacksInput.disabled = false;
+                    stackBonusInput.disabled = false;
+                } else {
+                    maxStacksInput.disabled = true;
+                    stackBonusInput.disabled = true;
+                    maxStacksInput.value = 1;
+                    stackBonusInput.value = 0.1;
+                }
+                updatePreview();
+            });
 
             // 提交表单
             form.onsubmit = (e) => {
@@ -867,6 +948,20 @@
                 duration: parseInt(document.getElementById('param-duration').value) || 0,
                 count: parseInt(document.getElementById('param-count').value) || 1
             };
+            
+            // 技能状态（通用参数）
+            const skillState = document.getElementById('param-skill-state').value;
+            if (skillState) {
+                params.skillState = skillState;
+                params.skillStateDuration = parseInt(document.getElementById('param-skill-state-duration').value) || 0;
+                
+                const isStackable = document.getElementById('param-skill-state-stackable').checked;
+                if (isStackable) {
+                    params.skillStateStackable = true;
+                    params.skillStateMaxStacks = parseInt(document.getElementById('param-skill-state-max-stacks').value) || 1;
+                    params.skillStateStackBonus = parseFloat(document.getElementById('param-skill-state-stack-bonus').value) || 0.1;
+                }
+            }
 
             // 根据效果类型收集相关参数
             const effectParams = EFFECT_PARAMS[effect] || [];
@@ -907,6 +1002,14 @@
             if (effectParams.includes('status')) {
                 params.statusType = document.getElementById('param-status-type').value;
                 params.statusChance = parseInt(document.getElementById('param-status-chance').value) || 50;
+                
+                // 叠加层数相关参数
+                const isStackable = document.getElementById('param-status-stackable').checked;
+                if (isStackable) {
+                    params.statusStackable = true;
+                    params.statusMaxStacks = parseInt(document.getElementById('param-status-max-stacks').value) || 1;
+                    params.statusStackBonus = parseFloat(document.getElementById('param-status-stack-bonus').value) || 0.1;
+                }
             }
             
             if (effectParams.includes('element')) {
@@ -1011,6 +1114,22 @@
             document.getElementById('param-duration').value = params.duration || 0;
             document.getElementById('param-count').value = params.count || 1;
             
+            // 技能状态
+            if (params.skillState) {
+                document.getElementById('param-skill-state').value = params.skillState;
+                document.getElementById('param-skill-state-duration').disabled = false;
+                document.getElementById('param-skill-state-duration').value = params.skillStateDuration || 0;
+                document.getElementById('param-skill-state-stackable').disabled = false;
+                
+                if (params.skillStateStackable) {
+                    document.getElementById('param-skill-state-stackable').checked = true;
+                    document.getElementById('param-skill-state-max-stacks').disabled = false;
+                    document.getElementById('param-skill-state-stack-bonus').disabled = false;
+                    document.getElementById('param-skill-state-max-stacks').value = params.skillStateMaxStacks || 1;
+                    document.getElementById('param-skill-state-stack-bonus').value = params.skillStateStackBonus || 0.1;
+                }
+            }
+            
             if (params.attackBonus !== undefined) {
                 document.getElementById('param-attack-bonus').value = params.attackBonus;
             }
@@ -1039,6 +1158,15 @@
             if (params.statusType) {
                 document.getElementById('param-status-type').value = params.statusType;
                 document.getElementById('param-status-chance').value = params.statusChance || 50;
+                
+                // 叠加层数相关
+                if (params.statusStackable) {
+                    document.getElementById('param-status-stackable').checked = true;
+                    document.getElementById('param-status-max-stacks').disabled = false;
+                    document.getElementById('param-status-stack-bonus').disabled = false;
+                    document.getElementById('param-status-max-stacks').value = params.statusMaxStacks || 1;
+                    document.getElementById('param-status-stack-bonus').value = params.statusStackBonus || 0.1;
+                }
             }
             if (params.elementType) {
                 document.getElementById('param-element-type').value = params.elementType;
@@ -1295,7 +1423,9 @@
                 'bleed': '流血',
                 'frostbite': '冻伤',
                 'burn': '烧伤',
-                'paralyze': '麻痹'
+                'paralyze': '麻痹',
+                'surge': '涌动',
+                'water_moon': '水月'
             };
             return names[status] || status;
         }

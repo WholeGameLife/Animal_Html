@@ -202,5 +202,54 @@
       "healBonus": 0.5
     },
     "createdAt": "2026-01-05T07:54:01.168Z"
+  },
+  {
+    "key": "CUSTOM_1767603815436",
+    "name": "清流涌动",
+    "icon": "🌊",
+    "description": "引导纯净水流洗涤自身",
+    "category": "element-water",
+    "type": "attack",
+    "effect": "direct_attack",
+    "params": {
+      "cooldown": 2,
+      "duration": 0,
+      "count": 1,
+      "attackBonus": 10
+    },
+    "createdAt": "2026-01-05T09:03:35.436Z",
+    "updatedAt": "2026-01-05T09:03:45.252Z"
+  },
+  {
+    "key": "CUSTOM_1767603859844",
+    "name": "镜花水月",
+    "icon": "🌊",
+    "description": "在自身周围创造一片虚实交织的水域",
+    "category": "element-water",
+    "type": "attack",
+    "effect": "direct_attack",
+    "params": {
+      "cooldown": 3,
+      "duration": 0,
+      "count": 1,
+      "attackBonus": 20
+    },
+    "createdAt": "2026-01-05T09:04:19.844Z"
+  },
+  {
+    "key": "CUSTOM_1767603887716",
+    "name": "海魂觉醒",
+    "icon": "🌊",
+    "description": "唤醒沉睡于血脉的远古海魂之力",
+    "category": "element-water",
+    "type": "attack",
+    "effect": "direct_attack",
+    "params": {
+      "cooldown": 5,
+      "duration": 0,
+      "count": 1,
+      "attackBonus": 100
+    },
+    "createdAt": "2026-01-05T09:04:47.716Z"
   }
 ]
