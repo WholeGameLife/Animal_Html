@@ -180,84 +180,254 @@
                         </div>
                     </div>
 
-                    <!-- 技能类型 -->
+                    <!-- 技能类型（多选） -->
                     <div>
-                        <label class="block text-sm font-medium text-gray-300 mb-2">技能类型 *</label>
-                        <select id="skill-type" required
-                            class="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500">
-                            <option value="">选择类型</option>
-                            <option value="attack">⚔️ 攻击型</option>
-                            <option value="defense">🛡️ 防御型</option>
-                            <option value="agility">⚡ 敏捷型</option>
-                            <option value="buff">💪 增益型</option>
-                            <option value="debuff">🔻 减益型</option>
-                            <option value="heal">💚 治疗型</option>
-                        </select>
+                        <label class="block text-sm font-medium text-gray-300 mb-2">技能类型 * (可多选)</label>
+                        <div id="skill-types" class="bg-gray-800 border border-gray-600 rounded-lg p-3 grid grid-cols-2 gap-2">
+                            <label class="flex items-center gap-2 text-white cursor-pointer hover:bg-gray-700 p-2 rounded">
+                                <input type="checkbox" name="skill-type" value="attack" class="skill-type-checkbox">
+                                <span>⚔️ 攻击型</span>
+                            </label>
+                            <label class="flex items-center gap-2 text-white cursor-pointer hover:bg-gray-700 p-2 rounded">
+                                <input type="checkbox" name="skill-type" value="defense" class="skill-type-checkbox">
+                                <span>🛡️ 防御型</span>
+                            </label>
+                            <label class="flex items-center gap-2 text-white cursor-pointer hover:bg-gray-700 p-2 rounded">
+                                <input type="checkbox" name="skill-type" value="agility" class="skill-type-checkbox">
+                                <span>⚡ 敏捷型</span>
+                            </label>
+                            <label class="flex items-center gap-2 text-white cursor-pointer hover:bg-gray-700 p-2 rounded">
+                                <input type="checkbox" name="skill-type" value="buff" class="skill-type-checkbox">
+                                <span>💪 增益型</span>
+                            </label>
+                            <label class="flex items-center gap-2 text-white cursor-pointer hover:bg-gray-700 p-2 rounded">
+                                <input type="checkbox" name="skill-type" value="debuff" class="skill-type-checkbox">
+                                <span>🔻 减益型</span>
+                            </label>
+                            <label class="flex items-center gap-2 text-white cursor-pointer hover:bg-gray-700 p-2 rounded">
+                                <input type="checkbox" name="skill-type" value="heal" class="skill-type-checkbox">
+                                <span>💚 治疗型</span>
+                            </label>
+                        </div>
                     </div>
 
-                    <!-- 技能效果 -->
+                    <!-- 技能效果（多选） -->
                     <div>
-                        <label class="block text-sm font-medium text-gray-300 mb-2">技能效果 *</label>
-                        <select id="skill-effect" required
-                            class="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500">
-                            <option value="">选择效果</option>
-                            <optgroup label="攻击类">
-                                <option value="direct_attack">直接攻击</option>
-                                <option value="multi_attack">多段攻击</option>
-                                <option value="dot_damage">附加伤害(持续)</option>
-                                <option value="percent_damage">百分比伤害</option>
-                            </optgroup>
-                            <optgroup label="防御类">
-                                <option value="direct_defense">直接防御</option>
-                                <option value="continuous_defense">持续防御</option>
-                                <option value="defense_counter">防御反击</option>
-                            </optgroup>
-                            <optgroup label="敏捷类">
-                                <option value="direct_speed">直接增速</option>
-                                <option value="continuous_speed">持续增速</option>
-                            </optgroup>
-                            <optgroup label="增益类">
-                                <option value="buff_attack">增攻</option>
-                                <option value="buff_defense">增防</option>
-                                <option value="buff_attack_damage">攻击增伤</option>
-                                <option value="buff_attack_defense">攻击增防</option>
-                                <option value="buff_attack_speed">攻击增速</option>
-                                <option value="buff_attack_status">攻击增益(异常)</option>
-                                <option value="buff_defense_damage">防御增伤</option>
-                                <option value="buff_defense_speed">防御增速</option>
-                                <option value="buff_defense_defense">防御增防</option>
-                                <option value="buff_defense_status">防御增益(异常)</option>
-                                <option value="buff_speed">增速</option>
-                                <option value="buff_status_enemy">为敌方附加异常</option>
-                                <option value="buff_purify">净化</option>
-                                <option value="buff_heal_amp">增加治疗量</option>
-                                <option value="buff_element_damage">属性增伤</option>
-                            </optgroup>
-                            <optgroup label="减益类">
-                                <option value="debuff_attack">减攻</option>
-                                <option value="debuff_defense">减防</option>
-                                <option value="debuff_attack_damage">攻击减伤</option>
-                                <option value="debuff_attack_defense">攻击减防</option>
-                                <option value="debuff_attack_speed">攻击减速</option>
-                                <option value="debuff_attack_status">攻击减益(异常)</option>
-                                <option value="debuff_defense_damage">防御减伤</option>
-                                <option value="debuff_defense_defense">防御减防</option>
-                                <option value="debuff_defense_speed">防御减速</option>
-                                <option value="debuff_defense_status">防御减益(异常)</option>
-                                <option value="debuff_speed">减速</option>
-                                <option value="debuff_status_self">为自身附加异常</option>
-                                <option value="debuff_no_heal">禁疗</option>
-                                <option value="debuff_heal_reduce">减疗</option>
-                                <option value="debuff_element_damage">属性减伤</option>
-                            </optgroup>
-                            <optgroup label="治疗类">
-                                <option value="heal_direct">直接恢复</option>
-                                <option value="heal_continuous">持续恢复</option>
-                                <option value="heal_percent">百分比恢复</option>
-                                <option value="heal_rebirth">重生</option>
-                                <option value="heal_lifesteal">生命汲取</option>
-                            </optgroup>
-                        </select>
+                        <label class="block text-sm font-medium text-gray-300 mb-2">技能效果 * (可多选)</label>
+                        <div id="skill-effects" class="bg-gray-800 border border-gray-600 rounded-lg p-3 max-h-96 overflow-y-auto space-y-3">
+                            <!-- 攻击类 -->
+                            <div>
+                                <div class="text-xs font-bold text-blue-400 mb-2">攻击类</div>
+                                <div class="grid grid-cols-2 gap-2">
+                                    <label class="flex items-center gap-2 text-white text-sm cursor-pointer hover:bg-gray-700 p-1.5 rounded">
+                                        <input type="checkbox" name="skill-effect" value="direct_attack" class="skill-effect-checkbox">
+                                        <span>直接攻击</span>
+                                    </label>
+                                    <label class="flex items-center gap-2 text-white text-sm cursor-pointer hover:bg-gray-700 p-1.5 rounded">
+                                        <input type="checkbox" name="skill-effect" value="multi_attack" class="skill-effect-checkbox">
+                                        <span>多段攻击</span>
+                                    </label>
+                                    <label class="flex items-center gap-2 text-white text-sm cursor-pointer hover:bg-gray-700 p-1.5 rounded">
+                                        <input type="checkbox" name="skill-effect" value="dot_damage" class="skill-effect-checkbox">
+                                        <span>附加伤害(持续)</span>
+                                    </label>
+                                    <label class="flex items-center gap-2 text-white text-sm cursor-pointer hover:bg-gray-700 p-1.5 rounded">
+                                        <input type="checkbox" name="skill-effect" value="percent_damage" class="skill-effect-checkbox">
+                                        <span>百分比伤害</span>
+                                    </label>
+                                </div>
+                            </div>
+                            <!-- 防御类 -->
+                            <div>
+                                <div class="text-xs font-bold text-green-400 mb-2">防御类</div>
+                                <div class="grid grid-cols-2 gap-2">
+                                    <label class="flex items-center gap-2 text-white text-sm cursor-pointer hover:bg-gray-700 p-1.5 rounded">
+                                        <input type="checkbox" name="skill-effect" value="direct_defense" class="skill-effect-checkbox">
+                                        <span>直接防御</span>
+                                    </label>
+                                    <label class="flex items-center gap-2 text-white text-sm cursor-pointer hover:bg-gray-700 p-1.5 rounded">
+                                        <input type="checkbox" name="skill-effect" value="continuous_defense" class="skill-effect-checkbox">
+                                        <span>持续防御</span>
+                                    </label>
+                                    <label class="flex items-center gap-2 text-white text-sm cursor-pointer hover:bg-gray-700 p-1.5 rounded">
+                                        <input type="checkbox" name="skill-effect" value="defense_counter" class="skill-effect-checkbox">
+                                        <span>防御反击</span>
+                                    </label>
+                                </div>
+                            </div>
+                            <!-- 敏捷类 -->
+                            <div>
+                                <div class="text-xs font-bold text-yellow-400 mb-2">敏捷类</div>
+                                <div class="grid grid-cols-2 gap-2">
+                                    <label class="flex items-center gap-2 text-white text-sm cursor-pointer hover:bg-gray-700 p-1.5 rounded">
+                                        <input type="checkbox" name="skill-effect" value="direct_speed" class="skill-effect-checkbox">
+                                        <span>直接增速</span>
+                                    </label>
+                                    <label class="flex items-center gap-2 text-white text-sm cursor-pointer hover:bg-gray-700 p-1.5 rounded">
+                                        <input type="checkbox" name="skill-effect" value="continuous_speed" class="skill-effect-checkbox">
+                                        <span>持续增速</span>
+                                    </label>
+                                </div>
+                            </div>
+                            <!-- 增益类 -->
+                            <div>
+                                <div class="text-xs font-bold text-purple-400 mb-2">增益类</div>
+                                <div class="grid grid-cols-2 gap-2">
+                                    <label class="flex items-center gap-2 text-white text-sm cursor-pointer hover:bg-gray-700 p-1.5 rounded">
+                                        <input type="checkbox" name="skill-effect" value="buff_attack" class="skill-effect-checkbox">
+                                        <span>增攻</span>
+                                    </label>
+                                    <label class="flex items-center gap-2 text-white text-sm cursor-pointer hover:bg-gray-700 p-1.5 rounded">
+                                        <input type="checkbox" name="skill-effect" value="buff_defense" class="skill-effect-checkbox">
+                                        <span>增防</span>
+                                    </label>
+                                    <label class="flex items-center gap-2 text-white text-sm cursor-pointer hover:bg-gray-700 p-1.5 rounded">
+                                        <input type="checkbox" name="skill-effect" value="buff_attack_damage" class="skill-effect-checkbox">
+                                        <span>攻击增伤</span>
+                                    </label>
+                                    <label class="flex items-center gap-2 text-white text-sm cursor-pointer hover:bg-gray-700 p-1.5 rounded">
+                                        <input type="checkbox" name="skill-effect" value="buff_attack_defense" class="skill-effect-checkbox">
+                                        <span>攻击增防</span>
+                                    </label>
+                                    <label class="flex items-center gap-2 text-white text-sm cursor-pointer hover:bg-gray-700 p-1.5 rounded">
+                                        <input type="checkbox" name="skill-effect" value="buff_attack_speed" class="skill-effect-checkbox">
+                                        <span>攻击增速</span>
+                                    </label>
+                                    <label class="flex items-center gap-2 text-white text-sm cursor-pointer hover:bg-gray-700 p-1.5 rounded">
+                                        <input type="checkbox" name="skill-effect" value="buff_attack_status" class="skill-effect-checkbox">
+                                        <span>攻击增益(异常)</span>
+                                    </label>
+                                    <label class="flex items-center gap-2 text-white text-sm cursor-pointer hover:bg-gray-700 p-1.5 rounded">
+                                        <input type="checkbox" name="skill-effect" value="buff_defense_damage" class="skill-effect-checkbox">
+                                        <span>防御增伤</span>
+                                    </label>
+                                    <label class="flex items-center gap-2 text-white text-sm cursor-pointer hover:bg-gray-700 p-1.5 rounded">
+                                        <input type="checkbox" name="skill-effect" value="buff_defense_speed" class="skill-effect-checkbox">
+                                        <span>防御增速</span>
+                                    </label>
+                                    <label class="flex items-center gap-2 text-white text-sm cursor-pointer hover:bg-gray-700 p-1.5 rounded">
+                                        <input type="checkbox" name="skill-effect" value="buff_defense_defense" class="skill-effect-checkbox">
+                                        <span>防御增防</span>
+                                    </label>
+                                    <label class="flex items-center gap-2 text-white text-sm cursor-pointer hover:bg-gray-700 p-1.5 rounded">
+                                        <input type="checkbox" name="skill-effect" value="buff_defense_status" class="skill-effect-checkbox">
+                                        <span>防御增益(异常)</span>
+                                    </label>
+                                    <label class="flex items-center gap-2 text-white text-sm cursor-pointer hover:bg-gray-700 p-1.5 rounded">
+                                        <input type="checkbox" name="skill-effect" value="buff_speed" class="skill-effect-checkbox">
+                                        <span>增速</span>
+                                    </label>
+                                    <label class="flex items-center gap-2 text-white text-sm cursor-pointer hover:bg-gray-700 p-1.5 rounded">
+                                        <input type="checkbox" name="skill-effect" value="buff_status_enemy" class="skill-effect-checkbox">
+                                        <span>为敌方附加异常</span>
+                                    </label>
+                                    <label class="flex items-center gap-2 text-white text-sm cursor-pointer hover:bg-gray-700 p-1.5 rounded">
+                                        <input type="checkbox" name="skill-effect" value="buff_purify" class="skill-effect-checkbox">
+                                        <span>净化</span>
+                                    </label>
+                                    <label class="flex items-center gap-2 text-white text-sm cursor-pointer hover:bg-gray-700 p-1.5 rounded">
+                                        <input type="checkbox" name="skill-effect" value="buff_heal_amp" class="skill-effect-checkbox">
+                                        <span>增加治疗量</span>
+                                    </label>
+                                    <label class="flex items-center gap-2 text-white text-sm cursor-pointer hover:bg-gray-700 p-1.5 rounded">
+                                        <input type="checkbox" name="skill-effect" value="buff_element_damage" class="skill-effect-checkbox">
+                                        <span>属性增伤</span>
+                                    </label>
+                                </div>
+                            </div>
+                            <!-- 减益类 -->
+                            <div>
+                                <div class="text-xs font-bold text-red-400 mb-2">减益类</div>
+                                <div class="grid grid-cols-2 gap-2">
+                                    <label class="flex items-center gap-2 text-white text-sm cursor-pointer hover:bg-gray-700 p-1.5 rounded">
+                                        <input type="checkbox" name="skill-effect" value="debuff_attack" class="skill-effect-checkbox">
+                                        <span>减攻</span>
+                                    </label>
+                                    <label class="flex items-center gap-2 text-white text-sm cursor-pointer hover:bg-gray-700 p-1.5 rounded">
+                                        <input type="checkbox" name="skill-effect" value="debuff_defense" class="skill-effect-checkbox">
+                                        <span>减防</span>
+                                    </label>
+                                    <label class="flex items-center gap-2 text-white text-sm cursor-pointer hover:bg-gray-700 p-1.5 rounded">
+                                        <input type="checkbox" name="skill-effect" value="debuff_attack_damage" class="skill-effect-checkbox">
+                                        <span>攻击减伤</span>
+                                    </label>
+                                    <label class="flex items-center gap-2 text-white text-sm cursor-pointer hover:bg-gray-700 p-1.5 rounded">
+                                        <input type="checkbox" name="skill-effect" value="debuff_attack_defense" class="skill-effect-checkbox">
+                                        <span>攻击减防</span>
+                                    </label>
+                                    <label class="flex items-center gap-2 text-white text-sm cursor-pointer hover:bg-gray-700 p-1.5 rounded">
+                                        <input type="checkbox" name="skill-effect" value="debuff_attack_speed" class="skill-effect-checkbox">
+                                        <span>攻击减速</span>
+                                    </label>
+                                    <label class="flex items-center gap-2 text-white text-sm cursor-pointer hover:bg-gray-700 p-1.5 rounded">
+                                        <input type="checkbox" name="skill-effect" value="debuff_attack_status" class="skill-effect-checkbox">
+                                        <span>攻击减益(异常)</span>
+                                    </label>
+                                    <label class="flex items-center gap-2 text-white text-sm cursor-pointer hover:bg-gray-700 p-1.5 rounded">
+                                        <input type="checkbox" name="skill-effect" value="debuff_defense_damage" class="skill-effect-checkbox">
+                                        <span>防御减伤</span>
+                                    </label>
+                                    <label class="flex items-center gap-2 text-white text-sm cursor-pointer hover:bg-gray-700 p-1.5 rounded">
+                                        <input type="checkbox" name="skill-effect" value="debuff_defense_defense" class="skill-effect-checkbox">
+                                        <span>防御减防</span>
+                                    </label>
+                                    <label class="flex items-center gap-2 text-white text-sm cursor-pointer hover:bg-gray-700 p-1.5 rounded">
+                                        <input type="checkbox" name="skill-effect" value="debuff_defense_speed" class="skill-effect-checkbox">
+                                        <span>防御减速</span>
+                                    </label>
+                                    <label class="flex items-center gap-2 text-white text-sm cursor-pointer hover:bg-gray-700 p-1.5 rounded">
+                                        <input type="checkbox" name="skill-effect" value="debuff_defense_status" class="skill-effect-checkbox">
+                                        <span>防御减益(异常)</span>
+                                    </label>
+                                    <label class="flex items-center gap-2 text-white text-sm cursor-pointer hover:bg-gray-700 p-1.5 rounded">
+                                        <input type="checkbox" name="skill-effect" value="debuff_speed" class="skill-effect-checkbox">
+                                        <span>减速</span>
+                                    </label>
+                                    <label class="flex items-center gap-2 text-white text-sm cursor-pointer hover:bg-gray-700 p-1.5 rounded">
+                                        <input type="checkbox" name="skill-effect" value="debuff_status_self" class="skill-effect-checkbox">
+                                        <span>为自身附加异常</span>
+                                    </label>
+                                    <label class="flex items-center gap-2 text-white text-sm cursor-pointer hover:bg-gray-700 p-1.5 rounded">
+                                        <input type="checkbox" name="skill-effect" value="debuff_no_heal" class="skill-effect-checkbox">
+                                        <span>禁疗</span>
+                                    </label>
+                                    <label class="flex items-center gap-2 text-white text-sm cursor-pointer hover:bg-gray-700 p-1.5 rounded">
+                                        <input type="checkbox" name="skill-effect" value="debuff_heal_reduce" class="skill-effect-checkbox">
+                                        <span>减疗</span>
+                                    </label>
+                                    <label class="flex items-center gap-2 text-white text-sm cursor-pointer hover:bg-gray-700 p-1.5 rounded">
+                                        <input type="checkbox" name="skill-effect" value="debuff_element_damage" class="skill-effect-checkbox">
+                                        <span>属性减伤</span>
+                                    </label>
+                                </div>
+                            </div>
+                            <!-- 治疗类 -->
+                            <div>
+                                <div class="text-xs font-bold text-pink-400 mb-2">治疗类</div>
+                                <div class="grid grid-cols-2 gap-2">
+                                    <label class="flex items-center gap-2 text-white text-sm cursor-pointer hover:bg-gray-700 p-1.5 rounded">
+                                        <input type="checkbox" name="skill-effect" value="heal_direct" class="skill-effect-checkbox">
+                                        <span>直接恢复</span>
+                                    </label>
+                                    <label class="flex items-center gap-2 text-white text-sm cursor-pointer hover:bg-gray-700 p-1.5 rounded">
+                                        <input type="checkbox" name="skill-effect" value="heal_continuous" class="skill-effect-checkbox">
+                                        <span>持续恢复</span>
+                                    </label>
+                                    <label class="flex items-center gap-2 text-white text-sm cursor-pointer hover:bg-gray-700 p-1.5 rounded">
+                                        <input type="checkbox" name="skill-effect" value="heal_percent" class="skill-effect-checkbox">
+                                        <span>百分比恢复</span>
+                                    </label>
+                                    <label class="flex items-center gap-2 text-white text-sm cursor-pointer hover:bg-gray-700 p-1.5 rounded">
+                                        <input type="checkbox" name="skill-effect" value="heal_rebirth" class="skill-effect-checkbox">
+                                        <span>重生</span>
+                                    </label>
+                                    <label class="flex items-center gap-2 text-white text-sm cursor-pointer hover:bg-gray-700 p-1.5 rounded">
+                                        <input type="checkbox" name="skill-effect" value="heal_lifesteal" class="skill-effect-checkbox">
+                                        <span>生命汲取</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- 动态参数区域 -->
@@ -534,45 +704,6 @@
                             </div>
                         </div>
                         
-                        <!-- 技能状态（通用，放在最后） -->
-                        <div class="bg-gray-700/50 rounded-lg p-3 border border-purple-600/30">
-                            <label class="block text-sm font-semibold text-purple-400 mb-2">✨ 技能状态（可选）</label>
-                            <div class="grid grid-cols-2 gap-4 mb-3">
-                                <div>
-                                    <label class="block text-xs font-medium text-gray-400 mb-1">状态类型</label>
-                                    <select id="param-skill-state"
-                                        class="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white text-sm focus:outline-none focus:border-purple-500">
-                                        <option value="">无状态</option>
-                                        <option value="surge">🌊 涌动</option>
-                                        <option value="water_moon">🌙 水月</option>
-                                    </select>
-                                    <p class="text-xs text-gray-500 mt-1">技能附带的特殊状态</p>
-                                </div>
-                                <div>
-                                    <label class="block text-xs font-medium text-gray-400 mb-1">状态持续回合</label>
-                                    <input type="number" id="param-skill-state-duration" min="0" value="0" disabled
-                                        class="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white text-sm focus:outline-none focus:border-purple-500">
-                                    <p class="text-xs text-gray-500 mt-1">0表示永久</p>
-                                </div>
-                            </div>
-                            <div class="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label class="block text-xs font-medium text-gray-400 mb-1">
-                                        <input type="checkbox" id="param-skill-state-stackable" class="mr-1" disabled>
-                                        可叠加层数
-                                    </label>
-                                    <input type="number" id="param-skill-state-max-stacks" min="1" max="99" value="1" disabled
-                                        class="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white text-sm focus:outline-none focus:border-purple-500">
-                                    <p class="text-xs text-gray-500 mt-1">最大叠加层数</p>
-                                </div>
-                                <div>
-                                    <label class="block text-xs font-medium text-gray-400 mb-1">每层效果加成</label>
-                                    <input type="number" id="param-skill-state-stack-bonus" step="0.01" min="0" value="0.1" disabled
-                                        class="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white text-sm focus:outline-none focus:border-purple-500">
-                                    <p class="text-xs text-gray-500 mt-1">每层增加的效果</p>
-                                </div>
-                            </div>
-                        </div>
                     </div>
 
                     <!-- 按钮 -->
@@ -720,7 +851,6 @@
         const skillCount = document.getElementById('skill-count');
         const emojiModal = document.getElementById('emoji-modal');
         const emojiGrid = document.getElementById('emoji-grid');
-        const skillEffect = document.getElementById('skill-effect');
 
         // 初始化
         function init() {
@@ -765,51 +895,12 @@
                 input.addEventListener('input', updatePreview);
             });
 
-            // 技能效果改变时显示对应参数
-            skillEffect.addEventListener('change', () => {
-                showRelevantParams();
-                updatePreview();
-            });
-            
-            // 技能状态选择控制
-            document.getElementById('param-skill-state').addEventListener('change', (e) => {
-                const hasState = e.target.value !== '';
-                const durationInput = document.getElementById('param-skill-state-duration');
-                const stackableCheckbox = document.getElementById('param-skill-state-stackable');
-                const maxStacksInput = document.getElementById('param-skill-state-max-stacks');
-                const stackBonusInput = document.getElementById('param-skill-state-stack-bonus');
-                
-                if (hasState) {
-                    durationInput.disabled = false;
-                    stackableCheckbox.disabled = false;
-                } else {
-                    durationInput.disabled = true;
-                    stackableCheckbox.disabled = true;
-                    stackableCheckbox.checked = false;
-                    maxStacksInput.disabled = true;
-                    stackBonusInput.disabled = true;
-                    durationInput.value = 0;
-                    maxStacksInput.value = 1;
-                    stackBonusInput.value = 0.1;
-                }
-                updatePreview();
-            });
-            
-            // 技能状态叠加层数复选框控制
-            document.getElementById('param-skill-state-stackable').addEventListener('change', (e) => {
-                const maxStacksInput = document.getElementById('param-skill-state-max-stacks');
-                const stackBonusInput = document.getElementById('param-skill-state-stack-bonus');
-                
-                if (e.target.checked) {
-                    maxStacksInput.disabled = false;
-                    stackBonusInput.disabled = false;
-                } else {
-                    maxStacksInput.disabled = true;
-                    stackBonusInput.disabled = true;
-                    maxStacksInput.value = 1;
-                    stackBonusInput.value = 0.1;
-                }
-                updatePreview();
+            // 技能类型和效果复选框改变时显示对应参数和更新预览
+            document.querySelectorAll('.skill-type-checkbox, .skill-effect-checkbox').forEach(checkbox => {
+                checkbox.addEventListener('change', () => {
+                    showRelevantParams();
+                    updatePreview();
+                });
             });
 
             // 提交表单
@@ -847,8 +938,16 @@
 
         // 显示相关参数
         function showRelevantParams() {
-            const effect = skillEffect.value;
-            const params = EFFECT_PARAMS[effect] || [];
+            // 获取所有选中的效果
+            const selectedEffects = Array.from(document.querySelectorAll('.skill-effect-checkbox:checked'))
+                .map(checkbox => checkbox.value);
+            
+            // 收集所有选中效果需要的参数
+            const allParams = new Set();
+            selectedEffects.forEach(effect => {
+                const params = EFFECT_PARAMS[effect] || [];
+                params.forEach(param => allParams.add(param));
+            });
 
             // 隐藏所有参数组
             document.querySelectorAll('.param-group').forEach(group => {
@@ -856,7 +955,7 @@
             });
 
             // 显示相关参数组
-            params.forEach(param => {
+            allParams.forEach(param => {
                 const group = document.getElementById(`param-${param}-group`);
                 if (group) group.classList.add('active');
             });
@@ -884,7 +983,16 @@
                 'debuff': '🔻',
                 'heal': '💚'
             };
-            const typeIcon = typeIcons[data.type] || '';
+            
+            // 生成类型标签（支持多个类型）
+            const typeLabels = data.types && data.types.length > 0 ? data.types.map(type =>
+                `<span class="bg-blue-600/30 text-blue-300 px-2 py-1 rounded text-xs font-bold">${typeIcons[type]} ${getTypeName(type)}</span>`
+            ).join('') : '';
+            
+            // 生成效果标签（支持多个效果）
+            const effectLabels = data.effects && data.effects.length > 0 ? data.effects.map(effect =>
+                `<span class="bg-green-600/30 text-green-300 px-2 py-1 rounded text-xs">${getEffectName(effect)}</span>`
+            ).join('') : '';
             
             // 生成参数描述
             let paramDesc = [];
@@ -900,10 +1008,10 @@
                             <h4 class="text-lg font-bold text-white">${data.name}</h4>
                             <span class="category-badge ${categoryClass}">${getCategoryName(data.category)}</span>
                             ${data.rarity ? `<span class="category-badge rarity-${data.rarity}">${getRarityName(data.rarity)}</span>` : ''}
-                            ${data.type ? `<span class="bg-blue-600/30 text-blue-300 px-2 py-1 rounded text-xs font-bold">${typeIcon} ${getTypeName(data.type)}</span>` : ''}
                         </div>
+                        ${typeLabels ? `<div class="flex flex-wrap gap-1 mb-2">${typeLabels}</div>` : ''}
                         ${data.description ? `<p class="text-xs text-gray-400 italic mb-2">${data.description}</p>` : ''}
-                        <p class="text-sm text-gray-300 mb-2">${getEffectDescription(data)}</p>
+                        ${effectLabels ? `<div class="flex flex-wrap gap-1 mb-2">${effectLabels}</div>` : ''}
                         ${paramDesc.length > 0 ? `<div class="flex flex-wrap gap-2 text-xs">
                             ${paramDesc.map(p => `<span class="bg-purple-600/30 text-purple-300 px-2 py-1 rounded">${p}</span>`).join('')}
                         </div>` : ''}
@@ -974,64 +1082,61 @@
 
         // 获取表单数据
         function getFormData() {
-            const effect = skillEffect.value;
+            // 获取选中的类型（多选）
+            const selectedTypes = Array.from(document.querySelectorAll('.skill-type-checkbox:checked'))
+                .map(checkbox => checkbox.value);
+            
+            // 获取选中的效果（多选）
+            const selectedEffects = Array.from(document.querySelectorAll('.skill-effect-checkbox:checked'))
+                .map(checkbox => checkbox.value);
+            
             const params = {
                 cooldown: parseInt(document.getElementById('param-cooldown').value) || 0,
                 duration: parseInt(document.getElementById('param-duration').value) || 0,
                 count: parseInt(document.getElementById('param-count').value) || 1
             };
-            
-            // 技能状态（通用参数）
-            const skillState = document.getElementById('param-skill-state').value;
-            if (skillState) {
-                params.skillState = skillState;
-                params.skillStateDuration = parseInt(document.getElementById('param-skill-state-duration').value) || 0;
-                
-                const isStackable = document.getElementById('param-skill-state-stackable').checked;
-                if (isStackable) {
-                    params.skillStateStackable = true;
-                    params.skillStateMaxStacks = parseInt(document.getElementById('param-skill-state-max-stacks').value) || 1;
-                    params.skillStateStackBonus = parseFloat(document.getElementById('param-skill-state-stack-bonus').value) || 0.1;
-                }
-            }
 
-            // 根据效果类型收集相关参数
-            const effectParams = EFFECT_PARAMS[effect] || [];
+            // 根据所有选中的效果类型收集相关参数
+            const allEffectParams = new Set();
+            selectedEffects.forEach(effect => {
+                const effectParams = EFFECT_PARAMS[effect] || [];
+                effectParams.forEach(param => allEffectParams.add(param));
+            });
             
-            if (effectParams.includes('attack-bonus')) {
+            if (allEffectParams.has('attack-bonus')) {
                 params.attackBonus = parseFloat(document.getElementById('param-attack-bonus').value) || 1.0;
             }
             
-            if (effectParams.includes('multi-bonus')) {
+            if (allEffectParams.has('multi-bonus')) {
                 const multiBonusStr = document.getElementById('param-multi-bonus').value;
                 params.multiBonus = multiBonusStr ? multiBonusStr.split(',').map(v => parseFloat(v.trim())) : [1.0];
             }
             
-            if (effectParams.includes('percent-damage')) {
+            if (allEffectParams.has('percent-damage')) {
                 params.damageSource = document.getElementById('param-damage-source').value;
                 params.damagePercent = parseFloat(document.getElementById('param-damage-percent').value) || 0.1;
             }
             
-            if (effectParams.includes('defense-bonus')) {
+            if (allEffectParams.has('defense-bonus')) {
                 params.defenseBonus = parseFloat(document.getElementById('param-defense-bonus').value) || 1.0;
             }
             
-            if (effectParams.includes('counter')) {
+            if (allEffectParams.has('counter')) {
                 params.counterSource = document.getElementById('param-counter-source').value;
                 params.counterBonus = parseFloat(document.getElementById('param-counter-bonus').value) || 0.5;
             }
             
-            if (effectParams.includes('speed-bonus')) {
+            if (allEffectParams.has('speed-bonus')) {
                 params.speedBonus = parseFloat(document.getElementById('param-speed-bonus').value) || 0.2;
             }
             
-            if (effectParams.includes('buff')) {
+            if (allEffectParams.has('buff')) {
                 params.target = document.getElementById('param-target').value;
                 params.buffSource = document.getElementById('param-buff-source').value;
                 params.buffBonus = parseFloat(document.getElementById('param-buff-bonus').value) || 0.2;
             }
             
-            if (effectParams.includes('status')) {
+            if (allEffectParams.has('status')) {
                 params.statusType = document.getElementById('param-status-type').value;
                 params.statusChance = parseInt(document.getElementById('param-status-chance').value) || 50;
                 
@@ -1044,28 +1149,28 @@
                 }
             }
             
-            if (effectParams.includes('element')) {
+            if (allEffectParams.has('element')) {
                 params.elementType = document.getElementById('param-element-type').value;
                 params.elementBonus = parseFloat(document.getElementById('param-element-bonus').value) || 0.2;
             }
             
-            if (effectParams.includes('heal')) {
+            if (allEffectParams.has('heal')) {
                 params.healTarget = document.getElementById('param-heal-target').value;
                 params.healSource = document.getElementById('param-heal-source').value;
                 params.healBonus = parseFloat(document.getElementById('param-heal-bonus').value) || 0.5;
             }
             
-            if (effectParams.includes('heal-percent')) {
+            if (allEffectParams.has('heal-percent')) {
                 params.healPercentSource = document.getElementById('param-heal-percent-source').value;
                 params.healPercent = parseFloat(document.getElementById('param-heal-percent').value) || 0.3;
             }
             
-            if (effectParams.includes('rebirth')) {
+            if (allEffectParams.has('rebirth')) {
                 params.rebirthTarget = document.getElementById('param-rebirth-target').value;
                 params.rebirthPercent = parseFloat(document.getElementById('param-rebirth-percent').value) || 0.5;
             }
             
-            if (effectParams.includes('lifesteal')) {
+            if (allEffectParams.has('lifesteal')) {
                 params.lifestealSource = document.getElementById('param-lifesteal-source').value;
                 params.lifestealBonus = parseFloat(document.getElementById('param-lifesteal-bonus').value) || 0.2;
             }
@@ -1075,8 +1180,8 @@
                 icon: document.getElementById('skill-icon').value,
                 description: document.getElementById('skill-description').value,
                 category: document.getElementById('skill-category').value,
-                type: document.getElementById('skill-type').value,
-                effect: effect,
+                types: selectedTypes,
+                effects: selectedEffects,
                 params: params
             };
             
@@ -1146,30 +1251,30 @@
             document.getElementById('skill-description').value = skill.description || '';
             document.getElementById('skill-category').value = skill.category;
             document.getElementById('skill-rarity').value = skill.rarity || '';
-            document.getElementById('skill-type').value = skill.type;
-            document.getElementById('skill-effect').value = skill.effect;
+            
+            // 清除所有复选框
+            document.querySelectorAll('.skill-type-checkbox').forEach(cb => cb.checked = false);
+            document.querySelectorAll('.skill-effect-checkbox').forEach(cb => cb.checked = false);
+            
+            // 填充类型（兼容旧格式和新格式）
+            const types = skill.types || (skill.type ? [skill.type] : []);
+            types.forEach(type => {
+                const checkbox = document.querySelector(`.skill-type-checkbox[value="${type}"]`);
+                if (checkbox) checkbox.checked = true;
+            });
+            
+            // 填充效果（兼容旧格式和新格式）
+            const effects = skill.effects || (skill.effect ? [skill.effect] : []);
+            effects.forEach(effect => {
+                const checkbox = document.querySelector(`.skill-effect-checkbox[value="${effect}"]`);
+                if (checkbox) checkbox.checked = true;
+            });
             
             // 填充参数
             const params = skill.params || {};
             document.getElementById('param-cooldown').value = params.cooldown || 0;
             document.getElementById('param-duration').value = params.duration || 0;
             document.getElementById('param-count').value = params.count || 1;
-            
-            // 技能状态
-            if (params.skillState) {
-                document.getElementById('param-skill-state').value = params.skillState;
-                document.getElementById('param-skill-state-duration').disabled = false;
-                document.getElementById('param-skill-state-duration').value = params.skillStateDuration || 0;
-                document.getElementById('param-skill-state-stackable').disabled = false;
-                
-                if (params.skillStateStackable) {
-                    document.getElementById('param-skill-state-stackable').checked = true;
-                    document.getElementById('param-skill-state-max-stacks').disabled = false;
-                    document.getElementById('param-skill-state-stack-bonus').disabled = false;
-                    document.getElementById('param-skill-state-max-stacks').value = params.skillStateMaxStacks || 1;
-                    document.getElementById('param-skill-state-stack-bonus').value = params.skillStateStackBonus || 0.1;
-                }
-            }
             
             if (params.attackBonus !== undefined) {
                 document.getElementById('param-attack-bonus').value = params.attackBonus;
@@ -1278,8 +1383,19 @@
             };
 
             skillsList.innerHTML = skills.map((skill, index) => {
-                const typeIcon = typeIcons[skill.type] || '';
-                const typeName = getTypeName(skill.type);
+                // 兼容旧格式和新格式
+                const types = skill.types || (skill.type ? [skill.type] : []);
+                const effects = skill.effects || (skill.effect ? [skill.effect] : []);
+                
+                const typeLabels = types.map(type => {
+                    const icon = typeIcons[type] || '';
+                    const name = getTypeName(type);
+                    return `<span class="bg-blue-600/30 text-blue-300 px-2 py-0.5 rounded text-xs">${icon} ${name}</span>`;
+                }).join(' ');
+                
+                const effectLabels = effects.map(effect =>
+                    `<span class="bg-green-600/30 text-green-300 px-1.5 py-0.5 rounded text-xs">${getEffectName(effect)}</span>`
+                ).join(' ');
                 
                 return `
                     <div class="skill-card bg-gray-800 rounded-lg p-3 border border-gray-600">
@@ -1290,10 +1406,10 @@
                                     <h5 class="text-sm font-bold text-white truncate">${skill.name}</h5>
                                     <span class="category-badge ${skill.category} text-xs">${getCategoryName(skill.category)}</span>
                                     ${skill.rarity ? `<span class="category-badge rarity-${skill.rarity} text-xs">${getRarityName(skill.rarity)}</span>` : ''}
-                                    <span class="bg-blue-600/30 text-blue-300 px-2 py-0.5 rounded text-xs">${typeIcon} ${typeName}</span>
                                 </div>
                                 ${skill.description ? `<p class="text-xs text-gray-500 italic mb-1">${skill.description}</p>` : ''}
-                                <p class="text-xs text-gray-400">${getEffectName(skill.effect)}</p>
+                                ${typeLabels ? `<div class="mb-1">${typeLabels}</div>` : ''}
+                                ${effectLabels ? `<div>${effectLabels}</div>` : ''}
                             </div>
                             <div class="flex gap-1 flex-shrink-0">
                                 <button onclick="editSkill(${index})"
@@ -1466,9 +1582,7 @@
                 'bleed': '流血',
                 'frostbite': '冻伤',
                 'burn': '烧伤',
-                'paralyze': '麻痹',
-                'surge': '涌动',
-                'water_moon': '水月'
+                'paralyze': '麻痹'
             };
             return names[status] || status;
         }

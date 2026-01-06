@@ -473,8 +473,8 @@
                         const isOnCooldown = cooldownRemaining > 0;
                         
                         // 冷却中显示灰色，否则正常颜色
-                        const bgColor = isOnCooldown ? 'bg-gray-800/50' : (isMutationSkill ? 'bg-pink-900/20' : 'bg-purple-900/20');
-                        const borderColor = isOnCooldown ? 'border-gray-700' : 'border-gray-600';
+                        const bgColor = isOnCooldown ? 'bg-gray-800/50' : (isMutationSkill ? 'bg-pink-900/60' : 'bg-purple-900/60');
+                        const borderColor = isOnCooldown ? 'border-gray-700' : (isMutationSkill ? 'border-pink-600' : 'border-purple-600');
                         
                         slotDiv.className = `${bgColor} border-2 ${borderColor} rounded p-2 text-center min-h-[70px] flex flex-col items-center justify-center transition-all duration-300`;
                         slotDiv.id = `${containerId}-slot-${i}`; // 添加ID以便触发动画
@@ -526,17 +526,32 @@
                     if (!skill && skillKey) {
                         const customSkill = skillPool.find(s => s.key === skillKey);
                         if (customSkill) {
+                            // 兼容旧格式（单个type/effect）和新格式（types/effects数组）
+                            const types = customSkill.types || (customSkill.type ? [customSkill.type] : []);
+                            const effects = customSkill.effects || (customSkill.effect ? [customSkill.effect] : []);
+                            
                             skill = {
                                 name: customSkill.name,
                                 icon: customSkill.icon,
                                 desc: customSkill.description || customSkill.desc,
-                                type: customSkill.type,
-                                effect: customSkill.effect,
+                                types: types,  // 多类型数组
+                                effects: effects,  // 多效果数组
+                                // 为了向后兼容，保留单个type和effect（取第一个）
+                                type: types[0] || customSkill.type,
+                                effect: effects[0] || customSkill.effect,
                                 value: customSkill.value,
                                 cooldown: customSkill.params?.cooldown || customSkill.cooldown || 0,
                                 duration: customSkill.params?.duration || customSkill.duration || 0,
                                 params: customSkill.params || {}
                             };
+                        }
+                    } else if (skill) {
+                        // 为预定义技能添加types和effects数组（向后兼容）
+                        if (!skill.types && skill.type) {
+                            skill.types = [skill.type];
+                        }
+                        if (!skill.effects && skill.effect) {
+                            skill.effects = [skill.effect];
                         }
                     }
                     
@@ -658,18 +673,19 @@
                 
                 // 触发所有攻击相关的技能（检查冷却）
                 for (const skill of attackerSkills) {
-                    // 跳过明确的防御、敏捷buff技能和被动技能
-                    const isDefenseSkill = skill.type === 'defense' ||
-                                          skill.effect === 'defense_counter' ||
-                                          skill.effect === 'buff_defense' ||
-                                          skill.effect === 'counter' ||
-                                          skill.effect === 'passive_defense' ||
-                                          skill.effect === 'damage_reduction' ||
-                                          skill.effect === 'guaranteed_dodge';
+                    // 获取技能的所有类型和效果（支持多类型多效果）
+                    const skillTypes = skill.types || (skill.type ? [skill.type] : []);
+                    const skillEffects = skill.effects || (skill.effect ? [skill.effect] : []);
                     
-                    const isAgilityBuff = skill.effect === 'buff_agility' || skill.effect === 'passive_agility';
-                    const isPassiveOnly = skill.effect === 'passive_attack' || skill.effect === 'regen' ||
-                                         skill.effect === 'heal_reduce' || skill.effect === 'rebirth';
+                    // 判断是否为防御、敏捷或纯被动技能
+                    const isDefenseSkill = skillTypes.includes('defense') ||
+                                          skillEffects.some(e => ['defense_counter', 'buff_defense', 'counter',
+                                                                  'passive_defense', 'damage_reduction',
+                                                                  'guaranteed_dodge', 'direct_defense',
+                                                                  'continuous_defense'].includes(e));
+                    
+                    const isAgilityBuff = skillEffects.some(e => ['buff_agility', 'passive_agility'].includes(e));
+                    const isPassiveOnly = skillEffects.some(e => ['passive_attack', 'regen', 'heal_reduce', 'rebirth'].includes(e));
                     
                     if (isDefenseSkill || isAgilityBuff || isPassiveOnly) {
                         continue; // 跳过防御和敏捷技能
@@ -680,153 +696,163 @@
                         continue; // 跳过冷却中的技能
                     }
                     
-                    // 计算该技能的伤害贡献
-                    let skillDamage = 0;
-                    let skillMultiplier = 1.0;
-                    let damageType = ''; // 伤害类型描述
-                    
-                    // 处理自定义技能的params参数
+                    // 处理技能的所有攻击效果
+                    let skillTotalDamage = 0;
+                    const damageInfoList = [];
                     const params = skill.params || {};
-                    const attackBonus = params.attackBonus || skill.value || 0;
-                    const multiBonus = params.multiBonus || [];
-                    const count = params.count || 1;
                     
-                    if (skill.effect === 'direct_attack' && attackBonus) {
-                        // 直接攻击：attackBonus是固定伤害值
-                        skillDamage = Math.floor(attackBonus);
-                        totalDamage += skillDamage; // 直接累加到总伤害
-                        damageType = 'direct';
-                    } else if (skill.effect === 'multi_attack' && (multiBonus.length > 0 || count > 1)) {
-                        // 多段攻击：计算所有段的总伤害
-                        let hitDamages = []; // 记录每段伤害
-                        let hitCount = count;
+                    // 遍历所有效果，计算每个效果的伤害
+                    for (const effect of skillEffects) {
+                        let effectDamage = 0;
+                        let damageType = '';
                         
-                        if (multiBonus.length > 0) {
-                            // 如果有multiBonus数组
-                            if (multiBonus.length === 1) {
-                                // 只有一个值，表示每段都是这个倍率
-                                for (let i = 0; i < count; i++) {
-                                    const hitDamage = Math.floor(baseDamage * multiBonus[0]);
-                                    hitDamages.push(hitDamage);
+                        // 跳过非攻击效果
+                        if (['buff_attack', 'buff_defense', 'buff_speed', 'buff_purify',
+                             'buff_heal_amp', 'debuff_attack', 'debuff_defense', 'debuff_speed',
+                             'debuff_no_heal', 'debuff_heal_reduce', 'heal_direct', 'heal_continuous',
+                             'heal_percent', 'heal_rebirth'].includes(effect)) {
+                            continue;
+                        }
+                        
+                        const attackBonus = params.attackBonus || skill.value || 0;
+                        const multiBonus = params.multiBonus || [];
+                        const count = params.count || 1;
+                        
+                        if (effect === 'direct_attack' && attackBonus) {
+                            // 直接攻击：attackBonus是固定伤害值
+                            effectDamage = Math.floor(attackBonus);
+                            damageType = 'direct';
+                        } else if (effect === 'multi_attack' && (multiBonus.length > 0 || count > 1)) {
+                            // 多段攻击：计算所有段的总伤害
+                            let hitDamages = [];
+                            let hitCount = count;
+                            
+                            if (multiBonus.length > 0) {
+                                if (multiBonus.length === 1) {
+                                    for (let i = 0; i < count; i++) {
+                                        hitDamages.push(Math.floor(baseDamage * multiBonus[0]));
+                                    }
+                                    hitCount = count;
+                                } else {
+                                    for (let i = 0; i < count && i < multiBonus.length; i++) {
+                                        hitDamages.push(Math.floor(baseDamage * multiBonus[i]));
+                                    }
+                                    hitCount = Math.min(count, multiBonus.length);
                                 }
-                                hitCount = count;
                             } else {
-                                // 多个值，每段使用对应倍率
-                                for (let i = 0; i < count && i < multiBonus.length; i++) {
-                                    const hitDamage = Math.floor(baseDamage * multiBonus[i]);
-                                    hitDamages.push(hitDamage);
+                                for (let i = 0; i < count; i++) {
+                                    hitDamages.push(baseDamage);
                                 }
-                                hitCount = Math.min(count, multiBonus.length);
                             }
-                        } else {
-                            // 没有multiBonus，默认每段100%伤害
-                            for (let i = 0; i < count; i++) {
-                                hitDamages.push(baseDamage);
+                            
+                            effectDamage = hitDamages.reduce((sum, dmg) => sum + dmg, 0);
+                            damageType = 'multi';
+                            damageInfoList.push({
+                                type: 'multi',
+                                damage: effectDamage,
+                                hitCount: hitCount,
+                                hitDamages: hitDamages
+                            });
+                        } else if (effect === 'critical' && skill.value) {
+                            effectDamage = Math.floor(baseDamage * skill.value);
+                            isCriticalHit = true;
+                            damageType = 'critical';
+                        } else if (effect === 'damage' && skill.value) {
+                            effectDamage = Math.floor(baseDamage * skill.value);
+                            damageType = 'damage';
+                        } else if (effect === 'bonus_damage' && skill.value) {
+                            effectDamage = Math.floor(baseDamage * skill.value);
+                            damageType = 'bonus';
+                        } else if (effect === 'percent_damage' && skill.value) {
+                            const targetMaxHealth = isPlayer ? this.opponentData.stamina : this.playerData.stamina;
+                            effectDamage = Math.floor(targetMaxHealth * skill.value);
+                            damageType = 'percent';
+                        } else if (effect === 'true_damage' && skill.value) {
+                            effectDamage = Math.floor(baseAttack * skill.value);
+                            damageType = 'true';
+                        } else if (effect === 'damage_amp' && skill.value) {
+                            effectDamage = Math.floor(baseDamage * skill.value);
+                            damageType = 'amp';
+                        } else if (effect === 'armor_pierce' && skill.value) {
+                            const ignoredDefense = Math.floor(defense * skill.value);
+                            effectDamage = Math.floor(ignoredDefense * 0.5);
+                            damageType = 'pierce';
+                        } else if (effect === 'dot_damage' && attackBonus) {
+                            effectDamage = Math.floor(baseAttack * attackBonus);
+                            damageType = 'dot';
+                        } else if (effect === 'heal_lifesteal' && skill.value) {
+                            effectDamage = baseDamage;
+                            damageType = 'lifesteal';
+                        } else if (skill.value && skill.value > 0) {
+                            if (skill.value > 1.0) {
+                                effectDamage = Math.floor(baseDamage * skill.value);
+                                damageType = 'multiplier';
+                            } else {
+                                effectDamage = Math.floor(baseDamage * skill.value);
+                                damageType = 'bonus';
                             }
                         }
                         
-                        skillDamage = hitDamages.reduce((sum, dmg) => sum + dmg, 0);
-                        totalDamage += skillDamage; // 直接累加到总伤害
-                        damageType = 'multi';
-                        skill._hitCount = hitCount; // 保存段数用于显示
-                        skill._hitDamages = hitDamages; // 保存每段伤害用于显示
-                    } else if (skill.effect === 'critical' && skill.value) {
-                        skillMultiplier = skill.value;
-                        skillDamage = Math.floor(baseDamage * skillMultiplier);
-                        totalDamage += skillDamage; // 直接累加
-                        isCriticalHit = true;
-                        damageType = 'critical';
-                    } else if (skill.effect === 'damage' && skill.value) {
-                        skillMultiplier = skill.value;
-                        skillDamage = Math.floor(baseDamage * skillMultiplier);
-                        totalDamage += skillDamage; // 直接累加
-                        damageType = 'damage';
-                    } else if (skill.effect === 'bonus_damage' && skill.value) {
-                        skillDamage = Math.floor(baseDamage * skill.value);
-                        totalDamage += skillDamage; // 直接累加
-                        damageType = 'bonus';
-                    } else if (skill.effect === 'percent_damage' && skill.value) {
-                        const targetMaxHealth = isPlayer ? this.opponentData.stamina : this.playerData.stamina;
-                        skillDamage = Math.floor(targetMaxHealth * skill.value);
-                        totalDamage += skillDamage; // 直接累加
-                        damageType = 'percent';
-                    } else if (skill.effect === 'true_damage' && skill.value) {
-                        skillDamage = Math.floor(baseAttack * skill.value);
-                        totalDamage += skillDamage; // 直接累加
-                        damageType = 'true';
-                    } else if (skill.effect === 'damage_amp' && skill.value) {
-                        skillDamage = Math.floor(baseDamage * skill.value);
-                        totalDamage += skillDamage; // 直接累加
-                        damageType = 'amp';
-                    } else if (skill.effect === 'armor_pierce' && skill.value) {
-                        const ignoredDefense = Math.floor(defense * skill.value);
-                        skillDamage = Math.floor(ignoredDefense * 0.5);
-                        totalDamage += skillDamage; // 直接累加
-                        damageType = 'pierce';
-                    } else if (skill.effect === 'buff_attack' && skill.value) {
-                        const attackBoostValue = Math.floor(baseAttack * skill.value);
-                        skillDamage = Math.floor(attackBoostValue);
-                        totalDamage += skillDamage; // 直接累加
-                        damageType = 'buff';
-                    } else if (skill.effect === 'lifesteal' && skill.value) {
-                        skillDamage = baseDamage;
-                        totalDamage += skillDamage; // 直接累加
-                        damageType = 'lifesteal';
-                    } else if (skill.value) {
-                        if (skill.value > 1.0) {
-                            skillMultiplier = skill.value;
-                            skillDamage = Math.floor(baseDamage * skillMultiplier);
-                            totalDamage += skillDamage; // 直接累加
-                            damageType = 'multiplier';
-                        } else if (skill.value > 0 && skill.value <= 1.0) {
-                            skillDamage = Math.floor(baseDamage * skill.value);
-                            totalDamage += skillDamage; // 直接累加
-                            damageType = 'bonus';
+                        if (effectDamage > 0 && damageType) {
+                            skillTotalDamage += effectDamage;
+                            
+                            // 构建伤害信息
+                            let damageInfo = '';
+                            if (damageType === 'direct') {
+                                damageInfo = `固定伤害: ${effectDamage}`;
+                            } else if (damageType === 'critical') {
+                                damageInfo = `暴击伤害: ${effectDamage}`;
+                            } else if (damageType === 'percent') {
+                                damageInfo = `百分比伤害: ${effectDamage}`;
+                            } else if (damageType === 'true') {
+                                damageInfo = `真实伤害: ${effectDamage}`;
+                            } else if (damageType === 'pierce') {
+                                damageInfo = `穿透伤害: +${effectDamage}`;
+                            } else if (damageType === 'dot') {
+                                damageInfo = `持续伤害: ${effectDamage}`;
+                            } else if (damageType === 'lifesteal') {
+                                damageInfo = `伤害: ${effectDamage}, 汲取: ${Math.floor(effectDamage * skill.value)}`;
+                            } else if (damageType === 'multiplier') {
+                                damageInfo = `伤害: ${effectDamage} (${(skill.value * 100).toFixed(0)}%倍率)`;
+                            } else if (damageType === 'bonus' || damageType === 'amp') {
+                                damageInfo = `额外伤害: +${effectDamage}`;
+                            } else if (damageType === 'damage') {
+                                damageInfo = `伤害: ${effectDamage}`;
+                            }
+                            
+                            if (damageInfo) {
+                                damageInfoList.push({
+                                    type: damageType,
+                                    damage: effectDamage,
+                                    info: damageInfo
+                                });
+                            }
                         }
                     }
                     
-                    // 如果没有计算出伤害，跳过这个技能
-                    if (skillDamage === 0 && damageType === '') {
-                        continue;
-                    }
-                    
-                    // 构建伤害信息字符串
-                    let damageInfo = '';
-                    if (damageType === 'direct') {
-                        damageInfo = `固定伤害: ${skillDamage}`;
-                    } else if (damageType === 'multi') {
-                        const hitCount = skill._hitCount || count;
-                        const hitDamages = skill._hitDamages || [];
-                        if (hitDamages.length > 0) {
-                            damageInfo = `多段伤害: ${skillDamage} [${hitDamages.join('+')}]`;
+                    // 如果这个技能造成了伤害，显示技能效果
+                    if (skillTotalDamage > 0) {
+                        totalDamage += skillTotalDamage;
+                        
+                        // 合并所有伤害信息
+                        let combinedInfo = '';
+                        if (damageInfoList.length > 0) {
+                            if (damageInfoList.length === 1) {
+                                combinedInfo = damageInfoList[0].info || `伤害: ${skillTotalDamage}`;
+                            } else {
+                                const parts = damageInfoList.map(d => d.info).filter(Boolean);
+                                combinedInfo = `总伤害: ${skillTotalDamage} (${parts.join(' + ')})`;
+                            }
                         } else {
-                            damageInfo = `多段伤害: ${skillDamage} (${hitCount}段)`;
+                            combinedInfo = `伤害: ${skillTotalDamage}`;
                         }
-                    } else if (damageType === 'critical') {
-                        damageInfo = `暴击伤害: ${skillDamage}`;
-                    } else if (damageType === 'percent') {
-                        damageInfo = `百分比伤害: ${skillDamage}`;
-                    } else if (damageType === 'true') {
-                        damageInfo = `真实伤害: ${skillDamage}`;
-                    } else if (damageType === 'pierce') {
-                        damageInfo = `穿透伤害: +${skillDamage}`;
-                    } else if (damageType === 'buff') {
-                        damageInfo = `攻击提升: +${skillDamage}`;
-                    } else if (damageType === 'lifesteal') {
-                        damageInfo = `伤害: ${skillDamage}, 汲取: ${Math.floor(skillDamage * skill.value)}`;
-                    } else if (damageType === 'multiplier') {
-                        damageInfo = `伤害: ${skillDamage} (${(skillMultiplier * 100).toFixed(0)}%倍率)`;
-                    } else if (damageType === 'bonus' || damageType === 'amp') {
-                        damageInfo = `额外伤害: +${skillDamage}`;
-                    } else if (damageType === 'damage') {
-                        damageInfo = `伤害: ${skillDamage} (${(skillMultiplier * 100).toFixed(0)}%倍率)`;
-                    }
-                    
-                    await this.triggerSkillEffect(skill, isPlayer, damageInfo);
-                    
-                    // 设置冷却
-                    if (skill.cooldown) {
-                        this.setSkillCooldown(skill.key, skill.cooldown, isPlayer);
+                        
+                        await this.triggerSkillEffect(skill, isPlayer, combinedInfo);
+                        
+                        // 设置冷却
+                        if (skill.cooldown) {
+                            this.setSkillCooldown(skill.key, skill.cooldown, isPlayer);
+                        }
                     }
                 }
                 
@@ -888,10 +914,18 @@
                 
                 // 触发所有防御相关的技能（检查冷却）
                 for (const skill of defenderSkills) {
-                    if (skill.type === 'defense' || skill.effect === 'defense_counter' ||
-                        skill.effect === 'buff_defense' || skill.effect === 'counter' ||
-                        skill.effect === 'passive_defense' || skill.effect === 'damage_reduction') {
-                        
+                    // 获取技能的所有类型和效果（支持多类型多效果）
+                    const skillTypes = skill.types || (skill.type ? [skill.type] : []);
+                    const skillEffects = skill.effects || (skill.effect ? [skill.effect] : []);
+                    
+                    // 判断是否包含防御相关的类型或效果
+                    const hasDefenseType = skillTypes.includes('defense');
+                    const hasDefenseEffect = skillEffects.some(e =>
+                        ['defense_counter', 'buff_defense', 'counter', 'passive_defense',
+                         'damage_reduction', 'direct_defense', 'continuous_defense'].includes(e)
+                    );
+                    
+                    if (hasDefenseType || hasDefenseEffect) {
                         // 检查技能是否在冷却中
                         if (this.isSkillOnCooldown(skill.key, isDefender)) {
                             continue; // 跳过冷却中的技能
@@ -899,18 +933,35 @@
                         
                         hasDefenseSkill = true;
                         
-                        // 计算防御加成信息
-                        let defenseInfo = '';
-                        if (skill.value) {
-                            const defenseBoost = Math.floor(this.getEffectiveStat(defenderStats, 'defense') * skill.value);
-                            defenseInfo = `防御提升: +${defenseBoost}`;
+                        // 计算防御加成信息（处理多个防御效果）
+                        const defenseInfoList = [];
+                        let totalDefenseBoost = 0;
+                        
+                        for (const effect of skillEffects) {
+                            if (['direct_defense', 'continuous_defense', 'buff_defense', 'passive_defense'].includes(effect)) {
+                                if (skill.value || skill.params?.defenseBonus) {
+                                    const defenseValue = skill.params?.defenseBonus || skill.value || 0;
+                                    const defenseBoost = Math.floor(this.getEffectiveStat(defenderStats, 'defense') * defenseValue);
+                                    totalDefenseBoost += defenseBoost;
+                                    defenseInfoList.push(`防御提升: +${defenseBoost}`);
+                                }
+                            } else if (effect === 'defense_counter') {
+                                defenseInfoList.push('防御反击');
+                                defenderStats.buffs.counter = { value: 1.0, duration: 1 };
+                            } else if (effect === 'damage_reduction') {
+                                const reductionValue = skill.value || 0.2;
+                                defenseInfoList.push(`减伤: ${(reductionValue * 100).toFixed(0)}%`);
+                            }
                         }
+                        
+                        const defenseInfo = defenseInfoList.length > 0 ? defenseInfoList.join(', ') : '防御';
                         
                         await this.triggerSkillEffect(skill, isDefender, defenseInfo);
                         
                         // 应用防御加成
-                        if (skill.value) {
-                            defenderStats.buffs.defense_boost = { value: skill.value, duration: 1 };
+                        if (totalDefenseBoost > 0) {
+                            const defenseValue = skill.params?.defenseBonus || skill.value || 0;
+                            defenderStats.buffs.defense_boost = { value: defenseValue, duration: 1 };
                         }
                         
                         // 显示防御效果
@@ -1283,13 +1334,25 @@
                     if (!skill && skillKey) {
                         const customSkill = skillPool.find(s => s.key === skillKey);
                         if (customSkill) {
+                            // 兼容新旧格式
+                            const effects = customSkill.effects || (customSkill.effect ? [customSkill.effect] : []);
                             skill = {
-                                effect: customSkill.effect
+                                effects: effects,
+                                effect: customSkill.effect  // 保留向后兼容
                             };
                         }
+                    } else if (skill && !skill.effects && skill.effect) {
+                        // 为预定义技能添加effects数组
+                        skill.effects = [skill.effect];
                     }
                     
-                    if (skill && skill.effect === effectType) {
+                    // 检查技能是否包含指定效果（支持多效果）
+                    const hasEffect = skill && (
+                        (skill.effects && skill.effects.includes(effectType)) ||
+                        skill.effect === effectType
+                    );
+                    
+                    if (hasEffect) {
                         const slotElement = document.getElementById(`${containerId}-slot-${index}`);
                         if (slotElement) {
                             slotElement.classList.add('skill-triggered');

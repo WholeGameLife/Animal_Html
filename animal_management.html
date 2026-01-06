@@ -20,23 +20,28 @@
             box-shadow: 0 10px 15px rgba(0, 0, 0, 0.5);
         }
         
+        /* 确保右侧详情面板不裁剪悬浮提示 */
+        #animal-details {
+            overflow: visible !important;
+        }
+        
         /* 技能悬浮提示框样式 */
         .skill-tooltip {
             position: absolute;
             bottom: 100%;
             left: 50%;
             transform: translateX(-50%) translateY(-10px);
-            background: rgba(17, 24, 39, 0.98);
-            border: 2px solid rgba(139, 92, 246, 0.6);
+            background: rgba(17, 24, 39, 1);
+            border: 2px solid rgba(139, 92, 246, 0.8);
             border-radius: 8px;
             padding: 12px;
             min-width: 280px;
             max-width: 350px;
-            z-index: 1000;
+            z-index: 10000;
             opacity: 0;
             pointer-events: none;
             transition: opacity 0.2s ease, transform 0.2s ease;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.9);
             backdrop-filter: blur(10px);
             white-space: normal;
         }
@@ -45,8 +50,7 @@
             position: relative;
         }
         
-        .skill-slot-wrapper:hover .skill-tooltip,
-        .skill-item-wrapper:hover .skill-tooltip {
+        .skill-slot-wrapper:hover .skill-tooltip {
             opacity: 1;
             transform: translateX(-50%) translateY(-5px);
             pointer-events: auto;
@@ -64,6 +68,67 @@
         
         .skill-item-wrapper {
             position: relative;
+            overflow: visible;
+        }
+        
+        /* 可用技能列表的悬浮提示显示在右侧 */
+        .skill-item-wrapper .skill-tooltip {
+            bottom: auto;
+            top: 0;
+            left: calc(100% + 8px);
+            right: auto;
+            transform: none;
+            min-width: 300px;
+            max-width: 350px;
+            z-index: 10000;
+            background: rgba(17, 24, 39, 1);
+        }
+        
+        .skill-item-wrapper:hover .skill-tooltip {
+            opacity: 1 !important;
+            transform: none;
+            pointer-events: auto;
+            display: block !important;
+        }
+        
+        .skill-item-wrapper .skill-tooltip::after {
+            content: '';
+            position: absolute;
+            top: 24px;
+            left: -12px;
+            transform: none;
+            border: 6px solid transparent;
+            border-right-color: rgba(139, 92, 246, 0.8);
+        }
+        
+        /* 确保所有相关容器不裁剪提示框 */
+        #available-skills-list {
+            overflow-y: auto !important;
+            overflow-x: visible !important;
+            position: relative !important;
+        }
+        
+        #mutation-skills-in-abilities {
+            overflow: visible !important;
+            position: relative !important;
+        }
+        
+        #panel-abilities {
+            overflow: visible !important;
+        }
+        
+        #animal-detail-content {
+            overflow: visible !important;
+        }
+        
+        .bg-gray-800.rounded-lg.p-3.space-y-3 {
+            overflow: visible !important;
+        }
+        
+        /* 强制显示技能项包装器 */
+        .skill-item-wrapper {
+            position: relative !important;
+            overflow: visible !important;
         }
         
         .tooltip-header {
@@ -134,7 +199,7 @@
         </div>
 
         <!-- 主容器 -->
-        <div id="main-container" class="flex flex-col md:flex-row gap-6">
+        <div id="main-container" class="flex flex-col md:flex-row gap-6" style="overflow: visible;">
             <!-- 左侧主菜单 -->
             <div id="animal-system-main-menu" class="control-panel p-4 rounded-lg text-white w-full md:w-72">
                 <h3 class="text-xl font-bold mb-4 text-cyan-400 border-b border-gray-700 pb-2">
@@ -389,8 +454,8 @@
             </div>
 
             <!-- 右侧详情面板 (独立出来) -->
-            <div id="animal-details" class="control-panel p-4 rounded-lg text-white w-full md:w-96">
-                            <div id="animal-detail-content" class="hidden">
+            <div id="animal-details" class="control-panel p-4 rounded-lg text-white w-full md:w-96" style="overflow: visible;">
+                            <div id="animal-detail-content" class="hidden" style="overflow: visible;">
                                 <h4 class="text-lg font-bold text-fuchsia-400 flex justify-between items-center">
                                     <span class="flex items-center">
                                         <span id="animal-detail-name"></span>
@@ -453,9 +518,9 @@
                                         <button id="btn-feed-animal-10" class="action-button w-full bg-orange-800 hover:bg-orange-900 text-white font-bold py-2 px-4 rounded-lg">连升10级</button>
                                     </div>
                                 </div>
-                                <div id="panel-abilities" class="text-sm space-y-2 hidden">
+                                <div id="panel-abilities" class="text-sm space-y-2 hidden" style="overflow: visible;">
                                     <!-- 战斗能力栏 -->
-                                    <div class="bg-gray-800 rounded-lg p-3 space-y-3">
+                                    <div class="bg-gray-800 rounded-lg p-3 space-y-3" style="overflow: visible;">
                                         <p class="font-semibold text-red-400 text-center border-b border-gray-700 pb-2">⚔️ 战斗能力</p>
                                         
                                         <!-- 三个属性值 -->
@@ -513,7 +578,7 @@
                                             </div>
                                             
                                             <!-- 战斗技能区域 -->
-                                            <div id="available-skills-list" class="space-y-1 max-h-[150px] overflow-y-auto">
+                                            <div id="available-skills-list" class="space-y-1 max-h-[150px]" style="overflow-y: auto; overflow-x: visible; position: relative;">
                                                 <p class="text-xs text-gray-500 text-center py-2">暂无可用技能</p>
                                             </div>
                                         </div>
