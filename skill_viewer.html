@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>技能池查看器</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .skill-card {
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+        
+        .skill-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+        }
+        
+        .filter-btn {
+            transition: all 0.2s ease;
+        }
+        
+        .filter-btn.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .category-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        
+        .type-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body class="p-6">
+    <div class="max-w-7xl mx-auto">
+        <!-- 标题 -->
+        <div class="text-center mb-8">
+            <h1 class="text-4xl font-bold text-white mb-2">🎯 技能池查看器</h1>
+            <p class="text-white/80">查看和筛选所有可用技能</p>
+        </div>
+
+        <!-- 统计信息 -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            <div class="bg-white/10 backdrop-blur-md rounded-lg p-4 text-white">
+                <div class="text-sm opacity-80">总技能数</div>
+                <div class="text-3xl font-bold" id="total-count">0</div>
+            </div>
+            <div class="bg-white/10 backdrop-blur-md rounded-lg p-4 text-white">
+                <div class="text-sm opacity-80">攻击技能</div>
+                <div class="text-3xl font-bold" id="attack-count">0</div>
+            </div>
+            <div class="bg-white/10 backdrop-blur-md rounded-lg p-4 text-white">
+                <div class="text-sm opacity-80">防御技能</div>
+                <div class="text-3xl font-bold" id="defense-count">0</div>
+            </div>
+            <div class="bg-white/10 backdrop-blur-md rounded-lg p-4 text-white">
+                <div class="text-sm opacity-80">辅助技能</div>
+                <div class="text-3xl font-bold" id="support-count">0</div>
+            </div>
+        </div>
+
+        <!-- 筛选器 -->
+        <div class="bg-white/10 backdrop-blur-md rounded-lg p-6 mb-6">
+            <div class="mb-4">
+                <h3 class="text-white font-bold mb-3">按类别筛选</h3>
+                <div class="flex flex-wrap gap-2" id="category-filters">
+                    <button class="filter-btn active px-4 py-2 rounded-lg bg-white/20 text-white" data-category="all">
+                        全部
+                    </button>
+                </div>
+            </div>
+            
+            <div class="mb-4">
+                <h3 class="text-white font-bold mb-3">按类型筛选</h3>
+                <div class="flex flex-wrap gap-2" id="type-filters">
+                    <button class="filter-btn active px-4 py-2 rounded-lg bg-white/20 text-white" data-type="all">
+                        全部
+                    </button>
+                </div>
+            </div>
+            
+            <div>
+                <h3 class="text-white font-bold mb-3">按稀有度筛选</h3>
+                <div class="flex flex-wrap gap-2" id="rarity-filters">
+                    <button class="filter-btn active px-4 py-2 rounded-lg bg-white/20 text-white" data-rarity="all">
+                        全部
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 技能列表 -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="skills-container">
+            <!-- 技能卡片将在这里动态生成 -->
+        </div>
+
+        <!-- 返回按钮 -->
+        <div class="mt-8 text-center">
+            <button onclick="window.history.back()" class="px-6 py-3 bg-white/20 hover:bg-white/30 text-white rounded-lg backdrop-blur-md transition-all">
+                ← 返回
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // 类别和类型的中文映射
+        const CATEGORY_MAP = {
+            'element-water': { name: '水元素', color: 'bg-blue-500' },
+            'element-fire': { name: '火元素', color: 'bg-red-500' },
+            'element-earth': { name: '土元素', color: 'bg-yellow-700' },
+            'element-wind': { name: '风元素', color: 'bg-cyan-400' },
+            'element-light': { name: '光元素', color: 'bg-yellow-300' },
+            'element-dark': { name: '暗元素', color: 'bg-purple-900' },
+            'physical': { name: '物理', color: 'bg-gray-600' },
+            'magic': { name: '魔法', color: 'bg-purple-500' },
+            'special': { name: '特殊', color: 'bg-pink-500' }
+        };
+
+        const TYPE_MAP = {
+            'attack': { name: '攻击', color: 'bg-red-600 text-white' },
+            'defense': { name: '防御', color: 'bg-blue-600 text-white' },
+            'agility': { name: '敏捷', color: 'bg-green-600 text-white' },
+            'buff': { name: '增益', color: 'bg-yellow-600 text-white' },
+            'debuff': { name: '减益', color: 'bg-purple-600 text-white' },
+            'heal': { name: '治疗', color: 'bg-pink-600 text-white' }
+        };
+
+        const RARITY_MAP = {
+            'shiny': { name: '✨ 闪光', color: 'bg-yellow-500' },
+            'prismatic': { name: '🌈 幻彩', color: 'bg-gradient-to-r from-pink-500 via-purple-500 to-blue-500' },
+            'stellar': { name: '⭐ 星芒', color: 'bg-yellow-300 text-gray-900' }
+        };
+
+        const EFFECT_MAP = {
+            'direct_attack': '直接攻击',
+            'multi_attack': '多段攻击',
+            'direct_defense': '直接防御',
+            'direct_speed': '直接加速',
+            'continuous_speed': '持续加速',
+            'buff_purify': '净化',
+            'buff_element_damage': '元素增幅',
+            'debuff_speed': '减速',
+            'heal_direct': '直接治疗',
+            'damage': '伤害',
+            'critical': '暴击',
+            'lifesteal': '生命汲取',
+            'bonus_damage': '额外伤害',
+            'armor_pierce': '护甲穿透',
+            'true_damage': '真实伤害',
+            'damage_amp': '伤害增幅',
+            'percent_damage': '百分比伤害',
+            'defense_counter': '防御反击',
+            'buff_defense': '防御增益',
+            'counter': '反击',
+            'passive_defense': '被动防御',
+            'damage_reduction': '伤害减免',
+            'guaranteed_dodge': '必定闪避',
+            'buff_attack': '攻击增益',
+            'buff_agility': '敏捷增益',
+            'passive_attack': '被动攻击',
+            'passive_agility': '被动敏捷',
+            'regen': '回复',
+            'heal_reduce': '治疗削弱',
+            'rebirth': '重生',
+            'burn': '灼烧'
+        };
+
+        let allSkills = [];
+        let currentCategory = 'all';
+        let currentType = 'all';
+        let currentRarity = 'all';
+
+        // 加载技能池
+        async function loadSkills() {
+            try {
+                const skillPool = JSON.parse(localStorage.getItem('SKILL_POOL') || '[]');
+                allSkills = skillPool;
+                
+                // 更新统计
+                updateStatistics();
+                
+                // 生成筛选器
+                generateFilters();
+                
+                // 显示技能
+                displaySkills();
+            } catch (error) {
+                console.error('加载技能失败:', error);
+                document.getElementById('skills-container').innerHTML = 
+                    '<div class="col-span-full text-center text-white">加载技能失败，请确保技能池数据存在</div>';
+            }
+        }
+
+        // 更新统计信息
+        function updateStatistics() {
+            document.getElementById('total-count').textContent = allSkills.length;
+            document.getElementById('attack-count').textContent = 
+                allSkills.filter(s => s.type === 'attack').length;
+            document.getElementById('defense-count').textContent = 
+                allSkills.filter(s => s.type === 'defense').length;
+            document.getElementById('support-count').textContent = 
+                allSkills.filter(s => ['buff', 'debuff', 'heal', 'agility'].includes(s.type)).length;
+        }
+
+        // 生成筛选器
+        function generateFilters() {
+            // 获取所有唯一的类别
+            const categories = [...new Set(allSkills.map(s => s.category))].filter(Boolean);
+            const categoryContainer = document.getElementById('category-filters');
+            
+            categories.forEach(category => {
+                const categoryInfo = CATEGORY_MAP[category] || { name: category, color: 'bg-gray-500' };
+                const btn = document.createElement('button');
+                btn.className = 'filter-btn px-4 py-2 rounded-lg bg-white/20 text-white';
+                btn.dataset.category = category;
+                btn.textContent = categoryInfo.name;
+                btn.onclick = () => filterByCategory(category);
+                categoryContainer.appendChild(btn);
+            });
+
+            // 获取所有唯一的类型
+            const types = [...new Set(allSkills.map(s => s.type))].filter(Boolean);
+            const typeContainer = document.getElementById('type-filters');
+            
+            types.forEach(type => {
+                const typeInfo = TYPE_MAP[type] || { name: type, color: 'bg-gray-600' };
+                const btn = document.createElement('button');
+                btn.className = 'filter-btn px-4 py-2 rounded-lg bg-white/20 text-white';
+                btn.dataset.type = type;
+                btn.textContent = typeInfo.name;
+                btn.onclick = () => filterByType(type);
+                typeContainer.appendChild(btn);
+            });
+
+            // 获取所有唯一的稀有度
+            const rarities = [...new Set(allSkills.map(s => s.rarity))].filter(Boolean);
+            const rarityContainer = document.getElementById('rarity-filters');
+            
+            rarities.forEach(rarity => {
+                const rarityInfo = RARITY_MAP[rarity] || { name: rarity, color: 'bg-gray-600' };
+                const btn = document.createElement('button');
+                btn.className = 'filter-btn px-4 py-2 rounded-lg bg-white/20 text-white';
+                btn.dataset.rarity = rarity;
+                btn.textContent = rarityInfo.name;
+                btn.onclick = () => filterByRarity(rarity);
+                rarityContainer.appendChild(btn);
+            });
+        }
+
+        // 按类别筛选
+        function filterByCategory(category) {
+            currentCategory = category;
+            
+            // 更新按钮状态
+            document.querySelectorAll('[data-category]').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.category === category);
+            });
+            
+            displaySkills();
+        }
+
+        // 按类型筛选
+        function filterByType(type) {
+            currentType = type;
+            
+            // 更新按钮状态
+            document.querySelectorAll('[data-type]').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.type === type);
+            });
+            
+            displaySkills();
+        }
+
+        // 按稀有度筛选
+        function filterByRarity(rarity) {
+            currentRarity = rarity;
+            
+            // 更新按钮状态
+            document.querySelectorAll('[data-rarity]').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.rarity === rarity);
+            });
+            
+            displaySkills();
+        }
+        
+        // 初始化"全部"按钮
+        function initializeAllButtons() {
+            // 类别"全部"按钮
+            const categoryAllBtn = document.querySelector('[data-category="all"]');
+            if (categoryAllBtn) {
+                categoryAllBtn.onclick = () => filterByCategory('all');
+            }
+            
+            // 类型"全部"按钮
+            const typeAllBtn = document.querySelector('[data-type="all"]');
+            if (typeAllBtn) {
+                typeAllBtn.onclick = () => filterByType('all');
+            }
+            
+            // 稀有度"全部"按钮
+            const rarityAllBtn = document.querySelector('[data-rarity="all"]');
+            if (rarityAllBtn) {
+                rarityAllBtn.onclick = () => filterByRarity('all');
+            }
+        }
+
+        // 显示技能
+        function displaySkills() {
+            const container = document.getElementById('skills-container');
+            
+            // 筛选技能
+            let filteredSkills = allSkills;
+            
+            if (currentCategory !== 'all') {
+                filteredSkills = filteredSkills.filter(s => s.category === currentCategory);
+            }
+            
+            if (currentType !== 'all') {
+                filteredSkills = filteredSkills.filter(s => s.type === currentType);
+            }
+            
+            if (currentRarity !== 'all') {
+                filteredSkills = filteredSkills.filter(s => s.rarity === currentRarity);
+            }
+
+            // 生成技能卡片
+            if (filteredSkills.length === 0) {
+                container.innerHTML = '<div class="col-span-full text-center text-white">没有找到符合条件的技能</div>';
+                return;
+            }
+
+            container.innerHTML = filteredSkills.map(skill => createSkillCard(skill)).join('');
+        }
+
+        // 创建技能卡片
+        function createSkillCard(skill) {
+            const categoryInfo = CATEGORY_MAP[skill.category] || { name: skill.category, color: 'bg-gray-500' };
+            const typeInfo = TYPE_MAP[skill.type] || { name: skill.type, color: 'bg-gray-600' };
+            const effectName = EFFECT_MAP[skill.effect] || skill.effect;
+            
+            // 解析参数
+            const params = skill.params || {};
+            let paramsHtml = '';
+            
+            if (params.cooldown) {
+                paramsHtml += `<div class="text-xs text-gray-300">冷却: ${params.cooldown}回合</div>`;
+            }
+            if (params.duration) {
+                paramsHtml += `<div class="text-xs text-gray-300">持续: ${params.duration}回合</div>`;
+            }
+            if (params.attackBonus) {
+                paramsHtml += `<div class="text-xs text-green-300">攻击加成: ${params.attackBonus}</div>`;
+            }
+            if (params.defenseBonus) {
+                paramsHtml += `<div class="text-xs text-blue-300">防御加成: ${params.defenseBonus}</div>`;
+            }
+            if (params.speedBonus) {
+                paramsHtml += `<div class="text-xs text-yellow-300">速度加成: ${(params.speedBonus * 100).toFixed(0)}%</div>`;
+            }
+            if (params.count && params.count > 1) {
+                paramsHtml += `<div class="text-xs text-purple-300">次数: ${params.count}</div>`;
+            }
+            if (params.multiBonus && params.multiBonus.length > 0) {
+                paramsHtml += `<div class="text-xs text-orange-300">倍率: [${params.multiBonus.join(', ')}]</div>`;
+            }
+            if (params.healBonus) {
+                paramsHtml += `<div class="text-xs text-pink-300">治疗: ${(params.healBonus * 100).toFixed(0)}%</div>`;
+            }
+
+            return `
+                <div class="skill-card bg-white/10 backdrop-blur-md rounded-lg p-4 text-white">
+                    <div class="flex items-start justify-between mb-3">
+                        <div class="flex items-center gap-2">
+                            <span class="text-3xl">${skill.icon}</span>
+                            <div>
+                                <h3 class="font-bold text-lg">${skill.name}</h3>
+                                <div class="flex gap-2 mt-1 flex-wrap">
+                                    <span class="category-badge ${categoryInfo.color} text-white">
+                                        ${categoryInfo.name}
+                                    </span>
+                                    ${skill.rarity ? `<span class="category-badge ${RARITY_MAP[skill.rarity]?.color || 'bg-gray-500'} text-white">
+                                        ${RARITY_MAP[skill.rarity]?.name || skill.rarity}
+                                    </span>` : ''}
+                                    <span class="type-badge ${typeInfo.color}">
+                                        ${typeInfo.name}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <p class="text-sm text-gray-200 mb-3">${skill.description || skill.desc || '无描述'}</p>
+                    
+                    <div class="border-t border-white/20 pt-3 space-y-1">
+                        <div class="text-xs text-gray-300">效果: ${effectName}</div>
+                        ${paramsHtml}
+                    </div>
+                    
+                    <div class="mt-3 text-xs text-gray-400">
+                        创建时间: ${new Date(skill.createdAt).toLocaleString('zh-CN')}
+                    </div>
+                </div>
+            `;
+        }
+
+        // 页面加载时初始化
+        window.onload = function() {
+            initializeAllButtons();
+            loadSkills();
+        };
+    </script>
+</body>
+</html>

@@ -90,7 +90,19 @@
         <!-- 标题 -->
         <div class="text-center mb-8">
             <h1 class="text-4xl font-bold text-white mb-2">⚔️ 技能设计器 ⚔️</h1>
-            <p class="text-blue-200">精确设计战斗技能的每个参数</p>
+            <p class="text-blue-200 mb-3">精确设计战斗技能的每个参数</p>
+            <div class="flex justify-center gap-3">
+                <a href="skill_viewer.html"
+                   class="inline-flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-6 rounded-lg transition-colors">
+                    <span>🎯</span>
+                    <span>查看技能池</span>
+                </a>
+                <button onclick="window.history.back()"
+                        class="inline-flex items-center gap-2 bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-6 rounded-lg transition-colors">
+                    <span>←</span>
+                    <span>返回</span>
+                </button>
+            </div>
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -126,39 +138,46 @@
                             class="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500 resize-none"></textarea>
                     </div>
 
-                    <!-- 技能类别 -->
-                    <div>
-                        <label class="block text-sm font-medium text-gray-300 mb-2">技能类别 *</label>
-                        <select id="skill-category" required
-                            class="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500">
-                            <option value="">选择类别</option>
-                            <optgroup label="系别技能">
-                                <option value="element-water">💧 水系</option>
-                                <option value="element-fire">🔥 火系</option>
-                                <option value="element-grass">🌿 草系</option>
-                                <option value="element-wind">💨 风系</option>
-                                <option value="element-electric">⚡ 电系</option>
-                                <option value="element-earth">🪨 土系</option>
-                            </optgroup>
-                            <optgroup label="变异技能">
-                                <option value="mutation-dark">🖤 黑化</option>
-                                <option value="mutation-light">🤍 白化</option>
-                                <option value="mutation-crystal">💎 晶化</option>
-                                <option value="mutation-shadow">👤 影化</option>
-                                <option value="mutation-thunder">⚡ 极电</option>
-                                <option value="mutation-holy">✨ 圣辉</option>
-                                <option value="mutation-psychic">🔮 异能</option>
-                                <option value="mutation-void">🌀 虚无</option>
-                                <option value="mutation-annihilate">💀 湮灭</option>
-                                <option value="mutation-chaos">🌑 暗蚀</option>
-                                <option value="mutation-rebirth">♻️ 轮回</option>
-                            </optgroup>
-                            <optgroup label="稀有度技能">
-                                <option value="rarity-shiny">✨ 闪光</option>
-                                <option value="rarity-prismatic">🌈 幻彩</option>
-                                <option value="rarity-stellar">⭐ 星芒</option>
-                            </optgroup>
-                        </select>
+                    <!-- 技能类别和稀有度 -->
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">技能类别 *</label>
+                            <select id="skill-category" required
+                                class="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500">
+                                <option value="">选择类别</option>
+                                <optgroup label="系别技能">
+                                    <option value="element-water">💧 水系</option>
+                                    <option value="element-fire">🔥 火系</option>
+                                    <option value="element-grass">🌿 草系</option>
+                                    <option value="element-wind">💨 风系</option>
+                                    <option value="element-electric">⚡ 电系</option>
+                                    <option value="element-earth">🪨 土系</option>
+                                </optgroup>
+                                <optgroup label="变异技能">
+                                    <option value="mutation-dark">🖤 黑化</option>
+                                    <option value="mutation-light">🤍 白化</option>
+                                    <option value="mutation-crystal">💎 晶化</option>
+                                    <option value="mutation-shadow">👤 影化</option>
+                                    <option value="mutation-thunder">⚡ 极电</option>
+                                    <option value="mutation-holy">✨ 圣辉</option>
+                                    <option value="mutation-psychic">🔮 异能</option>
+                                    <option value="mutation-void">🌀 虚无</option>
+                                    <option value="mutation-annihilate">💀 湮灭</option>
+                                    <option value="mutation-chaos">🌑 暗蚀</option>
+                                    <option value="mutation-rebirth">♻️ 轮回</option>
+                                </optgroup>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">稀有度（可选）</label>
+                            <select id="skill-rarity"
+                                class="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500">
+                                <option value="">无</option>
+                                <option value="shiny">✨ 闪光</option>
+                                <option value="prismatic">🌈 幻彩</option>
+                                <option value="stellar">⭐ 星芒</option>
+                            </select>
+                        </div>
                     </div>
 
                     <!-- 技能类型 -->
@@ -872,6 +891,7 @@
                         <div class="flex items-center gap-2 mb-2 flex-wrap">
                             <h4 class="text-lg font-bold text-white">${data.name}</h4>
                             <span class="category-badge ${categoryClass}">${getCategoryName(data.category)}</span>
+                            ${data.rarity ? `<span class="category-badge rarity-${data.rarity}">${getRarityName(data.rarity)}</span>` : ''}
                             ${data.type ? `<span class="bg-blue-600/30 text-blue-300 px-2 py-1 rounded text-xs font-bold">${typeIcon} ${getTypeName(data.type)}</span>` : ''}
                         </div>
                         ${data.description ? `<p class="text-xs text-gray-400 italic mb-2">${data.description}</p>` : ''}
@@ -1038,7 +1058,7 @@
                 params.lifestealBonus = parseFloat(document.getElementById('param-lifesteal-bonus').value) || 0.2;
             }
 
-            return {
+            const data = {
                 name: document.getElementById('skill-name').value,
                 icon: document.getElementById('skill-icon').value,
                 description: document.getElementById('skill-description').value,
@@ -1047,6 +1067,14 @@
                 effect: effect,
                 params: params
             };
+            
+            // 添加稀有度（如果选择了）
+            const rarity = document.getElementById('skill-rarity').value;
+            if (rarity) {
+                data.rarity = rarity;
+            }
+            
+            return data;
         }
 
         // 创建技能
@@ -1105,6 +1133,7 @@
             document.getElementById('skill-icon').value = skill.icon;
             document.getElementById('skill-description').value = skill.description || '';
             document.getElementById('skill-category').value = skill.category;
+            document.getElementById('skill-rarity').value = skill.rarity || '';
             document.getElementById('skill-type').value = skill.type;
             document.getElementById('skill-effect').value = skill.effect;
             
@@ -1248,6 +1277,7 @@
                                 <div class="flex items-center gap-2 mb-1 flex-wrap">
                                     <h5 class="text-sm font-bold text-white truncate">${skill.name}</h5>
                                     <span class="category-badge ${skill.category} text-xs">${getCategoryName(skill.category)}</span>
+                                    ${skill.rarity ? `<span class="category-badge rarity-${skill.rarity} text-xs">${getRarityName(skill.rarity)}</span>` : ''}
                                     <span class="bg-blue-600/30 text-blue-300 px-2 py-0.5 rounded text-xs">${typeIcon} ${typeName}</span>
                                 </div>
                                 ${skill.description ? `<p class="text-xs text-gray-500 italic mb-1">${skill.description}</p>` : ''}
@@ -1428,6 +1458,15 @@
                 'water_moon': '水月'
             };
             return names[status] || status;
+        }
+
+        function getRarityName(rarity) {
+            const names = {
+                'shiny': '✨ 闪光',
+                'prismatic': '🌈 幻彩',
+                'stellar': '⭐ 星芒'
+            };
+            return names[rarity] || rarity;
         }
 
         // 初始化应用
