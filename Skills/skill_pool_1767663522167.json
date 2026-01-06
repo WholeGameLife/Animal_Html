@@ -217,8 +217,9 @@
       "count": 1,
       "attackBonus": 10
     },
+    "rarity": "shiny",
     "createdAt": "2026-01-05T09:03:35.436Z",
-    "updatedAt": "2026-01-05T09:03:45.252Z"
+    "updatedAt": "2026-01-06T01:36:51.204Z"
   },
   {
     "key": "CUSTOM_1767603859844",
@@ -234,7 +235,9 @@
       "count": 1,
       "attackBonus": 20
     },
-    "createdAt": "2026-01-05T09:04:19.844Z"
+    "rarity": "prismatic",
+    "createdAt": "2026-01-05T09:04:19.844Z",
+    "updatedAt": "2026-01-06T01:36:45.789Z"
   },
   {
     "key": "CUSTOM_1767603887716",
@@ -250,6 +253,25 @@
       "count": 1,
       "attackBonus": 100
     },
-    "createdAt": "2026-01-05T09:04:47.716Z"
+    "rarity": "stellar",
+    "createdAt": "2026-01-05T09:04:47.716Z",
+    "updatedAt": "2026-01-06T01:36:37.780Z"
+  },
+  {
+    "key": "CUSTOM_1767663470613",
+    "name": "烈焰",
+    "icon": "🔥",
+    "description": "",
+    "category": "element-fire",
+    "type": "attack",
+    "effect": "direct_attack",
+    "params": {
+      "cooldown": 1,
+      "duration": 0,
+      "count": 1,
+      "attackBonus": 2
+    },
+    "rarity": "shiny",
+    "createdAt": "2026-01-06T01:37:50.613Z"
   }
 ]

@@ -15,6 +15,8 @@
         .skill-card {
             transition: all 0.3s ease;
             backdrop-filter: blur(10px);
+            position: relative;
+            cursor: pointer;
         }
         
         .skill-card:hover {
@@ -46,6 +48,64 @@
             border-radius: 0.375rem;
             font-size: 0.75rem;
             font-weight: 600;
+        }
+        
+        /* 悬浮提示框样式 */
+        .skill-tooltip {
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%) translateY(-10px);
+            background: rgba(17, 24, 39, 0.98);
+            border: 2px solid rgba(139, 92, 246, 0.5);
+            border-radius: 12px;
+            padding: 16px;
+            min-width: 320px;
+            max-width: 400px;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease, transform 0.3s ease;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+        }
+        
+        .skill-card:hover .skill-tooltip {
+            opacity: 1;
+            transform: translateX(-50%) translateY(-5px);
+            pointer-events: auto;
+        }
+        
+        .skill-tooltip::after {
+            content: '';
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 8px solid transparent;
+            border-top-color: rgba(139, 92, 246, 0.5);
+        }
+        
+        .param-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .param-item:last-child {
+            border-bottom: none;
+        }
+        
+        .param-label {
+            color: #9ca3af;
+            font-size: 0.875rem;
+        }
+        
+        .param-value {
+            color: #a78bfa;
+            font-weight: 600;
+            font-size: 0.875rem;
         }
     </style>
 </head>
@@ -123,15 +183,23 @@
     <script>
         // 类别和类型的中文映射
         const CATEGORY_MAP = {
-            'element-water': { name: '水元素', color: 'bg-blue-500' },
-            'element-fire': { name: '火元素', color: 'bg-red-500' },
-            'element-earth': { name: '土元素', color: 'bg-yellow-700' },
-            'element-wind': { name: '风元素', color: 'bg-cyan-400' },
-            'element-light': { name: '光元素', color: 'bg-yellow-300' },
-            'element-dark': { name: '暗元素', color: 'bg-purple-900' },
-            'physical': { name: '物理', color: 'bg-gray-600' },
-            'magic': { name: '魔法', color: 'bg-purple-500' },
-            'special': { name: '特殊', color: 'bg-pink-500' }
+            'element-water': { name: '💧 水系', color: 'bg-blue-500' },
+            'element-fire': { name: '🔥 火系', color: 'bg-red-500' },
+            'element-grass': { name: '🌿 草系', color: 'bg-green-600' },
+            'element-wind': { name: '💨 风系', color: 'bg-cyan-400' },
+            'element-electric': { name: '⚡ 电系', color: 'bg-yellow-500' },
+            'element-earth': { name: '🪨 土系', color: 'bg-yellow-700' },
+            'mutation-dark': { name: '🌑 黑化', color: 'bg-gray-900' },
+            'mutation-light': { name: '☀️ 白化', color: 'bg-gray-100 text-gray-900' },
+            'mutation-crystal': { name: '💎 晶化', color: 'bg-purple-500' },
+            'mutation-shadow': { name: '👤 影化', color: 'bg-gray-700' },
+            'mutation-thunder': { name: '⚡ 极电', color: 'bg-yellow-400' },
+            'mutation-holy': { name: '✨ 圣辉', color: 'bg-yellow-200 text-yellow-900' },
+            'mutation-psychic': { name: '🔮 异能', color: 'bg-pink-600' },
+            'mutation-void': { name: '🌀 虚无', color: 'bg-indigo-600' },
+            'mutation-annihilate': { name: '💀 湮灭', color: 'bg-red-900' },
+            'mutation-chaos': { name: '🖤 暗蚀', color: 'bg-purple-900' },
+            'mutation-rebirth': { name: '♻️ 轮回', color: 'bg-green-700' }
         };
 
         const TYPE_MAP = {
@@ -152,13 +220,48 @@
         const EFFECT_MAP = {
             'direct_attack': '直接攻击',
             'multi_attack': '多段攻击',
+            'dot_damage': '附加伤害',
+            'percent_damage': '百分比伤害',
             'direct_defense': '直接防御',
+            'continuous_defense': '持续防御',
+            'defense_counter': '防御反击',
             'direct_speed': '直接加速',
             'continuous_speed': '持续加速',
+            'buff_attack': '增攻',
+            'buff_defense': '增防',
+            'buff_attack_damage': '攻击增伤',
+            'buff_attack_defense': '攻击增防',
+            'buff_attack_speed': '攻击增速',
+            'buff_attack_status': '攻击增益',
+            'buff_defense_damage': '防御增伤',
+            'buff_defense_speed': '防御增速',
+            'buff_defense_defense': '防御增防',
+            'buff_defense_status': '防御增益',
+            'buff_speed': '增速',
+            'buff_status_enemy': '施加异常',
             'buff_purify': '净化',
-            'buff_element_damage': '元素增幅',
+            'buff_heal_amp': '增加治疗',
+            'buff_element_damage': '属性增伤',
+            'debuff_attack': '减攻',
+            'debuff_defense': '减防',
+            'debuff_attack_damage': '攻击减伤',
+            'debuff_attack_defense': '攻击减防',
+            'debuff_attack_speed': '攻击减速',
+            'debuff_attack_status': '攻击减益',
+            'debuff_defense_damage': '防御减伤',
+            'debuff_defense_defense': '防御减防',
+            'debuff_defense_speed': '防御减速',
+            'debuff_defense_status': '防御减益',
             'debuff_speed': '减速',
+            'debuff_status_self': '自身异常',
+            'debuff_no_heal': '禁疗',
+            'debuff_heal_reduce': '减疗',
+            'debuff_element_damage': '属性减伤',
             'heal_direct': '直接治疗',
+            'heal_continuous': '持续治疗',
+            'heal_percent': '百分比恢复',
+            'heal_rebirth': '重生',
+            'heal_lifesteal': '生命汲取',
             'damage': '伤害',
             'critical': '暴击',
             'lifesteal': '生命汲取',
@@ -166,14 +269,10 @@
             'armor_pierce': '护甲穿透',
             'true_damage': '真实伤害',
             'damage_amp': '伤害增幅',
-            'percent_damage': '百分比伤害',
-            'defense_counter': '防御反击',
-            'buff_defense': '防御增益',
             'counter': '反击',
             'passive_defense': '被动防御',
             'damage_reduction': '伤害减免',
             'guaranteed_dodge': '必定闪避',
-            'buff_attack': '攻击增益',
             'buff_agility': '敏捷增益',
             'passive_attack': '被动攻击',
             'passive_agility': '被动敏捷',

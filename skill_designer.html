@@ -154,8 +154,8 @@
                                     <option value="element-earth">🪨 土系</option>
                                 </optgroup>
                                 <optgroup label="变异技能">
-                                    <option value="mutation-dark">🖤 黑化</option>
-                                    <option value="mutation-light">🤍 白化</option>
+                                    <option value="mutation-dark">🌑 黑化</option>
+                                    <option value="mutation-light">☀️ 白化</option>
                                     <option value="mutation-crystal">💎 晶化</option>
                                     <option value="mutation-shadow">👤 影化</option>
                                     <option value="mutation-thunder">⚡ 极电</option>
@@ -163,7 +163,7 @@
                                     <option value="mutation-psychic">🔮 异能</option>
                                     <option value="mutation-void">🌀 虚无</option>
                                     <option value="mutation-annihilate">💀 湮灭</option>
-                                    <option value="mutation-chaos">🌑 暗蚀</option>
+                                    <option value="mutation-chaos">🖤 暗蚀</option>
                                     <option value="mutation-rebirth">♻️ 轮回</option>
                                 </optgroup>
                             </select>
@@ -217,6 +217,8 @@
                                 <option value="continuous_speed">持续增速</option>
                             </optgroup>
                             <optgroup label="增益类">
+                                <option value="buff_attack">增攻</option>
+                                <option value="buff_defense">增防</option>
                                 <option value="buff_attack_damage">攻击增伤</option>
                                 <option value="buff_attack_defense">攻击增防</option>
                                 <option value="buff_attack_speed">攻击增速</option>
@@ -232,6 +234,8 @@
                                 <option value="buff_element_damage">属性增伤</option>
                             </optgroup>
                             <optgroup label="减益类">
+                                <option value="debuff_attack">减攻</option>
+                                <option value="debuff_defense">减防</option>
                                 <option value="debuff_attack_damage">攻击减伤</option>
                                 <option value="debuff_attack_defense">攻击减防</option>
                                 <option value="debuff_attack_speed">攻击减速</option>
@@ -668,6 +672,8 @@
             'defense_counter': ['defense-bonus', 'counter'],
             'direct_speed': ['speed-bonus'],
             'continuous_speed': ['speed-bonus'],
+            'buff_attack': ['buff'],
+            'buff_defense': ['buff'],
             'buff_attack_damage': ['buff'],
             'buff_attack_defense': ['buff'],
             'buff_attack_speed': ['buff'],
@@ -681,6 +687,8 @@
             'buff_purify': [],
             'buff_heal_amp': ['buff'],
             'buff_element_damage': ['buff', 'element'],
+            'debuff_attack': ['buff'],
+            'debuff_defense': ['buff'],
             'debuff_attack_damage': ['buff'],
             'debuff_attack_defense': ['buff'],
             'debuff_attack_speed': ['buff'],
@@ -924,6 +932,8 @@
                 'defense_counter': `防御并反击 ${params.counterBonus || 0.5}× 伤害`,
                 'direct_speed': `增加 ${(params.speedBonus || 0.2) * 100}% 速度`,
                 'continuous_speed': `持续增加 ${(params.speedBonus || 0.2) * 100}% 速度`,
+                'buff_attack': `增加 ${(params.buffBonus || 0.2) * 100}% 攻击力`,
+                'buff_defense': `增加 ${(params.buffBonus || 0.2) * 100}% 防御力`,
                 'buff_attack_damage': `增加 ${(params.buffBonus || 0.2) * 100}% 攻击伤害`,
                 'buff_attack_defense': `增加 ${(params.buffBonus || 0.2) * 100}% 防御力`,
                 'buff_attack_speed': `增加 ${(params.buffBonus || 0.2) * 100}% 速度`,
@@ -937,6 +947,8 @@
                 'buff_purify': `净化所有异常状态`,
                 'buff_heal_amp': `增加 ${(params.buffBonus || 0.2) * 100}% 治疗效果`,
                 'buff_element_damage': `增加 ${(params.elementBonus || 0.2) * 100}% ${params.elementType || '属性'} 系伤害`,
+                'debuff_attack': `降低敌方 ${(params.buffBonus || 0.2) * 100}% 攻击力`,
+                'debuff_defense': `降低敌方 ${(params.buffBonus || 0.2) * 100}% 防御力`,
                 'debuff_attack_damage': `降低敌方 ${(params.buffBonus || 0.2) * 100}% 攻击伤害`,
                 'debuff_attack_defense': `降低敌方 ${(params.buffBonus || 0.2) * 100}% 防御力`,
                 'debuff_attack_speed': `降低敌方 ${(params.buffBonus || 0.2) * 100}% 速度`,
@@ -1370,20 +1382,17 @@
                 'element-wind': '风系',
                 'element-electric': '电系',
                 'element-earth': '土系',
-                'mutation-dark': '黑化',
-                'mutation-light': '白化',
-                'mutation-crystal': '晶化',
-                'mutation-shadow': '影化',
-                'mutation-thunder': '极电',
-                'mutation-holy': '圣辉',
-                'mutation-psychic': '异能',
-                'mutation-void': '虚无',
-                'mutation-annihilate': '湮灭',
-                'mutation-chaos': '暗蚀',
-                'mutation-rebirth': '轮回',
-                'rarity-shiny': '闪光',
-                'rarity-prismatic': '幻彩',
-                'rarity-stellar': '星芒'
+                'mutation-dark': '🌑 黑化',
+                'mutation-light': '☀️ 白化',
+                'mutation-crystal': '💎 晶化',
+                'mutation-shadow': '👤 影化',
+                'mutation-thunder': '⚡ 极电',
+                'mutation-holy': '✨ 圣辉',
+                'mutation-psychic': '🔮 异能',
+                'mutation-void': '🌀 虚无',
+                'mutation-annihilate': '💀 湮灭',
+                'mutation-chaos': '🖤 暗蚀',
+                'mutation-rebirth': '♻️ 轮回'
             };
             return names[category] || '未知';
         }
@@ -1411,6 +1420,8 @@
                 'defense_counter': '防御反击',
                 'direct_speed': '直接增速',
                 'continuous_speed': '持续增速',
+                'buff_attack': '增攻',
+                'buff_defense': '增防',
                 'buff_attack_damage': '攻击增伤',
                 'buff_attack_defense': '攻击增防',
                 'buff_attack_speed': '攻击增速',
@@ -1424,6 +1435,8 @@
                 'buff_purify': '净化',
                 'buff_heal_amp': '增加治疗',
                 'buff_element_damage': '属性增伤',
+                'debuff_attack': '减攻',
+                'debuff_defense': '减防',
                 'debuff_attack_damage': '攻击减伤',
                 'debuff_attack_defense': '攻击减防',
                 'debuff_attack_speed': '攻击减速',

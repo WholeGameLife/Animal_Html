@@ -647,14 +647,14 @@
                 }
                 
                 // 触发所有攻击型装备技能
-                let damageMultiplier = 1.0;
+                let totalDamage = 0; // 总伤害（直接累加）
                 let isCriticalHit = false; // 标记是否触发暴击技能
                 const attackerSkills = isPlayer ? this.playerPassiveSkills : this.opponentPassiveSkills;
                 
                 // 计算基础伤害（用于技能显示）
                 const baseAttack = this.getEffectiveStat(attackerStats, 'attack');
                 const defense = this.getEffectiveStat(defenderStats, 'defense');
-                const baseDamage = Math.max(1, Math.floor(baseAttack - defense * 0.5));
+                const baseDamage = Math.max(1, Math.floor(baseAttack - defense));
                 
                 // 触发所有攻击相关的技能（检查冷却）
                 for (const skill of attackerSkills) {
@@ -692,76 +692,95 @@
                     const count = params.count || 1;
                     
                     if (skill.effect === 'direct_attack' && attackBonus) {
-                        // 直接攻击：attackBonus是固定伤害值，直接加到基础伤害上
+                        // 直接攻击：attackBonus是固定伤害值
                         skillDamage = Math.floor(attackBonus);
-                        damageMultiplier += attackBonus / baseDamage; // 转换为倍率以应用到最终伤害
+                        totalDamage += skillDamage; // 直接累加到总伤害
                         damageType = 'direct';
                     } else if (skill.effect === 'multi_attack' && (multiBonus.length > 0 || count > 1)) {
                         // 多段攻击：计算所有段的总伤害
-                        let totalMultiplier = 0;
+                        let hitDamages = []; // 记录每段伤害
                         let hitCount = count;
                         
                         if (multiBonus.length > 0) {
                             // 如果有multiBonus数组
                             if (multiBonus.length === 1) {
                                 // 只有一个值，表示每段都是这个倍率
-                                totalMultiplier = multiBonus[0] * count;
+                                for (let i = 0; i < count; i++) {
+                                    const hitDamage = Math.floor(baseDamage * multiBonus[0]);
+                                    hitDamages.push(hitDamage);
+                                }
                                 hitCount = count;
                             } else {
                                 // 多个值，每段使用对应倍率
                                 for (let i = 0; i < count && i < multiBonus.length; i++) {
-                                    totalMultiplier += multiBonus[i];
+                                    const hitDamage = Math.floor(baseDamage * multiBonus[i]);
+                                    hitDamages.push(hitDamage);
                                 }
                                 hitCount = Math.min(count, multiBonus.length);
                             }
                         } else {
                             // 没有multiBonus，默认每段100%伤害
-                            totalMultiplier = count;
+                            for (let i = 0; i < count; i++) {
+                                hitDamages.push(baseDamage);
+                            }
                         }
                         
-                        skillDamage = Math.floor(baseDamage * totalMultiplier);
-                        damageMultiplier = Math.max(damageMultiplier, totalMultiplier);
+                        skillDamage = hitDamages.reduce((sum, dmg) => sum + dmg, 0);
+                        totalDamage += skillDamage; // 直接累加到总伤害
                         damageType = 'multi';
                         skill._hitCount = hitCount; // 保存段数用于显示
+                        skill._hitDamages = hitDamages; // 保存每段伤害用于显示
                     } else if (skill.effect === 'critical' && skill.value) {
                         skillMultiplier = skill.value;
                         skillDamage = Math.floor(baseDamage * skillMultiplier);
+                        totalDamage += skillDamage; // 直接累加
+                        isCriticalHit = true;
                         damageType = 'critical';
                     } else if (skill.effect === 'damage' && skill.value) {
                         skillMultiplier = skill.value;
                         skillDamage = Math.floor(baseDamage * skillMultiplier);
+                        totalDamage += skillDamage; // 直接累加
                         damageType = 'damage';
                     } else if (skill.effect === 'bonus_damage' && skill.value) {
                         skillDamage = Math.floor(baseDamage * skill.value);
+                        totalDamage += skillDamage; // 直接累加
                         damageType = 'bonus';
                     } else if (skill.effect === 'percent_damage' && skill.value) {
                         const targetMaxHealth = isPlayer ? this.opponentData.stamina : this.playerData.stamina;
                         skillDamage = Math.floor(targetMaxHealth * skill.value);
+                        totalDamage += skillDamage; // 直接累加
                         damageType = 'percent';
                     } else if (skill.effect === 'true_damage' && skill.value) {
                         skillDamage = Math.floor(baseAttack * skill.value);
+                        totalDamage += skillDamage; // 直接累加
                         damageType = 'true';
                     } else if (skill.effect === 'damage_amp' && skill.value) {
                         skillDamage = Math.floor(baseDamage * skill.value);
+                        totalDamage += skillDamage; // 直接累加
                         damageType = 'amp';
                     } else if (skill.effect === 'armor_pierce' && skill.value) {
                         const ignoredDefense = Math.floor(defense * skill.value);
                         skillDamage = Math.floor(ignoredDefense * 0.5);
+                        totalDamage += skillDamage; // 直接累加
                         damageType = 'pierce';
                     } else if (skill.effect === 'buff_attack' && skill.value) {
                         const attackBoostValue = Math.floor(baseAttack * skill.value);
                         skillDamage = Math.floor(attackBoostValue);
+                        totalDamage += skillDamage; // 直接累加
                         damageType = 'buff';
                     } else if (skill.effect === 'lifesteal' && skill.value) {
                         skillDamage = baseDamage;
+                        totalDamage += skillDamage; // 直接累加
                         damageType = 'lifesteal';
                     } else if (skill.value) {
                         if (skill.value > 1.0) {
                             skillMultiplier = skill.value;
                             skillDamage = Math.floor(baseDamage * skillMultiplier);
+                            totalDamage += skillDamage; // 直接累加
                             damageType = 'multiplier';
                         } else if (skill.value > 0 && skill.value <= 1.0) {
                             skillDamage = Math.floor(baseDamage * skill.value);
+                            totalDamage += skillDamage; // 直接累加
                             damageType = 'bonus';
                         }
                     }
@@ -777,7 +796,12 @@
                         damageInfo = `固定伤害: ${skillDamage}`;
                     } else if (damageType === 'multi') {
                         const hitCount = skill._hitCount || count;
-                        damageInfo = `多段伤害: ${skillDamage} (${hitCount}段)`;
+                        const hitDamages = skill._hitDamages || [];
+                        if (hitDamages.length > 0) {
+                            damageInfo = `多段伤害: ${skillDamage} [${hitDamages.join('+')}]`;
+                        } else {
+                            damageInfo = `多段伤害: ${skillDamage} (${hitCount}段)`;
+                        }
                     } else if (damageType === 'critical') {
                         damageInfo = `暴击伤害: ${skillDamage}`;
                     } else if (damageType === 'percent') {
@@ -800,23 +824,14 @@
                     
                     await this.triggerSkillEffect(skill, isPlayer, damageInfo);
                     
-                    // 应用技能效果
-                    if (skill.effect === 'critical' && skill.value) {
-                        // 暴击技能触发
-                        isCriticalHit = true;
-                        damageMultiplier = Math.max(damageMultiplier, skill.value);
-                    } else if (skill.value && skill.value > 1.0 && !skill.effect.includes('buff')) {
-                        damageMultiplier = Math.max(damageMultiplier, skill.value);
-                    }
-                    
                     // 设置冷却
                     if (skill.cooldown) {
                         this.setSkillCooldown(skill.key, skill.cooldown, isPlayer);
                     }
                 }
                 
-                // 计算最终伤害
-                let damage = Math.max(1, Math.floor(baseDamage * damageMultiplier));
+                // 最终伤害就是所有技能伤害的总和
+                let damage = Math.max(1, totalDamage);
                 
                 // 应用伤害
                 if (isPlayer) {

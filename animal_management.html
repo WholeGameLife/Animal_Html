@@ -16,8 +16,77 @@
             backdrop-filter: blur(5px);
             border: 1px solid #374151;
             /* Needed for progress bar positioning */
-            position: relative; 
+            position: relative;
             box-shadow: 0 10px 15px rgba(0, 0, 0, 0.5);
+        }
+        
+        /* 技能悬浮提示框样式 */
+        .skill-tooltip {
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%) translateY(-10px);
+            background: rgba(17, 24, 39, 0.98);
+            border: 2px solid rgba(139, 92, 246, 0.6);
+            border-radius: 8px;
+            padding: 12px;
+            min-width: 280px;
+            max-width: 350px;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s ease, transform 0.2s ease;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            white-space: normal;
+        }
+        
+        .skill-slot-wrapper {
+            position: relative;
+        }
+        
+        .skill-slot-wrapper:hover .skill-tooltip,
+        .skill-item-wrapper:hover .skill-tooltip {
+            opacity: 1;
+            transform: translateX(-50%) translateY(-5px);
+            pointer-events: auto;
+        }
+        
+        .skill-tooltip::after {
+            content: '';
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 6px solid transparent;
+            border-top-color: rgba(139, 92, 246, 0.6);
+        }
+        
+        .skill-item-wrapper {
+            position: relative;
+        }
+        
+        .tooltip-header {
+            text-align: center;
+            border-bottom: 1px solid rgba(139, 92, 246, 0.3);
+            padding-bottom: 8px;
+            margin-bottom: 8px;
+        }
+        
+        .tooltip-param {
+            display: flex;
+            justify-content: space-between;
+            padding: 4px 0;
+            font-size: 0.75rem;
+        }
+        
+        .tooltip-param-label {
+            color: #9ca3af;
+        }
+        
+        .tooltip-param-value {
+            color: #a78bfa;
+            font-weight: 600;
         }
         .action-button {
             transition: all 0.15s ease-in-out;
@@ -764,23 +833,27 @@
                 
                 // 检查是战斗技能、变异技能还是自定义技能
                 let skill = COMBAT_SKILLS[skillKey] || MUTATION_SKILLS[skillKey];
+                let customSkill = null;
                 
                 // 如果不是预定义技能，从技能池中查找
                 if (!skill && skillKey) {
-                    const customSkill = skillPool.find(s => s.key === skillKey);
+                    customSkill = skillPool.find(s => s.key === skillKey);
                     if (customSkill) {
                         skill = {
                             name: customSkill.name,
                             icon: customSkill.icon,
                             desc: customSkill.description || customSkill.desc || '无描述',
-                            cooldown: customSkill.cooldown || 0
+                            cooldown: customSkill.params?.cooldown || 0
                         };
                     }
                 }
                 
                 if (skillKey && skill) {
                     const isMutationSkill = !!MUTATION_SKILLS[skillKey];
+                    const tooltipHtml = generateSkillTooltip(skill, customSkill);
+                    
                     slot.innerHTML = `
+                        ${tooltipHtml}
                         <div class="text-2xl mb-1">${skill.icon}</div>
                         <div class="text-xs font-bold text-white">${skill.name}</div>
                         ${skill.cooldown ? `<div class="text-xs text-gray-400">CD: ${skill.cooldown}</div>` : ''}
@@ -788,7 +861,7 @@
                     // 变异技能使用粉色边框，普通技能使用紫色边框
                     const borderColor = isMutationSkill ? 'border-pink-400' : 'border-purple-400';
                     const bgColor = isMutationSkill ? 'bg-pink-700 hover:bg-pink-600' : 'bg-purple-700 hover:bg-purple-600';
-                    slot.className = `${bgColor} rounded p-2 text-center cursor-pointer transition-colors min-h-[60px] flex flex-col items-center justify-center border-2 ${borderColor}`;
+                    slot.className = `skill-slot-wrapper ${bgColor} rounded p-2 text-center cursor-pointer transition-colors min-h-[60px] flex flex-col items-center justify-center border-2 ${borderColor}`;
                     slot.onclick = () => unequipSkill(animal, index);
                 } else {
                     slot.innerHTML = '<span class="text-gray-500 text-xs">空槽位</span>';
@@ -810,10 +883,11 @@
                 availableSkills.forEach(skillKey => {
                     // 先从预定义技能中查找
                     let skill = COMBAT_SKILLS[skillKey];
+                    let customSkill = null;
                     
                     // 如果不是预定义技能，从技能池中查找
                     if (!skill) {
-                        const customSkill = skillPool.find(s => s.key === skillKey);
+                        customSkill = skillPool.find(s => s.key === skillKey);
                         if (customSkill) {
                             skill = {
                                 name: customSkill.name,
@@ -832,10 +906,14 @@
                     
                     const isEquipped = animal.combatSkills.equipped.includes(skillKey);
                     const div = document.createElement('div');
-                    div.className = `p-2 rounded cursor-pointer transition-colors ${
+                    div.className = `skill-item-wrapper p-2 rounded cursor-pointer transition-colors ${
                         isEquipped ? 'bg-purple-800 opacity-50' : 'bg-gray-700 hover:bg-gray-600'
                     }`;
+                    
+                    const tooltipHtml = generateSkillTooltip(skill, customSkill);
+                    
                     div.innerHTML = `
+                        ${tooltipHtml}
                         <div class="flex items-center space-x-2 mb-1">
                             <span class="text-lg flex-shrink-0">${skill.icon}</span>
                             <div class="flex-1 min-w-0">
@@ -853,6 +931,107 @@
                     ui.availableSkillsList.appendChild(div);
                 });
             }
+        }
+        
+        // 生成技能悬浮提示框
+        function generateSkillTooltip(skill, customSkill) {
+            let tooltipHtml = `
+                <div class="skill-tooltip">
+                    <div class="tooltip-header">
+                        <div class="text-3xl mb-1">${skill.icon}</div>
+                        <div class="text-sm font-bold text-purple-300">${skill.name}</div>
+                        ${skill.type ? `<div class="text-xs text-gray-400 mt-1">${getTypeDisplayName(skill.type)}</div>` : ''}
+                    </div>
+                    
+                    <div class="text-xs text-gray-300 mb-2">${skill.desc}</div>
+            `;
+            
+            // 如果是自定义技能，显示详细参数
+            if (customSkill && customSkill.params) {
+                const params = customSkill.params;
+                tooltipHtml += `<div class="border-t border-gray-600 pt-2 mt-2">`;
+                tooltipHtml += `<div class="text-xs font-bold text-purple-400 mb-1">📊 技能参数</div>`;
+                
+                if (params.cooldown !== undefined && params.cooldown > 0) {
+                    tooltipHtml += `<div class="tooltip-param"><span class="tooltip-param-label">冷却回合</span><span class="tooltip-param-value">${params.cooldown}</span></div>`;
+                }
+                if (params.duration !== undefined && params.duration > 0) {
+                    tooltipHtml += `<div class="tooltip-param"><span class="tooltip-param-label">持续回合</span><span class="tooltip-param-value">${params.duration}</span></div>`;
+                }
+                if (params.count !== undefined && params.count > 1) {
+                    tooltipHtml += `<div class="tooltip-param"><span class="tooltip-param-label">次数</span><span class="tooltip-param-value">${params.count}</span></div>`;
+                }
+                if (params.attackBonus !== undefined) {
+                    tooltipHtml += `<div class="tooltip-param"><span class="tooltip-param-label">攻击加成</span><span class="tooltip-param-value">×${params.attackBonus}</span></div>`;
+                }
+                if (params.defenseBonus !== undefined) {
+                    tooltipHtml += `<div class="tooltip-param"><span class="tooltip-param-label">防御加成</span><span class="tooltip-param-value">×${params.defenseBonus}</span></div>`;
+                }
+                if (params.speedBonus !== undefined) {
+                    tooltipHtml += `<div class="tooltip-param"><span class="tooltip-param-label">速度加成</span><span class="tooltip-param-value">${(params.speedBonus * 100).toFixed(0)}%</span></div>`;
+                }
+                if (params.buffBonus !== undefined) {
+                    tooltipHtml += `<div class="tooltip-param"><span class="tooltip-param-label">Buff加成</span><span class="tooltip-param-value">${(params.buffBonus * 100).toFixed(0)}%</span></div>`;
+                }
+                if (params.healBonus !== undefined) {
+                    tooltipHtml += `<div class="tooltip-param"><span class="tooltip-param-label">治疗加成</span><span class="tooltip-param-value">${(params.healBonus * 100).toFixed(0)}%</span></div>`;
+                }
+                if (params.damagePercent !== undefined) {
+                    tooltipHtml += `<div class="tooltip-param"><span class="tooltip-param-label">伤害百分比</span><span class="tooltip-param-value">${(params.damagePercent * 100).toFixed(0)}%</span></div>`;
+                }
+                if (params.healPercent !== undefined) {
+                    tooltipHtml += `<div class="tooltip-param"><span class="tooltip-param-label">恢复百分比</span><span class="tooltip-param-value">${(params.healPercent * 100).toFixed(0)}%</span></div>`;
+                }
+                if (params.multiBonus && params.multiBonus.length > 0) {
+                    tooltipHtml += `<div class="tooltip-param"><span class="tooltip-param-label">多段倍率</span><span class="tooltip-param-value">[${params.multiBonus.join(', ')}]</span></div>`;
+                }
+                if (params.target) {
+                    const targetMap = {
+                        'self': '自身', 'ally-single': '我方单体', 'ally-all': '我方全体',
+                        'enemy-single': '敌方单体', 'enemy-all': '敌方全体'
+                    };
+                    tooltipHtml += `<div class="tooltip-param"><span class="tooltip-param-label">目标</span><span class="tooltip-param-value">${targetMap[params.target] || params.target}</span></div>`;
+                }
+                if (params.statusType) {
+                    const statusMap = {
+                        'stun': '眩晕', 'poison': '中毒', 'bleed': '流血',
+                        'frostbite': '冻伤', 'burn': '烧伤', 'paralyze': '麻痹'
+                    };
+                    tooltipHtml += `<div class="tooltip-param"><span class="tooltip-param-label">异常状态</span><span class="tooltip-param-value">${statusMap[params.statusType] || params.statusType}</span></div>`;
+                }
+                if (params.statusChance !== undefined) {
+                    tooltipHtml += `<div class="tooltip-param"><span class="tooltip-param-label">施加概率</span><span class="tooltip-param-value">${params.statusChance}%</span></div>`;
+                }
+                if (params.elementType) {
+                    tooltipHtml += `<div class="tooltip-param"><span class="tooltip-param-label">针对属性</span><span class="tooltip-param-value">${params.elementType}</span></div>`;
+                }
+                if (params.elementBonus !== undefined) {
+                    tooltipHtml += `<div class="tooltip-param"><span class="tooltip-param-label">属性加成</span><span class="tooltip-param-value">${(params.elementBonus * 100).toFixed(0)}%</span></div>`;
+                }
+                
+                tooltipHtml += `</div>`;
+            } else if (skill.cooldown) {
+                // 预定义技能只显示冷却时间
+                tooltipHtml += `<div class="border-t border-gray-600 pt-2 mt-2">`;
+                tooltipHtml += `<div class="tooltip-param"><span class="tooltip-param-label">冷却回合</span><span class="tooltip-param-value">${skill.cooldown}</span></div>`;
+                tooltipHtml += `</div>`;
+            }
+            
+            tooltipHtml += `</div>`;
+            return tooltipHtml;
+        }
+        
+        // 获取类型显示名称
+        function getTypeDisplayName(type) {
+            const typeMap = {
+                'attack': '⚔️ 攻击型',
+                'defense': '🛡️ 防御型',
+                'agility': '⚡ 敏捷型',
+                'buff': '💪 增益型',
+                'debuff': '🔻 减益型',
+                'heal': '💚 治疗型'
+            };
+            return typeMap[type] || type;
         }
 
         // 新增：计算体力详细加成
@@ -1178,10 +1357,11 @@
             animal.mutations.skills.forEach(skillKey => {
                 // 先从预定义变异技能中查找
                 let skill = MUTATION_SKILLS[skillKey];
+                let customSkill = null;
                 
                 // 如果不是预定义技能，从技能池中查找
                 if (!skill) {
-                    const customSkill = skillPool.find(s => s.key === skillKey);
+                    customSkill = skillPool.find(s => s.key === skillKey);
                     if (customSkill) {
                         skill = {
                             name: customSkill.name,
@@ -1200,10 +1380,14 @@
                 const isEquipped = animal.combatSkills.equipped.includes(skillKey);
                 
                 const skillDiv = document.createElement('div');
-                skillDiv.className = `p-2 rounded cursor-pointer transition-colors border-2 border-pink-500/50 mb-1 flex items-center justify-between ${
+                skillDiv.className = `skill-item-wrapper p-2 rounded cursor-pointer transition-colors border-2 border-pink-500/50 mb-1 flex items-center justify-between ${
                     isEquipped ? 'bg-purple-800 opacity-50' : 'bg-gradient-to-r from-pink-900/40 to-purple-900/40 hover:from-pink-800/50 hover:to-purple-800/50'
                 }`;
+                
+                const tooltipHtml = generateSkillTooltip(skill, customSkill);
+                
                 skillDiv.innerHTML = `
+                    ${tooltipHtml}
                     <div class="flex items-center space-x-2">
                         <span class="text-lg">${skill.icon}</span>
                         <div class="flex-1">
@@ -1958,6 +2142,9 @@
             
             config = MUTATION_CONFIG.tier1[targetRarity][mutationName];
             
+            // 从技能池中获取对应变异类型的技能
+            const mutationSkills = getSkillsFromPool(mutationName);
+            
             // 初始化变异历史数组
             if (!animal.mutations.history) {
                 animal.mutations.history = [];
@@ -2004,12 +2191,21 @@
             // 更新当前变异
             animal.mutations.tier1 = mutationName;
             
-            // 添加新技能
-            config.skills.forEach(skill => {
-                if (!animal.mutations.skills.includes(skill)) {
-                    animal.mutations.skills.push(skill);
-                }
-            });
+            // 添加新技能（从技能池获取）
+            if (mutationSkills.length > 0) {
+                mutationSkills.forEach(skillKey => {
+                    if (!animal.mutations.skills.includes(skillKey)) {
+                        animal.mutations.skills.push(skillKey);
+                    }
+                });
+            } else {
+                // 如果技能池中没有对应技能，使用预定义技能
+                config.skills.forEach(skill => {
+                    if (!animal.mutations.skills.includes(skill)) {
+                        animal.mutations.skills.push(skill);
+                    }
+                });
+            }
             
             // 应用属性加成
             applyMutationStats(animal, config.stats);
@@ -2023,7 +2219,10 @@
             if (isUpgrade) {
                 log += `🎉 稀有度提升！旧变异已保留到历史记录\n`;
             }
-            log += `获得技能: ${config.skills.map(s => MUTATION_SKILLS[s].name).join(', ')}`;
+            
+            // 获取技能名称（从技能池或预定义）
+            const skillNames = getSkillNames(mutationSkills.length > 0 ? mutationSkills : config.skills);
+            log += `获得技能: ${skillNames.join(', ')}`;
             
             const changeDesc = `
                 <div class="space-y-2">
@@ -2043,7 +2242,7 @@
                     ` : ''}
                     <div class="bg-gray-700 p-3 rounded">
                         <div class="text-gray-400 mb-2">新增技能:</div>
-                        ${config.skills.map(s => `<div class="text-sm">${MUTATION_SKILLS[s].icon} ${MUTATION_SKILLS[s].name}</div>`).join('')}
+                        ${getSkillDisplayHtml(mutationSkills.length > 0 ? mutationSkills : config.skills)}
                     </div>
                 </div>
             `;
@@ -2110,6 +2309,70 @@
         function getRarityLevel(rarity) {
             const levels = { basic: 1, elite: 2, legendary: 3 };
             return levels[rarity] || 0;
+        }
+        
+        // 新增：从技能池中获取对应变异类型的技能
+        function getSkillsFromPool(mutationType) {
+            const skillPool = JSON.parse(localStorage.getItem('SKILL_POOL') || '[]');
+            
+            // 变异类型到category的映射
+            const mutationToCategoryMap = {
+                '黑化': 'mutation-dark',
+                '白化': 'mutation-light',
+                '晶化': 'mutation-crystal',
+                '影化': 'mutation-shadow',
+                '极电': 'mutation-thunder',
+                '圣辉': 'mutation-holy',
+                '异能': 'mutation-psychic',
+                '暗蚀': 'mutation-chaos',
+                '湮灭': 'mutation-annihilate',
+                '虚无': 'mutation-void',
+                '轮回': 'mutation-rebirth'
+            };
+            
+            const category = mutationToCategoryMap[mutationType];
+            if (!category) return [];
+            
+            // 筛选出对应类别的技能
+            const matchingSkills = skillPool.filter(skill => skill.category === category);
+            
+            // 随机选择技能（基础级1个，精英级2个，传说级2个）
+            const config = getMutationConfig(mutationType);
+            const maxSkills = config?.rarity === 'basic' ? 1 : 2;
+            
+            // 打乱并选择
+            const shuffled = matchingSkills.sort(() => Math.random() - 0.5);
+            return shuffled.slice(0, maxSkills).map(s => s.key);
+        }
+        
+        // 新增：获取技能名称列表
+        function getSkillNames(skillKeys) {
+            const skillPool = JSON.parse(localStorage.getItem('SKILL_POOL') || '[]');
+            return skillKeys.map(skillKey => {
+                const skill = MUTATION_SKILLS[skillKey];
+                if (skill) return skill.name;
+                
+                const customSkill = skillPool.find(s => s.key === skillKey);
+                return customSkill ? customSkill.name : '未知技能';
+            });
+        }
+        
+        // 新增：获取技能显示HTML
+        function getSkillDisplayHtml(skillKeys) {
+            const skillPool = JSON.parse(localStorage.getItem('SKILL_POOL') || '[]');
+            return skillKeys.map(skillKey => {
+                const skill = MUTATION_SKILLS[skillKey];
+                if (skill) {
+                    return `<div class="text-sm">${skill.icon} ${skill.name}</div>`;
+                }
+                
+                const customSkill = skillPool.find(s => s.key === skillKey);
+                if (customSkill) {
+                    return `<div class="text-sm">${customSkill.icon} ${customSkill.name}</div>`;
+                }
+                
+                return `<div class="text-sm">❓ 未知技能</div>`;
+            }).join('');
         }
 
         // --- 逻辑处理函数 ---
