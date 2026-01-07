@@ -92,36 +92,85 @@ const debugPanelHTML = isWorldMapPage ? `
         </div>
     </div>
 ` : `
-    <div id="debug-panel" class="fixed top-10 right-10 control-panel p-4 rounded-lg text-white w-96 z-50 hidden" style="cursor: move;">
-        <div id="debug-header" class="w-full flex justify-between items-center mb-4">
-            <h4 class="text-lg font-bold text-red-500">🐞 调试窗口</h4>
-            <button id="btn-close-debug" class="text-xl">&times;</button>
+    <div id="debug-panel" class="fixed top-10 right-10 control-panel p-4 rounded-lg text-white w-[420px] z-50 hidden" style="cursor: move;">
+        <div id="debug-header" class="w-full flex justify-between items-center mb-4 cursor-move">
+            <h4 class="text-lg font-bold text-red-500">🐞 调试工具 <span class="text-xs text-gray-400">[反引号键切换]</span></h4>
+            <button id="btn-close-debug" class="text-xl hover:text-red-400">&times;</button>
         </div>
-        <div class="space-y-4 max-h-96 overflow-y-auto pr-2">
+        <div class="space-y-3 max-h-[75vh] overflow-y-auto pr-2">
             <!-- 资源控制 -->
-            <div class="bg-gray-800 p-3 rounded">
-                <p class="font-semibold text-yellow-400 mb-2">资源</p>
-                <div class="grid grid-cols-2 gap-2">
-                    <button onclick="debug.addResource('food', 1000)" class="bg-blue-600 text-xs py-1 rounded">+1000 食物</button>
-                    <button onclick="debug.addResource('gems', 100)" class="bg-blue-600 text-xs py-1 rounded">+100 宝石</button>
+            <div class="bg-gray-800 p-3 rounded-lg border border-gray-700">
+                <p class="font-semibold text-yellow-400 mb-3 flex items-center gap-2">💰 资源管理</p>
+                <div class="grid grid-cols-3 gap-2">
+                    <button onclick="debug.addResource('food', 1000)" class="bg-blue-600 hover:bg-blue-700 text-xs py-2 rounded transition">+1K 食物</button>
+                    <button onclick="debug.addResource('food', 10000)" class="bg-blue-700 hover:bg-blue-800 text-xs py-2 rounded transition">+10K 食物</button>
+                    <button onclick="debug.addResource('gems', 100)" class="bg-purple-600 hover:bg-purple-700 text-xs py-2 rounded transition">+100 宝石</button>
+                    <button onclick="debug.addAllItems()" class="col-span-3 bg-cyan-600 hover:bg-cyan-700 text-xs py-2 rounded transition">补充所有道具</button>
                 </div>
             </div>
+            
             <!-- 动物控制 -->
-            <div class="bg-gray-800 p-3 rounded">
-                <p class="font-semibold text-green-400 mb-2">选中动物</p>
-                <div class="grid grid-cols-2 gap-2">
-                    <button onclick="debug.addLevel(1)" class="bg-green-600 text-xs py-1 rounded">+1 等级</button>
-                    <button onclick="debug.addLevel(10)" class="bg-green-600 text-xs py-1 rounded">+10 等级</button>
-                    <button onclick="debug.addExperience(100)" class="bg-green-600 text-xs py-1 rounded">+100 经验</button>
+            <div class="bg-gray-800 p-3 rounded-lg border border-gray-700">
+                <p class="font-semibold text-green-400 mb-3 flex items-center gap-2">🐾 当前动物</p>
+                <div id="debug-animal-info" class="text-xs text-gray-400 mb-2 p-2 bg-gray-900/50 rounded">
+                    未选择动物
+                </div>
+                <div class="grid grid-cols-3 gap-2">
+                    <button onclick="debug.addLevel(1)" class="bg-green-600 hover:bg-green-700 text-xs py-2 rounded transition">+1 级</button>
+                    <button onclick="debug.addLevel(5)" class="bg-green-700 hover:bg-green-800 text-xs py-2 rounded transition">+5 级</button>
+                    <button onclick="debug.addLevel(10)" class="bg-green-800 hover:bg-green-900 text-xs py-2 rounded transition">+10 级</button>
+                    <button onclick="debug.maxLevel()" class="col-span-3 bg-emerald-600 hover:bg-emerald-700 text-xs py-2 rounded transition">升至50级</button>
+                    <button onclick="debug.fullStamina()" class="bg-orange-600 hover:bg-orange-700 text-xs py-2 rounded transition">满体力</button>
+                    <button onclick="debug.maxFavorability()" class="bg-pink-600 hover:bg-pink-700 text-xs py-2 rounded transition">满好感</button>
+                    <button onclick="debug.changePotential()" class="bg-indigo-600 hover:bg-indigo-700 text-xs py-2 rounded transition">切换潜力</button>
                 </div>
             </div>
-            <!-- 变异控制 -->
-            <div class="bg-gray-800 p-3 rounded">
-                <p class="font-semibold text-pink-400 mb-2">变异</p>
+            
+            <!-- 稀有度控制 -->
+            <div class="bg-gray-800 p-3 rounded-lg border border-gray-700">
+                <p class="font-semibold text-purple-400 mb-3 flex items-center gap-2">⭐ 稀有度</p>
                 <div class="grid grid-cols-2 gap-2">
-                    <button onclick="debug.addMutationSerum(1)" class="bg-pink-600 text-xs py-1 rounded">+1 变异血清</button>
-                    <button onclick="debug.resetMutationCooldown()" class="bg-pink-600 text-xs py-1 rounded">重置冷却</button>
+                    <button onclick="debug.setRarity('普通')" class="bg-gray-600 hover:bg-gray-700 text-xs py-2 rounded transition">普通</button>
+                    <button onclick="debug.setRarity('闪光')" class="bg-yellow-600 hover:bg-yellow-700 text-xs py-2 rounded transition">✨ 闪光</button>
+                    <button onclick="debug.setRarity('幻彩')" class="bg-pink-600 hover:bg-pink-700 text-xs py-2 rounded transition">🌈 幻彩</button>
+                    <button onclick="debug.setRarity('星芒')" class="bg-purple-600 hover:bg-purple-700 text-xs py-2 rounded transition">⭐ 星芒</button>
                 </div>
+            </div>
+            
+            <!-- 变异控制 -->
+            <div class="bg-gray-800 p-3 rounded-lg border border-gray-700">
+                <p class="font-semibold text-pink-400 mb-3 flex items-center gap-2">🧬 变异系统</p>
+                <div class="grid grid-cols-2 gap-2">
+                    <button onclick="debug.addMutationSerum(1)" class="bg-pink-600 hover:bg-pink-700 text-xs py-2 rounded transition">+1 血清</button>
+                    <button onclick="debug.addMutationSerum(10)" class="bg-pink-700 hover:bg-pink-800 text-xs py-2 rounded transition">+10 血清</button>
+                    <button onclick="debug.resetMutationCooldown()" class="bg-fuchsia-600 hover:bg-fuchsia-700 text-xs py-2 rounded transition">重置冷却</button>
+                    <button onclick="debug.clearMutation()" class="bg-red-600 hover:bg-red-700 text-xs py-2 rounded transition">清除变异</button>
+                </div>
+            </div>
+            
+            <!-- 技能控制 -->
+            <div class="bg-gray-800 p-3 rounded-lg border border-gray-700">
+                <p class="font-semibold text-cyan-400 mb-3 flex items-center gap-2">⚔️ 技能系统</p>
+                <div class="grid grid-cols-2 gap-2">
+                    <button onclick="debug.unlockAllSkills()" class="bg-cyan-600 hover:bg-cyan-700 text-xs py-2 rounded transition">解锁所有技能</button>
+                    <button onclick="debug.clearSkills()" class="bg-red-600 hover:bg-red-700 text-xs py-2 rounded transition">清空技能</button>
+                    <button onclick="debug.equipAllSkills()" class="col-span-2 bg-blue-600 hover:bg-blue-700 text-xs py-2 rounded transition">自动装备前4个</button>
+                </div>
+            </div>
+            
+            <!-- 批量操作 -->
+            <div class="bg-gray-800 p-3 rounded-lg border border-gray-700">
+                <p class="font-semibold text-orange-400 mb-3 flex items-center gap-2">🚀 批量操作</p>
+                <div class="grid grid-cols-2 gap-2">
+                    <button onclick="debug.upgradeAllAnimals()" class="bg-orange-600 hover:bg-orange-700 text-xs py-2 rounded transition">全体+10级</button>
+                    <button onclick="debug.healAllAnimals()" class="bg-green-600 hover:bg-green-700 text-xs py-2 rounded transition">全体满血</button>
+                    <button onclick="debug.godMode()" class="col-span-2 bg-gradient-to-r from-yellow-500 to-red-500 hover:from-yellow-600 hover:to-red-600 text-sm py-2 rounded font-bold transition">🔥 上帝模式</button>
+                </div>
+            </div>
+            
+            <!-- 信息显示 -->
+            <div class="bg-gray-800/50 p-2 rounded text-xs text-gray-400 text-center border border-gray-700">
+                调试工具 v2.0 - 按反引号键切换显示
             </div>
         </div>
     </div>
@@ -139,41 +188,292 @@ window.debug = {
     addResource: (resource, amount) => {
         if (typeof gameState === 'undefined') return;
         gameState[resource] += amount;
-        updateResourceUI();
-        showStatus(`调试：+${amount} ${resource}`, 1500);
+        if (typeof updateResourceUI === 'function') updateResourceUI();
+        if (typeof saveGameState === 'function') saveGameState();
+        showStatus(`✅ +${amount} ${resource}`, 1500);
     },
+    
     addLevel: (levels) => {
-        if (typeof selectedAnimalId === 'undefined' || !selectedAnimalId) return showStatus('调试：未选择动物', 1500);
+        if (typeof selectedAnimalId === 'undefined' || !selectedAnimalId) {
+            showStatus('❌ 请先选择动物', 1500);
+            return;
+        }
         const animal = gameState.animals.find(a => a.id === selectedAnimalId);
+        if (!animal) return;
         for (let i = 0; i < levels; i++) {
             levelUpAnimal(animal);
         }
+        if (typeof saveGameState === 'function') saveGameState();
         showAnimalDetails(animal.id);
-        showStatus(`调试：+${levels} 等级`, 1500);
+        debug.updateAnimalInfo();
+        showStatus(`✅ +${levels} 等级`, 1500);
     },
-    addExperience: (amount) => {
-        if (typeof selectedAnimalId === 'undefined' || !selectedAnimalId) return showStatus('调试：未选择动物', 1500);
+    
+    maxLevel: () => {
+        if (typeof selectedAnimalId === 'undefined' || !selectedAnimalId) {
+            showStatus('❌ 请先选择动物', 1500);
+            return;
+        }
         const animal = gameState.animals.find(a => a.id === selectedAnimalId);
-        animal.experience += amount;
-        if (animal.experience >= animal.experienceToNextLevel) {
+        if (!animal) return;
+        while (animal.level < 50) {
             levelUpAnimal(animal);
         }
+        if (typeof saveGameState === 'function') saveGameState();
         showAnimalDetails(animal.id);
-        showStatus(`调试：+${amount} 经验`, 1500);
+        debug.updateAnimalInfo();
+        showStatus(`✅ 已升至50级`, 2000);
     },
+    
+    addExperience: (amount) => {
+        if (typeof selectedAnimalId === 'undefined' || !selectedAnimalId) {
+            showStatus('❌ 请先选择动物', 1500);
+            return;
+        }
+        const animal = gameState.animals.find(a => a.id === selectedAnimalId);
+        if (!animal) return;
+        animal.experience += amount;
+        while (animal.experience >= animal.experienceToNextLevel) {
+            levelUpAnimal(animal);
+        }
+        if (typeof saveGameState === 'function') saveGameState();
+        showAnimalDetails(animal.id);
+        debug.updateAnimalInfo();
+        showStatus(`✅ +${amount} 经验`, 1500);
+    },
+    
+    fullStamina: () => {
+        if (typeof selectedAnimalId === 'undefined' || !selectedAnimalId) {
+            showStatus('❌ 请先选择动物', 1500);
+            return;
+        }
+        const animal = gameState.animals.find(a => a.id === selectedAnimalId);
+        if (!animal) return;
+        animal.stamina = animal.maxStamina;
+        if (typeof saveGameState === 'function') saveGameState();
+        showAnimalDetails(animal.id);
+        showStatus(`✅ 体力已恢复`, 1500);
+    },
+    
+    maxFavorability: () => {
+        if (typeof selectedAnimalId === 'undefined' || !selectedAnimalId) {
+            showStatus('❌ 请先选择动物', 1500);
+            return;
+        }
+        const animal = gameState.animals.find(a => a.id === selectedAnimalId);
+        if (!animal) return;
+        animal.favorability = 100;
+        if (typeof saveGameState === 'function') saveGameState();
+        showAnimalDetails(animal.id);
+        showStatus(`✅ 好感度已满`, 1500);
+    },
+    
+    changePotential: () => {
+        if (typeof selectedAnimalId === 'undefined' || !selectedAnimalId) {
+            showStatus('❌ 请先选择动物', 1500);
+            return;
+        }
+        const animal = gameState.animals.find(a => a.id === selectedAnimalId);
+        if (!animal) return;
+        const potentials = ['平庸', '超常', '璀璨'];
+        const currentIndex = potentials.indexOf(animal.potential);
+        animal.potential = potentials[(currentIndex + 1) % 3];
+        if (typeof saveGameState === 'function') saveGameState();
+        showAnimalDetails(animal.id);
+        debug.updateAnimalInfo();
+        showStatus(`✅ 潜力: ${animal.potential}`, 1500);
+    },
+    
+    setRarity: (rarity) => {
+        if (typeof selectedAnimalId === 'undefined' || !selectedAnimalId) {
+            showStatus('❌ 请先选择动物', 1500);
+            return;
+        }
+        const animal = gameState.animals.find(a => a.id === selectedAnimalId);
+        if (!animal) return;
+        animal.rarity = rarity;
+        if (typeof saveGameState === 'function') saveGameState();
+        showAnimalDetails(animal.id);
+        debug.updateAnimalInfo();
+        showStatus(`✅ 稀有度: ${rarity}`, 1500);
+    },
+    
     addMutationSerum: (amount) => {
         if (typeof gameState === 'undefined') return;
         gameState.inventory['mutation_serum'] = (gameState.inventory['mutation_serum'] || 0) + amount;
-        updateResourceUI();
+        if (typeof updateResourceUI === 'function') updateResourceUI();
         if (typeof renderItemPanel === 'function') renderItemPanel();
-        showStatus(`调试：+${amount} 变异血清`, 1500);
+        if (typeof saveGameState === 'function') saveGameState();
+        showStatus(`✅ +${amount} 变异血清`, 1500);
     },
+    
     resetMutationCooldown: () => {
-        if (typeof selectedAnimalId === 'undefined' || !selectedAnimalId) return showStatus('调试：未选择动物', 1500);
+        if (typeof selectedAnimalId === 'undefined' || !selectedAnimalId) {
+            showStatus('❌ 请先选择动物', 1500);
+            return;
+        }
         const animal = gameState.animals.find(a => a.id === selectedAnimalId);
-        animal.mutationCooldownEnd = 0;
+        if (!animal) return;
+        if (animal.mutationCooldownUntil) animal.mutationCooldownUntil = 0;
+        if (animal.tier2MutationCooldownUntil) animal.tier2MutationCooldownUntil = 0;
+        if (typeof saveGameState === 'function') saveGameState();
         if (typeof selectMutationTarget === 'function') selectMutationTarget(animal);
-        showStatus('调试：变异冷却已重置', 1500);
+        showStatus('✅ 变异冷却已重置', 1500);
+    },
+    
+    clearMutation: () => {
+        if (typeof selectedAnimalId === 'undefined' || !selectedAnimalId) {
+            showStatus('❌ 请先选择动物', 1500);
+            return;
+        }
+        const animal = gameState.animals.find(a => a.id === selectedAnimalId);
+        if (!animal) return;
+        animal.mutations = { tier1: null, tier2: null, skills: [], currentSkills: [], history: [] };
+        animal.mutationCount = 0;
+        if (typeof saveGameState === 'function') saveGameState();
+        showAnimalDetails(animal.id);
+        showStatus('✅ 已清除所有变异', 1500);
+    },
+    
+    unlockAllSkills: () => {
+        if (typeof selectedAnimalId === 'undefined' || !selectedAnimalId) {
+            showStatus('❌ 请先选择动物', 1500);
+            return;
+        }
+        const animal = gameState.animals.find(a => a.id === selectedAnimalId);
+        if (!animal) return;
+        
+        // 解锁所有战斗技能
+        const allCombatSkills = Object.keys(typeof COMBAT_SKILLS !== 'undefined' ? COMBAT_SKILLS : {});
+        animal.combatSkills = animal.combatSkills || { equipped: [], available: [] };
+        allCombatSkills.forEach(skillKey => {
+            if (!animal.combatSkills.available.includes(skillKey)) {
+                animal.combatSkills.available.push(skillKey);
+            }
+        });
+        
+        if (typeof saveGameState === 'function') saveGameState();
+        if (typeof renderCombatSkills === 'function') renderCombatSkills(animal);
+        showStatus(`✅ 已解锁 ${allCombatSkills.length} 个技能`, 2000);
+    },
+    
+    clearSkills: () => {
+        if (typeof selectedAnimalId === 'undefined' || !selectedAnimalId) {
+            showStatus('❌ 请先选择动物', 1500);
+            return;
+        }
+        const animal = gameState.animals.find(a => a.id === selectedAnimalId);
+        if (!animal) return;
+        animal.combatSkills = { equipped: [], available: [] };
+        if (typeof saveGameState === 'function') saveGameState();
+        if (typeof renderCombatSkills === 'function') renderCombatSkills(animal);
+        if (typeof renderMutationSkills === 'function') renderMutationSkills(animal);
+        showStatus('✅ 已清空所有技能', 1500);
+    },
+    
+    equipAllSkills: () => {
+        if (typeof selectedAnimalId === 'undefined' || !selectedAnimalId) {
+            showStatus('❌ 请先选择动物', 1500);
+            return;
+        }
+        const animal = gameState.animals.find(a => a.id === selectedAnimalId);
+        if (!animal || !animal.combatSkills) return;
+        
+        const allSkills = [...(animal.combatSkills.available || []), ...(animal.mutations?.skills || [])];
+        animal.combatSkills.equipped = allSkills.slice(0, 4);
+        
+        if (typeof saveGameState === 'function') saveGameState();
+        if (typeof renderCombatSkills === 'function') renderCombatSkills(animal);
+        if (typeof renderMutationSkills === 'function') renderMutationSkills(animal);
+        showStatus(`✅ 已装备前4个技能`, 1500);
+    },
+    
+    addAllItems: () => {
+        if (typeof gameState === 'undefined') return;
+        if (!gameState.inventory) gameState.inventory = {};
+        gameState.inventory['exp_potion_s'] = (gameState.inventory['exp_potion_s'] || 0) + 99;
+        gameState.inventory['exp_potion_l'] = (gameState.inventory['exp_potion_l'] || 0) + 99;
+        gameState.inventory['stamina_potion'] = (gameState.inventory['stamina_potion'] || 0) + 99;
+        gameState.inventory['mutation_serum'] = (gameState.inventory['mutation_serum'] || 0) + 99;
+        if (typeof updateResourceUI === 'function') updateResourceUI();
+        if (typeof renderItemPanel === 'function') renderItemPanel();
+        if (typeof saveGameState === 'function') saveGameState();
+        showStatus('✅ 已添加所有道具', 2000);
+    },
+    
+    upgradeAllAnimals: () => {
+        if (typeof gameState === 'undefined' || !gameState.animals) return;
+        gameState.animals.forEach(animal => {
+            for (let i = 0; i < 10; i++) {
+                levelUpAnimal(animal);
+            }
+        });
+        if (typeof saveGameState === 'function') saveGameState();
+        if (typeof renderAnimalList === 'function') renderAnimalList();
+        if (selectedAnimalId) showAnimalDetails(selectedAnimalId);
+        showStatus('✅ 所有动物 +10级', 2000);
+    },
+    
+    healAllAnimals: () => {
+        if (typeof gameState === 'undefined' || !gameState.animals) return;
+        gameState.animals.forEach(animal => {
+            animal.stamina = animal.maxStamina;
+        });
+        if (typeof saveGameState === 'function') saveGameState();
+        if (selectedAnimalId) showAnimalDetails(selectedAnimalId);
+        showStatus('✅ 所有动物体力已恢复', 2000);
+    },
+    
+    godMode: () => {
+        if (typeof gameState === 'undefined') return;
+        // 资源拉满
+        gameState.food = 999999;
+        gameState.gems = 9999;
+        // 道具拉满
+        if (!gameState.inventory) gameState.inventory = {};
+        Object.keys(typeof ITEMS !== 'undefined' ? ITEMS : {}).forEach(itemKey => {
+            gameState.inventory[itemKey] = 999;
+        });
+        // 当前动物强化
+        if (selectedAnimalId) {
+            const animal = gameState.animals.find(a => a.id === selectedAnimalId);
+            if (animal) {
+                animal.rarity = '星芒';
+                animal.potential = '璀璨';
+                animal.favorability = 100;
+                while (animal.level < 50) {
+                    levelUpAnimal(animal);
+                }
+                showAnimalDetails(animal.id);
+            }
+        }
+        if (typeof updateResourceUI === 'function') updateResourceUI();
+        if (typeof renderItemPanel === 'function') renderItemPanel();
+        if (typeof saveGameState === 'function') saveGameState();
+        showStatus('🔥 上帝模式已激活！', 3000);
+    },
+    
+    updateAnimalInfo: () => {
+        const infoDiv = document.getElementById('debug-animal-info');
+        if (!infoDiv) return;
+        
+        if (typeof selectedAnimalId === 'undefined' || !selectedAnimalId) {
+            infoDiv.innerHTML = '未选择动物';
+            return;
+        }
+        
+        const animal = gameState.animals.find(a => a.id === selectedAnimalId);
+        if (!animal) {
+            infoDiv.innerHTML = '动物不存在';
+            return;
+        }
+        
+        const mutationDisplay = animal.mutations?.tier1 ? `🧬 ${animal.mutations.tier1}` : '无变异';
+        infoDiv.innerHTML = `
+            <div class="font-bold text-white">${animal.name} Lv.${animal.level}</div>
+            <div class="mt-1">稀有度: ${animal.rarity || '普通'} | 潜力: ${animal.potential}</div>
+            <div>变异: ${mutationDisplay}</div>
+        `;
     },
     
     // 地图调试功能
@@ -446,8 +746,21 @@ document.body.insertAdjacentHTML('beforeend', debugPanelHTML);
         if (e.key === '`') {
             e.preventDefault();
             debugPanel.classList.toggle('hidden');
+            // 更新动物信息
+            if (!isWorldMapPage && typeof debug.updateAnimalInfo === 'function') {
+                debug.updateAnimalInfo();
+            }
         }
     });
+    
+    // 选中动物变化时更新信息显示
+    if (!isWorldMapPage) {
+        setInterval(() => {
+            if (!debugPanel.classList.contains('hidden') && typeof debug.updateAnimalInfo === 'function') {
+                debug.updateAnimalInfo();
+            }
+        }, 500);
+    }
     
     // 关闭按钮
     const closeBtn = document.getElementById('btn-close-debug');
