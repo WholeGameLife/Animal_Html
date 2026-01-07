@@ -598,131 +598,18 @@
         </div>
     </div>
 
+    <!-- 引入配置文件 -->
+    <script src="animal_config.js"></script>
+    
     <script>
         // 调试对象将由 debug.js 提供
 
-        // --- 全局变量和配置 ---
+        // --- 全局变量 ---
         let gameState = {};
         let selectedAnimalId = null;
         let lastSelectedAnimalIdInCultivation = null; // 新增：记录养成面板的最后选择
         let currentActivePanel = 'cultivation'; // 追踪当前激活的面板
         let isActionInProgress = false; // 防止在繁殖/融合期间进行其他操作
-
-        // 等级和成长配置 (与 game3d.html 保持一致)
-        const LEVEL_CONFIG = {
-            baseExperience: 100,
-            experienceMultiplier: 1.5,
-            feedAmount: 20,
-            potentialMultipliers: { '平庸': { stamina: 1.0, combat: 1.0 }, '超常': { stamina: 1.2, combat: 1.3 }, '璀璨': { stamina: 1.5, combat: 1.8 } },
-            baseGrowth: { stamina: 10, attack: 3, defense: 2, agility: 2, favorability: 5 }
-        };
-        const ACTION_DURATION = 15000; // 15 seconds for breeding/fusion
-
-        const ELEMENT_ICONS = {
-            '水': '💧',
-            '火': '🔥',
-            '土': '🌍',
-            '风': '💨',
-            '雷': '⚡️',
-            '木': '🌳',
-            '光': '☀️',
-            '暗': '🌙',
-            '默认': '❔'
-        };
-        const ELEMENT_COLORS = {
-            '水': 'bg-blue-500',
-            '火': 'bg-red-600',
-            '土': 'bg-amber-700',
-            '风': 'bg-teal-400 text-black',
-            '雷': 'bg-yellow-400 text-black',
-            '木': 'bg-green-600',
-            '光': 'bg-yellow-200 text-black',
-            '暗': 'bg-indigo-800',
-            '默认': 'bg-gray-500'
-        };
-        const ANIMAL_NAMES = ['Ami', 'Bao', 'Cai', 'Duo', 'Fei', 'Gui', 'Hao', 'Jing', 'Kai', 'Ling'];
-        // 新增：道具配置
-        const ITEMS = {
-            'exp_potion_s': { name: '小经验药水', icon: '🧪', type: 'exp', value: 50, desc: '增加50点经验' },
-            'exp_potion_l': { name: '大经验药水', icon: '⚗️', type: 'exp', value: 200, desc: '增加200点经验' },
-            'stamina_potion': { name: '体力药剂', icon: '⚡', type: 'stamina', value: 50, desc: '恢复50点体力' },
-            'mutation_serum': { name: '变异血清', icon: '💉', type: 'material', desc: '诱发动物基因突变的关键道具' }
-        };
-
-        // 战斗技能配置
-        const COMBAT_SKILLS = {
-            'POWER_STRIKE': { name: '力量打击', icon: '💥', type: 'attack', desc: '造成150%攻击力的伤害', cooldown: 3 },
-            'SHIELD_BASH': { name: '盾击', icon: '🛡️', type: 'defense', desc: '提升50%防御并反击', cooldown: 4 },
-            'QUICK_SLASH': { name: '疾风斩', icon: '⚡', type: 'agility', desc: '连续攻击2次，每次70%伤害', cooldown: 2 },
-            'BERSERKER': { name: '狂暴', icon: '😡', type: 'buff', desc: '攻击力提升30%，持续3回合', cooldown: 5 },
-            'IRON_WALL': { name: '铁壁', icon: '🏰', type: 'defense', desc: '防御力提升50%，持续2回合', cooldown: 4 },
-            'DODGE': { name: '闪避', icon: '💨', type: 'agility', desc: '下次攻击必定闪避', cooldown: 3 },
-            'CRITICAL_HIT': { name: '致命一击', icon: '🎯', type: 'attack', desc: '造成200%暴击伤害', cooldown: 5 },
-            'LIFE_STEAL': { name: '生命汲取', icon: '🩸', type: 'attack', desc: '攻击回复50%伤害的生命', cooldown: 4 },
-            'COUNTER': { name: '反击', icon: '↩️', type: 'defense', desc: '受到攻击时反击100%伤害', cooldown: 3 },
-            'SPEED_BOOST': { name: '加速', icon: '🚀', type: 'agility', desc: '敏捷提升40%，持续2回合', cooldown: 3 }
-        };
-
-        // 变异系统配置
-        const MUTATION_CONFIG = {
-            tier1: {
-                basic: {
-                    '黑化': { icon: '🖤', rarity: 'basic', chain: 'dark', skills: ['MUT_DARK_POWER'], stats: { attack: 5 } },
-                    '白化': { icon: '🤍', rarity: 'basic', chain: 'light', skills: ['MUT_LIGHT_HEAL'], stats: { stamina: 10 } },
-                    '晶化': { icon: '💎', rarity: 'basic', chain: 'crystal', skills: ['MUT_CRYSTAL_SHIELD'], stats: { defense: 5 } },
-                    '影化': { icon: '👤', rarity: 'basic', chain: 'thunder', skills: ['MUT_SHADOW_SPEED'], stats: { agility: 5 } }
-                },
-                elite: {
-                    '暗蚀': { icon: '🌑', rarity: 'elite', chain: 'dark', skills: ['MUT_PERCENT_DAMAGE', 'MUT_LIFE_DRAIN'], stats: { attack: 10 } },
-                    '圣辉': { icon: '✨', rarity: 'elite', chain: 'light', skills: ['MUT_HOLY_HEAL', 'MUT_HEAL_REDUCE'], stats: { stamina: 15, defense: 5 } },
-                    '异能': { icon: '🔮', rarity: 'elite', chain: 'crystal', skills: ['MUT_DAMAGE_AMP', 'MUT_DEFENSE_AMP'], stats: { attack: 6, defense: 6 } },
-                    '极电': { icon: '⚡', rarity: 'elite', chain: 'thunder', skills: ['MUT_THUNDER_STRIKE', 'MUT_LIGHTNING_SPEED'], stats: { attack: 8, agility: 8 } }
-                },
-                legendary: {
-                    '永夜': { icon: '🌙', rarity: 'legendary', chain: 'dark', skills: ['MUT_ETERNAL_DARK', 'MUT_DARK_AURA'], stats: { attack: 15, defense: 10 }, mechanism: 'enemy_debuff' },
-                    '永耀': { icon: '☀️', rarity: 'legendary', chain: 'light', skills: ['MUT_ETERNAL_LIGHT', 'MUT_REGEN_AURA'], stats: { stamina: 20, defense: 10 }, mechanism: 'team_buff' },
-                    '源晶': { icon: '💠', rarity: 'legendary', chain: 'crystal', skills: ['MUT_CRYSTAL_POWER', 'MUT_SHIELD_AURA'], stats: { defense: 15, stamina: 15 }, mechanism: 'production' },
-                    '雷煌': { icon: '⚡', rarity: 'legendary', chain: 'thunder', skills: ['MUT_LIGHTNING_LORD', 'MUT_SPEED_AURA'], stats: { attack: 15, agility: 15 }, mechanism: 'speed_buff' }
-                }
-            },
-            tier2: {
-                '阴': { icon: '☯️', stats: { agility: 10, stamina: 15 } },
-                '阳': { icon: '☀️', stats: { attack: 10, defense: 10 } },
-                '玄': { icon: '🔯', stats: { attack: 5, defense: 5, agility: 5, stamina: 10 } }
-            }
-        };
-        
-        // 亲和关系链定义
-        const AFFINITY_CHAINS = {
-            dark: { basic: '黑化', elite: '暗蚀', legendary: '永夜', opposite: 'light' },
-            light: { basic: '白化', elite: '圣辉', legendary: '永耀', opposite: 'dark' },
-            crystal: { basic: '晶化', elite: '异能', legendary: '源晶', opposite: 'thunder' },
-            thunder: { basic: '影化', elite: '极电', legendary: '雷煌', opposite: 'crystal' }
-        };
-
-        // 变异技能配置
-        const MUTATION_SKILLS = {
-            'MUT_DARK_POWER': { name: '暗黑之力', icon: '🖤', desc: '攻击力+15%' },
-            'MUT_LIGHT_HEAL': { name: '光明治愈', icon: '🤍', desc: '每回合恢复5%生命' },
-            'MUT_CRYSTAL_SHIELD': { name: '晶体护盾', icon: '💎', desc: '防御力+20%' },
-            'MUT_SHADOW_SPEED': { name: '影之疾行', icon: '👤', desc: '敏捷+25%' },
-            'MUT_THUNDER_STRIKE': { name: '雷霆一击', icon: '⚡', desc: '攻击附加30%雷电伤害' },
-            'MUT_LIGHTNING_SPEED': { name: '闪电疾驰', icon: '⚡', desc: '敏捷+30%' },
-            'MUT_HOLY_HEAL': { name: '圣光治疗', icon: '✨', desc: '每回合恢复8%生命' },
-            'MUT_HEAL_REDUCE': { name: '治疗削弱', icon: '✨', desc: '敌方治疗效果-50%' },
-            'MUT_DAMAGE_AMP': { name: '伤害增幅', icon: '🔮', desc: '造成伤害+25%' },
-            'MUT_DEFENSE_AMP': { name: '防御增幅', icon: '🔮', desc: '受到伤害-20%' },
-            'MUT_PERCENT_DAMAGE': { name: '百分比伤害', icon: '🌑', desc: '攻击造成敌方5%最大生命伤害' },
-            'MUT_LIFE_DRAIN': { name: '生命汲取', icon: '🌑', desc: '攻击回复50%伤害生命' },
-            'MUT_ETERNAL_DARK': { name: '永恒暗夜', icon: '🌙', desc: '降低敌方全体10%攻击/命中' },
-            'MUT_DARK_AURA': { name: '暗影光环', icon: '🌙', desc: '己方暗系伤害+30%' },
-            'MUT_ETERNAL_LIGHT': { name: '永恒光辉', icon: '☀️', desc: '出战背包全体生命+15%' },
-            'MUT_REGEN_AURA': { name: '再生光环', icon: '☀️', desc: '队伍全体每回合恢复3%生命' },
-            'MUT_CRYSTAL_POWER': { name: '源晶之力', icon: '💠', desc: '防御力+40%' },
-            'MUT_SHIELD_AURA': { name: '护盾光环', icon: '💠', desc: '队伍全体受到伤害-15%' },
-            'MUT_LIGHTNING_LORD': { name: '雷霆之主', icon: '⚡', desc: '攻击速度+50%，概率触发连锁闪电' },
-            'MUT_SPEED_AURA': { name: '疾速光环', icon: '⚡', desc: '队伍全体攻击速度/移动速度+25%' }
-        };
 
         // UI 元素引用
         const ui = {
@@ -1070,18 +957,10 @@
                     tooltipHtml += `<div class="tooltip-param"><span class="tooltip-param-label">多段倍率</span><span class="tooltip-param-value">[${params.multiBonus.join(', ')}]</span></div>`;
                 }
                 if (params.target) {
-                    const targetMap = {
-                        'self': '自身', 'ally-single': '我方单体', 'ally-all': '我方全体',
-                        'enemy-single': '敌方单体', 'enemy-all': '敌方全体'
-                    };
-                    tooltipHtml += `<div class="tooltip-param"><span class="tooltip-param-label">目标</span><span class="tooltip-param-value">${targetMap[params.target] || params.target}</span></div>`;
+                    tooltipHtml += `<div class="tooltip-param"><span class="tooltip-param-label">目标</span><span class="tooltip-param-value">${SKILL_TARGET_NAMES[params.target] || params.target}</span></div>`;
                 }
                 if (params.statusType) {
-                    const statusMap = {
-                        'stun': '眩晕', 'poison': '中毒', 'bleed': '流血',
-                        'frostbite': '冻伤', 'burn': '烧伤', 'paralyze': '麻痹'
-                    };
-                    tooltipHtml += `<div class="tooltip-param"><span class="tooltip-param-label">异常状态</span><span class="tooltip-param-value">${statusMap[params.statusType] || params.statusType}</span></div>`;
+                    tooltipHtml += `<div class="tooltip-param"><span class="tooltip-param-label">异常状态</span><span class="tooltip-param-value">${STATUS_NAMES[params.statusType] || params.statusType}</span></div>`;
                 }
                 if (params.statusChance !== undefined) {
                     tooltipHtml += `<div class="tooltip-param"><span class="tooltip-param-label">施加概率</span><span class="tooltip-param-value">${params.statusChance}%</span></div>`;
@@ -1107,15 +986,7 @@
         
         // 获取类型显示名称
         function getTypeDisplayName(type) {
-            const typeMap = {
-                'attack': '⚔️ 攻击型',
-                'defense': '🛡️ 防御型',
-                'agility': '⚡ 敏捷型',
-                'buff': '💪 增益型',
-                'debuff': '🔻 减益型',
-                'heal': '💚 治疗型'
-            };
-            return typeMap[type] || type;
+            return SKILL_TYPE_NAMES[type] || type;
         }
 
         // 新增：计算体力详细加成
@@ -1248,13 +1119,7 @@
         
         // 新增：获取稀有度倍率
         function getRarityMultiplier(rarity) {
-            const multipliers = {
-                '普通': 1.0,
-                '闪光': 1.25,
-                '幻彩': 1.5,
-                '星芒': 2.0
-            };
-            return multipliers[rarity] || 1.0;
+            return RARITY_CONFIG.multipliers[rarity] || 1.0;
         }
         
         // 新增：切换战斗能力详细信息显示
@@ -1278,22 +1143,8 @@
             if (!rarityText) return;
             
             const rarity = animal.rarity || '普通';
-            const rarityColors = {
-                '普通': 'text-gray-400',
-                '闪光': 'text-yellow-400',
-                '幻彩': 'text-pink-400',
-                '星芒': 'text-purple-500'
-            };
-            
-            const rarityIcons = {
-                '普通': '',
-                '闪光': '✨',
-                '幻彩': '🌈',
-                '星芒': '⭐'
-            };
-            
-            rarityText.textContent = `${rarityIcons[rarity] || ''} ${rarity}`;
-            rarityText.className = `text-sm font-bold ${rarityColors[rarity] || 'text-gray-400'}`;
+            rarityText.textContent = `${RARITY_CONFIG.icons[rarity] || ''} ${rarity}`;
+            rarityText.className = `text-sm font-bold ${RARITY_CONFIG.colors[rarity] || 'text-gray-400'}`;
         }
 
         // 渲染变异类型（在属性标签页）
@@ -1395,14 +1246,7 @@
             // 显示机制
             mechanismDisplay.classList.remove('hidden');
             
-            const mechanismDescriptions = {
-                'production': '📦 生产加速：基建生产速度+50%',
-                'team_buff': '💫 团队增益：出战背包全体生命+15%',
-                'enemy_debuff': '🌑 敌方削弱：降低敌方全体10%攻击/命中',
-                'speed_buff': '⚡ 疾速增益：队伍全体攻击速度/移动速度+25%'
-            };
-            
-            const mechanismDesc = mechanismDescriptions[tier1Config.mechanism] || tier1Config.mechanism;
+            const mechanismDesc = LEGENDARY_MECHANISMS[tier1Config.mechanism] || tier1Config.mechanism;
             
             const div = document.createElement('div');
             div.className = 'bg-gradient-to-r from-pink-900/30 to-purple-900/30 border-2 border-pink-500/50 rounded px-3 py-2';
@@ -2230,11 +2074,12 @@
             if (!currentMutation) {
                 // 首次变异 - 使用标准概率
                 const roll = Math.random() * 100;
-                if (roll < 80) {
+                const prob = MUTATION_PROBABILITY.first_mutation;
+                if (roll < prob.basic) {
                     targetRarity = 'basic';
                     const options = Object.keys(MUTATION_CONFIG.tier1.basic);
                     mutationName = options[Math.floor(Math.random() * options.length)];
-                } else if (roll < 98) {
+                } else if (roll < prob.basic + prob.elite) {
                     targetRarity = 'elite';
                     const options = Object.keys(MUTATION_CONFIG.tier1.elite);
                     mutationName = options[Math.floor(Math.random() * options.length)];
@@ -2272,7 +2117,7 @@
             const isRarityUpgrade = oldMutation && getRarityLevel(targetRarity) > getRarityLevel(oldRarity);
             
             // 管理技能：根据技能数量限制处理
-            const skillLimits = { basic: 2, elite: 2, legendary: 2 };
+            const skillLimits = SKILL_LIMITS.mutation;
             
             // 如果是进阶（稀有度提升），保留旧变异到历史
             if (isRarityUpgrade) {
@@ -2400,7 +2245,7 @@
             // 暂时移除二级变异冷却期
             // animal.tier2MutationCooldownUntil = Date.now() + (24 * 60 * 60 * 1000);
             
-            if (roll > 60) {
+            if (roll > MUTATION_PROBABILITY.tier2.success_rate) {
                 return {
                     success: false,
                     log: '❌ 二级变异失败！基因序列不稳定。\n进入24小时冷却修养期。',
@@ -2410,9 +2255,10 @@
             
             let mutationName;
             const tierRoll = Math.random() * 100;
-            if (tierRoll < 40) {
+            const dist = MUTATION_PROBABILITY.tier2.distribution;
+            if (tierRoll < dist['阴']) {
                 mutationName = '阴';
-            } else if (tierRoll < 80) {
+            } else if (tierRoll < dist['阴'] + dist['阳']) {
                 mutationName = '阳';
             } else {
                 mutationName = '玄';
@@ -2465,8 +2311,7 @@
         }
 
         function getRarityLevel(rarity) {
-            const levels = { basic: 1, elite: 2, legendary: 3 };
-            return levels[rarity] || 0;
+            return MUTATION_RARITY_LEVELS[rarity] || 0;
         }
         
         // 新增：基于亲和链计算变异结果
@@ -2485,26 +2330,23 @@
             if (currentRarity === 'basic') {
                 // 从基础级变异
                 const roll = Math.random() * 100;
+                const prob = MUTATION_PROBABILITY.from_basic;
                 
-                if (roll < 70) {
-                    // 同级转换 (70%)
+                if (roll < prob.same_tier) {
                     return selectSameTierMutation('basic', currentMutation, currentChain, oppositeChain);
-                } else if (roll < 98) {
-                    // 向上进阶 (28%)
+                } else if (roll < prob.same_tier + prob.upgrade_elite) {
                     return selectUpgradeMutation('elite', currentChain, oppositeChain);
                 } else {
-                    // 跨级突变 (2%)
                     return selectUpgradeMutation('legendary', currentChain, oppositeChain);
                 }
             } else if (currentRarity === 'elite') {
                 // 从精英级变异
                 const roll = Math.random() * 100;
+                const prob = MUTATION_PROBABILITY.from_elite;
                 
-                if (roll < 75) {
-                    // 同级转换 (75%)
+                if (roll < prob.same_tier) {
                     return selectSameTierMutation('elite', currentMutation, currentChain, oppositeChain);
                 } else {
-                    // 向上进阶 (25%)
                     return selectUpgradeMutation('legendary', currentChain, oppositeChain);
                 }
             } else {
@@ -2528,7 +2370,8 @@
             
             if (rarity === 'legendary') {
                 // 传说级：对立15%，中立各42.5%
-                if (roll < 15 && opposite.length > 0) {
+                const oppositeChance = MUTATION_PROBABILITY.same_tier_opposite.legendary;
+                if (roll < oppositeChance && opposite.length > 0) {
                     selected = opposite[Math.floor(Math.random() * opposite.length)];
                 } else if (neutral.length > 0) {
                     selected = neutral[Math.floor(Math.random() * neutral.length)];
@@ -2537,7 +2380,7 @@
                 }
             } else {
                 // 基础级/精英级：对立较低概率，中立均分
-                const oppositeChance = rarity === 'basic' ? 15 : 10;
+                const oppositeChance = MUTATION_PROBABILITY.same_tier_opposite[rarity];
                 if (roll < oppositeChance && opposite.length > 0) {
                     selected = opposite[Math.floor(Math.random() * opposite.length)];
                 } else if (neutral.length > 0) {
@@ -2565,10 +2408,11 @@
             let selected;
             
             if (targetRarity === 'elite') {
-                // 升级到精英：亲和20%，对立1%，中立各3.5%
-                if (roll < 71.4 && affinity.length > 0) { // 20/28 * 100
+                // 升级到精英：使用配置的概率
+                const prob = MUTATION_PROBABILITY.affinity.to_elite;
+                if (roll < prob.affinity_chain && affinity.length > 0) {
                     selected = affinity[Math.floor(Math.random() * affinity.length)];
-                } else if (roll < 75 && opposite.length > 0) { // 1/28 * 100
+                } else if (roll < prob.affinity_chain + prob.opposite_chain && opposite.length > 0) {
                     selected = opposite[Math.floor(Math.random() * opposite.length)];
                 } else if (neutral.length > 0) {
                     selected = neutral[Math.floor(Math.random() * neutral.length)];
@@ -2576,13 +2420,12 @@
                     selected = candidates[Math.floor(Math.random() * candidates.length)];
                 }
             } else {
-                // 升级到传说：亲和1.6%(基础)或20%(精英)，对立0.1%或1%，中立均分
-                const affinityChance = currentChain ? 80 : 1.6; // 假设从精英升级
-                const oppositeChance = currentChain ? 4 : 0.1;
+                // 升级到传说：使用配置的概率
+                const prob = MUTATION_PROBABILITY.affinity.to_legendary;
                 
-                if (roll < affinityChance && affinity.length > 0) {
+                if (roll < prob.affinity_chain && affinity.length > 0) {
                     selected = affinity[Math.floor(Math.random() * affinity.length)];
-                } else if (roll < affinityChance + oppositeChance && opposite.length > 0) {
+                } else if (roll < prob.affinity_chain + prob.opposite_chain && opposite.length > 0) {
                     selected = opposite[Math.floor(Math.random() * opposite.length)];
                 } else if (neutral.length > 0) {
                     selected = neutral[Math.floor(Math.random() * neutral.length)];
@@ -2670,22 +2513,7 @@
         function getSkillsFromPool(mutationType) {
             const skillPool = JSON.parse(localStorage.getItem('SKILL_POOL') || '[]');
             
-            // 变异类型到category的映射
-            const mutationToCategoryMap = {
-                '黑化': 'mutation-dark',
-                '白化': 'mutation-light',
-                '晶化': 'mutation-crystal',
-                '影化': 'mutation-shadow',
-                '极电': 'mutation-thunder',
-                '圣辉': 'mutation-holy',
-                '异能': 'mutation-psychic',
-                '暗蚀': 'mutation-chaos',
-                '湮灭': 'mutation-annihilate',
-                '虚无': 'mutation-void',
-                '轮回': 'mutation-rebirth'
-            };
-            
-            const category = mutationToCategoryMap[mutationType];
+            const category = MUTATION_TO_CATEGORY_MAP[mutationType];
             if (!category) return [];
             
             // 筛选出对应类别的技能
@@ -3115,7 +2943,7 @@
         }
 
         function updateBreedingButton() {
-            const cost = 100;
+            const cost = BREEDING_CONFIG.cost;
             const parents = gameState.selectedAnimalsForBreeding.map(id => gameState.animals.find(a => a.id === id));
             const hasTwoParents = parents.length === 2;
             const isMaleFemalePair = hasTwoParents && parents[0].gender !== parents[1].gender;
@@ -3140,7 +2968,7 @@
         }
 
         function updateFusionButton() {
-            const cost = 50;
+            const cost = FUSION_CONFIG.cost;
             const canFuse = !isActionInProgress && gameState.selectedAnimalsForFusion.length === 2 && gameState.food >= cost;
             ui.btnExecuteFusion.disabled = !canFuse;
             if (gameState.selectedAnimalsForFusion.length < 2) {
@@ -3170,20 +2998,20 @@
                 gender: Math.random() > 0.5 ? '雄' : '雌',
                 experience: 0,
                 experienceToNextLevel: LEVEL_CONFIG.baseExperience,
-                stamina: 70,
-                maxStamina: 70,
+                stamina: BASE_ANIMAL_STATS.stamina,
+                maxStamina: BASE_ANIMAL_STATS.maxStamina,
                 potential: '平庸',
                 favorability: 0,
                 element: '水',
                 developmentStage: '幼年期',
                 abilities: {
-                    combat: { attack: 10, defense: 5, agility: 8 }
+                    combat: { ...BASE_ANIMAL_STATS.combat }
                 },
                 isInjured: false,
                 injuryTimer: 0,
                 combatSkills: { equipped: [], available: [] },
-                mutations: { tier1: null, tier2: null, skills: [], currentSkills: [] }, // 初始化变异系统
-                mutationCount: 0 // 变异次数
+                mutations: { tier1: null, tier2: null, skills: [], currentSkills: [] },
+                mutationCount: 0
             };
             gameState.animals.push(animalData);
             gameState.animalCount++;
@@ -3192,7 +3020,7 @@
         function breedAnimal() {
             if (isActionInProgress) return;
 
-            const cost = 100;
+            const cost = BREEDING_CONFIG.cost;
             const parents = gameState.selectedAnimalsForBreeding.map(id => gameState.animals.find(a => a.id === id)).filter(Boolean);
             if (parents.length !== 2 || gameState.food < cost || gameState.animalCount >= gameState.maxAnimals) {
                 showStatus('❌ 不满足繁殖条件。', 2000);
@@ -3254,15 +3082,15 @@
                 gender: Math.random() > 0.5 ? '雄' : '雌',
                 experience: 0,
                 experienceToNextLevel: LEVEL_CONFIG.baseExperience,
-                stamina: 70,
-                maxStamina: 70,
-                potential: '平庸', // 可以之后再加入潜力继承
+                stamina: BASE_ANIMAL_STATS.stamina,
+                maxStamina: BASE_ANIMAL_STATS.maxStamina,
+                potential: '平庸',
                 favorability: 0,
                 element: Math.random() > 0.5 ? parent1.element : parent2.element,
                 developmentStage: '幼年期',
-                rarity: offspringRarity, // 应用新的稀有度
+                rarity: offspringRarity,
                 abilities: {
-                    combat: { attack: 10, defense: 5, agility: 8 }
+                    combat: { ...BASE_ANIMAL_STATS.combat }
                 },
                 isInjured: false,
                 injuryTimer: 0,
@@ -3289,23 +3117,14 @@
 
         // 新增：根据父母稀有度计算子代稀有度
         function calculateOffspringRarity(rarity1, rarity2) {
-            const RARITY_LEVELS = ['普通', '闪光', '幻彩', '星芒'];
-            const key = [rarity1, rarity2].sort((a, b) => RARITY_LEVELS.indexOf(a) - RARITY_LEVELS.indexOf(b)).join(' × ');
+            const RARITY_LEVELS = Object.keys(RARITY_CONFIG.levels).sort((a, b) =>
+                RARITY_CONFIG.levels[a] - RARITY_CONFIG.levels[b]
+            );
+            const key = [rarity1, rarity2].sort((a, b) =>
+                RARITY_CONFIG.levels[a] - RARITY_CONFIG.levels[b]
+            ).join(' × ');
 
-            const PROBABILITY_TABLE = {
-                '普通 × 普通': { '普通': 95.0, '闪光': 4.5, '幻彩': 0.5, '星芒': 0 },
-                '普通 × 闪光': { '普通': 70.0, '闪光': 25.0, '幻彩': 4.5, '星芒': 0.5 },
-                '普通 × 幻彩': { '普通': 60.0, '闪光': 25.0, '幻彩': 13.0, '星芒': 2.0 },
-                '普通 × 星芒': { '普通': 40.0, '闪光': 30.0, '幻彩': 20.0, '星芒': 10.0 },
-                '闪光 × 闪光': { '普通': 50.0, '闪光': 40.0, '幻彩': 9.0, '星芒': 1.0 },
-                '闪光 × 幻彩': { '普通': 35.0, '闪光': 40.0, '幻彩': 20.0, '星芒': 5.0 },
-                '闪光 × 星芒': { '普通': 25.0, '闪光': 35.0, '幻彩': 25.0, '星芒': 15.0 },
-                '幻彩 × 幻彩': { '普通': 20.0, '闪光': 30.0, '幻彩': 40.0, '星芒': 10.0 },
-                '幻彩 × 星芒': { '普通': 10.0, '闪光': 25.0, '幻彩': 35.0, '星芒': 30.0 },
-                '星芒 × 星芒': { '普通': 5.0, '闪光': 15.0, '幻彩': 30.0, '星芒': 50.0 }
-            };
-
-            const probabilities = PROBABILITY_TABLE[key];
+            const probabilities = BREEDING_RARITY_PROBABILITY[key];
             if (!probabilities) return '普通';
 
             const roll = Math.random() * 100;
@@ -3357,12 +3176,9 @@
                 if (p1Rarity === offspringMutationRarity) {
                     const unlockLevel = getUnlockLevelByRarity(p1Rarity);
                     const skillPool = [...new Set([...(p1Config.skills || []), ...(p2Config.skills || [])])];
-                    let maxInherit = 0;
-                    if (p1Rarity === 'basic') maxInherit = 1;
-                    if (p1Rarity === 'elite') maxInherit = 2;
-                    if (p1Rarity === 'legendary') maxInherit = 2;
+                    const maxInherit = BREEDING_CONFIG.max_inherit[p1Rarity] || 0;
                     
-                    const skillsToInherit = skillPool.slice(0, maxInherit); // 随机选择技能
+                    const skillsToInherit = skillPool.slice(0, maxInherit);
                     skillsToInherit.forEach(skillKey => {
                         inheritedSkills.push({ skillKey, unlockLevel });
                     });
@@ -3402,23 +3218,19 @@
 
         // 辅助函数
         function getRarityLevelByName(rarityName) {
-            const levels = {'普通': 0, '闪光': 1, '幻彩': 2, '星芒': 3};
-            return levels[rarityName] ?? -1;
+            return RARITY_CONFIG.levels[rarityName] ?? -1;
         }
 
         function getUnlockLevelByRarity(mutationRarity) {
-            const levels = { 'basic': 5, 'elite': 10, 'legendary': 15 };
-            return levels[mutationRarity] || 99;
+            return SKILL_UNLOCK_LEVELS[mutationRarity] || 99;
         }
         
         function getMutationRarityFromAnimalRarity(animalRarity) {
-            const mapping = { '闪光': 'basic', '幻彩': 'elite', '星芒': 'legendary' };
-            return mapping[animalRarity];
+            return RARITY_CONFIG.animalToMutation[animalRarity];
         }
 
         function getAnimalRarityFromMutationRarity(mutationRarity) {
-            const mapping = { 'basic': '闪光', 'elite': '幻彩', 'legendary': '星芒' };
-            return mapping[mutationRarity];
+            return RARITY_CONFIG.mutationToAnimal[mutationRarity];
         }
 
         function updateAnimalStats(animal) {
@@ -3429,7 +3241,7 @@
         function fuseAnimals() {
             if (isActionInProgress) return;
 
-            const cost = 50;
+            const cost = FUSION_CONFIG.cost;
             const parents = gameState.selectedAnimalsForFusion.map(id => gameState.animals.find(a => a.id === id)).filter(Boolean);
             if (parents.length !== 2 || gameState.food < cost) {
                 showStatus('❌ 不满足融合条件。', 2000);
