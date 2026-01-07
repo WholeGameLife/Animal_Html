@@ -45,10 +45,11 @@
         .mutation-thunder { background: linear-gradient(135deg, #fbbf24, #f59e0b); }
         .mutation-holy { background: linear-gradient(135deg, #fef3c7, #fde68a); color: #92400e; }
         .mutation-psychic { background: linear-gradient(135deg, #ec4899, #db2777); }
-        .mutation-void { background: linear-gradient(135deg, #6366f1, #4f46e5); }
-        .mutation-annihilate { background: linear-gradient(135deg, #7c2d12, #991b1b); }
         .mutation-chaos { background: linear-gradient(135deg, #581c87, #6b21a8); }
-        .mutation-rebirth { background: linear-gradient(135deg, #059669, #047857); }
+        .mutation-eternal-dark { background: linear-gradient(135deg, #0f172a, #020617); }
+        .mutation-eternal-light { background: linear-gradient(135deg, #fef9c3, #fef08a); color: #713f12; }
+        .mutation-source-crystal { background: linear-gradient(135deg, #5b21b6, #6d28d9); }
+        .mutation-thunder-lord { background: linear-gradient(135deg, #f59e0b, #d97706); }
         
         /* 稀有度颜色 */
         .rarity-shiny { background: linear-gradient(135deg, #fbbf24, #f59e0b); }
@@ -153,18 +154,23 @@
                                     <option value="element-electric">⚡ 电系</option>
                                     <option value="element-earth">🪨 土系</option>
                                 </optgroup>
-                                <optgroup label="变异技能">
-                                    <option value="mutation-dark">🌑 黑化</option>
-                                    <option value="mutation-light">☀️ 白化</option>
+                                <optgroup label="变异技能 - 基础级">
+                                    <option value="mutation-dark">🖤 黑化</option>
+                                    <option value="mutation-light">🤍 白化</option>
                                     <option value="mutation-crystal">💎 晶化</option>
                                     <option value="mutation-shadow">👤 影化</option>
-                                    <option value="mutation-thunder">⚡ 极电</option>
+                                </optgroup>
+                                <optgroup label="变异技能 - 精英级">
+                                    <option value="mutation-chaos">🌑 暗蚀</option>
                                     <option value="mutation-holy">✨ 圣辉</option>
                                     <option value="mutation-psychic">🔮 异能</option>
-                                    <option value="mutation-void">🌀 虚无</option>
-                                    <option value="mutation-annihilate">💀 湮灭</option>
-                                    <option value="mutation-chaos">🖤 暗蚀</option>
-                                    <option value="mutation-rebirth">♻️ 轮回</option>
+                                    <option value="mutation-thunder">⚡ 极电</option>
+                                </optgroup>
+                                <optgroup label="变异技能 - 传说级">
+                                    <option value="mutation-eternal-dark">🌙 永夜</option>
+                                    <option value="mutation-eternal-light">☀️ 永耀</option>
+                                    <option value="mutation-source-crystal">💠 源晶</option>
+                                    <option value="mutation-thunder-lord">⚡ 雷煌</option>
                                 </optgroup>
                             </select>
                         </div>
@@ -282,38 +288,6 @@
                                         <span>增防</span>
                                     </label>
                                     <label class="flex items-center gap-2 text-white text-sm cursor-pointer hover:bg-gray-700 p-1.5 rounded">
-                                        <input type="checkbox" name="skill-effect" value="buff_attack_damage" class="skill-effect-checkbox">
-                                        <span>攻击增伤</span>
-                                    </label>
-                                    <label class="flex items-center gap-2 text-white text-sm cursor-pointer hover:bg-gray-700 p-1.5 rounded">
-                                        <input type="checkbox" name="skill-effect" value="buff_attack_defense" class="skill-effect-checkbox">
-                                        <span>攻击增防</span>
-                                    </label>
-                                    <label class="flex items-center gap-2 text-white text-sm cursor-pointer hover:bg-gray-700 p-1.5 rounded">
-                                        <input type="checkbox" name="skill-effect" value="buff_attack_speed" class="skill-effect-checkbox">
-                                        <span>攻击增速</span>
-                                    </label>
-                                    <label class="flex items-center gap-2 text-white text-sm cursor-pointer hover:bg-gray-700 p-1.5 rounded">
-                                        <input type="checkbox" name="skill-effect" value="buff_attack_status" class="skill-effect-checkbox">
-                                        <span>攻击增益(异常)</span>
-                                    </label>
-                                    <label class="flex items-center gap-2 text-white text-sm cursor-pointer hover:bg-gray-700 p-1.5 rounded">
-                                        <input type="checkbox" name="skill-effect" value="buff_defense_damage" class="skill-effect-checkbox">
-                                        <span>防御增伤</span>
-                                    </label>
-                                    <label class="flex items-center gap-2 text-white text-sm cursor-pointer hover:bg-gray-700 p-1.5 rounded">
-                                        <input type="checkbox" name="skill-effect" value="buff_defense_speed" class="skill-effect-checkbox">
-                                        <span>防御增速</span>
-                                    </label>
-                                    <label class="flex items-center gap-2 text-white text-sm cursor-pointer hover:bg-gray-700 p-1.5 rounded">
-                                        <input type="checkbox" name="skill-effect" value="buff_defense_defense" class="skill-effect-checkbox">
-                                        <span>防御增防</span>
-                                    </label>
-                                    <label class="flex items-center gap-2 text-white text-sm cursor-pointer hover:bg-gray-700 p-1.5 rounded">
-                                        <input type="checkbox" name="skill-effect" value="buff_defense_status" class="skill-effect-checkbox">
-                                        <span>防御增益(异常)</span>
-                                    </label>
-                                    <label class="flex items-center gap-2 text-white text-sm cursor-pointer hover:bg-gray-700 p-1.5 rounded">
                                         <input type="checkbox" name="skill-effect" value="buff_speed" class="skill-effect-checkbox">
                                         <span>增速</span>
                                     </label>
@@ -346,38 +320,6 @@
                                     <label class="flex items-center gap-2 text-white text-sm cursor-pointer hover:bg-gray-700 p-1.5 rounded">
                                         <input type="checkbox" name="skill-effect" value="debuff_defense" class="skill-effect-checkbox">
                                         <span>减防</span>
-                                    </label>
-                                    <label class="flex items-center gap-2 text-white text-sm cursor-pointer hover:bg-gray-700 p-1.5 rounded">
-                                        <input type="checkbox" name="skill-effect" value="debuff_attack_damage" class="skill-effect-checkbox">
-                                        <span>攻击减伤</span>
-                                    </label>
-                                    <label class="flex items-center gap-2 text-white text-sm cursor-pointer hover:bg-gray-700 p-1.5 rounded">
-                                        <input type="checkbox" name="skill-effect" value="debuff_attack_defense" class="skill-effect-checkbox">
-                                        <span>攻击减防</span>
-                                    </label>
-                                    <label class="flex items-center gap-2 text-white text-sm cursor-pointer hover:bg-gray-700 p-1.5 rounded">
-                                        <input type="checkbox" name="skill-effect" value="debuff_attack_speed" class="skill-effect-checkbox">
-                                        <span>攻击减速</span>
-                                    </label>
-                                    <label class="flex items-center gap-2 text-white text-sm cursor-pointer hover:bg-gray-700 p-1.5 rounded">
-                                        <input type="checkbox" name="skill-effect" value="debuff_attack_status" class="skill-effect-checkbox">
-                                        <span>攻击减益(异常)</span>
-                                    </label>
-                                    <label class="flex items-center gap-2 text-white text-sm cursor-pointer hover:bg-gray-700 p-1.5 rounded">
-                                        <input type="checkbox" name="skill-effect" value="debuff_defense_damage" class="skill-effect-checkbox">
-                                        <span>防御减伤</span>
-                                    </label>
-                                    <label class="flex items-center gap-2 text-white text-sm cursor-pointer hover:bg-gray-700 p-1.5 rounded">
-                                        <input type="checkbox" name="skill-effect" value="debuff_defense_defense" class="skill-effect-checkbox">
-                                        <span>防御减防</span>
-                                    </label>
-                                    <label class="flex items-center gap-2 text-white text-sm cursor-pointer hover:bg-gray-700 p-1.5 rounded">
-                                        <input type="checkbox" name="skill-effect" value="debuff_defense_speed" class="skill-effect-checkbox">
-                                        <span>防御减速</span>
-                                    </label>
-                                    <label class="flex items-center gap-2 text-white text-sm cursor-pointer hover:bg-gray-700 p-1.5 rounded">
-                                        <input type="checkbox" name="skill-effect" value="debuff_defense_status" class="skill-effect-checkbox">
-                                        <span>防御减益(异常)</span>
                                     </label>
                                     <label class="flex items-center gap-2 text-white text-sm cursor-pointer hover:bg-gray-700 p-1.5 rounded">
                                         <input type="checkbox" name="skill-effect" value="debuff_speed" class="skill-effect-checkbox">
@@ -531,41 +473,54 @@
                             <p class="text-xs text-gray-500 mt-1">额外速度 = 基础速度 × 增速加成</p>
                         </div>
 
-                        <!-- Buff/Debuff目标和来源 -->
-                        <div id="param-buff-group" class="param-group">
-                            <div class="grid grid-cols-3 gap-4">
-                                <div>
-                                    <label class="block text-xs font-medium text-gray-400 mb-1">目标</label>
-                                    <select id="param-target"
-                                        class="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white text-sm focus:outline-none focus:border-blue-500">
-                                        <option value="self">自身</option>
-                                        <option value="ally-single">我方单体</option>
-                                        <option value="ally-all">我方全体</option>
-                                        <option value="enemy-single">敌方单体</option>
-                                        <option value="enemy-all">敌方全体</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label class="block text-xs font-medium text-gray-400 mb-1">来源</label>
-                                    <select id="param-buff-source"
-                                        class="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white text-sm focus:outline-none focus:border-blue-500">
-                                        <option value="self-attack">自身攻击</option>
-                                        <option value="self-defense">自身防御</option>
-                                        <option value="self-speed">自身速度</option>
-                                        <option value="self-hp">自身生命</option>
-                                        <option value="target-attack">目标攻击</option>
-                                        <option value="target-defense">目标防御</option>
-                                        <option value="target-speed">目标速度</option>
-                                        <option value="target-hp">目标生命</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label class="block text-xs font-medium text-gray-400 mb-1">加成</label>
-                                    <input type="number" id="param-buff-bonus" step="0.01" min="0" value="0.2"
-                                        class="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white text-sm focus:outline-none focus:border-blue-500">
-                                </div>
-                            </div>
-                        </div>
+                        <!-- 通用Buff/Debuff参数模板生成器 -->
+                        <script>
+                            function createBuffDebuffParams(id, title, color, defaultTarget = 'self', defaultSource = 'fixed') {
+                                const isDebuff = id.startsWith('debuff');
+                                const targetOptions = isDebuff ?
+                                    '<option value="enemy-single">敌方单体</option><option value="enemy-all">敌方全体</option>' :
+                                    '<option value="self">自身</option><option value="ally-single">我方单体</option><option value="ally-all">我方全体</option>';
+                                
+                                return `
+                                <div id="param-${id}-group" class="param-group">
+                                    <h4 class="text-sm font-semibold text-${color}-300 border-b border-${color}-800 pb-1 mb-2">${title}参数</h4>
+                                    <div class="grid grid-cols-3 gap-4">
+                                        <div>
+                                            <label class="block text-xs font-medium text-gray-400 mb-1">目标</label>
+                                            <select id="param-${id}-target" class="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white text-sm">
+                                                ${targetOptions}
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label class="block text-xs font-medium text-gray-400 mb-1">来源</label>
+                                            <select id="param-${id}-source" class="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white text-sm">
+                                                <option value="self-attack">自身攻击</option>
+                                                <option value="self-defense">自身防御</option>
+                                                <option value="self-speed">自身速度</option>
+                                                <option value="fixed" selected>固定值</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label class="block text-xs font-medium text-gray-400 mb-1">加成值</label>
+                                            <input type="number" id="param-${id}-bonus" step="0.01" min="0" value="0.2" class="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white text-sm">
+                                        </div>
+                                    </div>
+                                </div>`;
+                            }
+
+                            const buffParams = [
+                                { id: 'buff_attack', title: '增攻', color: 'purple' },
+                                { id: 'buff_defense', title: '增防', color: 'purple' },
+                                { id: 'buff_speed', title: '增速', color: 'purple' },
+                                { id: 'buff_heal_amp', title: '治疗增强', color: 'purple' },
+                                { id: 'debuff_attack', title: '减攻', color: 'red' },
+                                { id: 'debuff_defense', title: '减防', color: 'red' },
+                                { id: 'debuff_speed', title: '减速', color: 'red' },
+                                { id: 'debuff_heal_reduce', title: '减疗', color: 'red' }
+                            ];
+
+                            document.write(buffParams.map(p => createBuffDebuffParams(p.id, p.title, p.color)).join(''));
+                        </script>
 
                         <!-- 异常状态参数 -->
                         <div id="param-status-group" class="param-group">
@@ -803,31 +758,15 @@
             'defense_counter': ['defense-bonus', 'counter'],
             'direct_speed': ['speed-bonus'],
             'continuous_speed': ['speed-bonus'],
-            'buff_attack': ['buff'],
-            'buff_defense': ['buff'],
-            'buff_attack_damage': ['buff'],
-            'buff_attack_defense': ['buff'],
-            'buff_attack_speed': ['buff'],
-            'buff_attack_status': ['buff', 'status'],
-            'buff_defense_damage': ['buff'],
-            'buff_defense_speed': ['buff'],
-            'buff_defense_defense': ['buff'],
-            'buff_defense_status': ['buff', 'status'],
+            'buff_attack': ['buff_attack'],
+            'buff_defense': ['buff_defense'],
             'buff_speed': ['speed-bonus'],
             'buff_status_enemy': ['status'],
             'buff_purify': [],
-            'buff_heal_amp': ['buff'],
-            'buff_element_damage': ['buff', 'element'],
-            'debuff_attack': ['buff'],
-            'debuff_defense': ['buff'],
-            'debuff_attack_damage': ['buff'],
-            'debuff_attack_defense': ['buff'],
-            'debuff_attack_speed': ['buff'],
-            'debuff_attack_status': ['status'],
-            'debuff_defense_damage': ['buff'],
-            'debuff_defense_defense': ['buff'],
-            'debuff_defense_speed': ['buff'],
-            'debuff_defense_status': ['status'],
+            'buff_heal_amp': ['buff_attack'], // Example, can be customized
+            'buff_element_damage': ['element'],
+            'debuff_attack': ['debuff_attack'],
+            'debuff_defense': ['debuff_defense'],
             'debuff_speed': ['speed-bonus'],
             'debuff_status_self': ['status'],
             'debuff_no_heal': [],
@@ -1042,14 +981,6 @@
                 'continuous_speed': `持续增加 ${(params.speedBonus || 0.2) * 100}% 速度`,
                 'buff_attack': `增加 ${(params.buffBonus || 0.2) * 100}% 攻击力`,
                 'buff_defense': `增加 ${(params.buffBonus || 0.2) * 100}% 防御力`,
-                'buff_attack_damage': `增加 ${(params.buffBonus || 0.2) * 100}% 攻击伤害`,
-                'buff_attack_defense': `增加 ${(params.buffBonus || 0.2) * 100}% 防御力`,
-                'buff_attack_speed': `增加 ${(params.buffBonus || 0.2) * 100}% 速度`,
-                'buff_attack_status': `有 ${params.statusChance || 50}% 概率施加 ${getStatusName(params.statusType)}`,
-                'buff_defense_damage': `增加 ${(params.buffBonus || 0.2) * 100}% 防御伤害`,
-                'buff_defense_speed': `增加 ${(params.buffBonus || 0.2) * 100}% 防御速度`,
-                'buff_defense_defense': `增加 ${(params.buffBonus || 0.2) * 100}% 防御力`,
-                'buff_defense_status': `防御时有 ${params.statusChance || 50}% 概率施加 ${getStatusName(params.statusType)}`,
                 'buff_speed': `增加 ${(params.speedBonus || 0.2) * 100}% 速度`,
                 'buff_status_enemy': `有 ${params.statusChance || 50}% 概率对敌方施加 ${getStatusName(params.statusType)}`,
                 'buff_purify': `净化所有异常状态`,
@@ -1057,14 +988,6 @@
                 'buff_element_damage': `增加 ${(params.elementBonus || 0.2) * 100}% ${params.elementType || '属性'} 系伤害`,
                 'debuff_attack': `降低敌方 ${(params.buffBonus || 0.2) * 100}% 攻击力`,
                 'debuff_defense': `降低敌方 ${(params.buffBonus || 0.2) * 100}% 防御力`,
-                'debuff_attack_damage': `降低敌方 ${(params.buffBonus || 0.2) * 100}% 攻击伤害`,
-                'debuff_attack_defense': `降低敌方 ${(params.buffBonus || 0.2) * 100}% 防御力`,
-                'debuff_attack_speed': `降低敌方 ${(params.buffBonus || 0.2) * 100}% 速度`,
-                'debuff_attack_status': `有 ${params.statusChance || 50}% 概率对敌方施加 ${getStatusName(params.statusType)}`,
-                'debuff_defense_damage': `降低敌方 ${(params.buffBonus || 0.2) * 100}% 防御伤害`,
-                'debuff_defense_defense': `降低敌方 ${(params.buffBonus || 0.2) * 100}% 防御力`,
-                'debuff_defense_speed': `降低敌方 ${(params.buffBonus || 0.2) * 100}% 防御速度`,
-                'debuff_defense_status': `防御时有 ${params.statusChance || 50}% 概率对敌方施加 ${getStatusName(params.statusType)}`,
                 'debuff_speed': `降低敌方 ${(params.speedBonus || 0.2) * 100}% 速度`,
                 'debuff_status_self': `为自身施加 ${getStatusName(params.statusType)}`,
                 'debuff_no_heal': `禁止目标恢复生命`,
@@ -1130,11 +1053,23 @@
                 params.speedBonus = parseFloat(document.getElementById('param-speed-bonus').value) || 0.2;
             }
             
-            if (allEffectParams.has('buff')) {
-                params.target = document.getElementById('param-target').value;
-                params.buffSource = document.getElementById('param-buff-source').value;
-                params.buffBonus = parseFloat(document.getElementById('param-buff-bonus').value) || 0.2;
-            }
+            // Helper to collect data for a specific buff/debuff
+            const collectBuffDebuffParams = (effect) => {
+                if (allEffectParams.has(effect)) {
+                    params[effect] = {
+                        target: document.getElementById(`param-${effect}-target`).value,
+                        source: document.getElementById(`param-${effect}-source`).value,
+                        bonus: parseFloat(document.getElementById(`param-${effect}-bonus`).value) || 0.2,
+                    };
+                }
+            };
+            
+            const buffDebuffList = [
+                'buff_attack', 'buff_defense', 'buff_speed', 'buff_heal_amp',
+                'debuff_attack', 'debuff_defense', 'debuff_speed', 'debuff_heal_reduce'
+            ];
+            
+            buffDebuffList.forEach(effect => collectBuffDebuffParams(effect));
             
             if (allEffectParams.has('status')) {
                 params.statusType = document.getElementById('param-status-type').value;
@@ -1296,11 +1231,21 @@
             if (params.speedBonus !== undefined) {
                 document.getElementById('param-speed-bonus').value = params.speedBonus;
             }
-            if (params.target) {
-                document.getElementById('param-target').value = params.target;
-                document.getElementById('param-buff-source').value = params.buffSource || 'self-attack';
-                document.getElementById('param-buff-bonus').value = params.buffBonus || 0.2;
-            }
+            // Helper to fill data for a specific buff/debuff
+            const fillBuffDebuffParams = (effect) => {
+                if (params[effect]) {
+                    document.getElementById(`param-${effect}-target`).value = params[effect].target || '';
+                    document.getElementById(`param-${effect}-source`).value = params[effect].source || '';
+                    document.getElementById(`param-${effect}-bonus`).value = params[effect].bonus || 0.2;
+                }
+            };
+
+            const buffDebuffList = [
+                'buff_attack', 'buff_defense', 'buff_speed', 'buff_heal_amp',
+                'debuff_attack', 'debuff_defense', 'debuff_speed', 'debuff_heal_reduce'
+            ];
+            
+            buffDebuffList.forEach(effect => fillBuffDebuffParams(effect));
             if (params.statusType) {
                 document.getElementById('param-status-type').value = params.statusType;
                 document.getElementById('param-status-chance').value = params.statusChance || 50;
@@ -1498,17 +1443,18 @@
                 'element-wind': '风系',
                 'element-electric': '电系',
                 'element-earth': '土系',
-                'mutation-dark': '🌑 黑化',
-                'mutation-light': '☀️ 白化',
+                'mutation-dark': '🖤 黑化',
+                'mutation-light': '🤍 白化',
                 'mutation-crystal': '💎 晶化',
                 'mutation-shadow': '👤 影化',
-                'mutation-thunder': '⚡ 极电',
+                'mutation-chaos': '🌑 暗蚀',
                 'mutation-holy': '✨ 圣辉',
                 'mutation-psychic': '🔮 异能',
-                'mutation-void': '🌀 虚无',
-                'mutation-annihilate': '💀 湮灭',
-                'mutation-chaos': '🖤 暗蚀',
-                'mutation-rebirth': '♻️ 轮回'
+                'mutation-thunder': '⚡ 极电',
+                'mutation-eternal-dark': '🌙 永夜',
+                'mutation-eternal-light': '☀️ 永耀',
+                'mutation-source-crystal': '💠 源晶',
+                'mutation-thunder-lord': '⚡ 雷煌'
             };
             return names[category] || '未知';
         }

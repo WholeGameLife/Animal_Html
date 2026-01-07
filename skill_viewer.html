@@ -189,17 +189,18 @@
             'element-wind': { name: '💨 风系', color: 'bg-cyan-400' },
             'element-electric': { name: '⚡ 电系', color: 'bg-yellow-500' },
             'element-earth': { name: '🪨 土系', color: 'bg-yellow-700' },
-            'mutation-dark': { name: '🌑 黑化', color: 'bg-gray-900' },
-            'mutation-light': { name: '☀️ 白化', color: 'bg-gray-100 text-gray-900' },
+            'mutation-dark': { name: '🖤 黑化', color: 'bg-gray-900' },
+            'mutation-light': { name: '🤍 白化', color: 'bg-gray-100 text-gray-900' },
             'mutation-crystal': { name: '💎 晶化', color: 'bg-purple-500' },
             'mutation-shadow': { name: '👤 影化', color: 'bg-gray-700' },
-            'mutation-thunder': { name: '⚡ 极电', color: 'bg-yellow-400' },
+            'mutation-chaos': { name: '🌑 暗蚀', color: 'bg-purple-900' },
             'mutation-holy': { name: '✨ 圣辉', color: 'bg-yellow-200 text-yellow-900' },
             'mutation-psychic': { name: '🔮 异能', color: 'bg-pink-600' },
-            'mutation-void': { name: '🌀 虚无', color: 'bg-indigo-600' },
-            'mutation-annihilate': { name: '💀 湮灭', color: 'bg-red-900' },
-            'mutation-chaos': { name: '🖤 暗蚀', color: 'bg-purple-900' },
-            'mutation-rebirth': { name: '♻️ 轮回', color: 'bg-green-700' }
+            'mutation-thunder': { name: '⚡ 极电', color: 'bg-yellow-400' },
+            'mutation-eternal-dark': { name: '🌙 永夜', color: 'bg-indigo-950' },
+            'mutation-eternal-light': { name: '☀️ 永耀', color: 'bg-amber-300 text-amber-900' },
+            'mutation-source-crystal': { name: '💠 源晶', color: 'bg-purple-700' },
+            'mutation-thunder-lord': { name: '⚡ 雷煌', color: 'bg-yellow-600' }
         };
 
         const TYPE_MAP = {
@@ -311,12 +312,15 @@
         // 更新统计信息
         function updateStatistics() {
             document.getElementById('total-count').textContent = allSkills.length;
-            document.getElementById('attack-count').textContent = 
-                allSkills.filter(s => s.type === 'attack').length;
-            document.getElementById('defense-count').textContent = 
-                allSkills.filter(s => s.type === 'defense').length;
-            document.getElementById('support-count').textContent = 
-                allSkills.filter(s => ['buff', 'debuff', 'heal', 'agility'].includes(s.type)).length;
+            document.getElementById('attack-count').textContent =
+                allSkills.filter(s => (s.types || [s.type]).includes('attack')).length;
+            document.getElementById('defense-count').textContent =
+                allSkills.filter(s => (s.types || [s.type]).includes('defense')).length;
+            document.getElementById('support-count').textContent =
+                allSkills.filter(s => {
+                    const types = s.types || [s.type];
+                    return types.some(t => ['buff', 'debuff', 'heal', 'agility'].includes(t));
+                }).length;
         }
 
         // 生成筛选器
@@ -336,7 +340,7 @@
             });
 
             // 获取所有唯一的类型
-            const types = [...new Set(allSkills.map(s => s.type))].filter(Boolean);
+            const types = [...new Set(allSkills.flatMap(s => s.types || [s.type]))].filter(Boolean);
             const typeContainer = document.getElementById('type-filters');
             
             types.forEach(type => {
@@ -433,7 +437,7 @@
             }
             
             if (currentType !== 'all') {
-                filteredSkills = filteredSkills.filter(s => s.type === currentType);
+                filteredSkills = filteredSkills.filter(s => (s.types || [s.type]).includes(currentType));
             }
             
             if (currentRarity !== 'all') {
@@ -452,69 +456,74 @@
         // 创建技能卡片
         function createSkillCard(skill) {
             const categoryInfo = CATEGORY_MAP[skill.category] || { name: skill.category, color: 'bg-gray-500' };
-            const typeInfo = TYPE_MAP[skill.type] || { name: skill.type, color: 'bg-gray-600' };
-            const effectName = EFFECT_MAP[skill.effect] || skill.effect;
+            const types = skill.types || (skill.type ? [skill.type] : []);
+            const effects = skill.effects || (skill.effect ? [skill.effect] : []);
+            
+            const typeBadges = types.map(type => {
+                const typeInfo = TYPE_MAP[type] || { name: type, color: 'bg-gray-600' };
+                return `<span class="type-badge ${typeInfo.color}">${typeInfo.name}</span>`;
+            }).join('');
+
+            const effectBadges = effects.map(effect => {
+                 const effectName = EFFECT_MAP[effect] || effect;
+                 return `<span class="bg-gray-700 text-gray-300 px-2 py-1 rounded-md text-xs">${effectName}</span>`;
+            }).join('');
             
             // 解析参数
             const params = skill.params || {};
             let paramsHtml = '';
             
-            if (params.cooldown) {
-                paramsHtml += `<div class="text-xs text-gray-300">冷却: ${params.cooldown}回合</div>`;
-            }
-            if (params.duration) {
-                paramsHtml += `<div class="text-xs text-gray-300">持续: ${params.duration}回合</div>`;
-            }
-            if (params.attackBonus) {
-                paramsHtml += `<div class="text-xs text-green-300">攻击加成: ${params.attackBonus}</div>`;
-            }
-            if (params.defenseBonus) {
-                paramsHtml += `<div class="text-xs text-blue-300">防御加成: ${params.defenseBonus}</div>`;
-            }
-            if (params.speedBonus) {
-                paramsHtml += `<div class="text-xs text-yellow-300">速度加成: ${(params.speedBonus * 100).toFixed(0)}%</div>`;
-            }
-            if (params.count && params.count > 1) {
-                paramsHtml += `<div class="text-xs text-purple-300">次数: ${params.count}</div>`;
-            }
-            if (params.multiBonus && params.multiBonus.length > 0) {
-                paramsHtml += `<div class="text-xs text-orange-300">倍率: [${params.multiBonus.join(', ')}]</div>`;
-            }
-            if (params.healBonus) {
-                paramsHtml += `<div class="text-xs text-pink-300">治疗: ${(params.healBonus * 100).toFixed(0)}%</div>`;
-            }
+            const paramDisplay = (label, value) => {
+                if (value !== undefined && value !== 0 && value !== '' && value !== null) {
+                    return `<div class="param-item"><span class="param-label">${label}</span><span class="param-value">${value}</span></div>`;
+                }
+                return '';
+            };
+
+            paramsHtml += paramDisplay('冷却回合', params.cooldown);
+            paramsHtml += paramDisplay('持续回合', params.duration);
+            paramsHtml += paramDisplay('攻击加成', params.attackBonus);
+            paramsHtml += paramDisplay('防御加成', params.defenseBonus);
+            paramsHtml += paramDisplay('速度加成', params.speedBonus ? `${(params.speedBonus * 100).toFixed(0)}%` : undefined);
+            paramsHtml += paramDisplay('次数', params.count > 1 ? params.count : undefined);
+            paramsHtml += paramDisplay('多段倍率', params.multiBonus?.join(', '));
+            paramsHtml += paramDisplay('治疗加成', params.healBonus ? `${(params.healBonus * 100).toFixed(0)}%` : undefined);
+            paramsHtml += paramDisplay('伤害百分比', params.damagePercent ? `${(params.damagePercent * 100).toFixed(0)}%` : undefined);
+            paramsHtml += paramDisplay('伤害来源', params.damageSource);
+            
+            const tooltipHtml = `
+                <div class="skill-tooltip">
+                    <div class="flex items-start gap-4 mb-3">
+                        <span class="text-4xl mt-1">${skill.icon}</span>
+                        <div>
+                            <h4 class="font-bold text-xl text-white">${skill.name}</h4>
+                            <p class="text-sm text-gray-400">${skill.description || skill.desc || '无描述'}</p>
+                        </div>
+                    </div>
+                    <div class="space-y-2 mb-3">
+                         <div class="flex flex-wrap gap-2">${typeBadges}</div>
+                         <div class="flex flex-wrap gap-2">${effectBadges}</div>
+                    </div>
+                    ${paramsHtml ? `<div class="bg-black/20 rounded-lg p-3">${paramsHtml}</div>` : ''}
+                </div>
+            `;
 
             return `
                 <div class="skill-card bg-white/10 backdrop-blur-md rounded-lg p-4 text-white">
-                    <div class="flex items-start justify-between mb-3">
-                        <div class="flex items-center gap-2">
-                            <span class="text-3xl">${skill.icon}</span>
-                            <div>
-                                <h3 class="font-bold text-lg">${skill.name}</h3>
-                                <div class="flex gap-2 mt-1 flex-wrap">
-                                    <span class="category-badge ${categoryInfo.color} text-white">
-                                        ${categoryInfo.name}
-                                    </span>
-                                    ${skill.rarity ? `<span class="category-badge ${RARITY_MAP[skill.rarity]?.color || 'bg-gray-500'} text-white">
-                                        ${RARITY_MAP[skill.rarity]?.name || skill.rarity}
-                                    </span>` : ''}
-                                    <span class="type-badge ${typeInfo.color}">
-                                        ${typeInfo.name}
-                                    </span>
-                                </div>
+                    ${tooltipHtml}
+                    <div class="flex items-center gap-3">
+                        <span class="text-3xl">${skill.icon}</span>
+                        <div class="flex-1">
+                            <h3 class="font-bold">${skill.name}</h3>
+                            <div class="flex gap-2 mt-1.5 flex-wrap">
+                                <span class="category-badge ${categoryInfo.color} text-white">
+                                    ${categoryInfo.name}
+                                </span>
+                                ${skill.rarity ? `<span class="category-badge ${RARITY_MAP[skill.rarity]?.color || 'bg-gray-500'} text-white">
+                                    ${RARITY_MAP[skill.rarity]?.name || skill.rarity}
+                                </span>` : ''}
                             </div>
                         </div>
-                    </div>
-                    
-                    <p class="text-sm text-gray-200 mb-3">${skill.description || skill.desc || '无描述'}</p>
-                    
-                    <div class="border-t border-white/20 pt-3 space-y-1">
-                        <div class="text-xs text-gray-300">效果: ${effectName}</div>
-                        ${paramsHtml}
-                    </div>
-                    
-                    <div class="mt-3 text-xs text-gray-400">
-                        创建时间: ${new Date(skill.createdAt).toLocaleString('zh-CN')}
                     </div>
                 </div>
             `;

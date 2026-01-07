@@ -667,21 +667,22 @@
         const MUTATION_CONFIG = {
             tier1: {
                 basic: {
-                    '黑化': { icon: '🖤', rarity: 'basic', skills: ['MUT_DARK_POWER'], stats: { attack: 5 } },
-                    '白化': { icon: '🤍', rarity: 'basic', skills: ['MUT_LIGHT_HEAL'], stats: { stamina: 10 } },
-                    '晶化': { icon: '💎', rarity: 'basic', skills: ['MUT_CRYSTAL_SHIELD'], stats: { defense: 5 } },
-                    '影化': { icon: '👤', rarity: 'basic', skills: ['MUT_SHADOW_SPEED'], stats: { agility: 5 } }
+                    '黑化': { icon: '🖤', rarity: 'basic', chain: 'dark', skills: ['MUT_DARK_POWER'], stats: { attack: 5 } },
+                    '白化': { icon: '🤍', rarity: 'basic', chain: 'light', skills: ['MUT_LIGHT_HEAL'], stats: { stamina: 10 } },
+                    '晶化': { icon: '💎', rarity: 'basic', chain: 'crystal', skills: ['MUT_CRYSTAL_SHIELD'], stats: { defense: 5 } },
+                    '影化': { icon: '👤', rarity: 'basic', chain: 'thunder', skills: ['MUT_SHADOW_SPEED'], stats: { agility: 5 } }
                 },
                 elite: {
-                    '极电': { icon: '⚡', rarity: 'elite', skills: ['MUT_THUNDER_STRIKE', 'MUT_LIGHTNING_SPEED'], stats: { attack: 8, agility: 8 } },
-                    '圣辉': { icon: '✨', rarity: 'elite', skills: ['MUT_HOLY_HEAL', 'MUT_HEAL_REDUCE'], stats: { stamina: 15, defense: 5 } },
-                    '异能': { icon: '🔮', rarity: 'elite', skills: ['MUT_DAMAGE_AMP', 'MUT_DEFENSE_AMP'], stats: { attack: 6, defense: 6 } },
-                    '暗蚀': { icon: '🌑', rarity: 'elite', skills: ['MUT_PERCENT_DAMAGE', 'MUT_LIFE_DRAIN'], stats: { attack: 10 } }
+                    '暗蚀': { icon: '🌑', rarity: 'elite', chain: 'dark', skills: ['MUT_PERCENT_DAMAGE', 'MUT_LIFE_DRAIN'], stats: { attack: 10 } },
+                    '圣辉': { icon: '✨', rarity: 'elite', chain: 'light', skills: ['MUT_HOLY_HEAL', 'MUT_HEAL_REDUCE'], stats: { stamina: 15, defense: 5 } },
+                    '异能': { icon: '🔮', rarity: 'elite', chain: 'crystal', skills: ['MUT_DAMAGE_AMP', 'MUT_DEFENSE_AMP'], stats: { attack: 6, defense: 6 } },
+                    '极电': { icon: '⚡', rarity: 'elite', chain: 'thunder', skills: ['MUT_THUNDER_STRIKE', 'MUT_LIGHTNING_SPEED'], stats: { attack: 8, agility: 8 } }
                 },
                 legendary: {
-                    '湮灭': { icon: '💀', rarity: 'legendary', skills: ['MUT_ANNIHILATE', 'MUT_VOID_PIERCE'], stats: { attack: 15, defense: 10 }, mechanism: 'production' },
-                    '虚无': { icon: '🌀', rarity: 'legendary', skills: ['MUT_VOID_STRIKE', 'MUT_TEAM_SHIELD'], stats: { defense: 15, agility: 10 }, mechanism: 'team_defense' },
-                    '轮回': { icon: '♻️', rarity: 'legendary', skills: ['MUT_REBIRTH', 'MUT_PHOENIX_FLAME'], stats: { stamina: 20, attack: 10 }, mechanism: 'exploration' }
+                    '永夜': { icon: '🌙', rarity: 'legendary', chain: 'dark', skills: ['MUT_ETERNAL_DARK', 'MUT_DARK_AURA'], stats: { attack: 15, defense: 10 }, mechanism: 'enemy_debuff' },
+                    '永耀': { icon: '☀️', rarity: 'legendary', chain: 'light', skills: ['MUT_ETERNAL_LIGHT', 'MUT_REGEN_AURA'], stats: { stamina: 20, defense: 10 }, mechanism: 'team_buff' },
+                    '源晶': { icon: '💠', rarity: 'legendary', chain: 'crystal', skills: ['MUT_CRYSTAL_POWER', 'MUT_SHIELD_AURA'], stats: { defense: 15, stamina: 15 }, mechanism: 'production' },
+                    '雷煌': { icon: '⚡', rarity: 'legendary', chain: 'thunder', skills: ['MUT_LIGHTNING_LORD', 'MUT_SPEED_AURA'], stats: { attack: 15, agility: 15 }, mechanism: 'speed_buff' }
                 }
             },
             tier2: {
@@ -689,6 +690,14 @@
                 '阳': { icon: '☀️', stats: { attack: 10, defense: 10 } },
                 '玄': { icon: '🔯', stats: { attack: 5, defense: 5, agility: 5, stamina: 10 } }
             }
+        };
+        
+        // 亲和关系链定义
+        const AFFINITY_CHAINS = {
+            dark: { basic: '黑化', elite: '暗蚀', legendary: '永夜', opposite: 'light' },
+            light: { basic: '白化', elite: '圣辉', legendary: '永耀', opposite: 'dark' },
+            crystal: { basic: '晶化', elite: '异能', legendary: '源晶', opposite: 'thunder' },
+            thunder: { basic: '影化', elite: '极电', legendary: '雷煌', opposite: 'crystal' }
         };
 
         // 变异技能配置
@@ -705,12 +714,14 @@
             'MUT_DEFENSE_AMP': { name: '防御增幅', icon: '🔮', desc: '受到伤害-20%' },
             'MUT_PERCENT_DAMAGE': { name: '百分比伤害', icon: '🌑', desc: '攻击造成敌方5%最大生命伤害' },
             'MUT_LIFE_DRAIN': { name: '生命汲取', icon: '🌑', desc: '攻击回复50%伤害生命' },
-            'MUT_ANNIHILATE': { name: '湮灭打击', icon: '💀', desc: '攻击力+40%，无视30%防御' },
-            'MUT_VOID_PIERCE': { name: '虚空穿刺', icon: '💀', desc: '攻击附加20%真实伤害' },
-            'MUT_VOID_STRIKE': { name: '虚空打击', icon: '🌀', desc: '攻击无视50%防御' },
-            'MUT_TEAM_SHIELD': { name: '团队护盾', icon: '🌀', desc: '队伍全体防御+20%' },
-            'MUT_REBIRTH': { name: '轮回重生', icon: '♻️', desc: '濒死时恢复30%生命(一次)' },
-            'MUT_PHOENIX_FLAME': { name: '凤凰之焰', icon: '♻️', desc: '攻击附加灼烧效果，持续3回合' }
+            'MUT_ETERNAL_DARK': { name: '永恒暗夜', icon: '🌙', desc: '降低敌方全体10%攻击/命中' },
+            'MUT_DARK_AURA': { name: '暗影光环', icon: '🌙', desc: '己方暗系伤害+30%' },
+            'MUT_ETERNAL_LIGHT': { name: '永恒光辉', icon: '☀️', desc: '出战背包全体生命+15%' },
+            'MUT_REGEN_AURA': { name: '再生光环', icon: '☀️', desc: '队伍全体每回合恢复3%生命' },
+            'MUT_CRYSTAL_POWER': { name: '源晶之力', icon: '💠', desc: '防御力+40%' },
+            'MUT_SHIELD_AURA': { name: '护盾光环', icon: '💠', desc: '队伍全体受到伤害-15%' },
+            'MUT_LIGHTNING_LORD': { name: '雷霆之主', icon: '⚡', desc: '攻击速度+50%，概率触发连锁闪电' },
+            'MUT_SPEED_AURA': { name: '疾速光环', icon: '⚡', desc: '队伍全体攻击速度/移动速度+25%' }
         };
 
         // UI 元素引用
@@ -833,13 +844,17 @@
             }
         }
 
-        function saveAndReturn() {
+        function saveGameState() {
             // 清理掉临时的选择状态再保存
             const stateToSave = { ...gameState };
             delete stateToSave.selectedAnimalsForBreeding;
             delete stateToSave.selectedAnimalsForFusion;
 
             localStorage.setItem('gameState', JSON.stringify(stateToSave));
+        }
+
+        function saveAndReturn() {
+            saveGameState();
             window.location.href = 'game3d.html';
         }
 
@@ -1378,8 +1393,9 @@
             
             const mechanismDescriptions = {
                 'production': '📦 生产加速：基建生产速度+50%',
-                'team_defense': '🛡️ 团队护盾：队伍全体防御+20%',
-                'exploration': '🗺️ 探索加速：探索效率+100%'
+                'team_buff': '💫 团队增益：出战背包全体生命+15%',
+                'enemy_debuff': '🌑 敌方削弱：降低敌方全体10%攻击/命中',
+                'speed_buff': '⚡ 疾速增益：队伍全体攻击速度/移动速度+25%'
             };
             
             const mechanismDesc = mechanismDescriptions[tier1Config.mechanism] || tier1Config.mechanism;
@@ -1511,6 +1527,7 @@
                 return;
             }
             
+            saveGameState(); // 保存状态
             renderCombatSkills(animal);
             renderMutationSkills(animal); // 刷新变异技能显示状态
         }
@@ -1526,6 +1543,7 @@
                 
                 animal.combatSkills.equipped[slotIndex] = null;
                 showStatus(`🔓 已卸下技能：${skillName}`, 2000);
+                saveGameState(); // 保存状态
                 renderCombatSkills(animal);
                 renderMutationSkills(animal); // 刷新变异技能显示状态
             }
@@ -1955,9 +1973,30 @@
             ui.mutCost.innerHTML = `💉 变异血清 x1 <span class="text-xs text-gray-400">(拥有: ${serumCount})</span>`;
             const hasSerum = serumCount >= 1;
             ui.mutCost.className = hasSerum ? 'font-mono text-green-400' : 'font-mono text-red-400';
-
-            ui.btnExecuteMutation.disabled = isActionInProgress || !hasSerum;
-            ui.btnExecuteMutation.textContent = hasSerum ? "开始一级变异" : "缺少变异血清";
+            
+            // 检查变异冷却期
+            const cooldownRemaining = checkMutationCooldown(animal);
+            const canMutate = hasSerum && cooldownRemaining === 0 && !isActionInProgress;
+            
+            ui.btnExecuteMutation.disabled = !canMutate;
+            
+            if (cooldownRemaining > 0) {
+                const hours = Math.floor(cooldownRemaining / 3600000);
+                const minutes = Math.floor((cooldownRemaining % 3600000) / 60000);
+                ui.btnExecuteMutation.textContent = `冷却中 (${hours}h${minutes}m)`;
+            } else if (!hasSerum) {
+                ui.btnExecuteMutation.textContent = "缺少变异血清";
+            } else {
+                ui.btnExecuteMutation.textContent = "🧬 开始一级变异";
+            }
+        }
+        
+        // 新增：检查变异冷却期（24小时）
+        function checkMutationCooldown(animal) {
+            if (!animal.mutationCooldownUntil) return 0;
+            const now = Date.now();
+            const remaining = animal.mutationCooldownUntil - now;
+            return remaining > 0 ? remaining : 0;
         }
 
         function executeMutation() {
@@ -1968,7 +2007,7 @@
 
             // 初始化变异对象
             if (!animal.mutations) {
-                animal.mutations = { tier1: null, tier2: null, skills: [] };
+                animal.mutations = { tier1: null, tier2: null, skills: [], currentSkills: [] };
             }
 
             isActionInProgress = true;
@@ -1990,6 +2029,7 @@
 
                 // 重置状态并刷新UI（必须在setTimeout内部）
                 isActionInProgress = false;
+                saveGameState(); // 保存状态
                 selectMutationTarget(animal);
                 showAnimalDetails(animal.id);
                 updateResourceUI();
@@ -2023,6 +2063,7 @@
                 ui.mutationResultContent.innerHTML = result.changeDesc;
                 
                 isActionInProgress = false;
+                saveGameState(); // 保存状态
                 selectTier2MutationTarget(animal);
                 showAnimalDetails(animal.id);
                 updateResourceUI();
@@ -2107,10 +2148,31 @@
             const serumCount = (gameState.inventory && gameState.inventory['mutation_serum']) || 0;
             document.getElementById('mut-tier2-cost').innerHTML = `💉 变异血清 x1 <span class="text-xs text-gray-400">(拥有: ${serumCount})</span>`;
             
-            const btn = document.getElementById('btn-execute-tier2-mutation');
+            // 检查二级变异冷却期（独立于一级变异）
+            const cooldownRemaining = checkTier2MutationCooldown(animal);
             const hasSerum = serumCount >= 1;
-            btn.disabled = isActionInProgress || !hasSerum;
-            btn.textContent = hasSerum ? "开始二级变异" : "缺少变异血清";
+            const canMutate = hasSerum && cooldownRemaining === 0 && !isActionInProgress;
+            
+            const btn = document.getElementById('btn-execute-tier2-mutation');
+            btn.disabled = !canMutate;
+            
+            if (cooldownRemaining > 0) {
+                const hours = Math.floor(cooldownRemaining / 3600000);
+                const minutes = Math.floor((cooldownRemaining % 3600000) / 60000);
+                btn.textContent = `冷却中 (${hours}h${minutes}m)`;
+            } else if (!hasSerum) {
+                btn.textContent = "缺少变异血清";
+            } else {
+                btn.textContent = "⚡ 开始二级变异";
+            }
+        }
+        
+        // 新增：检查二级变异冷却期（独立的24小时冷却）
+        function checkTier2MutationCooldown(animal) {
+            if (!animal.tier2MutationCooldownUntil) return 0;
+            const now = Date.now();
+            const remaining = animal.tier2MutationCooldownUntil - now;
+            return remaining > 0 ? remaining : 0;
         }
 
         function executeTier2Mutation() {
@@ -2132,13 +2194,13 @@
                 const result = performTier2Mutation(animal);
                 
                 log.textContent += result.log;
-                ui.mutationResultIcon.textContent = result.success ? "🧬" : "💥";
+                ui.mutationResultIcon.textContent = result.success ? "⚡" : "💥";
                 ui.mutationResultTitle.textContent = result.success ? "二级变异成功！" : "二级变异失败";
                 ui.mutationResultTitle.className = result.success ? "text-2xl font-bold text-green-400" : "text-2xl font-bold text-red-500";
                 ui.mutationResultContent.innerHTML = result.changeDesc;
                 
                 isActionInProgress = false;
-                btn.textContent = "开始二级变异";
+                saveGameState(); // 保存状态
                 selectTier2MutationTarget(animal);
                 showAnimalDetails(animal.id);
                 updateResourceUI();
@@ -2150,7 +2212,7 @@
             let targetRarity, mutationName, config;
             
             if (!currentMutation) {
-                // 首次变异
+                // 首次变异 - 使用标准概率
                 const roll = Math.random() * 100;
                 if (roll < 80) {
                     targetRarity = 'basic';
@@ -2165,50 +2227,14 @@
                     const options = Object.keys(MUTATION_CONFIG.tier1.legendary);
                     mutationName = options[Math.floor(Math.random() * options.length)];
                 }
-            } else if (currentRarity === 'basic') {
-                // 从基础级变异
-                const roll = Math.random() * 100;
-                if (roll < 70) {
-                    // 同级转换
-                    targetRarity = 'basic';
-                    const options = Object.keys(MUTATION_CONFIG.tier1.basic).filter(m => m !== currentMutation);
-                    mutationName = options[Math.floor(Math.random() * options.length)];
-                } else if (roll < 95) {
-                    // 进阶到精英
-                    targetRarity = 'elite';
-                    const options = Object.keys(MUTATION_CONFIG.tier1.elite);
-                    mutationName = options[Math.floor(Math.random() * options.length)];
-                } else {
-                    // 越级到传说
-                    targetRarity = 'legendary';
-                    const options = Object.keys(MUTATION_CONFIG.tier1.legendary);
-                    mutationName = options[Math.floor(Math.random() * options.length)];
-                }
-            } else if (currentRarity === 'elite') {
-                // 从精英级变异
-                const roll = Math.random() * 100;
-                if (roll < 88) {
-                    // 同级转换
-                    targetRarity = 'elite';
-                    const options = Object.keys(MUTATION_CONFIG.tier1.elite).filter(m => m !== currentMutation);
-                    mutationName = options[Math.floor(Math.random() * options.length)];
-                } else {
-                    // 进阶到传说
-                    targetRarity = 'legendary';
-                    const options = Object.keys(MUTATION_CONFIG.tier1.legendary);
-                    mutationName = options[Math.floor(Math.random() * options.length)];
-                }
             } else {
-                // 传说级只能同级转换
-                targetRarity = 'legendary';
-                const options = Object.keys(MUTATION_CONFIG.tier1.legendary).filter(m => m !== currentMutation);
-                mutationName = options[Math.floor(Math.random() * options.length)];
+                // 已有变异 - 使用亲和链规则
+                const result = calculateAffinityMutation(currentMutation, currentRarity);
+                targetRarity = result.rarity;
+                mutationName = result.mutation;
             }
             
             config = MUTATION_CONFIG.tier1[targetRarity][mutationName];
-            
-            // 从技能池中获取对应变异类型的技能
-            const mutationSkills = getSkillsFromPool(mutationName);
             
             // 初始化变异历史数组
             if (!animal.mutations.history) {
@@ -2222,7 +2248,10 @@
             // 判断是否为稀有度提升
             const isRarityUpgrade = oldMutation && getRarityLevel(targetRarity) > getRarityLevel(oldRarity);
             
-            // 如果是进阶（稀有度提升），保留旧变异到历史，并保留旧技能
+            // 管理技能：根据技能数量限制处理
+            const skillLimits = { basic: 2, elite: 2, legendary: 2 };
+            
+            // 如果是进阶（稀有度提升），保留旧变异到历史
             if (isRarityUpgrade) {
                 const oldConfig = getMutationConfig(oldMutation);
                 if (oldConfig && !animal.mutations.history.some(h => h.name === oldMutation)) {
@@ -2232,19 +2261,19 @@
                         icon: oldConfig.icon
                     });
                 }
-                // 稀有度提升时，保留所有旧技能，不移除
+                // 稀有度提升时，保留所有旧技能（不移除）
             } else if (oldMutation) {
-                // 如果是同级转换或降级，移除旧技能
-                const oldConfig = getMutationConfig(oldMutation);
-                if (oldConfig) {
-                    // 从变异技能列表中移除
-                    animal.mutations.skills = animal.mutations.skills.filter(s => !oldConfig.skills.includes(s));
+                // 同级转换：强制替换技能
+                const skillsToRemove = animal.mutations.currentSkills || (getMutationConfig(oldMutation)?.skills || []);
+                
+                if (skillsToRemove && skillsToRemove.length > 0) {
+                    // 从变异技能列表中移除旧变异的技能
+                    animal.mutations.skills = animal.mutations.skills.filter(s => !skillsToRemove.includes(s));
                     
                     // 从装备槽中移除旧的变异技能
                     if (animal.combatSkills && animal.combatSkills.equipped) {
                         animal.combatSkills.equipped = animal.combatSkills.equipped.map(skillKey => {
-                            // 如果装备的是旧变异技能，则清空该槽位
-                            if (skillKey && oldConfig.skills.includes(skillKey)) {
+                            if (skillKey && skillsToRemove.includes(skillKey)) {
                                 return null;
                             }
                             return skillKey;
@@ -2256,27 +2285,51 @@
             // 更新当前变异
             animal.mutations.tier1 = mutationName;
             
-            // 添加新技能（从技能池获取）
-            if (mutationSkills.length > 0) {
-                mutationSkills.forEach(skillKey => {
-                    if (!animal.mutations.skills.includes(skillKey)) {
-                        animal.mutations.skills.push(skillKey);
-                    }
-                });
-            } else {
-                // 如果技能池中没有对应技能，使用预定义技能
-                config.skills.forEach(skill => {
-                    if (!animal.mutations.skills.includes(skill)) {
-                        animal.mutations.skills.push(skill);
-                    }
-                });
+            // 从技能池中获取对应变异类型的技能
+            let mutationSkills = getSkillsFromPool(mutationName);
+            
+            // 如果技能池为空，使用预定义技能
+            if (mutationSkills.length === 0) {
+                mutationSkills = config.skills || [];
             }
+            
+            // 计算应获得的技能数量（考虑跨级奖励）
+            let skillCount = mutationSkills.length;
+            if (isRarityUpgrade) {
+                const rarityDiff = getRarityLevel(targetRarity) - getRarityLevel(oldRarity);
+                if (rarityDiff === 1) {
+                    // 普通->精英 或 精英->传说：+1技能
+                    skillCount = Math.min(skillCount + 1, skillLimits[targetRarity]);
+                } else if (rarityDiff === 2) {
+                    // 普通->传说：+2技能
+                    skillCount = Math.min(skillCount + 2, skillLimits[targetRarity]);
+                }
+            }
+            
+            // 从技能池中随机选择技能
+            const selectedSkills = mutationSkills.slice(0, skillCount);
+
+            // 记录当前变异带来的技能，供下次变异时移除
+            animal.mutations.currentSkills = [...selectedSkills];
+
+            // 添加新技能到拥有的技能列表
+            selectedSkills.forEach(skillKey => {
+                if (!animal.mutations.skills.includes(skillKey)) {
+                    animal.mutations.skills.push(skillKey);
+                }
+            });
+            
+            // 检查并限制技能数量
+            limitMutationSkills(animal, skillLimits);
             
             // 应用属性加成
             applyMutationStats(animal, config.stats);
             
             // 增加变异次数
             animal.mutationCount = (animal.mutationCount || 0) + 1;
+            
+            // 设置24小时冷却期
+            animal.mutationCooldownUntil = Date.now() + (24 * 60 * 60 * 1000);
             
             const rarityText = { basic: '基础', elite: '精英', legendary: '传说' }[targetRarity];
             const isUpgrade = oldMutation && getRarityLevel(targetRarity) > getRarityLevel(oldRarity);
@@ -2318,6 +2371,9 @@
         function performTier2Mutation(animal) {
             const roll = Math.random() * 100;
             
+            // 设置二级变异冷却期（无论成功失败都冷却）
+            animal.tier2MutationCooldownUntil = Date.now() + (24 * 60 * 60 * 1000);
+            
             if (roll > 60) {
                 return {
                     success: false,
@@ -2338,6 +2394,17 @@
             
             const config = MUTATION_CONFIG.tier2[mutationName];
             const oldTier2 = animal.mutations.tier2;
+            
+            // 如果已有二级变异，移除旧的属性加成（通过反向应用）
+            if (oldTier2 && MUTATION_CONFIG.tier2[oldTier2]) {
+                const oldConfig = MUTATION_CONFIG.tier2[oldTier2];
+                const reverseStats = {};
+                for (const [key, value] of Object.entries(oldConfig.stats)) {
+                    reverseStats[key] = -value;
+                }
+                applyMutationStats(animal, reverseStats);
+            }
+            
             animal.mutations.tier2 = mutationName;
             
             applyMutationStats(animal, config.stats);
@@ -2374,6 +2441,171 @@
         function getRarityLevel(rarity) {
             const levels = { basic: 1, elite: 2, legendary: 3 };
             return levels[rarity] || 0;
+        }
+        
+        // 新增：基于亲和链计算变异结果
+        function calculateAffinityMutation(currentMutation, currentRarity) {
+            const currentConfig = getMutationConfig(currentMutation);
+            const currentChain = currentConfig?.chain;
+            
+            if (!currentChain) {
+                // 如果没有链信息，回退到随机
+                return { rarity: currentRarity, mutation: currentMutation };
+            }
+            
+            const chainInfo = AFFINITY_CHAINS[currentChain];
+            const oppositeChain = chainInfo.opposite;
+            
+            if (currentRarity === 'basic') {
+                // 从基础级变异
+                const roll = Math.random() * 100;
+                
+                if (roll < 70) {
+                    // 同级转换 (70%)
+                    return selectSameTierMutation('basic', currentMutation, currentChain, oppositeChain);
+                } else if (roll < 98) {
+                    // 向上进阶 (28%)
+                    return selectUpgradeMutation('elite', currentChain, oppositeChain);
+                } else {
+                    // 跨级突变 (2%)
+                    return selectUpgradeMutation('legendary', currentChain, oppositeChain);
+                }
+            } else if (currentRarity === 'elite') {
+                // 从精英级变异
+                const roll = Math.random() * 100;
+                
+                if (roll < 75) {
+                    // 同级转换 (75%)
+                    return selectSameTierMutation('elite', currentMutation, currentChain, oppositeChain);
+                } else {
+                    // 向上进阶 (25%)
+                    return selectUpgradeMutation('legendary', currentChain, oppositeChain);
+                }
+            } else {
+                // 传说级只能同级转换
+                return selectSameTierMutation('legendary', currentMutation, currentChain, oppositeChain);
+            }
+        }
+        
+        // 新增：选择同级变异
+        function selectSameTierMutation(rarity, currentMutation, currentChain, oppositeChain) {
+            const tier = MUTATION_CONFIG.tier1[rarity];
+            const candidates = Object.keys(tier).filter(m => m !== currentMutation);
+            
+            // 按亲和度分类
+            const opposite = candidates.filter(m => tier[m].chain === oppositeChain);
+            const neutral = candidates.filter(m => tier[m].chain !== currentChain && tier[m].chain !== oppositeChain);
+            
+            // 计算概率
+            const roll = Math.random() * 100;
+            let selected;
+            
+            if (rarity === 'legendary') {
+                // 传说级：对立15%，中立各42.5%
+                if (roll < 15 && opposite.length > 0) {
+                    selected = opposite[Math.floor(Math.random() * opposite.length)];
+                } else if (neutral.length > 0) {
+                    selected = neutral[Math.floor(Math.random() * neutral.length)];
+                } else {
+                    selected = candidates[Math.floor(Math.random() * candidates.length)];
+                }
+            } else {
+                // 基础级/精英级：对立较低概率，中立均分
+                const oppositeChance = rarity === 'basic' ? 15 : 10;
+                if (roll < oppositeChance && opposite.length > 0) {
+                    selected = opposite[Math.floor(Math.random() * opposite.length)];
+                } else if (neutral.length > 0) {
+                    selected = neutral[Math.floor(Math.random() * neutral.length)];
+                } else {
+                    selected = candidates[Math.floor(Math.random() * candidates.length)];
+                }
+            }
+            
+            return { rarity, mutation: selected };
+        }
+        
+        // 新增：选择升级变异
+        function selectUpgradeMutation(targetRarity, currentChain, oppositeChain) {
+            const tier = MUTATION_CONFIG.tier1[targetRarity];
+            const candidates = Object.keys(tier);
+            
+            // 按亲和度分类
+            const affinity = candidates.filter(m => tier[m].chain === currentChain);
+            const opposite = candidates.filter(m => tier[m].chain === oppositeChain);
+            const neutral = candidates.filter(m => tier[m].chain !== currentChain && tier[m].chain !== oppositeChain);
+            
+            // 计算概率
+            const roll = Math.random() * 100;
+            let selected;
+            
+            if (targetRarity === 'elite') {
+                // 升级到精英：亲和20%，对立1%，中立各3.5%
+                if (roll < 71.4 && affinity.length > 0) { // 20/28 * 100
+                    selected = affinity[Math.floor(Math.random() * affinity.length)];
+                } else if (roll < 75 && opposite.length > 0) { // 1/28 * 100
+                    selected = opposite[Math.floor(Math.random() * opposite.length)];
+                } else if (neutral.length > 0) {
+                    selected = neutral[Math.floor(Math.random() * neutral.length)];
+                } else {
+                    selected = candidates[Math.floor(Math.random() * candidates.length)];
+                }
+            } else {
+                // 升级到传说：亲和1.6%(基础)或20%(精英)，对立0.1%或1%，中立均分
+                const affinityChance = currentChain ? 80 : 1.6; // 假设从精英升级
+                const oppositeChance = currentChain ? 4 : 0.1;
+                
+                if (roll < affinityChance && affinity.length > 0) {
+                    selected = affinity[Math.floor(Math.random() * affinity.length)];
+                } else if (roll < affinityChance + oppositeChance && opposite.length > 0) {
+                    selected = opposite[Math.floor(Math.random() * opposite.length)];
+                } else if (neutral.length > 0) {
+                    selected = neutral[Math.floor(Math.random() * neutral.length)];
+                } else {
+                    selected = candidates[Math.floor(Math.random() * candidates.length)];
+                }
+            }
+            
+            return { rarity: targetRarity, mutation: selected };
+        }
+        
+        // 新增：限制变异技能数量
+        function limitMutationSkills(animal, skillLimits) {
+            if (!animal.mutations || !animal.mutations.skills) return;
+            
+            // 按稀有度分类技能
+            const skillsByRarity = { basic: [], elite: [], legendary: [] };
+            
+            animal.mutations.skills.forEach(skillKey => {
+                // 查找技能所属的稀有度
+                for (const [rarity, mutations] of Object.entries(MUTATION_CONFIG.tier1)) {
+                    for (const mutConfig of Object.values(mutations)) {
+                        if (mutConfig.skills && mutConfig.skills.includes(skillKey)) {
+                            skillsByRarity[rarity].push(skillKey);
+                            return;
+                        }
+                    }
+                }
+            });
+            
+            // 限制每个稀有度的技能数量
+            let limitedSkills = [];
+            for (const [rarity, skills] of Object.entries(skillsByRarity)) {
+                const limit = skillLimits[rarity];
+                limitedSkills = limitedSkills.concat(skills.slice(0, limit));
+            }
+            
+            // 更新技能列表
+            animal.mutations.skills = limitedSkills;
+            
+            // 从装备槽中移除超出限制的技能
+            if (animal.combatSkills && animal.combatSkills.equipped) {
+                animal.combatSkills.equipped = animal.combatSkills.equipped.map(skillKey => {
+                    if (skillKey && !limitedSkills.includes(skillKey)) {
+                        return null;
+                    }
+                    return skillKey;
+                });
+            }
         }
         
         // 新增：从技能池中获取对应变异类型的技能
@@ -2459,6 +2691,7 @@
                 levelUpAnimal(animal);
             }
             
+            saveGameState(); // 保存状态
             updateResourceUI();
             showAnimalDetails(animal.id);
         }
@@ -2502,6 +2735,7 @@
             }
             
             showStatus(`🚀 ${animal.name} 连升10级！消耗了 ${totalCost} 食物。`, 3000);
+            saveGameState(); // 保存状态
             updateResourceUI();
             showAnimalDetails(animal.id);
         }
@@ -2562,6 +2796,7 @@
             }
 
             gameState.inventory[itemId]--;
+            saveGameState(); // 保存状态
             renderItemPanel();
             showAnimalDetails(animal.id); // 刷新界面
         }
@@ -2676,7 +2911,7 @@
                     if (skill.category && skill.category.startsWith('mutation-')) {
                         // 变异技能
                         if (!animal.mutations) {
-                            animal.mutations = { tier1: null, tier2: null, skills: [], inheritedSkills: [] };
+                            animal.mutations = { tier1: null, tier2: null, skills: [], inheritedSkills: [], currentSkills: [] };
                         }
                         if (!animal.mutations.skills.includes(skillConfig.skillKey)) {
                             animal.mutations.skills.push(skillConfig.skillKey);
@@ -2717,6 +2952,7 @@
             });
             
             console.log('[技能解锁] 解锁完成，当前可用技能:', animal.combatSkills.available);
+            saveGameState(); // 保存状态
         }
 
         function renameAnimal() {
@@ -2728,6 +2964,7 @@
 
             if (newName && newName.trim() !== '') {
                 animal.name = newName.trim();
+                saveGameState(); // 保存状态
                 showStatus(`名字已更新为 "${animal.name}"`, 2000);
                 // 刷新UI
                 showAnimalDetails(selectedAnimalId);
@@ -2887,7 +3124,7 @@
                 isInjured: false,
                 injuryTimer: 0,
                 combatSkills: { equipped: [], available: [] },
-                mutations: { tier1: null, tier2: null, skills: [] }, // 初始化变异系统
+                mutations: { tier1: null, tier2: null, skills: [], currentSkills: [] }, // 初始化变异系统
                 mutationCount: 0 // 变异次数
             };
             gameState.animals.push(animalData);
@@ -2932,15 +3169,19 @@
                 gameState.selectedAnimalsForBreeding = [];
                 ui.breedingProgressContainer.classList.add('hidden');
                 ui.breedingProgressBar.style.width = '0%';
+                saveGameState(); // 保存状态
                 updateResourceUI(); // 更新食物和动物数量
                 renderBreedingPanel();
             }, ACTION_DURATION);
         }
         
-        // 新增：创建带技能继承的子代
+        // 新增：创建带技能继承和新稀有度规则的子代
         function createOffspringWithInheritance(parent1, parent2, color) {
             const animalId = crypto.randomUUID();
             const nameIndex = Math.floor(Math.random() * ANIMAL_NAMES.length);
+            
+            // 1. 计算子代稀有度
+            const offspringRarity = calculateOffspringRarity(parent1.rarity || '普通', parent2.rarity || '普通');
             
             // 基础属性
             const offspring = {
@@ -2957,125 +3198,174 @@
                 experienceToNextLevel: LEVEL_CONFIG.baseExperience,
                 stamina: 70,
                 maxStamina: 70,
-                potential: '平庸',
+                potential: '平庸', // 可以之后再加入潜力继承
                 favorability: 0,
-                element: '水',
+                element: Math.random() > 0.5 ? parent1.element : parent2.element,
                 developmentStage: '幼年期',
+                rarity: offspringRarity, // 应用新的稀有度
                 abilities: {
                     combat: { attack: 10, defense: 5, agility: 8 }
                 },
                 isInjured: false,
                 injuryTimer: 0,
                 combatSkills: { equipped: [], available: [] },
-                mutations: { tier1: null, tier2: null, skills: [], inheritedSkills: [] },
+                mutations: { tier1: null, tier2: null, skills: [], inheritedSkills: [], currentSkills: [] },
                 mutationCount: 0
             };
             
-            // 技能继承逻辑
+            // 2. 技能继承逻辑
             const inheritedSkills = calculateSkillInheritance(parent1, parent2, offspring);
             if (inheritedSkills.length > 0) {
                 offspring.mutations.inheritedSkills = inheritedSkills;
-                showStatus(`✨ 子代继承了 ${inheritedSkills.length} 个技能！`, 4000);
+                showStatus(`✨ 子代继承了 ${inheritedSkills.length} 个技能！将在特定等级解锁。`, 4000);
             }
             
             gameState.animals.push(offspring);
             gameState.animalCount++;
             
+            // 更新新动物的属性
+            updateAnimalStats(offspring);
+            
             return offspring;
+        }
+
+        // 新增：根据父母稀有度计算子代稀有度
+        function calculateOffspringRarity(rarity1, rarity2) {
+            const RARITY_LEVELS = ['普通', '闪光', '幻彩', '星芒'];
+            const key = [rarity1, rarity2].sort((a, b) => RARITY_LEVELS.indexOf(a) - RARITY_LEVELS.indexOf(b)).join(' × ');
+
+            const PROBABILITY_TABLE = {
+                '普通 × 普通': { '普通': 95.0, '闪光': 4.5, '幻彩': 0.5, '星芒': 0 },
+                '普通 × 闪光': { '普通': 70.0, '闪光': 25.0, '幻彩': 4.5, '星芒': 0.5 },
+                '普通 × 幻彩': { '普通': 60.0, '闪光': 25.0, '幻彩': 13.0, '星芒': 2.0 },
+                '普通 × 星芒': { '普通': 40.0, '闪光': 30.0, '幻彩': 20.0, '星芒': 10.0 },
+                '闪光 × 闪光': { '普通': 50.0, '闪光': 40.0, '幻彩': 9.0, '星芒': 1.0 },
+                '闪光 × 幻彩': { '普通': 35.0, '闪光': 40.0, '幻彩': 20.0, '星芒': 5.0 },
+                '闪光 × 星芒': { '普通': 25.0, '闪光': 35.0, '幻彩': 25.0, '星芒': 15.0 },
+                '幻彩 × 幻彩': { '普通': 20.0, '闪光': 30.0, '幻彩': 40.0, '星芒': 10.0 },
+                '幻彩 × 星芒': { '普通': 10.0, '闪光': 25.0, '幻彩': 35.0, '星芒': 30.0 },
+                '星芒 × 星芒': { '普通': 5.0, '闪光': 15.0, '幻彩': 30.0, '星芒': 50.0 }
+            };
+
+            const probabilities = PROBABILITY_TABLE[key];
+            if (!probabilities) return '普通';
+
+            const roll = Math.random() * 100;
+            let cumulative = 0;
+            for (const rarity of RARITY_LEVELS) {
+                cumulative += probabilities[rarity];
+                if (roll < cumulative) {
+                    return rarity;
+                }
+            }
+            return '普通'; // Fallback
         }
         
         // 新增：计算技能继承
         function calculateSkillInheritance(parent1, parent2, offspring) {
             const inheritedSkills = [];
-            
-            // 获取父母的变异信息
             const p1Mutation = parent1.mutations?.tier1;
             const p2Mutation = parent2.mutations?.tier1;
-            
-            if (!p1Mutation && !p2Mutation) {
-                return []; // 父母都没有变异，无法继承
-            }
-            
             const p1Config = p1Mutation ? getMutationConfig(p1Mutation) : null;
             const p2Config = p2Mutation ? getMutationConfig(p2Mutation) : null;
-            const p1Rarity = p1Config?.rarity;
-            const p2Rarity = p2Config?.rarity;
-            
-            // 规则1: 父母其中一方是高稀有度变异个体
+            const p1Rarity = p1Config?.rarity; // e.g., 'elite'
+            const p2Rarity = p2Config?.rarity; // e.g., 'legendary'
+
+            // 子代的稀有度，例如 '幻彩'
+            const offspringAnimalRarity = offspring.rarity;
+            // 子代稀有度对应的变异稀有度，例如 'elite'
+            const offspringMutationRarity = getMutationRarityFromAnimalRarity(offspringAnimalRarity);
+
+            if (!offspringMutationRarity) {
+                return []; // 子代不是高稀有度变异，无法继承
+            }
+
+            // 规则 1: 单一高稀有度父代
             if ((p1Rarity && !p2Rarity) || (!p1Rarity && p2Rarity)) {
-                const mutatedParent = p1Rarity ? parent1 : parent2;
-                const mutatedConfig = p1Rarity ? p1Config : p2Config;
-                const mutatedRarity = p1Rarity || p2Rarity;
+                const highParentConfig = p1Rarity ? p1Config : p2Config;
+                const highParentRarity = p1Rarity || p2Rarity;
                 
-                // 子代需要达到对应等级才能使用
-                const unlockLevel = mutatedRarity === 'basic' ? 5 : (mutatedRarity === 'elite' ? 10 : 15);
-                
-                mutatedConfig.skills.forEach(skillKey => {
-                    inheritedSkills.push({
-                        skillKey: skillKey,
-                        unlockLevel: unlockLevel,
-                        source: 'single_parent',
-                        rarity: mutatedRarity
+                // 子代也是同高稀有度变异
+                if (highParentRarity === offspringMutationRarity) {
+                    const unlockLevel = getUnlockLevelByRarity(highParentRarity);
+                    (highParentConfig.skills || []).forEach(skillKey => {
+                        inheritedSkills.push({ skillKey, unlockLevel });
                     });
-                });
-                
-                return inheritedSkills;
+                }
             }
-            
-            // 规则2: 父母均为相同高稀有度变异个体
-            if (p1Rarity && p2Rarity && p1Rarity === p2Rarity && p1Mutation === p2Mutation) {
-                const rarity = p1Rarity;
-                const unlockLevel = rarity === 'basic' ? 5 : (rarity === 'elite' ? 10 : 15);
-                
-                // 可选择继承技能
-                const allParentSkills = [...new Set([...p1Config.skills, ...p2Config.skills])];
-                
-                // 基础级：选择1个，精英/传说级：选择2个
-                const maxInherit = rarity === 'basic' ? 1 : 2;
-                const selectedSkills = allParentSkills.slice(0, maxInherit);
-                
-                selectedSkills.forEach(skillKey => {
-                    inheritedSkills.push({
-                        skillKey: skillKey,
-                        unlockLevel: unlockLevel,
-                        source: 'both_parents_same',
-                        rarity: rarity
+            // 规则 2: 父母均为相同高稀有度变异
+            else if (p1Rarity && p1Rarity === p2Rarity) {
+                // 子代也是同高稀有度
+                if (p1Rarity === offspringMutationRarity) {
+                    const unlockLevel = getUnlockLevelByRarity(p1Rarity);
+                    const skillPool = [...new Set([...(p1Config.skills || []), ...(p2Config.skills || [])])];
+                    let maxInherit = 0;
+                    if (p1Rarity === 'basic') maxInherit = 1;
+                    if (p1Rarity === 'elite') maxInherit = 2;
+                    if (p1Rarity === 'legendary') maxInherit = 2;
+                    
+                    const skillsToInherit = skillPool.slice(0, maxInherit); // 随机选择技能
+                    skillsToInherit.forEach(skillKey => {
+                        inheritedSkills.push({ skillKey, unlockLevel });
                     });
-                });
-                
-                return inheritedSkills;
+                }
             }
-            
-            // 规则3: 父母均为不同稀有度变异个体
-            if (p1Rarity && p2Rarity && p1Rarity !== p2Rarity) {
-                // 子代只能继承低稀有度的技能
-                const rarityLevels = { basic: 1, elite: 2, legendary: 3 };
-                const lowerRarity = rarityLevels[p1Rarity] < rarityLevels[p2Rarity] ? p1Rarity : p2Rarity;
-                const lowerParent = rarityLevels[p1Rarity] < rarityLevels[p2Rarity] ? parent1 : parent2;
-                const lowerConfig = rarityLevels[p1Rarity] < rarityLevels[p2Rarity] ? p1Config : p2Config;
+            // 规则 3: 父母为不同稀有度变异
+            else if (p1Rarity && p2Rarity && p1Rarity !== p2Rarity) {
+                const p1MutationRarityLevel = getRarityLevel(p1Rarity);
+                const p2MutationRarityLevel = getRarityLevel(p2Rarity);
                 
-                const unlockLevel = lowerRarity === 'basic' ? 5 : (lowerRarity === 'elite' ? 10 : 15);
+                // 确定哪个是较低的稀有度
+                const lowerMutationRarity = p1MutationRarityLevel < p2MutationRarityLevel ? p1Rarity : p2Rarity;
                 
-                // 从父母双方的低稀有度技能中选择2个
-                const p1LowerSkills = p1Rarity === lowerRarity ? p1Config.skills : [];
-                const p2LowerSkills = p2Rarity === lowerRarity ? p2Config.skills : [];
-                const allLowerSkills = [...new Set([...p1LowerSkills, ...p2LowerSkills])];
-                
-                const selectedSkills = allLowerSkills.slice(0, 2);
-                
-                selectedSkills.forEach(skillKey => {
-                    inheritedSkills.push({
-                        skillKey: skillKey,
-                        unlockLevel: unlockLevel,
-                        source: 'both_parents_different',
-                        rarity: lowerRarity
+                // 如果子代遗传了较低的稀有度
+                if (offspringMutationRarity === lowerMutationRarity) {
+                    const unlockLevel = getUnlockLevelByRarity(lowerMutationRarity);
+                    const skillPool = [];
+
+                    // 从父母双方收集所有与子代稀有度匹配或更低的技能
+                    if (p1Rarity === lowerMutationRarity) {
+                        skillPool.push(...(p1Config.skills || []));
+                    }
+                    if (p2Rarity === lowerMutationRarity) {
+                        skillPool.push(...(p2Config.skills || []));
+                    }
+                    
+                    const uniqueSkills = [...new Set(skillPool)];
+                    const skillsToInherit = uniqueSkills.slice(0, 2); // 最多继承2个
+                    skillsToInherit.forEach(skillKey => {
+                        inheritedSkills.push({ skillKey, unlockLevel });
                     });
-                });
-                
-                return inheritedSkills;
+                }
             }
-            
+
             return inheritedSkills;
+        }
+
+        // 辅助函数
+        function getRarityLevelByName(rarityName) {
+            const levels = {'普通': 0, '闪光': 1, '幻彩': 2, '星芒': 3};
+            return levels[rarityName] ?? -1;
+        }
+
+        function getUnlockLevelByRarity(mutationRarity) {
+            const levels = { 'basic': 5, 'elite': 10, 'legendary': 15 };
+            return levels[mutationRarity] || 99;
+        }
+        
+        function getMutationRarityFromAnimalRarity(animalRarity) {
+            const mapping = { '闪光': 'basic', '幻彩': 'elite', '星芒': 'legendary' };
+            return mapping[animalRarity];
+        }
+
+        function getAnimalRarityFromMutationRarity(mutationRarity) {
+            const mapping = { 'basic': '闪光', 'elite': '幻彩', 'legendary': '星芒' };
+            return mapping[mutationRarity];
+        }
+
+        function updateAnimalStats(animal) {
+             // 确保所有属性都基于最新的稀有度和其他状态进行计算
+             // 这里可以调用一个统一的属性更新函数，如果存在的话
         }
 
         function fuseAnimals() {
@@ -3118,6 +3408,7 @@
                 gameState.selectedAnimalsForFusion = [];
                 ui.fusionProgressContainer.classList.add('hidden');
                 ui.fusionProgressBar.style.width = '0%';
+                saveGameState(); // 保存状态
                 updateResourceUI();
                 renderFusionPanel();
             }, ACTION_DURATION);

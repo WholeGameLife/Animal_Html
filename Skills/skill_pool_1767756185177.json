@@ -1,0 +1,1053 @@
+[
+  {
+    "key": "CUSTOM_1767595428450",
+    "name": "海啸三叠",
+    "icon": "🌊",
+    "description": "召唤一道向前推进的浪潮，最多可叠加三次，范围逐次扩大",
+    "category": "element-water",
+    "type": "attack",
+    "effect": "multi_attack",
+    "params": {
+      "cooldown": 0,
+      "duration": 0,
+      "count": 3,
+      "multiBonus": [
+        1.25,
+        1,
+        0.75
+      ]
+    },
+    "createdAt": "2026-01-05T06:43:48.451Z"
+  },
+  {
+    "key": "CUSTOM_1767599147105",
+    "name": "高压水刃",
+    "icon": "🌊",
+    "description": "将水流压缩为薄如蝉翼的利刃直线射出，具有极强穿透力",
+    "category": "element-water",
+    "type": "attack",
+    "effect": "direct_attack",
+    "params": {
+      "cooldown": 0,
+      "duration": 0,
+      "count": 1,
+      "attackBonus": 1.25
+    },
+    "createdAt": "2026-01-05T07:45:47.105Z"
+  },
+  {
+    "key": "CUSTOM_1767599206496",
+    "name": "漩涡绞杀",
+    "icon": "🌊",
+    "description": "在敌人脚下生成急速旋转的漩涡，持续造成撕裂伤害并轻微牵引",
+    "category": "element-water",
+    "type": "attack",
+    "effect": "multi_attack",
+    "params": {
+      "cooldown": 2,
+      "duration": 0,
+      "count": 3,
+      "multiBonus": [
+        1
+      ]
+    },
+    "createdAt": "2026-01-05T07:46:46.496Z"
+  },
+  {
+    "key": "CUSTOM_1767599253688",
+    "name": "水幕天华",
+    "icon": "🌊",
+    "description": "在身前展开一道流动的水幕，可吸收或偏转远程攻击",
+    "category": "element-water",
+    "type": "defense",
+    "effect": "direct_defense",
+    "params": {
+      "cooldown": 0,
+      "duration": 0,
+      "count": 1,
+      "defenseBonus": 1.5
+    },
+    "createdAt": "2026-01-05T07:47:33.688Z"
+  },
+  {
+    "key": "CUSTOM_1767599307416",
+    "name": "水牢庇护",
+    "icon": "🌊",
+    "description": "创造一个全方位的水球护罩，完全隔绝内外",
+    "category": "element-water",
+    "type": "defense",
+    "effect": "direct_defense",
+    "params": {
+      "cooldown": 2,
+      "duration": 0,
+      "count": 1,
+      "defenseBonus": 2
+    },
+    "createdAt": "2026-01-05T07:48:27.416Z"
+  },
+  {
+    "key": "CUSTOM_1767599349321",
+    "name": "镜面止水",
+    "icon": "🌊",
+    "description": "制造一片短暂静止的平整水面，如镜面般完美反射一次单体攻击",
+    "category": "element-water",
+    "type": "defense",
+    "effect": "direct_defense",
+    "params": {
+      "cooldown": 3,
+      "duration": 2,
+      "count": 1,
+      "defenseBonus": 3
+    },
+    "createdAt": "2026-01-05T07:49:09.321Z"
+  },
+  {
+    "key": "CUSTOM_1767599396527",
+    "name": "踏浪而行",
+    "icon": "🌊",
+    "description": "脚底凝聚不易散开的水团，可在任何表面（包括垂直面）短暂疾行",
+    "category": "element-water",
+    "type": "agility",
+    "effect": "direct_speed",
+    "params": {
+      "cooldown": 1,
+      "duration": 0,
+      "count": 1,
+      "speedBonus": 0.8
+    },
+    "createdAt": "2026-01-05T07:49:56.527Z",
+    "updatedAt": "2026-01-05T07:50:38.511Z"
+  },
+  {
+    "key": "CUSTOM_1767599433249",
+    "name": "流水加速",
+    "icon": "🌊",
+    "description": "在体表覆盖一层定向流动的水膜，大幅降低空气阻力，提升直线速度",
+    "category": "element-water",
+    "type": "agility",
+    "effect": "continuous_speed",
+    "params": {
+      "cooldown": 2,
+      "duration": 2,
+      "count": 1,
+      "speedBonus": 0.7
+    },
+    "createdAt": "2026-01-05T07:50:33.249Z"
+  },
+  {
+    "key": "CUSTOM_1767599517223",
+    "name": "清心活水",
+    "icon": "🌊",
+    "description": "引纯净水流洗涤目标，驱散疲乏",
+    "category": "element-water",
+    "type": "buff",
+    "effect": "buff_purify",
+    "params": {
+      "cooldown": 2,
+      "duration": 0,
+      "count": 1
+    },
+    "createdAt": "2026-01-05T07:51:57.223Z"
+  },
+  {
+    "key": "CUSTOM_1767599565248",
+    "name": "水之亲和",
+    "icon": "🌊",
+    "description": "暂时提升目标对水元素的掌控力，使其下一个水系技能效果增强",
+    "category": "element-water",
+    "type": "buff",
+    "effect": "buff_element_damage",
+    "params": {
+      "cooldown": 0,
+      "duration": 0,
+      "count": 1,
+      "target": "self",
+      "buffSource": "self-attack",
+      "buffBonus": 0.5,
+      "elementType": "water",
+      "elementBonus": 0.8
+    },
+    "createdAt": "2026-01-05T07:52:45.248Z"
+  },
+  {
+    "key": "CUSTOM_1767599602303",
+    "name": "深海重压",
+    "icon": "🌊",
+    "description": "使目标如同置身深海，承受无形水压，行动格外费力且难以跳跃",
+    "category": "element-water",
+    "type": "debuff",
+    "effect": "debuff_speed",
+    "params": {
+      "cooldown": 2,
+      "duration": 0,
+      "count": 1,
+      "speedBonus": 0.8
+    },
+    "createdAt": "2026-01-05T07:53:22.303Z"
+  },
+  {
+    "key": "CUSTOM_1767599641168",
+    "name": "生命潮汐",
+    "icon": "🌊",
+    "description": "模拟潮汐节奏，温和地推动目标体内气血循环，加速自然恢复",
+    "category": "element-water",
+    "type": "heal",
+    "effect": "heal_direct",
+    "params": {
+      "cooldown": 1,
+      "duration": 0,
+      "count": 1,
+      "healTarget": "self",
+      "healSource": "self-hp",
+      "healBonus": 0.5
+    },
+    "createdAt": "2026-01-05T07:54:01.168Z"
+  },
+  {
+    "key": "CUSTOM_1767603815436",
+    "name": "清流涌动",
+    "icon": "🌊",
+    "description": "引导纯净水流洗涤自身",
+    "category": "element-water",
+    "type": "attack",
+    "effect": "direct_attack",
+    "params": {
+      "cooldown": 2,
+      "duration": 0,
+      "count": 1,
+      "attackBonus": 10
+    },
+    "rarity": "shiny",
+    "createdAt": "2026-01-05T09:03:35.436Z",
+    "updatedAt": "2026-01-06T01:36:51.204Z"
+  },
+  {
+    "key": "CUSTOM_1767603859844",
+    "name": "镜花水月",
+    "icon": "🌊",
+    "description": "在自身周围创造一片虚实交织的水域",
+    "category": "element-water",
+    "type": "attack",
+    "effect": "direct_attack",
+    "params": {
+      "cooldown": 3,
+      "duration": 0,
+      "count": 1,
+      "attackBonus": 20
+    },
+    "rarity": "prismatic",
+    "createdAt": "2026-01-05T09:04:19.844Z",
+    "updatedAt": "2026-01-06T01:36:45.789Z"
+  },
+  {
+    "key": "CUSTOM_1767603887716",
+    "name": "海魂觉醒",
+    "icon": "🌊",
+    "description": "唤醒沉睡于血脉的远古海魂之力",
+    "category": "element-water",
+    "type": "attack",
+    "effect": "direct_attack",
+    "params": {
+      "cooldown": 5,
+      "duration": 0,
+      "count": 1,
+      "attackBonus": 100
+    },
+    "rarity": "stellar",
+    "createdAt": "2026-01-05T09:04:47.716Z",
+    "updatedAt": "2026-01-06T01:36:37.780Z"
+  },
+  {
+    "key": "CUSTOM_1767680886214",
+    "name": "暗影爪击",
+    "icon": "🌑",
+    "description": "",
+    "category": "mutation-dark",
+    "types": [
+      "attack"
+    ],
+    "effects": [
+      "direct_attack"
+    ],
+    "params": {
+      "cooldown": 0,
+      "duration": 0,
+      "count": 1,
+      "attackBonus": 2
+    },
+    "createdAt": "2026-01-06T06:28:06.214Z"
+  },
+  {
+    "key": "CUSTOM_1767681218510",
+    "name": "黑暗渴望",
+    "icon": "🌑",
+    "description": "",
+    "category": "mutation-dark",
+    "types": [
+      "attack",
+      "heal"
+    ],
+    "effects": [
+      "direct_attack",
+      "heal_direct"
+    ],
+    "params": {
+      "cooldown": 2,
+      "duration": 0,
+      "count": 1,
+      "attackBonus": 2,
+      "healTarget": "self",
+      "healSource": "self-attack",
+      "healBonus": 0.5
+    },
+    "createdAt": "2026-01-06T06:33:38.510Z"
+  },
+  {
+    "key": "CUSTOM_1767681281262",
+    "name": "黑暗连斩",
+    "icon": "🌑",
+    "description": "",
+    "category": "mutation-dark",
+    "types": [
+      "attack"
+    ],
+    "effects": [
+      "multi_attack"
+    ],
+    "params": {
+      "cooldown": 2,
+      "duration": 0,
+      "count": 3,
+      "multiBonus": [
+        1.2,
+        1,
+        0.8
+      ]
+    },
+    "createdAt": "2026-01-06T06:34:41.262Z"
+  },
+  {
+    "key": "CUSTOM_1767681322734",
+    "name": "黑暗笼罩",
+    "icon": "🌑",
+    "description": "",
+    "category": "mutation-dark",
+    "types": [
+      "debuff"
+    ],
+    "effects": [
+      "debuff_speed"
+    ],
+    "params": {
+      "cooldown": 1,
+      "duration": 0,
+      "count": 1,
+      "speedBonus": 0.6
+    },
+    "createdAt": "2026-01-06T06:35:22.734Z"
+  },
+  {
+    "key": "CUSTOM_1767681471559",
+    "name": "圣光庇护",
+    "icon": "🤍",
+    "description": "",
+    "category": "mutation-light",
+    "types": [
+      "defense"
+    ],
+    "effects": [
+      "direct_defense"
+    ],
+    "params": {
+      "cooldown": 1,
+      "duration": 0,
+      "count": 1,
+      "defenseBonus": 2
+    },
+    "createdAt": "2026-01-06T06:37:51.559Z"
+  },
+  {
+    "key": "CUSTOM_1767681517037",
+    "name": "生命链接",
+    "icon": "🤍",
+    "description": "",
+    "category": "mutation-light",
+    "types": [
+      "heal"
+    ],
+    "effects": [
+      "heal_direct"
+    ],
+    "params": {
+      "cooldown": 1,
+      "duration": 0,
+      "count": 1,
+      "healTarget": "self",
+      "healSource": "self-defense",
+      "healBonus": 0.5
+    },
+    "createdAt": "2026-01-06T06:38:37.037Z"
+  },
+  {
+    "key": "CUSTOM_1767681578341",
+    "name": "光之审判",
+    "icon": "🤍",
+    "description": "",
+    "category": "mutation-light",
+    "types": [
+      "attack",
+      "buff"
+    ],
+    "effects": [
+      "direct_attack",
+      "buff_heal_amp"
+    ],
+    "params": {
+      "cooldown": 2,
+      "duration": 0,
+      "count": 1,
+      "attackBonus": 1,
+      "target": "ally-single",
+      "buffSource": "self-attack",
+      "buffBonus": 0.2
+    },
+    "createdAt": "2026-01-06T06:39:38.341Z"
+  },
+  {
+    "key": "CUSTOM_1767681677133",
+    "name": "水晶护甲",
+    "icon": "💎",
+    "description": "",
+    "category": "mutation-crystal",
+    "types": [
+      "defense"
+    ],
+    "effects": [
+      "continuous_defense"
+    ],
+    "params": {
+      "cooldown": 1,
+      "duration": 2,
+      "count": 1,
+      "defenseBonus": 2
+    },
+    "createdAt": "2026-01-06T06:41:17.133Z"
+  },
+  {
+    "key": "CUSTOM_1767681723093",
+    "name": "晶石反射",
+    "icon": "💎",
+    "description": "",
+    "category": "mutation-crystal",
+    "types": [
+      "defense"
+    ],
+    "effects": [
+      "defense_counter"
+    ],
+    "params": {
+      "cooldown": 1,
+      "duration": 0,
+      "count": 1,
+      "defenseBonus": 2,
+      "counterSource": "self-attack",
+      "counterBonus": 0.5
+    },
+    "createdAt": "2026-01-06T06:42:03.093Z"
+  },
+  {
+    "key": "CUSTOM_1767681798821",
+    "name": "钻石风暴",
+    "icon": "💎",
+    "description": "",
+    "category": "mutation-crystal",
+    "types": [
+      "attack",
+      "debuff"
+    ],
+    "effects": [
+      "multi_attack",
+      "debuff_defense"
+    ],
+    "params": {
+      "cooldown": 2,
+      "duration": 0,
+      "count": 5,
+      "multiBonus": [
+        0.3,
+        0.5,
+        0.7,
+        0.9,
+        1.2
+      ],
+      "target": "enemy-single",
+      "buffSource": "target-attack",
+      "buffBonus": 0.5
+    },
+    "createdAt": "2026-01-06T06:43:18.821Z"
+  },
+  {
+    "key": "CUSTOM_1767681845420",
+    "name": "永恒水晶",
+    "icon": "💎",
+    "description": "",
+    "category": "mutation-crystal",
+    "types": [
+      "defense",
+      "heal"
+    ],
+    "effects": [
+      "buff_defense",
+      "heal_rebirth"
+    ],
+    "params": {
+      "cooldown": 10,
+      "duration": 0,
+      "count": 1,
+      "target": "self",
+      "buffSource": "self-defense",
+      "buffBonus": 0.6,
+      "rebirthTarget": "self",
+      "rebirthPercent": 0.5
+    },
+    "createdAt": "2026-01-06T06:44:05.420Z"
+  },
+  {
+    "key": "CUSTOM_1767681909949",
+    "name": "影袭",
+    "icon": "👤",
+    "description": "",
+    "category": "mutation-shadow",
+    "types": [
+      "attack",
+      "buff"
+    ],
+    "effects": [
+      "direct_attack",
+      "buff_speed"
+    ],
+    "params": {
+      "cooldown": 1,
+      "duration": 0,
+      "count": 1,
+      "attackBonus": 1,
+      "speedBonus": 0.2
+    },
+    "createdAt": "2026-01-06T06:45:09.949Z"
+  },
+  {
+    "key": "CUSTOM_1767681942524",
+    "name": "多重残影",
+    "icon": "👤",
+    "description": "",
+    "category": "mutation-shadow",
+    "types": [
+      "agility"
+    ],
+    "effects": [
+      "continuous_speed"
+    ],
+    "params": {
+      "cooldown": 2,
+      "duration": 2,
+      "count": 1,
+      "speedBonus": 0.2
+    },
+    "createdAt": "2026-01-06T06:45:42.524Z"
+  },
+  {
+    "key": "CUSTOM_1767681981348",
+    "name": "暗影穿梭",
+    "icon": "👤",
+    "description": "",
+    "category": "mutation-shadow",
+    "types": [
+      "defense",
+      "agility"
+    ],
+    "effects": [
+      "direct_defense",
+      "direct_speed"
+    ],
+    "params": {
+      "cooldown": 3,
+      "duration": 0,
+      "count": 1,
+      "defenseBonus": 1,
+      "speedBonus": 0.2
+    },
+    "createdAt": "2026-01-06T06:46:21.348Z"
+  },
+  {
+    "key": "CUSTOM_1767682025668",
+    "name": "电击",
+    "icon": "⚡",
+    "description": "",
+    "category": "mutation-thunder",
+    "types": [
+      "attack"
+    ],
+    "effects": [
+      "direct_attack"
+    ],
+    "params": {
+      "cooldown": 1,
+      "duration": 0,
+      "count": 1,
+      "attackBonus": 5
+    },
+    "createdAt": "2026-01-06T06:47:05.668Z"
+  },
+  {
+    "key": "CUSTOM_1767682051500",
+    "name": "雷光速",
+    "icon": "⚡",
+    "description": "",
+    "category": "mutation-thunder",
+    "types": [
+      "attack",
+      "agility"
+    ],
+    "effects": [
+      "direct_attack",
+      "direct_speed"
+    ],
+    "params": {
+      "cooldown": 1,
+      "duration": 0,
+      "count": 1,
+      "attackBonus": 1,
+      "speedBonus": 0.2
+    },
+    "createdAt": "2026-01-06T06:47:31.500Z"
+  },
+  {
+    "key": "CUSTOM_1767682077605",
+    "name": "雷霆万钧",
+    "icon": "⚡",
+    "description": "",
+    "category": "mutation-thunder",
+    "types": [
+      "attack"
+    ],
+    "effects": [
+      "multi_attack"
+    ],
+    "params": {
+      "cooldown": 1,
+      "duration": 0,
+      "count": 3,
+      "multiBonus": [
+        0.4,
+        0.6,
+        0.8
+      ]
+    },
+    "createdAt": "2026-01-06T06:47:57.605Z",
+    "updatedAt": "2026-01-06T07:45:50.584Z"
+  },
+  {
+    "key": "CUSTOM_1767682407828",
+    "name": "圣光治愈",
+    "icon": "✨",
+    "description": "",
+    "category": "mutation-holy",
+    "types": [
+      "heal"
+    ],
+    "effects": [
+      "heal_direct"
+    ],
+    "params": {
+      "cooldown": 1,
+      "duration": 0,
+      "count": 1,
+      "healTarget": "self",
+      "healSource": "self-hp",
+      "healBonus": 0.8
+    },
+    "createdAt": "2026-01-06T06:53:27.828Z"
+  },
+  {
+    "key": "CUSTOM_1767682460068",
+    "name": "光辉屏障",
+    "icon": "✨",
+    "description": "",
+    "category": "mutation-holy",
+    "types": [
+      "defense",
+      "buff"
+    ],
+    "effects": [
+      "direct_defense",
+      "buff_heal_amp"
+    ],
+    "params": {
+      "cooldown": 2,
+      "duration": 0,
+      "count": 1,
+      "defenseBonus": 1,
+      "target": "self",
+      "buffSource": "target-hp",
+      "buffBonus": 0.2
+    },
+    "createdAt": "2026-01-06T06:54:20.068Z"
+  },
+  {
+    "key": "CUSTOM_1767682511107",
+    "name": "天堂裁决",
+    "icon": "✨",
+    "description": "",
+    "category": "mutation-holy",
+    "types": [
+      "attack",
+      "heal"
+    ],
+    "effects": [
+      "direct_attack",
+      "heal_lifesteal"
+    ],
+    "params": {
+      "cooldown": 2,
+      "duration": 0,
+      "count": 1,
+      "attackBonus": 1,
+      "lifestealSource": "self-attack",
+      "lifestealBonus": 0.2
+    },
+    "createdAt": "2026-01-06T06:55:11.107Z"
+  },
+  {
+    "key": "CUSTOM_1767682562019",
+    "name": "念力冲击",
+    "icon": "🔮",
+    "description": "",
+    "category": "mutation-psychic",
+    "types": [
+      "attack"
+    ],
+    "effects": [
+      "direct_attack"
+    ],
+    "params": {
+      "cooldown": 0,
+      "duration": 0,
+      "count": 1,
+      "attackBonus": 5
+    },
+    "createdAt": "2026-01-06T06:56:02.019Z"
+  },
+  {
+    "key": "CUSTOM_1767682672036",
+    "name": "心灵感应",
+    "icon": "🔮",
+    "description": "",
+    "category": "mutation-psychic",
+    "types": [
+      "buff",
+      "debuff"
+    ],
+    "effects": [
+      "direct_attack",
+      "buff_attack",
+      "debuff_defense"
+    ],
+    "params": {
+      "cooldown": 2,
+      "duration": 0,
+      "count": 1,
+      "attackBonus": 1,
+      "target": "enemy-single",
+      "buffSource": "target-defense",
+      "buffBonus": 0.4
+    },
+    "createdAt": "2026-01-06T06:57:52.036Z"
+  },
+  {
+    "key": "CUSTOM_1767682733515",
+    "name": "异能爆发",
+    "icon": "🔮",
+    "description": "",
+    "category": "mutation-psychic",
+    "types": [
+      "attack",
+      "buff"
+    ],
+    "effects": [
+      "multi_attack",
+      "buff_attack",
+      "buff_defense"
+    ],
+    "params": {
+      "cooldown": 3,
+      "duration": 0,
+      "count": 2,
+      "multiBonus": [
+        1,
+        1.2
+      ],
+      "buff_attack": {
+        "target": "self",
+        "source": "fixed",
+        "bonus": 0.2
+      },
+      "buff_defense": {
+        "target": "self",
+        "source": "fixed",
+        "bonus": 0.2
+      }
+    },
+    "createdAt": "2026-01-06T06:58:53.515Z",
+    "updatedAt": "2026-01-06T07:10:04.593Z"
+  },
+  {
+    "key": "CUSTOM_1767683462866",
+    "name": "暗影腐蚀",
+    "icon": "👻",
+    "description": "",
+    "category": "mutation-chaos",
+    "types": [
+      "attack"
+    ],
+    "effects": [
+      "dot_damage"
+    ],
+    "params": {
+      "cooldown": 2,
+      "duration": 2,
+      "count": 1,
+      "attackBonus": 1
+    },
+    "createdAt": "2026-01-06T07:11:02.866Z"
+  },
+  {
+    "key": "CUSTOM_1767683502482",
+    "name": "终暗吞噬",
+    "icon": "👻",
+    "description": "",
+    "category": "mutation-chaos",
+    "types": [
+      "attack"
+    ],
+    "effects": [
+      "percent_damage"
+    ],
+    "params": {
+      "cooldown": 3,
+      "duration": 0,
+      "count": 1,
+      "damageSource": "enemy-hp",
+      "damagePercent": 0.4
+    },
+    "createdAt": "2026-01-06T07:11:42.482Z"
+  },
+  {
+    "key": "CUSTOM_1767683542369",
+    "name": "雷电暴鸣",
+    "icon": "⚡",
+    "description": "",
+    "category": "mutation-thunder-lord",
+    "types": [
+      "attack"
+    ],
+    "effects": [
+      "direct_attack"
+    ],
+    "params": {
+      "cooldown": 1,
+      "duration": 0,
+      "count": 1,
+      "attackBonus": 20
+    },
+    "createdAt": "2026-01-06T07:12:22.369Z",
+    "updatedAt": "2026-01-07T03:19:24.842Z"
+  },
+  {
+    "key": "CUSTOM_1767684243430",
+    "name": "终焉爆发",
+    "icon": "🌙",
+    "description": "",
+    "category": "mutation-eternal-dark",
+    "types": [
+      "attack"
+    ],
+    "effects": [
+      "multi_attack"
+    ],
+    "params": {
+      "cooldown": 2,
+      "duration": 0,
+      "count": 5,
+      "multiBonus": [
+        1,
+        1.25,
+        1.5,
+        1.75,
+        2
+      ]
+    },
+    "createdAt": "2026-01-06T07:24:03.430Z",
+    "updatedAt": "2026-01-07T03:18:59.234Z"
+  },
+  {
+    "key": "CUSTOM_1767684274086",
+    "name": "雷电终结",
+    "icon": "⚡",
+    "description": "",
+    "category": "mutation-thunder-lord",
+    "types": [
+      "attack"
+    ],
+    "effects": [
+      "direct_attack"
+    ],
+    "params": {
+      "cooldown": 3,
+      "duration": 0,
+      "count": 1,
+      "attackBonus": 100
+    },
+    "createdAt": "2026-01-06T07:24:34.086Z",
+    "updatedAt": "2026-01-07T03:18:44.698Z"
+  },
+  {
+    "key": "CUSTOM_1767684339469",
+    "name": "虚空裂痕",
+    "icon": "🌙",
+    "description": "",
+    "category": "mutation-eternal-dark",
+    "types": [
+      "attack"
+    ],
+    "effects": [
+      "dot_damage"
+    ],
+    "params": {
+      "cooldown": 4,
+      "duration": 4,
+      "count": 1,
+      "attackBonus": 5
+    },
+    "createdAt": "2026-01-06T07:25:39.469Z",
+    "updatedAt": "2026-01-07T03:18:20.091Z"
+  },
+  {
+    "key": "CUSTOM_1767684909727",
+    "name": "量子规避",
+    "icon": "💠",
+    "description": "",
+    "category": "mutation-source-crystal",
+    "types": [
+      "defense",
+      "buff"
+    ],
+    "effects": [
+      "direct_defense",
+      "buff_speed"
+    ],
+    "params": {
+      "cooldown": 0,
+      "duration": 0,
+      "count": 1,
+      "defenseBonus": 2,
+      "speedBonus": 0.5
+    },
+    "createdAt": "2026-01-06T07:35:09.727Z",
+    "updatedAt": "2026-01-07T03:18:06.387Z"
+  },
+  {
+    "key": "CUSTOM_1767685353778",
+    "name": "晶石同化",
+    "icon": "💠",
+    "description": "",
+    "category": "mutation-source-crystal",
+    "types": [
+      "buff"
+    ],
+    "effects": [
+      "buff_attack",
+      "buff_defense"
+    ],
+    "params": {
+      "cooldown": 1,
+      "duration": 0,
+      "count": 1,
+      "buff_attack": {
+        "target": "self",
+        "source": "self-attack",
+        "bonus": 0.2
+      },
+      "buff_defense": {
+        "target": "self",
+        "source": "self-attack",
+        "bonus": 0.2
+      }
+    },
+    "createdAt": "2026-01-06T07:42:33.778Z",
+    "updatedAt": "2026-01-07T03:17:57.037Z"
+  },
+  {
+    "key": "CUSTOM_1767685402384",
+    "name": "时间回溯",
+    "icon": "☀️",
+    "description": "",
+    "category": "mutation-eternal-light",
+    "types": [
+      "buff",
+      "heal"
+    ],
+    "effects": [
+      "buff_purify",
+      "heal_direct"
+    ],
+    "params": {
+      "cooldown": 2,
+      "duration": 0,
+      "count": 1,
+      "healTarget": "self",
+      "healSource": "self-hp",
+      "healBonus": 1
+    },
+    "createdAt": "2026-01-06T07:43:22.384Z",
+    "updatedAt": "2026-01-07T03:17:23.355Z"
+  },
+  {
+    "key": "CUSTOM_1767685471209",
+    "name": "永恒轮回",
+    "icon": "☀️",
+    "description": "",
+    "category": "mutation-eternal-light",
+    "types": [
+      "attack",
+      "buff",
+      "heal"
+    ],
+    "effects": [
+      "dot_damage",
+      "buff_attack",
+      "buff_defense",
+      "heal_continuous"
+    ],
+    "params": {
+      "cooldown": 5,
+      "duration": 0,
+      "count": 1,
+      "attackBonus": 2,
+      "buff_attack": {
+        "target": "self",
+        "source": "self-attack",
+        "bonus": 0.2
+      },
+      "buff_defense": {
+        "target": "self",
+        "source": "self-defense",
+        "bonus": 0.2
+      },
+      "healTarget": "self",
+      "healSource": "self-hp",
+      "healBonus": 0.5
+    },
+    "createdAt": "2026-01-06T07:44:31.209Z",
+    "updatedAt": "2026-01-07T03:16:42.027Z"
+  }
+]
