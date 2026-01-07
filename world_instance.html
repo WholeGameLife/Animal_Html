@@ -683,6 +683,7 @@
             let mesh = null;
             const animalData = {
                 id: id,
+                animalId: template.animalId,  // 设置物种ID（重要！）
                 name: template.name,
                 level: template.level || 1,
                 gender: Math.random() > 0.5 ? '雄' : '雌',
@@ -891,6 +892,7 @@
 
             return {
                 id: id,
+                animalId: null,  // 默认生成的动物没有物种ID（因为不是基于模板）
                 name: rarity.prefix ? `${rarity.prefix}·野生${element}兽` : `野生${element}兽`,
                 level: level,
                 gender: Math.random() > 0.5 ? '雄' : '雌',

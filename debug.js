@@ -120,9 +120,11 @@ const debugPanelHTML = isWorldMapPage ? `
                     <button onclick="debug.addLevel(5)" class="bg-green-700 hover:bg-green-800 text-xs py-2 rounded transition">+5 级</button>
                     <button onclick="debug.addLevel(10)" class="bg-green-800 hover:bg-green-900 text-xs py-2 rounded transition">+10 级</button>
                     <button onclick="debug.maxLevel()" class="col-span-3 bg-emerald-600 hover:bg-emerald-700 text-xs py-2 rounded transition">升至50级</button>
+                    <button onclick="debug.setAdult()" class="bg-teal-600 hover:bg-teal-700 text-xs py-2 rounded transition">设为成年</button>
                     <button onclick="debug.fullStamina()" class="bg-orange-600 hover:bg-orange-700 text-xs py-2 rounded transition">满体力</button>
                     <button onclick="debug.maxFavorability()" class="bg-pink-600 hover:bg-pink-700 text-xs py-2 rounded transition">满好感</button>
                     <button onclick="debug.changePotential()" class="bg-indigo-600 hover:bg-indigo-700 text-xs py-2 rounded transition">切换潜力</button>
+                    <button onclick="debug.resetBreedingCooldown()" class="col-span-3 bg-purple-600 hover:bg-purple-700 text-xs py-2 rounded transition">重置繁育冷却</button>
                 </div>
             </div>
             
@@ -282,6 +284,33 @@ window.debug = {
         showAnimalDetails(animal.id);
         debug.updateAnimalInfo();
         showStatus(`✅ 潜力: ${animal.potential}`, 1500);
+    },
+    
+    setAdult: () => {
+        if (typeof selectedAnimalId === 'undefined' || !selectedAnimalId) {
+            showStatus('❌ 请先选择动物', 1500);
+            return;
+        }
+        const animal = gameState.animals.find(a => a.id === selectedAnimalId);
+        if (!animal) return;
+        animal.developmentStage = '成年期';
+        if (typeof saveGameState === 'function') saveGameState();
+        showAnimalDetails(animal.id);
+        debug.updateAnimalInfo();
+        showStatus(`✅ 已设为成年期`, 1500);
+    },
+    
+    resetBreedingCooldown: () => {
+        if (typeof selectedAnimalId === 'undefined' || !selectedAnimalId) {
+            showStatus('❌ 请先选择动物', 1500);
+            return;
+        }
+        const animal = gameState.animals.find(a => a.id === selectedAnimalId);
+        if (!animal) return;
+        animal.breedingCooldownUntil = 0;
+        if (typeof saveGameState === 'function') saveGameState();
+        if (typeof renderBreedingPanel === 'function') renderBreedingPanel();
+        showStatus('✅ 繁育冷却已重置', 1500);
     },
     
     setRarity: (rarity) => {

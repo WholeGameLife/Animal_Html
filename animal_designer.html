@@ -115,11 +115,25 @@
                     <!-- 基础信息 -->
                     <div class="grid grid-cols-2 gap-4">
                         <div>
-                            <label class="block text-sm font-medium text-gray-300 mb-2">动物名称</label>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">动物名称 *</label>
                             <input type="text" id="animal-name" required
                                 class="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-green-500">
                         </div>
                         <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">动物ID (物种+稀有度) *</label>
+                            <input type="text" id="animal-id" required pattern="^[1-4]\d{4}$"
+                                class="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-2 text-white font-mono text-center text-lg focus:outline-none focus:border-green-500"
+                                placeholder="例: 10001">
+                            <p class="text-xs text-gray-400 mt-1">
+                                格式：<span class="font-mono">1xxxx</span>=普通 <span class="font-mono">2xxxx</span>=闪光
+                                <span class="font-mono">3xxxx</span>=幻彩 <span class="font-mono">4xxxx</span>=星芒<br>
+                                例：10001(普通)、20001(闪光)、30001(幻彩)、40001(星芒)为同一物种
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="col-span-2">
                             <label class="block text-sm font-medium text-gray-300 mb-2">颜色 (十六进制)</label>
                             <div class="flex gap-2">
                                 <input type="color" id="animal-color" required
@@ -1420,6 +1434,7 @@
         // 获取表单数据
         function getFormData() {
             return {
+                animalId: document.getElementById('animal-id').value.toUpperCase(),
                 name: document.getElementById('animal-name').value,
                 color: document.getElementById('animal-color-hex').value,
                 element: document.getElementById('animal-element').value,
@@ -1584,6 +1599,7 @@
             const animal = animals[index];
             
             // 填充表单
+            document.getElementById('animal-id').value = animal.animalId || '';
             document.getElementById('animal-name').value = animal.name;
             document.getElementById('animal-color').value = animal.color;
             document.getElementById('animal-color-hex').value = animal.color;
