@@ -961,12 +961,16 @@
                 const skillPool = JSON.parse(localStorage.getItem('SKILL_POOL') || '[]');
                 
                 availableSkills.forEach(skillKey => {
+                    // 跳过所有已知的变异技能，因为它们在专属区域渲染
+                    if (MUTATION_SKILLS[skillKey]) return;
+
                     // 先从预定义技能中查找
-                    let skill = COMBAT_SKILLS[skillKey];
+                    // 检查是战斗技能、变异技能还是自定义技能
+                    let skill = COMBAT_SKILLS[skillKey] || MUTATION_SKILLS[skillKey];
                     let customSkill = null;
                     
                     // 如果不是预定义技能，从技能池中查找
-                    if (!skill) {
+                    if (!skill && skillKey) {
                         customSkill = skillPool.find(s => s.key === skillKey);
                         if (customSkill) {
                             skill = {
@@ -1974,29 +1978,21 @@
             const hasSerum = serumCount >= 1;
             ui.mutCost.className = hasSerum ? 'font-mono text-green-400' : 'font-mono text-red-400';
             
-            // 检查变异冷却期
-            const cooldownRemaining = checkMutationCooldown(animal);
-            const canMutate = hasSerum && cooldownRemaining === 0 && !isActionInProgress;
+            // 移除变异冷却检查
+            const canMutate = hasSerum && !isActionInProgress;
             
             ui.btnExecuteMutation.disabled = !canMutate;
             
-            if (cooldownRemaining > 0) {
-                const hours = Math.floor(cooldownRemaining / 3600000);
-                const minutes = Math.floor((cooldownRemaining % 3600000) / 60000);
-                ui.btnExecuteMutation.textContent = `冷却中 (${hours}h${minutes}m)`;
-            } else if (!hasSerum) {
+            if (!hasSerum) {
                 ui.btnExecuteMutation.textContent = "缺少变异血清";
             } else {
                 ui.btnExecuteMutation.textContent = "🧬 开始一级变异";
             }
         }
         
-        // 新增：检查变异冷却期（24小时）
+        // 新增：检查变异冷却期（已暂时禁用）
         function checkMutationCooldown(animal) {
-            if (!animal.mutationCooldownUntil) return 0;
-            const now = Date.now();
-            const remaining = animal.mutationCooldownUntil - now;
-            return remaining > 0 ? remaining : 0;
+            return 0; // 暂时移除冷却限制
         }
 
         function executeMutation() {
@@ -2030,8 +2026,18 @@
                 // 重置状态并刷新UI（必须在setTimeout内部）
                 isActionInProgress = false;
                 saveGameState(); // 保存状态
+                
+                // 刷新变异目标显示
                 selectMutationTarget(animal);
-                showAnimalDetails(animal.id);
+                
+                // 强制切换到能力标签页并刷新详情以显示新获得的变异技能
+                if (result.success) {
+                    showAnimalDetails(animal.id);
+                    switchDetailTab('abilities');
+                    // 确保变异技能区域被渲染
+                    renderMutationSkills(animal);
+                }
+                
                 updateResourceUI();
                 
                 ui.mutationResultModal.classList.remove('hidden');
@@ -2064,8 +2070,17 @@
                 
                 isActionInProgress = false;
                 saveGameState(); // 保存状态
+                
+                // 刷新变异目标显示
                 selectTier2MutationTarget(animal);
-                showAnimalDetails(animal.id);
+                
+                // 强制切换到能力标签页并刷新详情
+                if (result.success) {
+                    showAnimalDetails(animal.id);
+                    switchDetailTab('abilities');
+                    renderMutationSkills(animal);
+                }
+                
                 updateResourceUI();
                 ui.mutationResultModal.classList.remove('hidden');
             }, 2000);
@@ -2148,31 +2163,23 @@
             const serumCount = (gameState.inventory && gameState.inventory['mutation_serum']) || 0;
             document.getElementById('mut-tier2-cost').innerHTML = `💉 变异血清 x1 <span class="text-xs text-gray-400">(拥有: ${serumCount})</span>`;
             
-            // 检查二级变异冷却期（独立于一级变异）
-            const cooldownRemaining = checkTier2MutationCooldown(animal);
+            // 移除二级变异冷却检查
             const hasSerum = serumCount >= 1;
-            const canMutate = hasSerum && cooldownRemaining === 0 && !isActionInProgress;
+            const canMutate = hasSerum && !isActionInProgress;
             
             const btn = document.getElementById('btn-execute-tier2-mutation');
             btn.disabled = !canMutate;
             
-            if (cooldownRemaining > 0) {
-                const hours = Math.floor(cooldownRemaining / 3600000);
-                const minutes = Math.floor((cooldownRemaining % 3600000) / 60000);
-                btn.textContent = `冷却中 (${hours}h${minutes}m)`;
-            } else if (!hasSerum) {
+            if (!hasSerum) {
                 btn.textContent = "缺少变异血清";
             } else {
                 btn.textContent = "⚡ 开始二级变异";
             }
         }
         
-        // 新增：检查二级变异冷却期（独立的24小时冷却）
+        // 新增：检查二级变异冷却期（已暂时禁用）
         function checkTier2MutationCooldown(animal) {
-            if (!animal.tier2MutationCooldownUntil) return 0;
-            const now = Date.now();
-            const remaining = animal.tier2MutationCooldownUntil - now;
-            return remaining > 0 ? remaining : 0;
+            return 0; // 暂时移除冷却限制
         }
 
         function executeTier2Mutation() {
@@ -2201,8 +2208,17 @@
                 
                 isActionInProgress = false;
                 saveGameState(); // 保存状态
+                
+                // 刷新变异目标显示
                 selectTier2MutationTarget(animal);
-                showAnimalDetails(animal.id);
+                
+                // 强制切换到能力标签页并刷新详情
+                if (result.success) {
+                    showAnimalDetails(animal.id);
+                    switchDetailTab('abilities');
+                    renderMutationSkills(animal);
+                }
+                
                 updateResourceUI();
                 ui.mutationResultModal.classList.remove('hidden');
             }, 2000);
@@ -2233,8 +2249,15 @@
                 targetRarity = result.rarity;
                 mutationName = result.mutation;
             }
+
+            // 修正：确保 config 被正确赋值
+            config = MUTATION_CONFIG.tier1[targetRarity]?.[mutationName];
             
-            config = MUTATION_CONFIG.tier1[targetRarity][mutationName];
+            // 如果 config 未定义，说明出现错误，提前退出
+            if (!config) {
+                console.error("Mutation failed: Could not find config for", targetRarity, mutationName);
+                return { success: false, log: "变异失败：未找到配置。", changeDesc: "<p>变异失败，请重试。</p>" };
+            }
             
             // 初始化变异历史数组
             if (!animal.mutations.history) {
@@ -2313,7 +2336,10 @@
             animal.mutations.currentSkills = [...selectedSkills];
 
             // 添加新技能到拥有的技能列表
-            selectedSkills.forEach(skillKey => {
+            // 确保即使 selectedSkills 为空，也从 config.skills 添加
+            const skillsToAdd = selectedSkills.length > 0 ? selectedSkills : (config.skills || []);
+
+            skillsToAdd.forEach(skillKey => {
                 if (!animal.mutations.skills.includes(skillKey)) {
                     animal.mutations.skills.push(skillKey);
                 }
@@ -2328,8 +2354,8 @@
             // 增加变异次数
             animal.mutationCount = (animal.mutationCount || 0) + 1;
             
-            // 设置24小时冷却期
-            animal.mutationCooldownUntil = Date.now() + (24 * 60 * 60 * 1000);
+            // 暂时移除24小时冷却期
+            // animal.mutationCooldownUntil = Date.now() + (24 * 60 * 60 * 1000);
             
             const rarityText = { basic: '基础', elite: '精英', legendary: '传说' }[targetRarity];
             const isUpgrade = oldMutation && getRarityLevel(targetRarity) > getRarityLevel(oldRarity);
@@ -2371,8 +2397,8 @@
         function performTier2Mutation(animal) {
             const roll = Math.random() * 100;
             
-            // 设置二级变异冷却期（无论成功失败都冷却）
-            animal.tier2MutationCooldownUntil = Date.now() + (24 * 60 * 60 * 1000);
+            // 暂时移除二级变异冷却期
+            // animal.tier2MutationCooldownUntil = Date.now() + (24 * 60 * 60 * 1000);
             
             if (roll > 60) {
                 return {
@@ -2572,17 +2598,49 @@
         function limitMutationSkills(animal, skillLimits) {
             if (!animal.mutations || !animal.mutations.skills) return;
             
+            // 读取技能池以支持自定义技能
+            const skillPool = JSON.parse(localStorage.getItem('SKILL_POOL') || '[]');
+            
             // 按稀有度分类技能
             const skillsByRarity = { basic: [], elite: [], legendary: [] };
             
             animal.mutations.skills.forEach(skillKey => {
-                // 查找技能所属的稀有度
+                let found = false;
+                
+                // 首先在预定义配置中查找
                 for (const [rarity, mutations] of Object.entries(MUTATION_CONFIG.tier1)) {
                     for (const mutConfig of Object.values(mutations)) {
                         if (mutConfig.skills && mutConfig.skills.includes(skillKey)) {
                             skillsByRarity[rarity].push(skillKey);
+                            found = true;
                             return;
                         }
+                    }
+                }
+                
+                // 如果是自定义技能，从技能池中推断稀有度
+                if (!found) {
+                    const customSkill = skillPool.find(s => s.key === skillKey);
+                    if (customSkill && customSkill.category) {
+                        // 根据category推断稀有度
+                        // mutation-dark, mutation-light, mutation-crystal, mutation-shadow -> basic
+                        // mutation-chaos, mutation-holy, mutation-psychic, mutation-thunder -> elite
+                        // mutation-eternal-*, mutation-source-*, mutation-thunder-lord -> legendary
+                        let rarity = 'basic'; // 默认为basic
+                        if (customSkill.category.includes('chaos') ||
+                            customSkill.category.includes('holy') ||
+                            customSkill.category.includes('psychic') ||
+                            (customSkill.category.includes('thunder') && !customSkill.category.includes('lord'))) {
+                            rarity = 'elite';
+                        } else if (customSkill.category.includes('eternal') ||
+                                   customSkill.category.includes('source') ||
+                                   customSkill.category.includes('lord')) {
+                            rarity = 'legendary';
+                        }
+                        skillsByRarity[rarity].push(skillKey);
+                    } else {
+                        // 如果完全找不到，保留该技能（归类到basic）
+                        skillsByRarity.basic.push(skillKey);
                     }
                 }
             });
@@ -3414,12 +3472,27 @@
             }, ACTION_DURATION);
         }
 
-        // 新增：强制重置游戏数据
+        // 新增：强制重置游戏数据（仅重置游戏内数据，保留技能设计器等游戏外数据）
         function resetGameData() {
-            const isConfirmed = confirm("警告：此操作将删除所有游戏进度和动物数据，且无法恢复。您确定要重新开始游戏吗？");
+            const isConfirmed = confirm("警告：此操作将删除所有游戏进度和动物数据，但会保留技能设计器等游戏外数据。您确定要重新开始游戏吗？");
             if (isConfirmed) {
-                showStatus("正在清除数据...", 2000);
+                showStatus("正在清除游戏数据...", 2000);
+                
+                // 保存游戏外数据
+                const skillPool = localStorage.getItem('SKILL_POOL');
+                const animalPool = localStorage.getItem('ANIMAL_POOL');
+                
+                // 清除所有数据
                 localStorage.clear();
+                
+                // 恢复游戏外数据
+                if (skillPool) {
+                    localStorage.setItem('SKILL_POOL', skillPool);
+                }
+                if (animalPool) {
+                    localStorage.setItem('ANIMAL_POOL', animalPool);
+                }
+                
                 setTimeout(() => {
                     window.location.href = 'game3d.html';
                 }, 1000);
