@@ -1,3 +1,35 @@
+// 效果参数配置（从skill_designer同步）
+const EFFECT_PARAMS_CONFIG = {
+    'direct_attack': { name: '直接攻击', params: ['effect-source', 'bonus'] },
+    'multi_attack': { name: '多段攻击', params: ['effect-source', 'multi-bonus'] },
+    'dot_damage': { name: '附加伤害', params: ['effect-source', 'bonus'] },
+    'percent_damage': { name: '百分比伤害', params: ['effect-source', 'percent'] },
+    'direct_defense': { name: '直接防御', params: ['effect-source', 'bonus'] },
+    'continuous_defense': { name: '持续防御', params: ['effect-source', 'bonus'] },
+    'defense_counter': { name: '防御反击', params: ['effect-source', 'defense-bonus', 'counter-effect-source', 'counter-bonus'] },
+    'direct_speed': { name: '直接增速', params: ['effect-source', 'bonus'] },
+    'continuous_speed': { name: '持续增速', params: ['effect-source', 'bonus'] },
+    'buff_attack': { name: '增攻', params: ['effect-source', 'target', 'bonus'] },
+    'buff_defense': { name: '增防', params: ['effect-source', 'target', 'bonus'] },
+    'buff_speed': { name: '增速', params: ['effect-source', 'target', 'bonus'] },
+    'buff_status_enemy': { name: '为敌方附加异常', params: ['status-type', 'status-chance'] },
+    'buff_purify': { name: '净化', params: ['target', 'purify-type'] },
+    'buff_heal_amp': { name: '增加治疗量', params: ['effect-source', 'target', 'bonus'] },
+    'buff_element_damage': { name: '属性增伤', params: ['target', 'element-type', 'damage-bonus'] },
+    'debuff_attack': { name: '减攻', params: ['effect-source', 'target', 'bonus'] },
+    'debuff_defense': { name: '减防', params: ['effect-source', 'target', 'bonus'] },
+    'debuff_speed': { name: '减速', params: ['effect-source', 'target', 'bonus'] },
+    'debuff_status_self': { name: '为自身附加异常', params: ['status-type', 'status-chance'] },
+    'debuff_no_heal': { name: '禁疗', params: ['target'] },
+    'debuff_heal_reduce': { name: '减疗', params: ['effect-source', 'target', 'bonus'] },
+    'debuff_element_damage': { name: '属性减伤', params: ['target', 'element-type', 'damage-reduce'] },
+    'heal_direct': { name: '直接恢复', params: ['effect-source', 'target', 'bonus'] },
+    'heal_continuous': { name: '持续恢复', params: ['effect-source', 'target', 'bonus'] },
+    'heal_percent': { name: '百分比恢复', params: ['effect-source', 'target', 'percent'] },
+    'heal_rebirth': { name: '重生', params: ['effect-source', 'target', 'percent', 'rebirth-condition'] },
+    'heal_lifesteal': { name: '生命汲取', params: ['effect-source', 'bonus'] }
+};
+
 // 战斗技能配置
 const COMBAT_SKILLS = {
     'POWER_STRIKE': { name: '力量打击', icon: '💥', type: 'attack', desc: '造成150%攻击力的伤害', effect: 'damage', value: 1.5, cooldown: 3 },
@@ -46,22 +78,43 @@ class BattleSystem {
         
         // 战斗属性 (包含buff加成)
         this.playerStats = {
+            hp: playerData.stamina,
+            maxHp: playerData.stamina,
             attack: playerData.abilities.combat.attack,
             defense: playerData.abilities.combat.defense,
             agility: playerData.abilities.combat.agility,
+            baseAttack: playerData.abilities.combat.attack,
+            baseDefense: playerData.abilities.combat.defense,
+            baseAgility: playerData.abilities.combat.agility,
+            turnDamage: 0,
+            status: [],
+            element: playerData.element || 'water',
+            elementDamageBonus: {},
             buffs: {}, // 存储buff效果
             activeSkills: [], // 存储当前生效的技能key
             skillCooldowns: {} // 存储技能冷却时间 {skillKey: remainingTurns}
         };
         
         this.opponentStats = {
+            hp: opponentData.stamina,
+            maxHp: opponentData.stamina,
             attack: opponentData.abilities.combat.attack || 10,
             defense: opponentData.abilities.combat.defense || 5,
             agility: opponentData.abilities.combat.agility || 8,
+            baseAttack: opponentData.abilities.combat.attack || 10,
+            baseDefense: opponentData.abilities.combat.defense || 5,
+            baseAgility: opponentData.abilities.combat.agility || 8,
+            turnDamage: 0,
+            status: [],
+            element: opponentData.element || 'fire',
+            elementDamageReduce: {},
             buffs: {},
             activeSkills: [],
             skillCooldowns: {}
         };
+        
+        // 持续效果列表
+        this.activeEffects = [];
         
         // 被动技能
         this.playerPassiveSkills = this.getPassiveSkills(playerData);
@@ -324,6 +377,14 @@ class BattleSystem {
             
             // 更新buff持续时间
             this.updateBuffs();
+            
+            // 处理持续效果
+            this.processContinuousEffects();
+            
+            // 同步hp到旧的health变量
+            this.playerCurrentHealth = this.playerStats.hp;
+            this.opponentCurrentHealth = this.opponentStats.hp;
+            this.updateHealthUI();
             
             await this.sleep(2000);
         }
@@ -1010,6 +1071,275 @@ class BattleSystem {
 
     sleep(ms) {
         return new Promise(resolve => setTimeout(resolve, ms));
+    }
+    
+    // 获取效果来源的数值（从skill_designer同步）
+    getEffectSourceValue(sourceKey, isPlayer) {
+        const stats = isPlayer ? this.playerStats : this.opponentStats;
+        const enemyStats = isPlayer ? this.opponentStats : this.playerStats;
+        const mapping = {
+            'self-current-attack': stats.attack,
+            'self-base-attack': stats.baseAttack,
+            'self-current-defense': stats.defense,
+            'self-base-defense': stats.baseDefense,
+            'self-current-agility': stats.agility,
+            'self-base-agility': stats.baseAgility,
+            'self-max-hp': stats.maxHp,
+            'self-lost-hp': stats.maxHp - stats.hp,
+            'self-current-hp': stats.hp,
+            'self-turn-damage': stats.turnDamage,
+            'enemy-current-attack': enemyStats.attack,
+            'enemy-base-attack': enemyStats.baseAttack,
+            'enemy-current-defense': enemyStats.defense,
+            'enemy-base-defense': enemyStats.baseDefense,
+            'enemy-current-agility': enemyStats.agility,
+            'enemy-base-agility': enemyStats.baseAgility,
+            'enemy-max-hp': enemyStats.maxHp,
+            'enemy-lost-hp': enemyStats.maxHp - enemyStats.hp,
+            'enemy-current-hp': enemyStats.hp,
+            'enemy-turn-damage': enemyStats.turnDamage
+        };
+        return mapping[sourceKey] || 0;
+    }
+    
+    // 应用属性增伤/减伤（从skill_designer同步）
+    applyElementDamageModifiers(baseDamage, isPlayer) {
+        let finalDamage = baseDamage;
+        const attackerStats = isPlayer ? this.playerStats : this.opponentStats;
+        const defenderStats = isPlayer ? this.opponentStats : this.playerStats;
+        const attackerElement = attackerStats.element;
+        const defenderElement = defenderStats.element;
+        
+        // 应用攻击方的属性增伤
+        if (attackerStats.elementDamageBonus && attackerStats.elementDamageBonus[defenderElement]) {
+            const bonus = attackerStats.elementDamageBonus[defenderElement];
+            const oldDamage = finalDamage;
+            finalDamage = Math.round(finalDamage * (1 + bonus));
+            this.addLog(`  → 属性增伤(对${this.getElementName(defenderElement)}系): ${oldDamage} × (1+${bonus}) = ${finalDamage}`, 'text-cyan-300');
+        }
+        
+        // 应用防御方的属性减伤
+        if (defenderStats.elementDamageReduce && defenderStats.elementDamageReduce[attackerElement]) {
+            const reduce = defenderStats.elementDamageReduce[attackerElement];
+            const oldDamage = finalDamage;
+            finalDamage = Math.round(finalDamage * (1 - reduce));
+            this.addLog(`  → 属性减伤(受${this.getElementName(attackerElement)}系): ${oldDamage} × (1-${reduce}) = ${finalDamage}`, 'text-cyan-300');
+        }
+        
+        return Math.max(1, finalDamage);
+    }
+    
+    getElementName(element) {
+        const names = {
+            'water': '水', 'fire': '火', 'grass': '草',
+            'wind': '风', 'electric': '电', 'earth': '土'
+        };
+        return names[element] || element;
+    }
+    
+    // 处理持续效果（从skill_designer同步）
+    processContinuousEffects() {
+        if (this.activeEffects.length === 0) return;
+        
+        this.addLog(`触发 ${this.activeEffects.length} 个持续效果`, 'text-yellow-300');
+        
+        this.activeEffects.forEach(effect => {
+            if (effect.isTempBuff) {
+                // 临时增益效果只在回合结束时清除，不需要每回合触发
+                return;
+            }
+            
+            // 对于基础属性，使用锁定的初始值；对于当前属性，重新计算
+            let effectValue;
+            if (effect.effectSource && effect.effectSource.includes('base')) {
+                effectValue = effect.lockedSourceValue;
+            } else {
+                effectValue = this.getEffectSourceValue(effect.effectSource, effect.isPlayer);
+            }
+            
+            this.applySingleEffect(effect.effectKey, effectValue, effect.count, effect.skill.params || {}, effect.isPlayer, effect.effectSource);
+        });
+        
+        // 减少回合数并移除已结束的效果
+        const beforeCount = this.activeEffects.length;
+        this.activeEffects = this.activeEffects.map(effect => ({
+            ...effect,
+            remainingTurns: effect.remainingTurns - 1
+        })).filter(effect => {
+            if (effect.remainingTurns > 0) {
+                return true;
+            } else {
+                // 清除过期的临时增益效果
+                if (effect.isTempBuff) {
+                    const params = effect.skill.params || {};
+                    const stats = effect.isPlayer ? this.playerStats : this.opponentStats;
+                    if (effect.effectKey === 'buff_element_damage') {
+                        const elementType = params[`${effect.effectKey}_element-type`] || 'fire';
+                        if (stats.elementDamageBonus) {
+                            delete stats.elementDamageBonus[elementType];
+                        }
+                        this.addLog(`× 属性增伤效果已结束(${this.getElementName(elementType)}系)`, 'text-gray-400');
+                    }
+                }
+                return false;
+            }
+        });
+        
+        if (beforeCount !== this.activeEffects.length) {
+            this.addLog(`${beforeCount - this.activeEffects.length} 个效果已结束`, 'text-gray-400');
+        }
+    }
+    
+    // 完整的效果应用函数（从skill_designer同步）
+    applySkillEffect(skill, isPlayer) {
+        const effects = skill.effects || (skill.effect ? [skill.effect] : []);
+        const params = skill.params || {};
+        const count = params.count || 1;
+        const duration = params.duration || skill.duration || 0;
+        
+        effects.forEach(effectKey => {
+            // 某些效果不需要效果来源
+            const noSourceEffects = ['buff_status_enemy', 'debuff_status_self', 'buff_purify', 'debuff_no_heal'];
+            const tempBuffEffects = ['buff_element_damage', 'debuff_element_damage'];
+            
+            let sourceValue = 0;
+            let effectSource = null;
+            
+            if (!noSourceEffects.includes(effectKey) && !tempBuffEffects.includes(effectKey)) {
+                effectSource = params[`${effectKey}_effect-source`];
+                if (effectSource) {
+                    sourceValue = this.getEffectSourceValue(effectSource, isPlayer);
+                    this.addLog(`[${EFFECT_PARAMS_CONFIG[effectKey]?.name || effectKey}] 效果来源: ${Math.round(sourceValue)}`, 'text-yellow-300');
+                }
+            }
+            
+            // 应用效果
+            this.applySingleEffect(effectKey, sourceValue, count, params, isPlayer, effectSource);
+            
+            // 如果有持续回合，添加到持续效果列表
+            if (duration > 0 && !noSourceEffects.includes(effectKey) && !tempBuffEffects.includes(effectKey)) {
+                this.activeEffects.push({
+                    effectKey: effectKey,
+                    effectSource: effectSource,
+                    lockedSourceValue: sourceValue,
+                    count: count,
+                    skill: skill,
+                    remainingTurns: duration,
+                    isPlayer: isPlayer
+                });
+                this.addLog(`→ ${EFFECT_PARAMS_CONFIG[effectKey]?.name} 将持续 ${duration} 回合`, 'text-cyan-300');
+            } else if (tempBuffEffects.includes(effectKey) && duration > 0) {
+                this.activeEffects.push({
+                    effectKey: effectKey,
+                    effectSource: null,
+                    lockedSourceValue: 0,
+                    count: 0,
+                    skill: skill,
+                    remainingTurns: duration,
+                    isPlayer: isPlayer,
+                    isTempBuff: true
+                });
+                this.addLog(`→ ${EFFECT_PARAMS_CONFIG[effectKey]?.name} 将持续 ${duration} 回合`, 'text-cyan-300');
+            }
+        });
+    }
+    
+    // 应用单个效果（从skill_designer同步并简化）
+    applySingleEffect(effectKey, sourceValue, count, params, isPlayer, effectSource) {
+        const attackerStats = isPlayer ? this.playerStats : this.opponentStats;
+        const defenderStats = isPlayer ? this.opponentStats : this.playerStats;
+        const attackerName = isPlayer ? this.playerData.name : this.opponentData.name;
+        const defenderName = isPlayer ? this.opponentData.name : this.playerData.name;
+        
+        // 判断是否基于攻击力
+        const isAttackBased = effectSource && effectSource.includes('attack');
+        
+        switch(effectKey) {
+            case 'direct_attack': {
+                const bonus = params[`${effectKey}_bonus`] || 1;
+                const rawDamage = Math.round(sourceValue * bonus);
+                let actualDamage;
+                
+                if (isAttackBased) {
+                    actualDamage = Math.max(1, rawDamage - defenderStats.defense);
+                } else {
+                    actualDamage = rawDamage;
+                }
+                
+                actualDamage = this.applyElementDamageModifiers(actualDamage, isPlayer);
+                defenderStats.hp -= actualDamage;
+                attackerStats.turnDamage += actualDamage;
+                
+                // 同步到旧的health变量
+                if (isPlayer) {
+                    this.opponentCurrentHealth = defenderStats.hp;
+                } else {
+                    this.playerCurrentHealth = defenderStats.hp;
+                }
+                this.addLog(`直接攻击: 造成 ${actualDamage} 点伤害`, 'text-red-300');
+                break;
+            }
+            
+            case 'buff_attack': {
+                const target = params[`${effectKey}_target`];
+                const bonus = params[`${effectKey}_bonus`] || 1;
+                const increase = Math.round(sourceValue * bonus);
+                if (target === 'self' || target === 'ally-all') {
+                    attackerStats.attack += increase;
+                    this.addLog(`增攻: ${isPlayer ? '我方' : '敌方'}攻击力 +${increase}`, 'text-green-300');
+                }
+                break;
+            }
+            
+            case 'buff_defense': {
+                const target = params[`${effectKey}_target`];
+                const bonus = params[`${effectKey}_bonus`] || 1;
+                const increase = Math.round(sourceValue * bonus);
+                if (target === 'self' || target === 'ally-all') {
+                    attackerStats.defense += increase;
+                    this.addLog(`增防: ${isPlayer ? '我方' : '敌方'}防御力 +${increase}`, 'text-green-300');
+                }
+                break;
+            }
+            
+            case 'heal_direct': {
+                const target = params[`${effectKey}_target`];
+                const bonus = params[`${effectKey}_bonus`] || 1;
+                const heal = Math.round(sourceValue * bonus * count);
+                if (target === 'self' || target === 'ally-all') {
+                    attackerStats.hp = Math.min(attackerStats.maxHp, attackerStats.hp + heal);
+                    
+                    // 同步到旧的health变量
+                    if (isPlayer) {
+                        this.playerCurrentHealth = attackerStats.hp;
+                    } else {
+                        this.opponentCurrentHealth = attackerStats.hp;
+                    }
+                    this.addLog(`直接恢复: +${heal} 生命`, 'text-green-300');
+                }
+                break;
+            }
+            
+            case 'buff_element_damage': {
+                const target = params[`${effectKey}_target`];
+                const elementType = params[`${effectKey}_element-type`] || 'fire';
+                const damageBonus = params[`${effectKey}_damage-bonus`] || 0.2;
+                
+                if (target === 'self' || target === 'ally-all') {
+                    if (!attackerStats.elementDamageBonus) attackerStats.elementDamageBonus = {};
+                    attackerStats.elementDamageBonus[elementType] =
+                        (attackerStats.elementDamageBonus[elementType] || 0) + damageBonus;
+                    this.addLog(`属性增伤: ${isPlayer ? '我方' : '敌方'}对${this.getElementName(elementType)}系伤害 +${Math.round(damageBonus * 100)}%`, 'text-green-300');
+                }
+                break;
+            }
+            
+            // 其他效果默认处理
+            default:
+                if (EFFECT_PARAMS_CONFIG[effectKey]) {
+                    this.addLog(`[${EFFECT_PARAMS_CONFIG[effectKey].name}] 效果触发`, 'text-gray-400');
+                }
+        }
     }
     
     // 新增：根据效果类型高亮技能
