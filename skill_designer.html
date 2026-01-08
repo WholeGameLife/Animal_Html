@@ -1,9 +1,10 @@
+
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>技能设计器 - 电子盆栽</title>
+    <title>技能设计器 V2.0 - 电子盆栽</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body {
@@ -51,11 +52,6 @@
         .mutation-source-crystal { background: linear-gradient(135deg, #5b21b6, #6d28d9); }
         .mutation-thunder-lord { background: linear-gradient(135deg, #f59e0b, #d97706); }
         
-        /* 稀有度颜色 */
-        .rarity-shiny { background: linear-gradient(135deg, #fbbf24, #f59e0b); }
-        .rarity-prismatic { background: linear-gradient(135deg, #ec4899, #8b5cf6, #3b82f6); }
-        .rarity-stellar { background: linear-gradient(135deg, #fef3c7, #fde68a, #fbbf24); color: #92400e; }
-        
         .emoji-picker {
             display: grid;
             grid-template-columns: repeat(8, 1fr);
@@ -76,22 +72,14 @@
             background: rgba(59, 130, 246, 0.2);
             transform: scale(1.2);
         }
-
-        .param-group {
-            display: none;
-        }
-
-        .param-group.active {
-            display: block;
-        }
     </style>
 </head>
 <body class="p-6">
     <div class="max-w-7xl mx-auto">
         <!-- 标题 -->
         <div class="text-center mb-8">
-            <h1 class="text-4xl font-bold text-white mb-2">⚔️ 技能设计器 ⚔️</h1>
-            <p class="text-blue-200 mb-3">精确设计战斗技能的每个参数</p>
+            <h1 class="text-4xl font-bold text-white mb-2">⚔️ 技能设计器 V2.0 ⚔️</h1>
+            <p class="text-blue-200 mb-3">全新技能系统 - 灵活配置效果来源和参数</p>
             <div class="flex justify-center gap-3">
                 <a href="skill_viewer.html"
                    class="inline-flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-6 rounded-lg transition-colors">
@@ -139,7 +127,7 @@
                             class="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500 resize-none"></textarea>
                     </div>
 
-                    <!-- 技能类别和稀有度 -->
+                    <!-- 技能类别 -->
                     <div class="grid grid-cols-2 gap-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-300 mb-2">技能类别 *</label>
@@ -175,55 +163,28 @@
                             </select>
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-300 mb-2">稀有度（可选）</label>
-                            <select id="skill-rarity"
+                            <label class="block text-sm font-medium text-gray-300 mb-2">技能类型 *</label>
+                            <select id="skill-type" required
                                 class="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500">
-                                <option value="">无</option>
-                                <option value="shiny">✨ 闪光</option>
-                                <option value="prismatic">🌈 幻彩</option>
-                                <option value="stellar">⭐ 星芒</option>
+                                <option value="">选择类型</option>
+                                <option value="attack">⚔️ 攻击型</option>
+                                <option value="defense">🛡️ 防御型</option>
+                                <option value="agility">⚡ 敏捷型</option>
+                                <option value="buff">💪 增益型</option>
+                                <option value="debuff">🔻 减益型</option>
+                                <option value="heal">💚 治疗型</option>
                             </select>
                         </div>
                     </div>
 
-                    <!-- 技能类型（多选） -->
-                    <div>
-                        <label class="block text-sm font-medium text-gray-300 mb-2">技能类型 * (可多选)</label>
-                        <div id="skill-types" class="bg-gray-800 border border-gray-600 rounded-lg p-3 grid grid-cols-2 gap-2">
-                            <label class="flex items-center gap-2 text-white cursor-pointer hover:bg-gray-700 p-2 rounded">
-                                <input type="checkbox" name="skill-type" value="attack" class="skill-type-checkbox">
-                                <span>⚔️ 攻击型</span>
-                            </label>
-                            <label class="flex items-center gap-2 text-white cursor-pointer hover:bg-gray-700 p-2 rounded">
-                                <input type="checkbox" name="skill-type" value="defense" class="skill-type-checkbox">
-                                <span>🛡️ 防御型</span>
-                            </label>
-                            <label class="flex items-center gap-2 text-white cursor-pointer hover:bg-gray-700 p-2 rounded">
-                                <input type="checkbox" name="skill-type" value="agility" class="skill-type-checkbox">
-                                <span>⚡ 敏捷型</span>
-                            </label>
-                            <label class="flex items-center gap-2 text-white cursor-pointer hover:bg-gray-700 p-2 rounded">
-                                <input type="checkbox" name="skill-type" value="buff" class="skill-type-checkbox">
-                                <span>💪 增益型</span>
-                            </label>
-                            <label class="flex items-center gap-2 text-white cursor-pointer hover:bg-gray-700 p-2 rounded">
-                                <input type="checkbox" name="skill-type" value="debuff" class="skill-type-checkbox">
-                                <span>🔻 减益型</span>
-                            </label>
-                            <label class="flex items-center gap-2 text-white cursor-pointer hover:bg-gray-700 p-2 rounded">
-                                <input type="checkbox" name="skill-type" value="heal" class="skill-type-checkbox">
-                                <span>💚 治疗型</span>
-                            </label>
-                        </div>
-                    </div>
 
-                    <!-- 技能效果（多选） -->
+                    <!-- 技能效果选择 -->
                     <div>
                         <label class="block text-sm font-medium text-gray-300 mb-2">技能效果 * (可多选)</label>
                         <div id="skill-effects" class="bg-gray-800 border border-gray-600 rounded-lg p-3 max-h-96 overflow-y-auto space-y-3">
                             <!-- 攻击类 -->
                             <div>
-                                <div class="text-xs font-bold text-blue-400 mb-2">攻击类</div>
+                                <div class="text-xs font-bold text-blue-400 mb-2">⚔️ 攻击类</div>
                                 <div class="grid grid-cols-2 gap-2">
                                     <label class="flex items-center gap-2 text-white text-sm cursor-pointer hover:bg-gray-700 p-1.5 rounded">
                                         <input type="checkbox" name="skill-effect" value="direct_attack" class="skill-effect-checkbox">
@@ -245,7 +206,7 @@
                             </div>
                             <!-- 防御类 -->
                             <div>
-                                <div class="text-xs font-bold text-green-400 mb-2">防御类</div>
+                                <div class="text-xs font-bold text-green-400 mb-2">🛡️ 防御类</div>
                                 <div class="grid grid-cols-2 gap-2">
                                     <label class="flex items-center gap-2 text-white text-sm cursor-pointer hover:bg-gray-700 p-1.5 rounded">
                                         <input type="checkbox" name="skill-effect" value="direct_defense" class="skill-effect-checkbox">
@@ -263,7 +224,7 @@
                             </div>
                             <!-- 敏捷类 -->
                             <div>
-                                <div class="text-xs font-bold text-yellow-400 mb-2">敏捷类</div>
+                                <div class="text-xs font-bold text-yellow-400 mb-2">⚡ 敏捷类</div>
                                 <div class="grid grid-cols-2 gap-2">
                                     <label class="flex items-center gap-2 text-white text-sm cursor-pointer hover:bg-gray-700 p-1.5 rounded">
                                         <input type="checkbox" name="skill-effect" value="direct_speed" class="skill-effect-checkbox">
@@ -277,7 +238,7 @@
                             </div>
                             <!-- 增益类 -->
                             <div>
-                                <div class="text-xs font-bold text-purple-400 mb-2">增益类</div>
+                                <div class="text-xs font-bold text-purple-400 mb-2">💪 增益类</div>
                                 <div class="grid grid-cols-2 gap-2">
                                     <label class="flex items-center gap-2 text-white text-sm cursor-pointer hover:bg-gray-700 p-1.5 rounded">
                                         <input type="checkbox" name="skill-effect" value="buff_attack" class="skill-effect-checkbox">
@@ -311,7 +272,7 @@
                             </div>
                             <!-- 减益类 -->
                             <div>
-                                <div class="text-xs font-bold text-red-400 mb-2">减益类</div>
+                                <div class="text-xs font-bold text-red-400 mb-2">🔻 减益类</div>
                                 <div class="grid grid-cols-2 gap-2">
                                     <label class="flex items-center gap-2 text-white text-sm cursor-pointer hover:bg-gray-700 p-1.5 rounded">
                                         <input type="checkbox" name="skill-effect" value="debuff_attack" class="skill-effect-checkbox">
@@ -345,7 +306,7 @@
                             </div>
                             <!-- 治疗类 -->
                             <div>
-                                <div class="text-xs font-bold text-pink-400 mb-2">治疗类</div>
+                                <div class="text-xs font-bold text-pink-400 mb-2">💚 治疗类</div>
                                 <div class="grid grid-cols-2 gap-2">
                                     <label class="flex items-center gap-2 text-white text-sm cursor-pointer hover:bg-gray-700 p-1.5 rounded">
                                         <input type="checkbox" name="skill-effect" value="heal_direct" class="skill-effect-checkbox">
@@ -374,7 +335,7 @@
 
                     <!-- 动态参数区域 -->
                     <div id="params-container" class="space-y-4 bg-gray-800/50 rounded-lg p-4 border border-gray-600">
-                        <h3 class="text-sm font-bold text-gray-300 mb-3">📊 技能参数</h3>
+                        <h3 class="text-sm font-bold text-gray-300 mb-3">📊 技能参数配置</h3>
                         
                         <!-- 通用参数 -->
                         <div class="grid grid-cols-3 gap-4">
@@ -389,276 +350,15 @@
                                     class="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white text-sm focus:outline-none focus:border-blue-500">
                             </div>
                             <div>
-                                <label class="block text-xs font-medium text-gray-400 mb-1">次数</label>
+                                <label class="block text-xs font-medium text-gray-400 mb-1">每回合次数</label>
                                 <input type="number" id="param-count" min="1" value="1"
                                     class="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white text-sm focus:outline-none focus:border-blue-500">
                             </div>
                         </div>
 
-                        <!-- 攻击加成参数 -->
-                        <div id="param-attack-bonus-group" class="param-group">
-                            <label class="block text-xs font-medium text-gray-400 mb-1">攻击加成</label>
-                            <input type="number" id="param-attack-bonus" step="0.01" min="0" value="1.0"
-                                class="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white text-sm focus:outline-none focus:border-blue-500">
-                            <p class="text-xs text-gray-500 mt-1">伤害 = 自身攻击力 × 攻击加成</p>
+                        <div id="dynamic-params" class="space-y-3">
+                            <!-- 动态生成的参数将插入这里 -->
                         </div>
-
-                        <!-- 多段攻击加成 -->
-                        <div id="param-multi-bonus-group" class="param-group">
-                            <label class="block text-xs font-medium text-gray-400 mb-1">多段攻击加成(逗号分隔)</label>
-                            <input type="text" id="param-multi-bonus" placeholder="例: 0.5,0.7,1.0"
-                                class="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white text-sm focus:outline-none focus:border-blue-500">
-                            <p class="text-xs text-gray-500 mt-1">每段伤害 = 攻击力 × 对应加成</p>
-                        </div>
-
-                        <!-- 百分比伤害参数 -->
-                        <div id="param-percent-damage-group" class="param-group">
-                            <div class="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label class="block text-xs font-medium text-gray-400 mb-1">伤害来源</label>
-                                    <select id="param-damage-source"
-                                        class="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white text-sm focus:outline-none focus:border-blue-500">
-                                        <option value="self-attack">我方攻击</option>
-                                        <option value="self-defense">我方防御</option>
-                                        <option value="self-speed">我方速度</option>
-                                        <option value="self-hp">我方生命</option>
-                                        <option value="enemy-attack">敌方攻击</option>
-                                        <option value="enemy-defense">敌方防御</option>
-                                        <option value="enemy-speed">敌方速度</option>
-                                        <option value="enemy-hp">敌方生命</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label class="block text-xs font-medium text-gray-400 mb-1">伤害百分比</label>
-                                    <input type="number" id="param-damage-percent" step="0.01" min="0" value="0.1"
-                                        class="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white text-sm focus:outline-none focus:border-blue-500">
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- 防御加成参数 -->
-                        <div id="param-defense-bonus-group" class="param-group">
-                            <label class="block text-xs font-medium text-gray-400 mb-1">防御加成</label>
-                            <input type="number" id="param-defense-bonus" step="0.01" min="0" value="1.0"
-                                class="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white text-sm focus:outline-none focus:border-blue-500">
-                            <p class="text-xs text-gray-500 mt-1">伤害抵抗 = 自身防御力 × 防御加成</p>
-                        </div>
-
-                        <!-- 反击参数 -->
-                        <div id="param-counter-group" class="param-group">
-                            <div class="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label class="block text-xs font-medium text-gray-400 mb-1">反击来源</label>
-                                    <select id="param-counter-source"
-                                        class="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white text-sm focus:outline-none focus:border-blue-500">
-                                        <option value="self-attack">我方攻击</option>
-                                        <option value="self-defense">我方防御</option>
-                                        <option value="enemy-attack">敌方攻击</option>
-                                        <option value="enemy-defense">敌方防御</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label class="block text-xs font-medium text-gray-400 mb-1">反击加成</label>
-                                    <input type="number" id="param-counter-bonus" step="0.01" min="0" value="0.5"
-                                        class="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white text-sm focus:outline-none focus:border-blue-500">
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- 增速参数 -->
-                        <div id="param-speed-bonus-group" class="param-group">
-                            <label class="block text-xs font-medium text-gray-400 mb-1">增速加成</label>
-                            <input type="number" id="param-speed-bonus" step="0.01" min="0" value="0.2"
-                                class="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white text-sm focus:outline-none focus:border-blue-500">
-                            <p class="text-xs text-gray-500 mt-1">额外速度 = 基础速度 × 增速加成</p>
-                        </div>
-
-                        <!-- 通用Buff/Debuff参数模板生成器 -->
-                        <script>
-                            function createBuffDebuffParams(id, title, color, defaultTarget = 'self', defaultSource = 'fixed') {
-                                const isDebuff = id.startsWith('debuff');
-                                const targetOptions = isDebuff ?
-                                    '<option value="enemy-single">敌方单体</option><option value="enemy-all">敌方全体</option>' :
-                                    '<option value="self">自身</option><option value="ally-single">我方单体</option><option value="ally-all">我方全体</option>';
-                                
-                                return `
-                                <div id="param-${id}-group" class="param-group">
-                                    <h4 class="text-sm font-semibold text-${color}-300 border-b border-${color}-800 pb-1 mb-2">${title}参数</h4>
-                                    <div class="grid grid-cols-3 gap-4">
-                                        <div>
-                                            <label class="block text-xs font-medium text-gray-400 mb-1">目标</label>
-                                            <select id="param-${id}-target" class="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white text-sm">
-                                                ${targetOptions}
-                                            </select>
-                                        </div>
-                                        <div>
-                                            <label class="block text-xs font-medium text-gray-400 mb-1">来源</label>
-                                            <select id="param-${id}-source" class="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white text-sm">
-                                                <option value="self-attack">自身攻击</option>
-                                                <option value="self-defense">自身防御</option>
-                                                <option value="self-speed">自身速度</option>
-                                                <option value="fixed" selected>固定值</option>
-                                            </select>
-                                        </div>
-                                        <div>
-                                            <label class="block text-xs font-medium text-gray-400 mb-1">加成值</label>
-                                            <input type="number" id="param-${id}-bonus" step="0.01" min="0" value="0.2" class="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white text-sm">
-                                        </div>
-                                    </div>
-                                </div>`;
-                            }
-
-                            const buffParams = [
-                                { id: 'buff_attack', title: '增攻', color: 'purple' },
-                                { id: 'buff_defense', title: '增防', color: 'purple' },
-                                { id: 'buff_speed', title: '增速', color: 'purple' },
-                                { id: 'buff_heal_amp', title: '治疗增强', color: 'purple' },
-                                { id: 'debuff_attack', title: '减攻', color: 'red' },
-                                { id: 'debuff_defense', title: '减防', color: 'red' },
-                                { id: 'debuff_speed', title: '减速', color: 'red' },
-                                { id: 'debuff_heal_reduce', title: '减疗', color: 'red' }
-                            ];
-
-                            document.write(buffParams.map(p => createBuffDebuffParams(p.id, p.title, p.color)).join(''));
-                        </script>
-
-                        <!-- 异常状态参数 -->
-                        <div id="param-status-group" class="param-group">
-                            <div class="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label class="block text-xs font-medium text-gray-400 mb-1">异常状态</label>
-                                    <select id="param-status-type"
-                                        class="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white text-sm focus:outline-none focus:border-blue-500">
-                                        <option value="stun">眩晕</option>
-                                        <option value="poison">中毒</option>
-                                        <option value="bleed">流血</option>
-                                        <option value="frostbite">冻伤</option>
-                                        <option value="burn">烧伤</option>
-                                        <option value="paralyze">麻痹</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label class="block text-xs font-medium text-gray-400 mb-1">施加概率(%)</label>
-                                    <input type="number" id="param-status-chance" min="0" max="100" value="50"
-                                        class="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white text-sm focus:outline-none focus:border-blue-500">
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- 属性增减伤参数 -->
-                        <div id="param-element-group" class="param-group">
-                            <div class="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label class="block text-xs font-medium text-gray-400 mb-1">针对属性</label>
-                                    <select id="param-element-type"
-                                        class="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white text-sm focus:outline-none focus:border-blue-500">
-                                        <option value="water">水</option>
-                                        <option value="fire">火</option>
-                                        <option value="grass">草</option>
-                                        <option value="wind">风</option>
-                                        <option value="electric">电</option>
-                                        <option value="earth">土</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label class="block text-xs font-medium text-gray-400 mb-1">增减伤加成</label>
-                                    <input type="number" id="param-element-bonus" step="0.01" value="0.2"
-                                        class="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white text-sm focus:outline-none focus:border-blue-500">
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- 治疗参数 -->
-                        <div id="param-heal-group" class="param-group">
-                            <div class="grid grid-cols-3 gap-4">
-                                <div>
-                                    <label class="block text-xs font-medium text-gray-400 mb-1">恢复目标</label>
-                                    <select id="param-heal-target"
-                                        class="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white text-sm focus:outline-none focus:border-blue-500">
-                                        <option value="self">自身</option>
-                                        <option value="ally-single">我方单体</option>
-                                        <option value="ally-all">我方全体</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label class="block text-xs font-medium text-gray-400 mb-1">治疗来源</label>
-                                    <select id="param-heal-source"
-                                        class="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white text-sm focus:outline-none focus:border-blue-500">
-                                        <option value="self-attack">自身攻击</option>
-                                        <option value="self-defense">自身防御</option>
-                                        <option value="self-hp">自身生命</option>
-                                        <option value="fixed">固定值</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label class="block text-xs font-medium text-gray-400 mb-1">治疗加成</label>
-                                    <input type="number" id="param-heal-bonus" step="0.01" min="0" value="0.5"
-                                        class="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white text-sm focus:outline-none focus:border-blue-500">
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- 百分比恢复参数 -->
-                        <div id="param-heal-percent-group" class="param-group">
-                            <div class="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label class="block text-xs font-medium text-gray-400 mb-1">恢复来源</label>
-                                    <select id="param-heal-percent-source"
-                                        class="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white text-sm focus:outline-none focus:border-blue-500">
-                                        <option value="self-max-hp">自身最大生命</option>
-                                        <option value="self-current-hp">自身当前生命</option>
-                                        <option value="target-max-hp">目标最大生命</option>
-                                        <option value="target-current-hp">目标当前生命</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label class="block text-xs font-medium text-gray-400 mb-1">恢复百分比</label>
-                                    <input type="number" id="param-heal-percent" step="0.01" min="0" max="1" value="0.3"
-                                        class="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white text-sm focus:outline-none focus:border-blue-500">
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- 重生参数 -->
-                        <div id="param-rebirth-group" class="param-group">
-                            <div class="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label class="block text-xs font-medium text-gray-400 mb-1">重生目标</label>
-                                    <select id="param-rebirth-target"
-                                        class="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white text-sm focus:outline-none focus:border-blue-500">
-                                        <option value="self">自身</option>
-                                        <option value="ally-single">我方单体</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label class="block text-xs font-medium text-gray-400 mb-1">复活生命比例</label>
-                                    <input type="number" id="param-rebirth-percent" step="0.01" min="0" max="1" value="0.5"
-                                        class="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white text-sm focus:outline-none focus:border-blue-500">
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- 生命汲取参数 -->
-                        <div id="param-lifesteal-group" class="param-group">
-                            <div class="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label class="block text-xs font-medium text-gray-400 mb-1">汲取来源</label>
-                                    <select id="param-lifesteal-source"
-                                        class="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white text-sm focus:outline-none focus:border-blue-500">
-                                        <option value="self-attack">我方攻击</option>
-                                        <option value="self-defense">我方防御</option>
-                                        <option value="enemy-attack">敌方攻击</option>
-                                        <option value="enemy-hp">敌方生命</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label class="block text-xs font-medium text-gray-400 mb-1">汲取加成</label>
-                                    <input type="number" id="param-lifesteal-bonus" step="0.01" min="0" value="0.2"
-                                        class="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white text-sm focus:outline-none focus:border-blue-500">
-                                </div>
-                            </div>
-                        </div>
-                        
                     </div>
 
                     <!-- 按钮 -->
@@ -689,6 +389,9 @@
                             <div class="text-sm">填写表单查看预览</div>
                         </div>
                     </div>
+                    <button type="button" id="test-skill-btn" class="hidden w-full mt-3 bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-lg transition-colors">
+                        🎮 测试技能效果
+                    </button>
                 </div>
 
                 <!-- 已创建技能列表 -->
@@ -728,6 +431,180 @@
                 </div>
             </div>
         </div>
+
+        <!-- 技能测试模态框 -->
+        <div id="test-modal" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+            <div class="bg-gray-900 rounded-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto border border-gray-700">
+                <div class="sticky top-0 bg-gray-900 border-b border-gray-700 p-4 flex justify-between items-center">
+                    <h3 class="text-xl font-bold text-white">🎮 技能测试场景</h3>
+                    <button id="close-test-modal" class="text-gray-400 hover:text-white text-2xl">×</button>
+                </div>
+                
+                <div class="p-6 space-y-4">
+                    <!-- 属性配置 -->
+                    <div class="bg-gray-800 border border-gray-600 rounded-lg p-4">
+                        <h4 class="text-sm font-bold text-gray-300 mb-3">⚙️ 自定义属性</h4>
+                        <div class="grid grid-cols-2 gap-4 text-xs">
+                            <div class="space-y-2">
+                                <div class="font-bold text-blue-300 mb-2">我方单位</div>
+                                <input type="number" id="config-self-hp" placeholder="生命值" value="1000" class="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1 text-white">
+                                <input type="number" id="config-self-attack" placeholder="攻击力" value="100" class="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1 text-white">
+                                <input type="number" id="config-self-defense" placeholder="防御力" value="50" class="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1 text-white">
+                                <input type="number" id="config-self-agility" placeholder="敏捷" value="80" class="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1 text-white">
+                            </div>
+                            <div class="space-y-2">
+                                <div class="font-bold text-red-300 mb-2">敌方单位</div>
+                                <input type="number" id="config-enemy-hp" placeholder="生命值" value="800" class="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1 text-white">
+                                <input type="number" id="config-enemy-attack" placeholder="攻击力" value="90" class="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1 text-white">
+                                <input type="number" id="config-enemy-defense" placeholder="防御力" value="40" class="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1 text-white">
+                                <input type="number" id="config-enemy-agility" placeholder="敏捷" value="70" class="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1 text-white">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 战斗场景 -->
+                    <div class="grid grid-cols-2 gap-4">
+                        <!-- 我方 -->
+                        <div class="bg-blue-900/30 border border-blue-600 rounded-lg p-4">
+                            <div class="flex justify-between items-center mb-3">
+                                <h4 class="text-lg font-bold text-blue-300">👤 我方单位</h4>
+                                <select id="self-element" class="bg-gray-700 border border-gray-600 rounded px-2 py-1 text-white text-xs">
+                                    <option value="water">💧 水</option>
+                                    <option value="fire">🔥 火</option>
+                                    <option value="grass">🌿 草</option>
+                                    <option value="wind">💨 风</option>
+                                    <option value="electric">⚡ 电</option>
+                                    <option value="earth">🪨 土</option>
+                                </select>
+                            </div>
+                            <div class="space-y-2 text-sm">
+                                <div class="flex justify-between">
+                                    <span class="text-gray-400">生命值:</span>
+                                    <span class="text-white font-bold">
+                                        <span id="self-hp">1000</span> / <span id="self-max-hp">1000</span>
+                                    </span>
+                                </div>
+                                <div class="w-full bg-gray-700 rounded-full h-2">
+                                    <div id="self-hp-bar" class="bg-green-500 h-2 rounded-full" style="width: 100%"></div>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-400">攻击力:</span>
+                                    <span class="text-white"><span id="self-attack">100</span></span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-400">防御力:</span>
+                                    <span class="text-white"><span id="self-defense">50</span></span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-400">敏捷:</span>
+                                    <span class="text-white"><span id="self-agility">80</span></span>
+                                </div>
+                                <div class="mt-3 pt-3 border-t border-blue-600">
+                                    <div class="text-xs text-gray-400 mb-1">🔮 异常状态:</div>
+                                    <div id="self-status" class="flex flex-wrap gap-1 min-h-[24px]">
+                                        <span class="text-xs text-gray-500">无</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 敌方 -->
+                        <div class="bg-red-900/30 border border-red-600 rounded-lg p-4">
+                            <div class="flex justify-between items-center mb-3">
+                                <h4 class="text-lg font-bold text-red-300">👹 敌方单位</h4>
+                                <select id="enemy-element" class="bg-gray-700 border border-gray-600 rounded px-2 py-1 text-white text-xs">
+                                    <option value="water">💧 水</option>
+                                    <option value="fire">🔥 火</option>
+                                    <option value="grass">🌿 草</option>
+                                    <option value="wind">💨 风</option>
+                                    <option value="electric">⚡ 电</option>
+                                    <option value="earth">🪨 土</option>
+                                </select>
+                            </div>
+                            <div class="space-y-2 text-sm">
+                                <div class="flex justify-between">
+                                    <span class="text-gray-400">生命值:</span>
+                                    <span class="text-white font-bold">
+                                        <span id="enemy-hp">800</span> / <span id="enemy-max-hp">800</span>
+                                    </span>
+                                </div>
+                                <div class="w-full bg-gray-700 rounded-full h-2">
+                                    <div id="enemy-hp-bar" class="bg-red-500 h-2 rounded-full" style="width: 100%"></div>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-400">攻击力:</span>
+                                    <span class="text-white"><span id="enemy-attack">90</span></span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-400">防御力:</span>
+                                    <span class="text-white"><span id="enemy-defense">40</span></span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-400">敏捷:</span>
+                                    <span class="text-white"><span id="enemy-agility">70</span></span>
+                                </div>
+                                <div class="mt-3 pt-3 border-t border-red-600">
+                                    <div class="text-xs text-gray-400 mb-1">🔮 异常状态:</div>
+                                    <div id="enemy-status" class="flex flex-wrap gap-1 min-h-[24px]">
+                                        <span class="text-xs text-gray-500">无</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 技能选择 -->
+                    <div class="bg-purple-900/30 border border-purple-600 rounded-lg p-4">
+                        <h4 class="text-lg font-bold text-purple-300 mb-3">⚔️ 选择测试技能</h4>
+                        <div id="test-skills-selector" class="space-y-2 max-h-60 overflow-y-auto">
+                            <!-- 技能选择列表 -->
+                        </div>
+                    </div>
+
+                    <!-- 回合信息 -->
+                    <div class="bg-gray-800 border border-gray-600 rounded-lg p-3">
+                        <div class="flex justify-between items-center">
+                            <div class="text-sm text-gray-300">
+                                <span class="font-bold text-yellow-300">当前回合：</span>
+                                <span id="current-turn" class="text-white font-bold">1</span>
+                            </div>
+                            <div class="text-xs text-gray-400">
+                                持续效果：<span id="active-effects-count" class="text-white">0</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 操作按钮 -->
+                    <div class="grid grid-cols-3 gap-3">
+                        <button id="use-skill-btn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg transition-colors disabled:bg-gray-500" disabled>
+                            ⚔️ 使用技能
+                        </button>
+                        <button id="enemy-attack-btn" class="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-6 rounded-lg transition-colors">
+                            👹 敌人攻击
+                        </button>
+                        <button id="next-turn-btn" class="bg-orange-600 hover:bg-orange-700 text-white font-bold py-3 px-6 rounded-lg transition-colors">
+                            ⏭️ 下一回合
+                        </button>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <button id="use-all-skills-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition-colors disabled:bg-gray-500" disabled>
+                            ⚡ 使用全部
+                        </button>
+                        <button id="reset-battle-btn" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 px-6 rounded-lg transition-colors">
+                            🔄 重置
+                        </button>
+                    </div>
+
+                    <!-- 战斗日志 -->
+                    <div class="bg-gray-800 border border-gray-600 rounded-lg p-4">
+                        <h4 class="text-sm font-bold text-gray-300 mb-2">📜 战斗日志</h4>
+                        <div id="battle-log" class="space-y-1 max-h-60 overflow-y-auto text-xs text-gray-400">
+                            <div class="text-center text-gray-500">等待使用技能...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -747,36 +624,36 @@
             '😈', '👿', '😡', '💢', '💯', '🔱', '⚜️', '♻️'
         ];
 
-        // 技能效果参数配置
-        const EFFECT_PARAMS = {
-            'direct_attack': ['attack-bonus'],
-            'multi_attack': ['multi-bonus'],
-            'dot_damage': ['attack-bonus'],
-            'percent_damage': ['percent-damage'],
-            'direct_defense': ['defense-bonus'],
-            'continuous_defense': ['defense-bonus'],
-            'defense_counter': ['defense-bonus', 'counter'],
-            'direct_speed': ['speed-bonus'],
-            'continuous_speed': ['speed-bonus'],
-            'buff_attack': ['buff_attack'],
-            'buff_defense': ['buff_defense'],
-            'buff_speed': ['speed-bonus'],
-            'buff_status_enemy': ['status'],
-            'buff_purify': [],
-            'buff_heal_amp': ['buff_attack'], // Example, can be customized
-            'buff_element_damage': ['element'],
-            'debuff_attack': ['debuff_attack'],
-            'debuff_defense': ['debuff_defense'],
-            'debuff_speed': ['speed-bonus'],
-            'debuff_status_self': ['status'],
-            'debuff_no_heal': [],
-            'debuff_heal_reduce': ['buff'],
-            'debuff_element_damage': ['element'],
-            'heal_direct': ['heal'],
-            'heal_continuous': ['heal'],
-            'heal_percent': ['heal-percent'],
-            'heal_rebirth': ['rebirth'],
-            'heal_lifesteal': ['lifesteal']
+        // 效果参数配置（每个效果都有独立的效果来源）
+        const EFFECT_PARAMS_CONFIG = {
+            'direct_attack': { name: '直接攻击', params: ['effect-source', 'bonus'] },
+            'multi_attack': { name: '多段攻击', params: ['effect-source', 'multi-bonus'] },
+            'dot_damage': { name: '附加伤害', params: ['effect-source', 'bonus'] },
+            'percent_damage': { name: '百分比伤害', params: ['effect-source', 'percent'] },
+            'direct_defense': { name: '直接防御', params: ['effect-source', 'bonus'] },
+            'continuous_defense': { name: '持续防御', params: ['effect-source', 'bonus'] },
+            'defense_counter': { name: '防御反击', params: ['effect-source', 'defense-bonus', 'counter-effect-source', 'counter-bonus'] },
+            'direct_speed': { name: '直接增速', params: ['effect-source', 'bonus'] },
+            'continuous_speed': { name: '持续增速', params: ['effect-source', 'bonus'] },
+            'buff_attack': { name: '增攻', params: ['effect-source', 'target', 'bonus'] },
+            'buff_defense': { name: '增防', params: ['effect-source', 'target', 'bonus'] },
+            'buff_speed': { name: '增速', params: ['effect-source', 'target', 'bonus'] },
+            'buff_status_enemy': { name: '为敌方附加异常', params: ['status-type', 'status-chance'] },
+            'buff_purify': { name: '净化', params: ['target', 'purify-type'] },
+            'buff_heal_amp': { name: '增加治疗量', params: ['effect-source', 'target', 'bonus'] },
+            'buff_element_damage': { name: '属性增伤', params: ['target', 'element-type', 'damage-bonus'] },
+            'debuff_attack': { name: '减攻', params: ['effect-source', 'target', 'bonus'] },
+            'debuff_defense': { name: '减防', params: ['effect-source', 'target', 'bonus'] },
+            'debuff_speed': { name: '减速', params: ['effect-source', 'target', 'bonus'] },
+            'debuff_status_self': { name: '为自身附加异常', params: ['status-type', 'status-chance'] },
+            'debuff_no_heal': { name: '禁疗', params: ['target'] },
+            'debuff_heal_reduce': { name: '减疗', params: ['effect-source', 'target', 'bonus'] },
+            'debuff_element_damage': { name: '属性减伤', params: ['target', 'element-type', 'damage-reduce'] },
+            'heal_direct': { name: '直接恢复', params: ['effect-source', 'target', 'bonus'] },
+            'heal_continuous': { name: '持续恢复', params: ['effect-source', 'target', 'bonus'] },
+            'heal_percent': { name: '百分比恢复', params: ['effect-source', 'target', 'percent'] },
+            'heal_rebirth': { name: '重生', params: ['effect-source', 'target', 'percent', 'rebirth-condition'] },
+            'heal_lifesteal': { name: '生命汲取', params: ['effect-source', 'bonus'] }
         };
 
         // 技能池存储
@@ -790,6 +667,7 @@
         const skillCount = document.getElementById('skill-count');
         const emojiModal = document.getElementById('emoji-modal');
         const emojiGrid = document.getElementById('emoji-grid');
+        const dynamicParams = document.getElementById('dynamic-params');
 
         // 初始化
         function init() {
@@ -829,20 +707,17 @@
 
         // 设置表单监听器
         function setupFormListeners() {
-            // 实时预览
             form.querySelectorAll('input, select, textarea').forEach(input => {
                 input.addEventListener('input', updatePreview);
             });
 
-            // 技能类型和效果复选框改变时显示对应参数和更新预览
-            document.querySelectorAll('.skill-type-checkbox, .skill-effect-checkbox').forEach(checkbox => {
+            document.querySelectorAll('.skill-effect-checkbox').forEach(checkbox => {
                 checkbox.addEventListener('change', () => {
                     showRelevantParams();
                     updatePreview();
                 });
             });
 
-            // 提交表单
             form.onsubmit = (e) => {
                 e.preventDefault();
                 if (editingIndex >= 0) {
@@ -852,164 +727,343 @@
                 }
             };
 
-            // 清空按钮
             document.getElementById('clear-btn').onclick = () => {
                 form.reset();
                 cancelEdit();
-                showRelevantParams();
+                dynamicParams.innerHTML = '';
                 updatePreview();
             };
 
-            // 取消编辑按钮
             document.getElementById('cancel-edit-btn').onclick = () => {
                 form.reset();
                 cancelEdit();
-                showRelevantParams();
+                dynamicParams.innerHTML = '';
                 updatePreview();
             };
 
-            // 导出按钮
             document.getElementById('export-btn').onclick = exportSkills;
-
-            // 导入按钮
             document.getElementById('import-file').onchange = importSkills;
         }
 
-        // 显示相关参数
+        // 动态显示相关参数（每个效果独立配置）
         function showRelevantParams() {
-            // 获取所有选中的效果
             const selectedEffects = Array.from(document.querySelectorAll('.skill-effect-checkbox:checked'))
                 .map(checkbox => checkbox.value);
             
-            // 收集所有选中效果需要的参数
-            const allParams = new Set();
-            selectedEffects.forEach(effect => {
-                const params = EFFECT_PARAMS[effect] || [];
-                params.forEach(param => allParams.add(param));
-            });
+            dynamicParams.innerHTML = '';
+            
+            if (selectedEffects.length === 0) return;
 
-            // 隐藏所有参数组
-            document.querySelectorAll('.param-group').forEach(group => {
-                group.classList.remove('active');
-            });
+            const effectsHTML = selectedEffects.map(effectKey => {
+                const config = EFFECT_PARAMS_CONFIG[effectKey];
+                if (!config || !config.params || config.params.length === 0) return '';
+                
+                const paramsHTML = config.params.map(param =>
+                    generateParamHTML(param, effectKey)
+                ).join('');
+                
+                return `
+                    <div class="border border-gray-600 rounded-lg p-3 bg-gray-700/30">
+                        <div class="text-sm font-bold text-blue-300 mb-2">📋 ${config.name}</div>
+                        <div class="grid grid-cols-1 gap-3">${paramsHTML}</div>
+                    </div>
+                `;
+            }).filter(html => html).join('');
 
-            // 显示相关参数组
-            allParams.forEach(param => {
-                const group = document.getElementById(`param-${param}-group`);
-                if (group) group.classList.add('active');
+            if (effectsHTML) {
+                dynamicParams.innerHTML = effectsHTML;
+                
+                // 为每个效果来源选择器添加change监听器，更新公式说明
+                selectedEffects.forEach(effectKey => {
+                    const sourceSelect = document.getElementById(`param-${effectKey}-effect-source`);
+                    if (sourceSelect) {
+                        sourceSelect.addEventListener('change', () => {
+                            updateParamDescriptions(effectKey);
+                            updatePreview();
+                        });
+                    }
+                    
+                    // 为特殊的第二效果来源也添加监听器（如防御反击的反击效果来源）
+                    const counterSourceSelect = document.getElementById(`param-${effectKey}-counter-effect-source`);
+                    if (counterSourceSelect) {
+                        counterSourceSelect.addEventListener('change', () => {
+                            updateCounterParamDescriptions(effectKey);
+                            updatePreview();
+                        });
+                    }
+                });
+            }
+        }
+
+        // 更新参数说明文本
+        function updateParamDescriptions(effectKey) {
+            const sourceSelect = document.getElementById(`param-${effectKey}-effect-source`);
+            if (!sourceSelect) return;
+            
+            const sourceName = getEffectSourceName(sourceSelect.value);
+            const config = EFFECT_PARAMS_CONFIG[effectKey];
+            
+            // 更新该效果下所有参数的说明文本
+            config.params.forEach(param => {
+                const descId = `desc-${effectKey}-${param}`;
+                const descEl = document.getElementById(descId);
+                if (descEl && sourceName) {
+                    switch(param) {
+                        case 'bonus':
+                            descEl.textContent = `效果 = ${sourceName} × 加成值`;
+                            break;
+                        case 'multi-bonus':
+                            descEl.textContent = `每段伤害 = ${sourceName} × 对应加成`;
+                            break;
+                        case 'percent':
+                            descEl.textContent = `效果 = ${sourceName} × 百分比`;
+                            break;
+                        case 'defense-bonus':
+                            descEl.textContent = `防御值 = 当前防御 + ${sourceName} × 防御加成`;
+                            break;
+                    }
+                }
             });
+        }
+
+        // 更新反击参数说明文本
+        function updateCounterParamDescriptions(effectKey) {
+            const counterSourceSelect = document.getElementById(`param-${effectKey}-counter-effect-source`);
+            if (!counterSourceSelect) return;
+            
+            const counterSourceName = getEffectSourceName(counterSourceSelect.value);
+            const descEl = document.getElementById(`desc-${effectKey}-counter-bonus`);
+            
+            if (descEl && counterSourceName) {
+                descEl.textContent = `反击伤害 = ${counterSourceName} × 反击加成`;
+            }
+        }
+
+        // 生成参数HTML（每个效果独立配置效果来源）
+        function generateParamHTML(paramType, effectName) {
+            const paramId = `param-${effectName}-${paramType}`;
+            
+            switch(paramType) {
+                case 'effect-source':
+                    return `<div><label class="block text-xs font-medium text-gray-400 mb-1">⚡ 效果来源</label>
+                        <select id="${paramId}" class="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white text-sm">
+                            <optgroup label="自身属性">
+                                <option value="self-current-attack">自身当前攻击力</option>
+                                <option value="self-base-attack">自身基础攻击力</option>
+                                <option value="self-current-defense">自身当前防御力</option>
+                                <option value="self-base-defense">自身基础防御力</option>
+                                <option value="self-current-agility">自身当前敏捷</option>
+                                <option value="self-base-agility">自身基础敏捷</option>
+                                <option value="self-max-hp">自身最大生命</option>
+                                <option value="self-lost-hp">自身已损失生命</option>
+                                <option value="self-current-hp">自身剩余生命</option>
+                                <option value="self-turn-damage">自身回合造成的伤害</option>
+                            </optgroup>
+                            <optgroup label="敌方属性">
+                                <option value="enemy-current-attack">敌方当前攻击力</option>
+                                <option value="enemy-base-attack">敌方基础攻击力</option>
+                                <option value="enemy-current-defense">敌方当前防御力</option>
+                                <option value="enemy-base-defense">敌方基础防御力</option>
+                                <option value="enemy-current-agility">敌方当前敏捷</option>
+                                <option value="enemy-base-agility">敌方基础敏捷</option>
+                                <option value="enemy-max-hp">敌方最大生命</option>
+                                <option value="enemy-lost-hp">敌方已损失生命</option>
+                                <option value="enemy-current-hp">敌方剩余生命</option>
+                                <option value="enemy-turn-damage">敌方回合造成的伤害</option>
+                            </optgroup>
+                        </select></div>`;
+                
+                case 'bonus':
+                    return `<div><label class="block text-xs font-medium text-gray-400 mb-1">加成值</label>
+                        <input type="number" id="${paramId}" step="0.01" min="0" value="1.0"
+                            class="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white text-sm">
+                        <p id="desc-${effectName}-bonus" class="text-xs text-gray-500 mt-1">效果 = 效果来源 × 加成值</p></div>`;
+                
+                case 'multi-bonus':
+                    return `<div><label class="block text-xs font-medium text-gray-400 mb-1">多段加成(逗号分隔)</label>
+                        <input type="text" id="${paramId}" placeholder="例: 0.5,0.7,1.0"
+                            class="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white text-sm">
+                        <p id="desc-${effectName}-multi-bonus" class="text-xs text-gray-500 mt-1">每段伤害 = 效果来源 × 对应加成</p></div>`;
+                
+                case 'percent':
+                    return `<div><label class="block text-xs font-medium text-gray-400 mb-1">百分比 (0-1)</label>
+                        <input type="number" id="${paramId}" step="0.01" min="0" max="1" value="0.1"
+                            class="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white text-sm">
+                        <p id="desc-${effectName}-percent" class="text-xs text-gray-500 mt-1">效果 = 效果来源 × 百分比</p></div>`;
+                
+                case 'defense-bonus':
+                    return `<div><label class="block text-xs font-medium text-gray-400 mb-1">防御加成</label>
+                        <input type="number" id="${paramId}" step="0.01" min="0" value="1.0"
+                            class="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white text-sm">
+                        <p id="desc-${effectName}-defense-bonus" class="text-xs text-gray-500 mt-1">防御值 = 当前防御 + 效果来源 × 防御加成</p></div>`;
+                
+                case 'counter-effect-source':
+                    return `<div><label class="block text-xs font-medium text-gray-400 mb-1">⚡ 反击效果来源</label>
+                        <select id="${paramId}" class="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white text-sm">
+                            <optgroup label="自身属性">
+                                <option value="self-current-attack">自身当前攻击力</option>
+                                <option value="self-base-attack">自身基础攻击力</option>
+                                <option value="self-current-defense">自身当前防御力</option>
+                                <option value="self-base-defense">自身基础防御力</option>
+                                <option value="self-current-agility">自身当前敏捷</option>
+                                <option value="self-base-agility">自身基础敏捷</option>
+                                <option value="self-max-hp">自身最大生命</option>
+                                <option value="self-lost-hp">自身已损失生命</option>
+                                <option value="self-current-hp">自身剩余生命</option>
+                                <option value="self-turn-damage">自身回合造成的伤害</option>
+                            </optgroup>
+                            <optgroup label="敌方属性">
+                                <option value="enemy-current-attack">敌方当前攻击力</option>
+                                <option value="enemy-base-attack">敌方基础攻击力</option>
+                                <option value="enemy-current-defense">敌方当前防御力</option>
+                                <option value="enemy-base-defense">敌方基础防御力</option>
+                                <option value="enemy-current-agility">敌方当前敏捷</option>
+                                <option value="enemy-base-agility">敌方基础敏捷</option>
+                                <option value="enemy-max-hp">敌方最大生命</option>
+                                <option value="enemy-lost-hp">敌方已损失生命</option>
+                                <option value="enemy-current-hp">敌方剩余生命</option>
+                                <option value="enemy-turn-damage">敌方回合造成的伤害</option>
+                            </optgroup>
+                        </select>
+                        <p class="text-xs text-gray-500 mt-1">用于计算反击伤害</p></div>`;
+                
+                case 'counter-bonus':
+                    return `<div><label class="block text-xs font-medium text-gray-400 mb-1">反击伤害加成</label>
+                        <input type="number" id="${paramId}" step="0.01" min="0" value="0.5"
+                            class="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white text-sm">
+                        <p id="desc-${effectName}-counter-bonus" class="text-xs text-gray-500 mt-1">反击伤害 = 反击效果来源 × 反击加成</p></div>`;
+                
+                case 'damage-bonus':
+                    return `<div><label class="block text-xs font-medium text-gray-400 mb-1">伤害加成 (0-1)</label>
+                        <input type="number" id="${paramId}" step="0.01" min="0" max="1" value="0.2"
+                            class="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white text-sm">
+                        <p class="text-xs text-gray-500 mt-1">最终伤害 = 原始伤害 × (1 + 加成)</p></div>`;
+                
+                case 'damage-reduce':
+                    return `<div><label class="block text-xs font-medium text-gray-400 mb-1">伤害减免 (0-1)</label>
+                        <input type="number" id="${paramId}" step="0.01" min="0" max="1" value="0.2"
+                            class="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white text-sm">
+                        <p class="text-xs text-gray-500 mt-1">最终伤害 = 原始伤害 × (1 - 减免)</p></div>`;
+                
+                case 'target':
+                    return `<div><label class="block text-xs font-medium text-gray-400 mb-1">目标</label>
+                        <select id="${paramId}" class="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white text-sm">
+                            <option value="self">自身</option>
+                            <option value="ally-all">我方全体</option>
+                            <option value="enemy-single">敌方单体</option>
+                            <option value="enemy-all">敌方全体</option>
+                        </select></div>`;
+                
+                case 'status-type':
+                    return `<div><label class="block text-xs font-medium text-gray-400 mb-1">异常状态类型</label>
+                        <select id="${paramId}" class="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white text-sm">
+                            <option value="stun">眩晕</option>
+                            <option value="poison">中毒</option>
+                            <option value="bleed">流血</option>
+                            <option value="frostbite">冻伤</option>
+                            <option value="burn">烧伤</option>
+                            <option value="paralyze">麻痹</option>
+                        </select></div>`;
+                
+                case 'status-chance':
+                    return `<div><label class="block text-xs font-medium text-gray-400 mb-1">施加概率 (%)</label>
+                        <input type="number" id="${paramId}" min="0" max="100" value="50"
+                            class="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white text-sm"></div>`;
+                
+                case 'purify-type':
+                    return `<div><label class="block text-xs font-medium text-gray-400 mb-1">可驱散的异常状态</label>
+                        <select id="${paramId}" class="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white text-sm">
+                            <option value="all">全部</option>
+                            <option value="stun">眩晕</option>
+                            <option value="poison">中毒</option>
+                            <option value="bleed">流血</option>
+                            <option value="frostbite">冻伤</option>
+                            <option value="burn">烧伤</option>
+                            <option value="paralyze">麻痹</option>
+                        </select></div>`;
+                
+                case 'element-type':
+                    return `<div><label class="block text-xs font-medium text-gray-400 mb-1">属性类型</label>
+                        <select id="${paramId}" class="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white text-sm">
+                            <option value="water">水</option>
+                            <option value="fire">火</option>
+                            <option value="grass">草</option>
+                            <option value="wind">风</option>
+                            <option value="electric">电</option>
+                            <option value="earth">土</option>
+                        </select></div>`;
+                
+                case 'rebirth-condition':
+                    return `<div><label class="block text-xs font-medium text-gray-400 mb-1">重生条件</label>
+                        <select id="${paramId}" class="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white text-sm">
+                            <option value="death">死亡后触发</option>
+                            <option value="low-hp">低生命触发</option>
+                        </select></div>`;
+                
+                default:
+                    return '';
+            }
         }
 
         // 更新预览
         function updatePreview() {
-            const data = getFormData();
-            if (!data.name) {
-                preview.innerHTML = `
-                    <div class="text-center text-gray-500">
-                        <div class="text-4xl mb-2">❓</div>
-                        <div class="text-sm">填写表单查看预览</div>
-                    </div>
-                `;
+            const name = document.getElementById('skill-name').value;
+            const icon = document.getElementById('skill-icon').value;
+            const category = document.getElementById('skill-category').value;
+            const type = document.getElementById('skill-type').value;
+            const description = document.getElementById('skill-description').value;
+            const testBtn = document.getElementById('test-skill-btn');
+
+            if (!name) {
+                preview.innerHTML = `<div class="text-center text-gray-500">
+                    <div class="text-4xl mb-2">❓</div>
+                    <div class="text-sm">填写表单查看预览</div></div>`;
+                testBtn.classList.add('hidden');
                 return;
             }
 
-            const categoryClass = data.category || 'bg-gray-700';
-            const typeIcons = {
-                'attack': '⚔️',
-                'defense': '🛡️',
-                'agility': '⚡',
-                'buff': '💪',
-                'debuff': '🔻',
-                'heal': '💚'
-            };
-            
-            // 生成类型标签（支持多个类型）
-            const typeLabels = data.types && data.types.length > 0 ? data.types.map(type =>
-                `<span class="bg-blue-600/30 text-blue-300 px-2 py-1 rounded text-xs font-bold">${typeIcons[type]} ${getTypeName(type)}</span>`
-            ).join('') : '';
-            
-            // 生成效果标签（支持多个效果）
-            const effectLabels = data.effects && data.effects.length > 0 ? data.effects.map(effect =>
-                `<span class="bg-green-600/30 text-green-300 px-2 py-1 rounded text-xs">${getEffectName(effect)}</span>`
-            ).join('') : '';
-            
-            // 生成参数描述
+            let selectedEffects = Array.from(document.querySelectorAll('.skill-effect-checkbox:checked'))
+                .map(cb => cb.value);
+
+            const effectLabels = selectedEffects.map(effect =>
+                `<span class="bg-green-600/30 text-green-300 px-2 py-1 rounded text-xs">${EFFECT_PARAMS_CONFIG[effect]?.name || effect}</span>`
+            ).join(' ');
+
+            const cooldown = document.getElementById('param-cooldown').value;
+            const duration = document.getElementById('param-duration').value;
+            const count = document.getElementById('param-count').value;
+
             let paramDesc = [];
-            if (data.params.cooldown > 0) paramDesc.push(`CD:${data.params.cooldown}回合`);
-            if (data.params.duration > 0) paramDesc.push(`持续:${data.params.duration}回合`);
-            if (data.params.count > 1) paramDesc.push(`${data.params.count}次`);
-            
+            if (cooldown > 0) paramDesc.push(`CD:${cooldown}回合`);
+            if (duration > 0) paramDesc.push(`持续:${duration}回合`);
+            if (count > 1) paramDesc.push(`${count}次`);
+
             preview.innerHTML = `
                 <div class="flex items-start gap-3">
-                    <div class="text-4xl">${data.icon || '❓'}</div>
+                    <div class="text-4xl">${icon || '❓'}</div>
                     <div class="flex-1">
                         <div class="flex items-center gap-2 mb-2 flex-wrap">
-                            <h4 class="text-lg font-bold text-white">${data.name}</h4>
-                            <span class="category-badge ${categoryClass}">${getCategoryName(data.category)}</span>
-                            ${data.rarity ? `<span class="category-badge rarity-${data.rarity}">${getRarityName(data.rarity)}</span>` : ''}
+                            <h4 class="text-lg font-bold text-white">${name}</h4>
+                            <span class="category-badge ${category}">${getCategoryName(category)}</span>
                         </div>
-                        ${typeLabels ? `<div class="flex flex-wrap gap-1 mb-2">${typeLabels}</div>` : ''}
-                        ${data.description ? `<p class="text-xs text-gray-400 italic mb-2">${data.description}</p>` : ''}
+                        ${description ? `<p class="text-xs text-gray-400 italic mb-2">${description}</p>` : ''}
                         ${effectLabels ? `<div class="flex flex-wrap gap-1 mb-2">${effectLabels}</div>` : ''}
                         ${paramDesc.length > 0 ? `<div class="flex flex-wrap gap-2 text-xs">
                             ${paramDesc.map(p => `<span class="bg-purple-600/30 text-purple-300 px-2 py-1 rounded">${p}</span>`).join('')}
                         </div>` : ''}
                     </div>
-                </div>
-            `;
-        }
-
-        // 获取效果描述
-        function getEffectDescription(data) {
-            const effect = data.effect;
-            const params = data.params;
+                </div>`;
             
-            // 如果有自定义描述，优先使用
-            if (data.description) {
-                return data.description;
+            // 显示/隐藏测试按钮（只要有效果就显示）
+            if (selectedEffects.length > 0) {
+                testBtn.classList.remove('hidden');
+            } else {
+                testBtn.classList.add('hidden');
             }
-            
-            const descriptions = {
-                'direct_attack': `造成 ${params.attackBonus || 1}× 攻击力的伤害`,
-                'multi_attack': `进行 ${params.count} 段攻击`,
-                'dot_damage': `每回合造成 ${params.attackBonus || 1}× 攻击力的持续伤害`,
-                'percent_damage': `造成目标 ${(params.damagePercent || 0.1) * 100}% ${params.damageSource || '生命'} 的伤害`,
-                'direct_defense': `抵挡 ${params.defenseBonus || 1}× 防御力的伤害`,
-                'continuous_defense': `持续抵挡 ${params.defenseBonus || 1}× 防御力的伤害`,
-                'defense_counter': `防御并反击 ${params.counterBonus || 0.5}× 伤害`,
-                'direct_speed': `增加 ${(params.speedBonus || 0.2) * 100}% 速度`,
-                'continuous_speed': `持续增加 ${(params.speedBonus || 0.2) * 100}% 速度`,
-                'buff_attack': `增加 ${(params.buffBonus || 0.2) * 100}% 攻击力`,
-                'buff_defense': `增加 ${(params.buffBonus || 0.2) * 100}% 防御力`,
-                'buff_speed': `增加 ${(params.speedBonus || 0.2) * 100}% 速度`,
-                'buff_status_enemy': `有 ${params.statusChance || 50}% 概率对敌方施加 ${getStatusName(params.statusType)}`,
-                'buff_purify': `净化所有异常状态`,
-                'buff_heal_amp': `增加 ${(params.buffBonus || 0.2) * 100}% 治疗效果`,
-                'buff_element_damage': `增加 ${(params.elementBonus || 0.2) * 100}% ${params.elementType || '属性'} 系伤害`,
-                'debuff_attack': `降低敌方 ${(params.buffBonus || 0.2) * 100}% 攻击力`,
-                'debuff_defense': `降低敌方 ${(params.buffBonus || 0.2) * 100}% 防御力`,
-                'debuff_speed': `降低敌方 ${(params.speedBonus || 0.2) * 100}% 速度`,
-                'debuff_status_self': `为自身施加 ${getStatusName(params.statusType)}`,
-                'debuff_no_heal': `禁止目标恢复生命`,
-                'debuff_heal_reduce': `降低目标 ${(params.buffBonus || 0.2) * 100}% 治疗效果`,
-                'debuff_element_damage': `降低 ${(params.elementBonus || 0.2) * 100}% ${params.elementType || '属性'} 系伤害`,
-                'heal_direct': `恢复 ${params.healBonus || 0.5}× ${params.healSource || '攻击力'} 的生命`,
-                'heal_continuous': `每回合恢复 ${params.healBonus || 0.5}× ${params.healSource || '攻击力'} 的生命`,
-                'heal_percent': `恢复 ${(params.healPercent || 0.3) * 100}% ${params.healPercentSource || '最大生命'}`,
-                'heal_rebirth': `复活并恢复 ${(params.rebirthPercent || 0.5) * 100}% 生命`,
-                'heal_lifesteal': `汲取 ${(params.lifestealBonus || 0.2) * 100}% 伤害转化为生命`
-            };
-            
-            return descriptions[effect] || getEffectName(effect);
         }
 
         // 获取表单数据
         function getFormData() {
-            // 获取选中的类型（多选）
-            const selectedTypes = Array.from(document.querySelectorAll('.skill-type-checkbox:checked'))
-                .map(checkbox => checkbox.value);
-            
-            // 获取选中的效果（多选）
             const selectedEffects = Array.from(document.querySelectorAll('.skill-effect-checkbox:checked'))
                 .map(checkbox => checkbox.value);
             
@@ -1019,114 +1073,33 @@
                 count: parseInt(document.getElementById('param-count').value) || 1
             };
 
-            // 根据所有选中的效果类型收集相关参数
-            const allEffectParams = new Set();
-            selectedEffects.forEach(effect => {
-                const effectParams = EFFECT_PARAMS[effect] || [];
-                effectParams.forEach(param => allEffectParams.add(param));
+            selectedEffects.forEach(effectKey => {
+                const config = EFFECT_PARAMS_CONFIG[effectKey];
+                if (config && config.params) {
+                    config.params.forEach(param => {
+                        const el = document.getElementById(`param-${effectKey}-${param}`);
+                        if (el) {
+                            if (param === 'multi-bonus') {
+                                params[`${effectKey}_${param}`] = el.value.split(',').map(v => parseFloat(v.trim()) || 1.0);
+                            } else if (el.type === 'number') {
+                                params[`${effectKey}_${param}`] = parseFloat(el.value) || 0;
+                            } else {
+                                params[`${effectKey}_${param}`] = el.value;
+                            }
+                        }
+                    });
+                }
             });
-            
-            if (allEffectParams.has('attack-bonus')) {
-                params.attackBonus = parseFloat(document.getElementById('param-attack-bonus').value) || 1.0;
-            }
-            
-            if (allEffectParams.has('multi-bonus')) {
-                const multiBonusStr = document.getElementById('param-multi-bonus').value;
-                params.multiBonus = multiBonusStr ? multiBonusStr.split(',').map(v => parseFloat(v.trim())) : [1.0];
-            }
-            
-            if (allEffectParams.has('percent-damage')) {
-                params.damageSource = document.getElementById('param-damage-source').value;
-                params.damagePercent = parseFloat(document.getElementById('param-damage-percent').value) || 0.1;
-            }
-            
-            if (allEffectParams.has('defense-bonus')) {
-                params.defenseBonus = parseFloat(document.getElementById('param-defense-bonus').value) || 1.0;
-            }
-            
-            if (allEffectParams.has('counter')) {
-                params.counterSource = document.getElementById('param-counter-source').value;
-                params.counterBonus = parseFloat(document.getElementById('param-counter-bonus').value) || 0.5;
-            }
-            
-            if (allEffectParams.has('speed-bonus')) {
-                params.speedBonus = parseFloat(document.getElementById('param-speed-bonus').value) || 0.2;
-            }
-            
-            // Helper to collect data for a specific buff/debuff
-            const collectBuffDebuffParams = (effect) => {
-                if (allEffectParams.has(effect)) {
-                    params[effect] = {
-                        target: document.getElementById(`param-${effect}-target`).value,
-                        source: document.getElementById(`param-${effect}-source`).value,
-                        bonus: parseFloat(document.getElementById(`param-${effect}-bonus`).value) || 0.2,
-                    };
-                }
-            };
-            
-            const buffDebuffList = [
-                'buff_attack', 'buff_defense', 'buff_speed', 'buff_heal_amp',
-                'debuff_attack', 'debuff_defense', 'debuff_speed', 'debuff_heal_reduce'
-            ];
-            
-            buffDebuffList.forEach(effect => collectBuffDebuffParams(effect));
-            
-            if (allEffectParams.has('status')) {
-                params.statusType = document.getElementById('param-status-type').value;
-                params.statusChance = parseInt(document.getElementById('param-status-chance').value) || 50;
-                
-                // 叠加层数相关参数
-                const isStackable = document.getElementById('param-status-stackable').checked;
-                if (isStackable) {
-                    params.statusStackable = true;
-                    params.statusMaxStacks = parseInt(document.getElementById('param-status-max-stacks').value) || 1;
-                    params.statusStackBonus = parseFloat(document.getElementById('param-status-stack-bonus').value) || 0.1;
-                }
-            }
-            
-            if (allEffectParams.has('element')) {
-                params.elementType = document.getElementById('param-element-type').value;
-                params.elementBonus = parseFloat(document.getElementById('param-element-bonus').value) || 0.2;
-            }
-            
-            if (allEffectParams.has('heal')) {
-                params.healTarget = document.getElementById('param-heal-target').value;
-                params.healSource = document.getElementById('param-heal-source').value;
-                params.healBonus = parseFloat(document.getElementById('param-heal-bonus').value) || 0.5;
-            }
-            
-            if (allEffectParams.has('heal-percent')) {
-                params.healPercentSource = document.getElementById('param-heal-percent-source').value;
-                params.healPercent = parseFloat(document.getElementById('param-heal-percent').value) || 0.3;
-            }
-            
-            if (allEffectParams.has('rebirth')) {
-                params.rebirthTarget = document.getElementById('param-rebirth-target').value;
-                params.rebirthPercent = parseFloat(document.getElementById('param-rebirth-percent').value) || 0.5;
-            }
-            
-            if (allEffectParams.has('lifesteal')) {
-                params.lifestealSource = document.getElementById('param-lifesteal-source').value;
-                params.lifestealBonus = parseFloat(document.getElementById('param-lifesteal-bonus').value) || 0.2;
-            }
 
-            const data = {
+            return {
                 name: document.getElementById('skill-name').value,
                 icon: document.getElementById('skill-icon').value,
                 description: document.getElementById('skill-description').value,
                 category: document.getElementById('skill-category').value,
-                types: selectedTypes,
+                type: document.getElementById('skill-type').value,
                 effects: selectedEffects,
                 params: params
             };
-            
-            // 添加稀有度（如果选择了）
-            const rarity = document.getElementById('skill-rarity').value;
-            if (rarity) {
-                data.rarity = rarity;
-            }
-            
-            return data;
         }
 
         // 创建技能
@@ -1146,7 +1119,7 @@
             renderSkillsList();
             updateSkillCount();
             form.reset();
-            showRelevantParams();
+            dynamicParams.innerHTML = '';
             updatePreview();
             
             alert(`✅ 技能 "${data.name}" 已创建！`);
@@ -1169,128 +1142,10 @@
             renderSkillsList();
             form.reset();
             cancelEdit();
-            showRelevantParams();
+            dynamicParams.innerHTML = '';
             updatePreview();
             
             alert(`✅ 技能 "${data.name}" 已更新！`);
-        }
-
-        // 编辑技能
-        function editSkill(index) {
-            editingIndex = index;
-            const skill = skills[index];
-            
-            // 填充表单
-            document.getElementById('skill-name').value = skill.name;
-            document.getElementById('skill-icon').value = skill.icon;
-            document.getElementById('skill-description').value = skill.description || '';
-            document.getElementById('skill-category').value = skill.category;
-            document.getElementById('skill-rarity').value = skill.rarity || '';
-            
-            // 清除所有复选框
-            document.querySelectorAll('.skill-type-checkbox').forEach(cb => cb.checked = false);
-            document.querySelectorAll('.skill-effect-checkbox').forEach(cb => cb.checked = false);
-            
-            // 填充类型（兼容旧格式和新格式）
-            const types = skill.types || (skill.type ? [skill.type] : []);
-            types.forEach(type => {
-                const checkbox = document.querySelector(`.skill-type-checkbox[value="${type}"]`);
-                if (checkbox) checkbox.checked = true;
-            });
-            
-            // 填充效果（兼容旧格式和新格式）
-            const effects = skill.effects || (skill.effect ? [skill.effect] : []);
-            effects.forEach(effect => {
-                const checkbox = document.querySelector(`.skill-effect-checkbox[value="${effect}"]`);
-                if (checkbox) checkbox.checked = true;
-            });
-            
-            // 填充参数
-            const params = skill.params || {};
-            document.getElementById('param-cooldown').value = params.cooldown || 0;
-            document.getElementById('param-duration').value = params.duration || 0;
-            document.getElementById('param-count').value = params.count || 1;
-            
-            if (params.attackBonus !== undefined) {
-                document.getElementById('param-attack-bonus').value = params.attackBonus;
-            }
-            if (params.multiBonus) {
-                document.getElementById('param-multi-bonus').value = params.multiBonus.join(',');
-            }
-            if (params.damageSource) {
-                document.getElementById('param-damage-source').value = params.damageSource;
-                document.getElementById('param-damage-percent').value = params.damagePercent || 0.1;
-            }
-            if (params.defenseBonus !== undefined) {
-                document.getElementById('param-defense-bonus').value = params.defenseBonus;
-            }
-            if (params.counterSource) {
-                document.getElementById('param-counter-source').value = params.counterSource;
-                document.getElementById('param-counter-bonus').value = params.counterBonus || 0.5;
-            }
-            if (params.speedBonus !== undefined) {
-                document.getElementById('param-speed-bonus').value = params.speedBonus;
-            }
-            // Helper to fill data for a specific buff/debuff
-            const fillBuffDebuffParams = (effect) => {
-                if (params[effect]) {
-                    document.getElementById(`param-${effect}-target`).value = params[effect].target || '';
-                    document.getElementById(`param-${effect}-source`).value = params[effect].source || '';
-                    document.getElementById(`param-${effect}-bonus`).value = params[effect].bonus || 0.2;
-                }
-            };
-
-            const buffDebuffList = [
-                'buff_attack', 'buff_defense', 'buff_speed', 'buff_heal_amp',
-                'debuff_attack', 'debuff_defense', 'debuff_speed', 'debuff_heal_reduce'
-            ];
-            
-            buffDebuffList.forEach(effect => fillBuffDebuffParams(effect));
-            if (params.statusType) {
-                document.getElementById('param-status-type').value = params.statusType;
-                document.getElementById('param-status-chance').value = params.statusChance || 50;
-                
-                // 叠加层数相关
-                if (params.statusStackable) {
-                    document.getElementById('param-status-stackable').checked = true;
-                    document.getElementById('param-status-max-stacks').disabled = false;
-                    document.getElementById('param-status-stack-bonus').disabled = false;
-                    document.getElementById('param-status-max-stacks').value = params.statusMaxStacks || 1;
-                    document.getElementById('param-status-stack-bonus').value = params.statusStackBonus || 0.1;
-                }
-            }
-            if (params.elementType) {
-                document.getElementById('param-element-type').value = params.elementType;
-                document.getElementById('param-element-bonus').value = params.elementBonus || 0.2;
-            }
-            if (params.healTarget) {
-                document.getElementById('param-heal-target').value = params.healTarget;
-                document.getElementById('param-heal-source').value = params.healSource || 'self-attack';
-                document.getElementById('param-heal-bonus').value = params.healBonus || 0.5;
-            }
-            if (params.healPercentSource) {
-                document.getElementById('param-heal-percent-source').value = params.healPercentSource;
-                document.getElementById('param-heal-percent').value = params.healPercent || 0.3;
-            }
-            if (params.rebirthTarget) {
-                document.getElementById('param-rebirth-target').value = params.rebirthTarget;
-                document.getElementById('param-rebirth-percent').value = params.rebirthPercent || 0.5;
-            }
-            if (params.lifestealSource) {
-                document.getElementById('param-lifesteal-source').value = params.lifestealSource;
-                document.getElementById('param-lifesteal-bonus').value = params.lifestealBonus || 0.2;
-            }
-            
-            // 更新UI
-            document.getElementById('submit-text').textContent = '💾 保存修改';
-            document.getElementById('submit-btn').classList.remove('bg-blue-600', 'hover:bg-blue-700');
-            document.getElementById('submit-btn').classList.add('bg-green-600', 'hover:bg-green-700');
-            document.getElementById('cancel-edit-btn').classList.remove('hidden');
-            
-            showRelevantParams();
-            updatePreview();
-            
-            form.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
 
         // 取消编辑
@@ -1310,36 +1165,14 @@
         // 渲染技能列表
         function renderSkillsList() {
             if (skills.length === 0) {
-                skillsList.innerHTML = `
-                    <div class="text-center text-gray-500 text-sm py-8">
-                        暂无技能
-                    </div>
-                `;
+                skillsList.innerHTML = `<div class="text-center text-gray-500 text-sm py-8">暂无技能</div>`;
                 return;
             }
 
-            const typeIcons = {
-                'attack': '⚔️',
-                'defense': '🛡️',
-                'agility': '⚡',
-                'buff': '💪',
-                'debuff': '🔻',
-                'heal': '💚'
-            };
-
             skillsList.innerHTML = skills.map((skill, index) => {
-                // 兼容旧格式和新格式
-                const types = skill.types || (skill.type ? [skill.type] : []);
-                const effects = skill.effects || (skill.effect ? [skill.effect] : []);
-                
-                const typeLabels = types.map(type => {
-                    const icon = typeIcons[type] || '';
-                    const name = getTypeName(type);
-                    return `<span class="bg-blue-600/30 text-blue-300 px-2 py-0.5 rounded text-xs">${icon} ${name}</span>`;
-                }).join(' ');
-                
+                const effects = skill.effects || [];
                 const effectLabels = effects.map(effect =>
-                    `<span class="bg-green-600/30 text-green-300 px-1.5 py-0.5 rounded text-xs">${getEffectName(effect)}</span>`
+                    `<span class="bg-green-600/30 text-green-300 px-1.5 py-0.5 rounded text-xs">${EFFECT_PARAMS_CONFIG[effect]?.name || effect}</span>`
                 ).join(' ');
                 
                 return `
@@ -1350,27 +1183,18 @@
                                 <div class="flex items-center gap-2 mb-1 flex-wrap">
                                     <h5 class="text-sm font-bold text-white truncate">${skill.name}</h5>
                                     <span class="category-badge ${skill.category} text-xs">${getCategoryName(skill.category)}</span>
-                                    ${skill.rarity ? `<span class="category-badge rarity-${skill.rarity} text-xs">${getRarityName(skill.rarity)}</span>` : ''}
                                 </div>
                                 ${skill.description ? `<p class="text-xs text-gray-500 italic mb-1">${skill.description}</p>` : ''}
-                                ${typeLabels ? `<div class="mb-1">${typeLabels}</div>` : ''}
                                 ${effectLabels ? `<div>${effectLabels}</div>` : ''}
                             </div>
                             <div class="flex gap-1 flex-shrink-0">
                                 <button onclick="editSkill(${index})"
-                                    class="text-blue-400 hover:text-blue-300 text-lg px-2"
-                                    title="编辑">
-                                    ✏️
-                                </button>
+                                    class="text-blue-400 hover:text-blue-300 text-lg px-2" title="编辑">✏️</button>
                                 <button onclick="deleteSkill(${index})"
-                                    class="text-red-400 hover:text-red-300 text-xl"
-                                    title="删除">
-                                    ×
-                                </button>
+                                    class="text-red-400 hover:text-red-300 text-xl" title="删除">×</button>
                             </div>
                         </div>
-                    </div>
-                `;
+                    </div>`;
             }).join('');
         }
 
@@ -1437,113 +1261,997 @@
         // 辅助函数
         function getCategoryName(category) {
             const names = {
-                'element-water': '水系',
-                'element-fire': '火系',
-                'element-grass': '草系',
-                'element-wind': '风系',
-                'element-electric': '电系',
-                'element-earth': '土系',
-                'mutation-dark': '🖤 黑化',
-                'mutation-light': '🤍 白化',
-                'mutation-crystal': '💎 晶化',
-                'mutation-shadow': '👤 影化',
-                'mutation-chaos': '🌑 暗蚀',
-                'mutation-holy': '✨ 圣辉',
-                'mutation-psychic': '🔮 异能',
-                'mutation-thunder': '⚡ 极电',
-                'mutation-eternal-dark': '🌙 永夜',
-                'mutation-eternal-light': '☀️ 永耀',
-                'mutation-source-crystal': '💠 源晶',
-                'mutation-thunder-lord': '⚡ 雷煌'
+                'element-water': '水系', 'element-fire': '火系', 'element-grass': '草系',
+                'element-wind': '风系', 'element-electric': '电系', 'element-earth': '土系',
+                'mutation-dark': '🖤 黑化', 'mutation-light': '🤍 白化', 'mutation-crystal': '💎 晶化',
+                'mutation-shadow': '👤 影化', 'mutation-chaos': '🌑 暗蚀', 'mutation-holy': '✨ 圣辉',
+                'mutation-psychic': '🔮 异能', 'mutation-thunder': '⚡ 极电',
+                'mutation-eternal-dark': '🌙 永夜', 'mutation-eternal-light': '☀️ 永耀',
+                'mutation-source-crystal': '💠 源晶', 'mutation-thunder-lord': '⚡ 雷煌'
             };
             return names[category] || '未知';
         }
 
-        function getTypeName(type) {
+        function getEffectSourceName(source) {
             const names = {
-                'attack': '攻击',
-                'defense': '防御',
-                'agility': '敏捷',
-                'buff': '增益',
-                'debuff': '减益',
-                'heal': '治疗'
+                'self-current-attack': '自身当前攻击', 'self-base-attack': '自身基础攻击',
+                'self-current-defense': '自身当前防御', 'self-base-defense': '自身基础防御',
+                'self-current-agility': '自身当前敏捷', 'self-base-agility': '自身基础敏捷',
+                'self-max-hp': '自身最大生命', 'self-lost-hp': '自身已损失生命',
+                'self-current-hp': '自身剩余生命', 'self-turn-damage': '自身回合伤害',
+                'enemy-current-attack': '敌方当前攻击', 'enemy-base-attack': '敌方基础攻击',
+                'enemy-current-defense': '敌方当前防御', 'enemy-base-defense': '敌方基础防御',
+                'enemy-current-agility': '敌方当前敏捷', 'enemy-base-agility': '敌方基础敏捷',
+                'enemy-max-hp': '敌方最大生命', 'enemy-lost-hp': '敌方已损失生命',
+                'enemy-current-hp': '敌方剩余生命', 'enemy-turn-damage': '敌方回合伤害'
             };
-            return names[type] || type;
+            return names[source] || source || '未选择';
         }
 
-        function getEffectName(effect) {
-            const names = {
-                'direct_attack': '直接攻击',
-                'multi_attack': '多段攻击',
-                'dot_damage': '附加伤害',
-                'percent_damage': '百分比伤害',
-                'direct_defense': '直接防御',
-                'continuous_defense': '持续防御',
-                'defense_counter': '防御反击',
-                'direct_speed': '直接增速',
-                'continuous_speed': '持续增速',
-                'buff_attack': '增攻',
-                'buff_defense': '增防',
-                'buff_attack_damage': '攻击增伤',
-                'buff_attack_defense': '攻击增防',
-                'buff_attack_speed': '攻击增速',
-                'buff_attack_status': '攻击增益',
-                'buff_defense_damage': '防御增伤',
-                'buff_defense_speed': '防御增速',
-                'buff_defense_defense': '防御增防',
-                'buff_defense_status': '防御增益',
-                'buff_speed': '增速',
-                'buff_status_enemy': '施加异常',
-                'buff_purify': '净化',
-                'buff_heal_amp': '增加治疗',
-                'buff_element_damage': '属性增伤',
-                'debuff_attack': '减攻',
-                'debuff_defense': '减防',
-                'debuff_attack_damage': '攻击减伤',
-                'debuff_attack_defense': '攻击减防',
-                'debuff_attack_speed': '攻击减速',
-                'debuff_attack_status': '攻击减益',
-                'debuff_defense_damage': '防御减伤',
-                'debuff_defense_defense': '防御减防',
-                'debuff_defense_speed': '防御减速',
-                'debuff_defense_status': '防御减益',
-                'debuff_speed': '减速',
-                'debuff_status_self': '自身异常',
-                'debuff_no_heal': '禁疗',
-                'debuff_heal_reduce': '减疗',
-                'debuff_element_damage': '属性减伤',
-                'heal_direct': '直接恢复',
-                'heal_continuous': '持续恢复',
-                'heal_percent': '百分比恢复',
-                'heal_rebirth': '重生',
-                'heal_lifesteal': '生命汲取'
+        // 战斗测试相关
+        let testSkill = null;
+        let currentTurn = 1;
+        let activeEffects = []; // 持续效果列表：{ effectKey, sourceValue, params, remainingTurns }
+        let battleState = {
+            self: {
+                hp: 1000, maxHp: 1000, attack: 100, defense: 50, agility: 80,
+                baseAttack: 100, baseDefense: 50, baseAgility: 80, turnDamage: 0,
+                status: [], element: 'water'
+            },
+            enemy: {
+                hp: 800, maxHp: 800, attack: 90, defense: 40, agility: 70,
+                baseAttack: 90, baseDefense: 40, baseAgility: 70, turnDamage: 0,
+                status: [], element: 'fire'
+            }
+        };
+
+        // 异常状态名称映射
+        const statusNames = {
+            'stun': '😵 眩晕',
+            'poison': '🤢 中毒',
+            'bleed': '🩸 流血',
+            'frostbite': '❄️ 冻伤',
+            'burn': '🔥 灼烧',
+            'paralyze': '⚡ 麻痹',
+            'no-heal': '🚫 禁疗',
+            'heal-reduce': '📉 减疗'
+        };
+
+        let selectedTestSkills = [];
+
+        function setupTestButton() {
+            document.getElementById('test-skill-btn').onclick = () => {
+                openTestModal();
             };
-            return names[effect] || effect;
+            document.getElementById('close-test-modal').onclick = closeTestModal;
+            document.getElementById('test-modal').onclick = (e) => {
+                if (e.target.id === 'test-modal') closeTestModal();
+            };
+            document.getElementById('use-skill-btn').onclick = useSelectedSkill;
+            document.getElementById('use-all-skills-btn').onclick = useAllSkills;
+            document.getElementById('enemy-attack-btn').onclick = enemyAttack;
+            document.getElementById('next-turn-btn').onclick = nextTurn;
+            document.getElementById('reset-battle-btn').onclick = resetBattle;
+            
+            // 为自定义属性输入框添加实时更新监听器
+            setupConfigInputListeners();
+        }
+        
+        function setupConfigInputListeners() {
+            // 我方属性输入框
+            const selfInputs = [
+                { id: 'config-self-hp', key: 'hp', type: 'self', updateMax: true },
+                { id: 'config-self-attack', key: 'attack', type: 'self' },
+                { id: 'config-self-defense', key: 'defense', type: 'self' },
+                { id: 'config-self-agility', key: 'agility', type: 'self' }
+            ];
+            
+            // 敌方属性输入框
+            const enemyInputs = [
+                { id: 'config-enemy-hp', key: 'hp', type: 'enemy', updateMax: true },
+                { id: 'config-enemy-attack', key: 'attack', type: 'enemy' },
+                { id: 'config-enemy-defense', key: 'defense', type: 'enemy' },
+                { id: 'config-enemy-agility', key: 'agility', type: 'enemy' }
+            ];
+            
+            const allInputs = [...selfInputs, ...enemyInputs];
+            
+            allInputs.forEach(({ id, key, type, updateMax }) => {
+                const input = document.getElementById(id);
+                if (input) {
+                    input.addEventListener('input', () => {
+                        const value = parseInt(input.value) || 0;
+                        if (battleState[type]) {
+                            battleState[type][key] = value;
+                            if (updateMax) {
+                                battleState[type].maxHp = value;
+                            }
+                            // 同时更新基础属性（对于攻击、防御、敏捷）
+                            if (key === 'attack') battleState[type].baseAttack = value;
+                            if (key === 'defense') battleState[type].baseDefense = value;
+                            if (key === 'agility') battleState[type].baseAgility = value;
+                            
+                            updateBattleUI();
+                            addLog(`⚙️ 属性已更新: ${type === 'self' ? '我方' : '敌方'}${getAttributeName(key)} = ${value}`, 'cyan');
+                        }
+                    });
+                }
+            });
+        }
+        
+        function getAttributeName(key) {
+            const names = {
+                'hp': '生命值',
+                'attack': '攻击力',
+                'defense': '防御力',
+                'agility': '敏捷'
+            };
+            return names[key] || key;
         }
 
-        function getStatusName(status) {
-            const names = {
-                'stun': '眩晕',
-                'poison': '中毒',
-                'bleed': '流血',
-                'frostbite': '冻伤',
-                'burn': '烧伤',
-                'paralyze': '麻痹'
-            };
-            return names[status] || status;
+        function enemyAttack() {
+            addLog(`━━━━━ 敌人回合 ━━━━━`, 'red');
+            
+            // 计算敌人的攻击伤害
+            const rawDamage = battleState.enemy.attack;
+            const actualDamage = Math.max(1, rawDamage - battleState.self.defense);
+            
+            battleState.self.hp -= actualDamage;
+            battleState.enemy.turnDamage += actualDamage;
+            
+            addLog(`敌人攻击: ${rawDamage} - ${battleState.self.defense}(我方防御) = ${actualDamage} 点伤害`, 'red');
+            
+            updateBattleUI();
+            
+            if (battleState.self.hp <= 0) {
+                addLog('💀 我方被击败！', 'red');
+            }
         }
 
-        function getRarityName(rarity) {
-            const names = {
-                'shiny': '✨ 闪光',
-                'prismatic': '🌈 幻彩',
-                'stellar': '⭐ 星芒'
+        function openTestModal() {
+            document.getElementById('test-modal').classList.remove('hidden');
+            resetBattle();
+            updateTestSkillsList();
+        }
+
+        function closeTestModal() {
+            document.getElementById('test-modal').classList.add('hidden');
+        }
+
+        function updateTestSkillsList() {
+            // 获取当前编辑的技能
+            const currentSkill = getFormData();
+            
+            // 合并已保存的技能和当前编辑的技能
+            const allSkills = [...skills];
+            if (currentSkill.name && currentSkill.effects.length > 0) {
+                allSkills.push({...currentSkill, key: 'CURRENT', name: `[当前] ${currentSkill.name}`});
+            }
+            
+            if (allSkills.length === 0) {
+                document.getElementById('test-skills-selector').innerHTML =
+                    '<div class="text-center text-gray-500 text-sm py-4">暂无可测试的技能</div>';
+                return;
+            }
+            
+            const skillsHTML = allSkills.map((skill, index) => {
+                const effectLabels = (skill.effects || []).map(e =>
+                    EFFECT_PARAMS_CONFIG[e]?.name || e
+                ).join('、');
+                
+                return `
+                    <label class="flex items-start gap-3 p-3 bg-gray-800 hover:bg-gray-700 rounded-lg cursor-pointer border border-gray-600">
+                        <input type="checkbox" value="${index}" class="test-skill-checkbox mt-1" onchange="updateUseSkillButton()">
+                        <div class="flex-1">
+                            <div class="flex items-center gap-2 mb-1">
+                                <span class="text-xl">${skill.icon}</span>
+                                <span class="font-bold text-white text-sm">${skill.name}</span>
+                                <span class="category-badge ${skill.category} text-xs">${getCategoryName(skill.category)}</span>
+                            </div>
+                            <div class="text-xs text-gray-400">${effectLabels}</div>
+                        </div>
+                    </label>
+                `;
+            }).join('');
+            
+            document.getElementById('test-skills-selector').innerHTML = skillsHTML;
+            selectedTestSkills = allSkills;
+        }
+
+        function updateUseSkillButton() {
+            const selected = document.querySelectorAll('.test-skill-checkbox:checked');
+            const useBtn = document.getElementById('use-skill-btn');
+            const useAllBtn = document.getElementById('use-all-skills-btn');
+            
+            if (selected.length === 0) {
+                useBtn.disabled = true;
+                useAllBtn.disabled = true;
+            } else if (selected.length === 1) {
+                useBtn.disabled = false;
+                useAllBtn.disabled = true;
+            } else {
+                useBtn.disabled = false;
+                useAllBtn.disabled = false;
+            }
+        }
+
+        function useSelectedSkill() {
+            const selected = Array.from(document.querySelectorAll('.test-skill-checkbox:checked'));
+            if (selected.length === 0) return;
+            
+            const skillIndex = parseInt(selected[0].value);
+            testSkill = selectedTestSkills[skillIndex];
+            useSkill();
+        }
+
+        function useAllSkills() {
+            const selected = Array.from(document.querySelectorAll('.test-skill-checkbox:checked'));
+            if (selected.length === 0) return;
+            
+            addLog(`━━━━━ 连续使用 ${selected.length} 个技能 ━━━━━`, 'blue');
+            
+            selected.forEach((checkbox, i) => {
+                const skillIndex = parseInt(checkbox.value);
+                testSkill = selectedTestSkills[skillIndex];
+                addLog(`\n【技能 ${i+1}/${selected.length}】`, 'blue');
+                useSkillInternal();
+            });
+            
+            updateBattleUI();
+            if (battleState.enemy.hp <= 0) {
+                addLog('💀 敌人被击败！', 'red');
+            }
+        }
+
+        function resetBattle() {
+            currentTurn = 1;
+            activeEffects = [];
+            
+            const selfElement = document.getElementById('self-element')?.value || 'water';
+            const enemyElement = document.getElementById('enemy-element')?.value || 'fire';
+            
+            // 读取自定义属性
+            const selfHp = parseInt(document.getElementById('config-self-hp')?.value) || 1000;
+            const selfAttack = parseInt(document.getElementById('config-self-attack')?.value) || 100;
+            const selfDefense = parseInt(document.getElementById('config-self-defense')?.value) || 50;
+            const selfAgility = parseInt(document.getElementById('config-self-agility')?.value) || 80;
+            
+            const enemyHp = parseInt(document.getElementById('config-enemy-hp')?.value) || 800;
+            const enemyAttack = parseInt(document.getElementById('config-enemy-attack')?.value) || 90;
+            const enemyDefense = parseInt(document.getElementById('config-enemy-defense')?.value) || 40;
+            const enemyAgility = parseInt(document.getElementById('config-enemy-agility')?.value) || 70;
+            
+            battleState = {
+                self: {
+                    hp: selfHp, maxHp: selfHp, attack: selfAttack, defense: selfDefense, agility: selfAgility,
+                    baseAttack: selfAttack, baseDefense: selfDefense, baseAgility: selfAgility, turnDamage: 0,
+                    status: [], element: selfElement,
+                    elementDamageBonus: {}
+                },
+                enemy: {
+                    hp: enemyHp, maxHp: enemyHp, attack: enemyAttack, defense: enemyDefense, agility: enemyAgility,
+                    baseAttack: enemyAttack, baseDefense: enemyDefense, baseAgility: enemyAgility, turnDamage: 0,
+                    status: [], element: enemyElement,
+                    elementDamageReduce: {}
+                }
             };
-            return names[rarity] || rarity;
+            updateBattleUI();
+            updateTurnDisplay();
+            document.getElementById('battle-log').innerHTML = '<div class="text-center text-gray-500">战斗已重置，可以开始测试技能</div>';
+        }
+
+        function nextTurn() {
+            currentTurn++;
+            battleState.self.turnDamage = 0;
+            battleState.enemy.turnDamage = 0;
+            
+            addLog(`━━━━━ 第${currentTurn}回合开始 ━━━━━`, 'blue');
+            
+            // 清除临时增益效果（duration=0的效果）
+            clearTemporaryBuffs();
+            
+            // 处理持续效果
+            if (activeEffects.length > 0) {
+                addLog(`触发 ${activeEffects.length} 个持续效果`, 'yellow');
+                
+                activeEffects.forEach(effect => {
+                    addLog(`[${EFFECT_PARAMS_CONFIG[effect.effectKey]?.name}] 剩余${effect.remainingTurns}回合`, 'yellow');
+                    
+                    if (effect.isTempBuff) {
+                        // 临时增益效果（属性增伤/减伤）只在回合结束时清除，不需要每回合触发
+                        addLog(`→ 临时增益效果保持中`, 'cyan');
+                    } else {
+                        testSkill = effect.skill; // 临时设置技能以便applyEffect使用
+                        
+                        // 对于基础属性，使用锁定的初始值；对于当前属性，重新计算
+                        let effectValue;
+                        if (effect.effectSource && effect.effectSource.includes('base')) {
+                            effectValue = effect.lockedSourceValue;
+                            addLog(`→ 使用锁定的基础值: ${Math.round(effectValue)}`, 'cyan');
+                        } else {
+                            effectValue = getEffectSourceValue(effect.effectSource);
+                            addLog(`→ 重新计算当前值: ${Math.round(effectValue)}`, 'yellow');
+                        }
+                        
+                        applyEffect(effect.effectKey, effectValue, effect.count);
+                    }
+                });
+                
+                // 减少回合数并移除已结束的效果
+                const beforeCount = activeEffects.length;
+                activeEffects = activeEffects.map(effect => ({
+                    ...effect,
+                    remainingTurns: effect.remainingTurns - 1
+                })).filter(effect => {
+                    if (effect.remainingTurns > 0) {
+                        return true;
+                    } else {
+                        // 清除过期的临时增益效果
+                        if (effect.isTempBuff) {
+                            testSkill = effect.skill;
+                            const params = testSkill.params;
+                            if (effect.effectKey === 'buff_element_damage') {
+                                const elementType = params[`${effect.effectKey}_element-type`] || 'fire';
+                                if (battleState.self.elementDamageBonus) {
+                                    delete battleState.self.elementDamageBonus[elementType];
+                                }
+                                addLog(`× 属性增伤效果已结束(${getElementName(elementType)}系)`, 'gray');
+                            } else if (effect.effectKey === 'debuff_element_damage') {
+                                const elementType = params[`${effect.effectKey}_element-type`] || 'fire';
+                                if (battleState.enemy.elementDamageReduce) {
+                                    delete battleState.enemy.elementDamageReduce[elementType];
+                                }
+                                addLog(`× 属性减伤效果已结束(${getElementName(elementType)}系)`, 'gray');
+                            }
+                        }
+                        return false;
+                    }
+                });
+                
+                if (beforeCount !== activeEffects.length) {
+                    addLog(`${beforeCount - activeEffects.length} 个效果已结束`, 'gray');
+                }
+                addLog(`持续效果处理完成，剩余 ${activeEffects.length} 个`, 'gray');
+            } else {
+                addLog('无持续效果', 'gray');
+            }
+            
+            updateBattleUI();
+            updateTurnDisplay();
+            
+            if (battleState.enemy.hp <= 0) {
+                addLog('💀 敌人被击败！', 'red');
+            }
+            addLog(`━━━━━ 第${currentTurn}回合结束 ━━━━━`, 'blue');
+        }
+
+        function updateTurnDisplay() {
+            document.getElementById('current-turn').textContent = currentTurn;
+            document.getElementById('active-effects-count').textContent = activeEffects.length;
+        }
+
+        function updateBattleUI() {
+            // 更新我方
+            document.getElementById('self-hp').textContent = Math.max(0, Math.round(battleState.self.hp));
+            document.getElementById('self-max-hp').textContent = battleState.self.maxHp;
+            document.getElementById('self-attack').textContent = Math.round(battleState.self.attack);
+            document.getElementById('self-defense').textContent = Math.round(battleState.self.defense);
+            document.getElementById('self-agility').textContent = Math.round(battleState.self.agility);
+            const selfHpPercent = (battleState.self.hp / battleState.self.maxHp) * 100;
+            document.getElementById('self-hp-bar').style.width = Math.max(0, selfHpPercent) + '%';
+
+            // 更新我方异常状态
+            const selfStatusEl = document.getElementById('self-status');
+            if (battleState.self.status.length === 0) {
+                selfStatusEl.innerHTML = '<span class="text-xs text-gray-500">无</span>';
+            } else {
+                selfStatusEl.innerHTML = battleState.self.status.map(s =>
+                    `<span class="bg-red-500/30 text-red-300 px-2 py-0.5 rounded text-xs">${statusNames[s] || s}</span>`
+                ).join('');
+            }
+
+            // 更新敌方
+            document.getElementById('enemy-hp').textContent = Math.max(0, Math.round(battleState.enemy.hp));
+            document.getElementById('enemy-max-hp').textContent = battleState.enemy.maxHp;
+            document.getElementById('enemy-attack').textContent = Math.round(battleState.enemy.attack);
+            document.getElementById('enemy-defense').textContent = Math.round(battleState.enemy.defense);
+            document.getElementById('enemy-agility').textContent = Math.round(battleState.enemy.agility);
+            const enemyHpPercent = (battleState.enemy.hp / battleState.enemy.maxHp) * 100;
+            document.getElementById('enemy-hp-bar').style.width = Math.max(0, enemyHpPercent) + '%';
+
+            // 更新敌方异常状态
+            const enemyStatusEl = document.getElementById('enemy-status');
+            if (battleState.enemy.status.length === 0) {
+                enemyStatusEl.innerHTML = '<span class="text-xs text-gray-500">无</span>';
+            } else {
+                enemyStatusEl.innerHTML = battleState.enemy.status.map(s =>
+                    `<span class="bg-red-500/30 text-red-300 px-2 py-0.5 rounded text-xs">${statusNames[s] || s}</span>`
+                ).join('');
+            }
+
+            // 更新回合信息
+            updateTurnDisplay();
+        }
+
+        function addLog(message, color = 'white') {
+            const log = document.getElementById('battle-log');
+            if (log.querySelector('.text-gray-500')) {
+                log.innerHTML = '';
+            }
+            const entry = document.createElement('div');
+            entry.className = `text-${color}-400`;
+            entry.textContent = `▸ ${message}`;
+            log.appendChild(entry);
+            log.scrollTop = log.scrollHeight;
+        }
+
+        function getEffectSourceValue(sourceKey) {
+            const mapping = {
+                'self-current-attack': battleState.self.attack,
+                'self-base-attack': battleState.self.baseAttack,
+                'self-current-defense': battleState.self.defense,
+                'self-base-defense': battleState.self.baseDefense,
+                'self-current-agility': battleState.self.agility,
+                'self-base-agility': battleState.self.baseAgility,
+                'self-max-hp': battleState.self.maxHp,
+                'self-lost-hp': battleState.self.maxHp - battleState.self.hp,
+                'self-current-hp': battleState.self.hp,
+                'self-turn-damage': battleState.self.turnDamage,
+                'enemy-current-attack': battleState.enemy.attack,
+                'enemy-base-attack': battleState.enemy.baseAttack,
+                'enemy-current-defense': battleState.enemy.defense,
+                'enemy-base-defense': battleState.enemy.baseDefense,
+                'enemy-current-agility': battleState.enemy.agility,
+                'enemy-base-agility': battleState.enemy.baseAgility,
+                'enemy-max-hp': battleState.enemy.maxHp,
+                'enemy-lost-hp': battleState.enemy.maxHp - battleState.enemy.hp,
+                'enemy-current-hp': battleState.enemy.hp,
+                'enemy-turn-damage': battleState.enemy.turnDamage
+            };
+            return mapping[sourceKey] || 0;
+        }
+
+        function useSkill() {
+            useSkillInternal();
+            updateBattleUI();
+            if (battleState.enemy.hp <= 0) {
+                addLog('💀 敌人被击败！', 'red');
+            }
+            addLog(`━━━━━ 回合结束 ━━━━━`, 'blue');
+        }
+
+        function useSkillInternal() {
+            const count = testSkill.params.count || 1;
+            addLog(`使用技能【${testSkill.name}】`, 'blue');
+            if (count > 1) {
+                addLog(`每回合次数: ${count}`, 'yellow');
+            }
+
+            // 按回合执行顺序排序效果
+            const effectPriority = {
+                // 第一阶段：净化（回合开始最先生效）
+                'buff_purify': 1,
+                
+                // 第二阶段：辅助状态效果（异常状态、禁疗、减疗等，在治疗前生效）
+                'buff_status_enemy': 2, 'debuff_status_self': 2,
+                'debuff_no_heal': 2, 'debuff_heal_reduce': 2,
+                'buff_heal_amp': 2, 'buff_element_damage': 2, 'debuff_element_damage': 2,
+                
+                // 第三阶段：治疗类（回合开始时如果不满血则生效）
+                'heal_direct': 3, 'heal_continuous': 3, 'heal_percent': 3, 'heal_rebirth': 3,
+                
+                // 第四阶段：属性增益/减益
+                'buff_attack': 4, 'buff_defense': 4, 'buff_speed': 4,
+                'debuff_attack': 4, 'debuff_defense': 4, 'debuff_speed': 4,
+                'direct_speed': 4, 'continuous_speed': 4,
+                
+                // 第五阶段：防御类
+                'direct_defense': 5, 'continuous_defense': 5, 'defense_counter': 5,
+                
+                // 第六阶段：伤害类
+                'direct_attack': 6, 'multi_attack': 6, 'dot_damage': 6, 'percent_damage': 6,
+                
+                // 第七阶段：生命汲取（基于造成的伤害）
+                'heal_lifesteal': 7
+            };
+
+            // 对效果按优先级排序
+            const sortedEffects = [...testSkill.effects].sort((a, b) => {
+                return (effectPriority[a] || 99) - (effectPriority[b] || 99);
+            });
+
+            addLog(`━ 执行顺序: ${sortedEffects.map(e => EFFECT_PARAMS_CONFIG[e]?.name || e).join(' → ')}`, 'gray');
+
+            const duration = testSkill.params.duration || 0;
+
+            sortedEffects.forEach(effectKey => {
+                // 某些效果不需要效果来源
+                const noSourceEffects = ['buff_status_enemy', 'debuff_status_self', 'buff_purify', 'debuff_no_heal'];
+                const tempBuffEffects = ['buff_element_damage', 'debuff_element_damage']; // 临时增益效果
+                
+                let sourceValue = 0;
+                if (!noSourceEffects.includes(effectKey) && !tempBuffEffects.includes(effectKey)) {
+                    const effectSource = testSkill.params[`${effectKey}_effect-source`];
+                    sourceValue = getEffectSourceValue(effectSource);
+                    addLog(`[${EFFECT_PARAMS_CONFIG[effectKey]?.name}] 效果来源: ${getEffectSourceName(effectSource)} = ${Math.round(sourceValue)}`, 'yellow');
+                } else {
+                    addLog(`[${EFFECT_PARAMS_CONFIG[effectKey]?.name}]`, 'yellow');
+                }
+                
+                // 立即执行一次效果
+                applyEffect(effectKey, sourceValue, count);
+                
+                // 如果有持续回合，添加到持续效果列表
+                if (duration > 0) {
+                    if (!noSourceEffects.includes(effectKey) && !tempBuffEffects.includes(effectKey)) {
+                        // 有效果来源的持续效果
+                        const effectSource = testSkill.params[`${effectKey}_effect-source`];
+                        activeEffects.push({
+                            effectKey: effectKey,
+                            effectSource: effectSource,
+                            lockedSourceValue: sourceValue,
+                            count: count,
+                            skill: testSkill,
+                            remainingTurns: duration
+                        });
+                        addLog(`→ ${EFFECT_PARAMS_CONFIG[effectKey]?.name} 将持续 ${duration} 回合（锁定来源值：${Math.round(sourceValue)}）`, 'cyan');
+                    } else if (tempBuffEffects.includes(effectKey)) {
+                        // 临时增益效果（属性增伤/减伤）
+                        activeEffects.push({
+                            effectKey: effectKey,
+                            effectSource: null,
+                            lockedSourceValue: 0,
+                            count: 0,
+                            skill: testSkill,
+                            remainingTurns: duration,
+                            isTempBuff: true // 标记为临时增益
+                        });
+                        addLog(`→ ${EFFECT_PARAMS_CONFIG[effectKey]?.name} 将持续 ${duration} 回合`, 'cyan');
+                    }
+                }
+            });
+            
+            updateTurnDisplay();
+        }
+
+        function applyEffect(effectKey, sourceValue, count) {
+            const config = EFFECT_PARAMS_CONFIG[effectKey];
+            if (!config) return;
+            const params = testSkill.params;
+
+            // 判断是否基于攻击力
+            const effectSource = testSkill.params[`${effectKey}_effect-source`];
+            const isAttackBased = effectSource && (
+                effectSource.includes('attack') ||
+                effectSource === 'self-current-attack' ||
+                effectSource === 'self-base-attack' ||
+                effectSource === 'enemy-current-attack' ||
+                effectSource === 'enemy-base-attack'
+            );
+
+            switch(effectKey) {
+                case 'direct_attack': {
+                    // 直接攻击：如果基于攻击力则计算防御，否则直接伤害
+                    const bonus = params[`${effectKey}_bonus`] || 1;
+                    const rawDamage = Math.round(sourceValue * bonus);
+                    let actualDamage;
+                    
+                    if (isAttackBased) {
+                        actualDamage = Math.max(1, rawDamage - battleState.enemy.defense);
+                        addLog(`直接攻击: ${rawDamage} - ${battleState.enemy.defense}(防御) = ${actualDamage} 点伤害`, 'red');
+                    } else {
+                        actualDamage = rawDamage;
+                        addLog(`直接攻击: ${actualDamage} 点伤害 (${Math.round(sourceValue)} × ${bonus})`, 'red');
+                    }
+                    
+                    // 应用属性增伤/减伤
+                    actualDamage = applyElementDamageModifiers(actualDamage);
+                    
+                    battleState.enemy.hp -= actualDamage;
+                    battleState.self.turnDamage += actualDamage;
+                    break;
+                }
+                case 'multi_attack': {
+                    // 多段攻击：如果基于攻击力则每段计算防御
+                    const bonuses = params[`${effectKey}_multi-bonus`] || [1];
+                    let totalDamage = 0;
+                    
+                    bonuses.forEach((bonus, i) => {
+                        const rawDamage = Math.round(sourceValue * bonus);
+                        let actualDamage;
+                        
+                        if (isAttackBased) {
+                            actualDamage = Math.max(1, rawDamage - battleState.enemy.defense);
+                            addLog(`多段攻击-第${i+1}段: ${rawDamage} - ${battleState.enemy.defense} = ${actualDamage} 点伤害`, 'red');
+                        } else {
+                            actualDamage = rawDamage;
+                            addLog(`多段攻击-第${i+1}段: ${actualDamage} 点伤害`, 'red');
+                        }
+                        
+                        totalDamage += actualDamage;
+                    });
+                    
+                    // 应用属性增伤/减伤
+                    totalDamage = applyElementDamageModifiers(totalDamage);
+                    
+                    battleState.enemy.hp -= totalDamage;
+                    battleState.self.turnDamage += totalDamage;
+                    addLog(`多段攻击总计: ${totalDamage} 点伤害`, 'red');
+                    break;
+                }
+                case 'dot_damage': {
+                    // 附加伤害：如果基于攻击力则计算防御
+                    const bonus = params[`${effectKey}_bonus`] || 1;
+                    const rawDamage = Math.round(sourceValue * count * bonus);
+                    let actualDamage;
+                    
+                    if (isAttackBased) {
+                        actualDamage = Math.max(1, rawDamage - battleState.enemy.defense);
+                        addLog(`附加伤害: ${rawDamage} - ${battleState.enemy.defense} = ${actualDamage} 点伤害`, 'red');
+                    } else {
+                        actualDamage = rawDamage;
+                        addLog(`附加伤害: ${actualDamage} 点伤害`, 'red');
+                    }
+                    
+                    // 应用属性增伤/减伤
+                    actualDamage = applyElementDamageModifiers(actualDamage);
+                    
+                    battleState.enemy.hp -= actualDamage;
+                    battleState.self.turnDamage += actualDamage;
+                    break;
+                }
+                case 'percent_damage': {
+                    // 百分比伤害：始终为真实伤害
+                    const percent = params[`${effectKey}_percent`] || 0.1;
+                    let damage = Math.round(sourceValue * count * percent);
+                    
+                    // 应用属性增伤/减伤
+                    damage = applyElementDamageModifiers(damage);
+                    
+                    battleState.enemy.hp -= damage;
+                    battleState.self.turnDamage += damage;
+                    addLog(`百分比伤害: ${damage} 点真实伤害`, 'red');
+                    break;
+                }
+                case 'buff_attack': {
+                    // 增攻：攻击力=效果来源*增攻加成
+                    const target = params[`${effectKey}_target`];
+                    const bonus = params[`${effectKey}_bonus`] || 1;
+                    const increase = Math.round(sourceValue * bonus);
+                    if (target === 'self' || target === 'ally-all') {
+                        battleState.self.attack += increase;
+                        addLog(`增攻: 我方攻击力 +${increase} (${Math.round(sourceValue)} × ${bonus})`, 'green');
+                    }
+                    break;
+                }
+                case 'buff_defense': {
+                    // 增防：防御力=效果来源*增防加成
+                    const target = params[`${effectKey}_target`];
+                    const bonus = params[`${effectKey}_bonus`] || 1;
+                    const increase = Math.round(sourceValue * bonus);
+                    if (target === 'self' || target === 'ally-all') {
+                        battleState.self.defense += increase;
+                        addLog(`增防: 我方防御力 +${increase} (${Math.round(sourceValue)} × ${bonus})`, 'green');
+                    }
+                    break;
+                }
+                case 'buff_speed': {
+                    // 增速：敏捷力=效果来源*增速加成
+                    const target = params[`${effectKey}_target`];
+                    const bonus = params[`${effectKey}_bonus`] || 1;
+                    const increase = Math.round(sourceValue * bonus);
+                    if (target === 'self' || target === 'ally-all') {
+                        battleState.self.agility += increase;
+                        addLog(`增速: 我方敏捷 +${increase} (${Math.round(sourceValue)} × ${bonus})`, 'green');
+                    }
+                    break;
+                }
+                case 'direct_defense': {
+                    // 直接防御：防御值=当前防御值+效果来源*防御加成
+                    const bonus = params[`${effectKey}_bonus`] || 1;
+                    const increase = Math.round(sourceValue * bonus);
+                    battleState.self.defense += increase;
+                    addLog(`直接防御: 我方防御力 +${increase} (${Math.round(sourceValue)} × ${bonus})`, 'green');
+                    break;
+                }
+                case 'continuous_defense': {
+                    // 持续防御：防御值=当前防御值+效果来源*防御加成
+                    const bonus = params[`${effectKey}_bonus`] || 1;
+                    const increase = Math.round(sourceValue * bonus);
+                    battleState.self.defense += increase;
+                    addLog(`持续防御: 我方防御力 +${increase} (${Math.round(sourceValue)} × ${bonus})`, 'green');
+                    break;
+                }
+                case 'defense_counter': {
+                    // 防御反击：使用防御效果来源增加防御，使用反击效果来源计算反击伤害
+                    const defBonus = params[`${effectKey}_defense-bonus`] || 1;
+                    const counterBonus = params[`${effectKey}_counter-bonus`] || 0.5;
+                    
+                    // 防御部分：使用防御效果来源
+                    const defIncrease = Math.round(sourceValue * defBonus);
+                    battleState.self.defense += defIncrease;
+                    addLog(`防御反击-防御: 防御力 +${defIncrease} (${Math.round(sourceValue)} × ${defBonus})`, 'green');
+                    
+                    // 反击部分：使用反击效果来源
+                    const counterSource = params[`${effectKey}_counter-effect-source`];
+                    const counterSourceValue = getEffectSourceValue(counterSource);
+                    const counterDamage = Math.round(counterSourceValue * counterBonus);
+                    
+                    battleState.enemy.hp -= counterDamage;
+                    battleState.self.turnDamage += counterDamage;
+                    addLog(`防御反击-反击: 造成 ${counterDamage} 点伤害 (${Math.round(counterSourceValue)} × ${counterBonus})`, 'red');
+                    break;
+                }
+                case 'direct_speed': {
+                    // 直接增速：敏捷=当前敏捷值+效果来源*增速加成
+                    const bonus = params[`${effectKey}_bonus`] || 0.2;
+                    const increase = Math.round(sourceValue * bonus);
+                    battleState.self.agility += increase;
+                    addLog(`直接增速: 我方敏捷 +${increase} (${Math.round(sourceValue)} × ${bonus})`, 'green');
+                    break;
+                }
+                case 'continuous_speed': {
+                    // 持续增速：敏捷=当前敏捷值+效果来源*增速加成
+                    const bonus = params[`${effectKey}_bonus`] || 0.2;
+                    const increase = Math.round(sourceValue * bonus);
+                    battleState.self.agility += increase;
+                    addLog(`持续增速: 我方敏捷 +${increase} (${Math.round(sourceValue)} × ${bonus})`, 'green');
+                    break;
+                }
+                case 'debuff_attack': {
+                    // 减攻：攻击力=效果来源*减攻加成
+                    const target = params[`${effectKey}_target`];
+                    const bonus = params[`${effectKey}_bonus`] || 1;
+                    const decrease = Math.round(sourceValue * bonus);
+                    if (target === 'enemy-single' || target === 'enemy-all') {
+                        battleState.enemy.attack = Math.max(0, battleState.enemy.attack - decrease);
+                        addLog(`减攻: 敌方攻击力 -${decrease} (${Math.round(sourceValue)} × ${bonus})`, 'purple');
+                    }
+                    break;
+                }
+                case 'debuff_defense': {
+                    // 减防：防御力=效果来源*减防加成
+                    const target = params[`${effectKey}_target`];
+                    const bonus = params[`${effectKey}_bonus`] || 1;
+                    const decrease = Math.round(sourceValue * bonus);
+                    if (target === 'enemy-single' || target === 'enemy-all') {
+                        battleState.enemy.defense = Math.max(0, battleState.enemy.defense - decrease);
+                        addLog(`减防: 敌方防御力 -${decrease} (${Math.round(sourceValue)} × ${bonus})`, 'purple');
+                    }
+                    break;
+                }
+                case 'debuff_speed': {
+                    // 减速：敏捷力=效果来源*减速加成
+                    const target = params[`${effectKey}_target`];
+                    const bonus = params[`${effectKey}_bonus`] || 1;
+                    const decrease = Math.round(sourceValue * bonus);
+                    if (target === 'enemy-single' || target === 'enemy-all') {
+                        battleState.enemy.agility = Math.max(0, battleState.enemy.agility - decrease);
+                        addLog(`减速: 敌方敏捷 -${decrease} (${Math.round(sourceValue)} × ${bonus})`, 'purple');
+                    }
+                    break;
+                }
+                case 'heal_direct': {
+                    // 直接恢复：恢复量=效果来源*治疗加成*每回合恢复次数
+                    const target = params[`${effectKey}_target`];
+                    const bonus = params[`${effectKey}_bonus`] || 1;
+                    const heal = Math.round(sourceValue * bonus * count);
+                    if (target === 'self' || target === 'ally-all') {
+                        battleState.self.hp = Math.min(battleState.self.maxHp, battleState.self.hp + heal);
+                        addLog(`直接恢复: +${heal} 生命 (${Math.round(sourceValue)} × ${bonus} × ${count})`, 'green');
+                    }
+                    break;
+                }
+                case 'heal_continuous': {
+                    // 持续恢复：恢复量=效果来源*治疗加成*每回合恢复次数
+                    const target = params[`${effectKey}_target`];
+                    const bonus = params[`${effectKey}_bonus`] || 1;
+                    const heal = Math.round(sourceValue * bonus * count);
+                    if (target === 'self' || target === 'ally-all') {
+                        battleState.self.hp = Math.min(battleState.self.maxHp, battleState.self.hp + heal);
+                        addLog(`持续恢复: +${heal} 生命 (${Math.round(sourceValue)} × ${bonus} × ${count})`, 'green');
+                    }
+                    break;
+                }
+                case 'heal_percent': {
+                    // 百分比恢复：效果来源*恢复百分比*每回合恢复次数
+                    const target = params[`${effectKey}_target`];
+                    const percent = params[`${effectKey}_percent`] || 0.1;
+                    const heal = Math.round(sourceValue * percent * count);
+                    if (target === 'self' || target === 'ally-all') {
+                        battleState.self.hp = Math.min(battleState.self.maxHp, battleState.self.hp + heal);
+                        addLog(`百分比恢复: +${heal} 生命 (${Math.round(sourceValue)} × ${percent} × ${count})`, 'green');
+                    }
+                    break;
+                }
+                case 'heal_lifesteal': {
+                    // 生命汲取：效果来源*汲取加成*每回合汲取次数
+                    const bonus = params[`${effectKey}_bonus`] || 0.2;
+                    const heal = Math.round(sourceValue * bonus * count);
+                    battleState.self.hp = Math.min(battleState.self.maxHp, battleState.self.hp + heal);
+                    addLog(`生命汲取: +${heal} 生命 (${Math.round(sourceValue)} × ${bonus} × ${count})`, 'green');
+                    break;
+                }
+                case 'buff_purify': {
+                    // 净化：清除异常状态
+                    const target = params[`${effectKey}_target`];
+                    const purifyType = params[`${effectKey}_purify-type`] || 'all';
+                    
+                    if (target === 'self' || target === 'ally-all') {
+                        const beforeCount = battleState.self.status.length;
+                        if (purifyType === 'all') {
+                            battleState.self.status = [];
+                            addLog(`净化: 清除我方所有异常状态 (${beforeCount}个)`, 'green');
+                        } else {
+                            battleState.self.status = battleState.self.status.filter(s => s !== purifyType);
+                            addLog(`净化: 清除我方 ${statusNames[purifyType] || purifyType}`, 'green');
+                        }
+                    }
+                    break;
+                }
+                case 'buff_status_enemy': {
+                    // 为敌方附加异常状态
+                    const statusType = params[`${effectKey}_status-type`] || 'poison';
+                    const statusChance = params[`${effectKey}_status-chance`] || 50;
+                    const random = Math.random() * 100;
+                    
+                    if (random <= statusChance) {
+                        if (!battleState.enemy.status.includes(statusType)) {
+                            battleState.enemy.status.push(statusType);
+                            addLog(`施加异常: 敌方获得 ${statusNames[statusType] || statusType} (${statusChance}%概率成功)`, 'purple');
+                        } else {
+                            addLog(`施加异常: 敌方已有 ${statusNames[statusType] || statusType}`, 'gray');
+                        }
+                    } else {
+                        addLog(`施加异常: 未触发 (${Math.round(random)}% > ${statusChance}%)`, 'gray');
+                    }
+                    break;
+                }
+                case 'debuff_status_self': {
+                    // 为自身附加异常状态
+                    const statusType = params[`${effectKey}_status-type`] || 'poison';
+                    const statusChance = params[`${effectKey}_status-chance`] || 50;
+                    const random = Math.random() * 100;
+                    
+                    if (random <= statusChance) {
+                        if (!battleState.self.status.includes(statusType)) {
+                            battleState.self.status.push(statusType);
+                            addLog(`自身异常: 获得 ${statusNames[statusType] || statusType} (${statusChance}%概率成功)`, 'purple');
+                        } else {
+                            addLog(`自身异常: 已有 ${statusNames[statusType] || statusType}`, 'gray');
+                        }
+                    } else {
+                        addLog(`自身异常: 未触发 (${Math.round(random)}% > ${statusChance}%)`, 'gray');
+                    }
+                    break;
+                }
+                case 'debuff_no_heal': {
+                    // 禁疗
+                    const target = params[`${effectKey}_target`];
+                    if (target === 'enemy-single' || target === 'enemy-all') {
+                        if (!battleState.enemy.status.includes('no-heal')) {
+                            battleState.enemy.status.push('no-heal');
+                            addLog(`禁疗: 敌方无法恢复生命`, 'purple');
+                        }
+                    }
+                    break;
+                }
+                case 'debuff_heal_reduce': {
+                    // 减疗
+                    const target = params[`${effectKey}_target`];
+                    const bonus = params[`${effectKey}_bonus`] || 0.5;
+                    if (target === 'enemy-single' || target === 'enemy-all') {
+                        if (!battleState.enemy.status.includes('heal-reduce')) {
+                            battleState.enemy.status.push('heal-reduce');
+                            addLog(`减疗: 敌方治疗效果降低 ${Math.round(bonus * 100)}%`, 'purple');
+                        }
+                    }
+                    break;
+                }
+                case 'buff_element_damage': {
+                    // 属性增伤：该属性目标的最终伤害=最终伤害*(1+增伤加成)
+                    const target = params[`${effectKey}_target`];
+                    const elementType = params[`${effectKey}_element-type`] || 'fire';
+                    const damageBonus = params[`${effectKey}_damage-bonus`] || 0.2;
+                    
+                    if (target === 'self' || target === 'ally-all') {
+                        if (!battleState.self.elementDamageBonus) battleState.self.elementDamageBonus = {};
+                        battleState.self.elementDamageBonus[elementType] =
+                            (battleState.self.elementDamageBonus[elementType] || 0) + damageBonus;
+                        addLog(`属性增伤: 我方对${getElementName(elementType)}系伤害 +${Math.round(damageBonus * 100)}% (当前敌方系别:${getElementName(battleState.enemy.element)})`, 'green');
+                    }
+                    break;
+                }
+                case 'debuff_element_damage': {
+                    // 属性减伤：受到该属性最终伤害=最终伤害*(1-减伤加成)
+                    const target = params[`${effectKey}_target`];
+                    const elementType = params[`${effectKey}_element-type`] || 'fire';
+                    const damageReduce = params[`${effectKey}_damage-reduce`] || 0.2;
+                    
+                    if (target === 'enemy-single' || target === 'enemy-all') {
+                        if (!battleState.enemy.elementDamageReduce) battleState.enemy.elementDamageReduce = {};
+                        battleState.enemy.elementDamageReduce[elementType] =
+                            (battleState.enemy.elementDamageReduce[elementType] || 0) + damageReduce;
+                        addLog(`属性减伤: 敌方受到${getElementName(elementType)}系伤害 -${Math.round(damageReduce * 100)}% (当前我方系别:${getElementName(battleState.self.element)})`, 'purple');
+                    }
+                    break;
+                }
+                default:
+                    addLog(`[${config.name}] 已触发（简化模拟）`, 'gray');
+            }
+        }
+
+        function getElementName(element) {
+            const names = {
+                'water': '水', 'fire': '火', 'grass': '草',
+                'wind': '风', 'electric': '电', 'earth': '土'
+            };
+            return names[element] || element;
+        }
+
+        // 应用属性增伤/减伤
+        function applyElementDamageModifiers(baseDamage) {
+            let finalDamage = baseDamage;
+            const selfElement = battleState.self.element;
+            const enemyElement = battleState.enemy.element;
+            
+            console.log('调试-属性增伤:', {
+                baseDamage, selfElement, enemyElement,
+                selfBonus: battleState.self.elementDamageBonus,
+                enemyReduce: battleState.enemy.elementDamageReduce
+            });
+            
+            // 应用我方的属性增伤（针对敌方系别）
+            if (battleState.self.elementDamageBonus && battleState.self.elementDamageBonus[enemyElement]) {
+                const bonus = battleState.self.elementDamageBonus[enemyElement];
+                const oldDamage = finalDamage;
+                finalDamage = Math.round(finalDamage * (1 + bonus));
+                addLog(`  → 属性增伤(对${getElementName(enemyElement)}系): ${oldDamage} × (1+${bonus}) = ${finalDamage}`, 'cyan');
+            }
+            
+            // 应用敌方的属性减伤（针对我方系别）
+            if (battleState.enemy.elementDamageReduce && battleState.enemy.elementDamageReduce[selfElement]) {
+                const reduce = battleState.enemy.elementDamageReduce[selfElement];
+                const oldDamage = finalDamage;
+                finalDamage = Math.round(finalDamage * (1 - reduce));
+                addLog(`  → 属性减伤(受${getElementName(selfElement)}系): ${oldDamage} × (1-${reduce}) = ${finalDamage}`, 'cyan');
+            }
+            
+            return Math.max(1, finalDamage);
+        }
+
+        // 清除临时增益效果
+        function clearTemporaryBuffs() {
+            // 检查是否有对应属性的持续效果
+            const activeElementBuffs = activeEffects.filter(e => e.isTempBuff).map(e => {
+                const params = e.skill.params;
+                return params[`${e.effectKey}_element-type`];
+            });
+            
+            // 清除没有持续效果的属性增伤
+            if (battleState.self.elementDamageBonus) {
+                Object.keys(battleState.self.elementDamageBonus).forEach(elem => {
+                    if (!activeElementBuffs.includes(elem)) {
+                        delete battleState.self.elementDamageBonus[elem];
+                        addLog(`清除临时属性增伤(${getElementName(elem)}系)`, 'gray');
+                    }
+                });
+            }
+            
+            // 清除没有持续效果的属性减伤
+            if (battleState.enemy.elementDamageReduce) {
+                Object.keys(battleState.enemy.elementDamageReduce).forEach(elem => {
+                    if (!activeElementBuffs.includes(elem)) {
+                        delete battleState.enemy.elementDamageReduce[elem];
+                        addLog(`清除临时属性减伤(${getElementName(elem)}系)`, 'gray');
+                    }
+                });
+            }
         }
 
         // 初始化应用
         init();
+        setupTestButton();
     </script>
 </body>
 </html>
