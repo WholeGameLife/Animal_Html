@@ -143,6 +143,23 @@
                                     placeholder="#FF5733">
                             </div>
                         </div>
+                        
+                        <div class="col-span-2">
+                            <label class="block text-sm font-medium text-gray-300 mb-2">头像图片 (可选)</label>
+                            <div class="flex gap-2">
+                                <label for="animal-avatar-input" class="flex-1 bg-gray-800 border border-gray-600 rounded-lg px-4 py-2 text-gray-400 hover:border-purple-500 cursor-pointer transition-colors flex items-center justify-center">
+                                    <span id="avatar-filename">点击选择图片</span>
+                                </label>
+                                <input type="file" id="animal-avatar-input" accept="image/*" class="hidden">
+                                <button type="button" id="clear-avatar-btn" class="bg-red-600 hover:bg-red-700 text-white px-4 rounded-lg hidden">
+                                    清除
+                                </button>
+                            </div>
+                            <div id="avatar-preview" class="mt-2 hidden">
+                                <img id="avatar-preview-img" class="w-20 h-20 rounded-full border-2 border-gray-600 object-cover" alt="头像预览">
+                            </div>
+                            <p class="text-xs text-gray-400 mt-1">支持 JPG、PNG、GIF 格式，建议尺寸 200x200</p>
+                        </div>
                     </div>
 
                     <!-- 系别和稀有度 -->
@@ -501,6 +518,10 @@
         let configuredSkills = [];
         // 当前编辑的动物索引
         let editingIndex = -1;
+        // 当前选择的头像数据
+        let currentAvatarData = null;
+        // 头像是否被修改过（用于区分"未修改"和"主动清除"）
+        let avatarModified = false;
         
         // 3D模型相关
         let scene, camera, renderer, animalMesh, currentShape = 'sphere';
@@ -529,7 +550,53 @@
             syncColorInputs();
             setupSkillModal();
             updateSkillSlotsDisplay();
+            setupAvatarUpload();
             init3DPreview(); // 初始化3D预览
+        }
+        
+        // 设置头像上传
+        function setupAvatarUpload() {
+            const avatarInput = document.getElementById('animal-avatar-input');
+            const avatarFilename = document.getElementById('avatar-filename');
+            const avatarPreview = document.getElementById('avatar-preview');
+            const avatarPreviewImg = document.getElementById('avatar-preview-img');
+            const clearAvatarBtn = document.getElementById('clear-avatar-btn');
+            
+            avatarInput.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                
+                // 检查文件大小（限制2MB）
+                if (file.size > 2 * 1024 * 1024) {
+                    alert('❌ 图片文件过大！请选择小于2MB的图片。');
+                    return;
+                }
+                
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    const base64Data = event.target.result;
+                    currentAvatarData = base64Data;
+                    avatarModified = true;  // 标记头像已修改
+                    
+                    // 显示预览
+                    avatarPreviewImg.src = base64Data;
+                    avatarPreview.classList.remove('hidden');
+                    avatarFilename.textContent = file.name;
+                    clearAvatarBtn.classList.remove('hidden');
+                    updatePreview();  // 更新预览
+                };
+                reader.readAsDataURL(file);
+            });
+            
+            clearAvatarBtn.addEventListener('click', () => {
+                currentAvatarData = null;
+                avatarModified = true;  // 标记头像已修改（清除）
+                avatarInput.value = '';
+                avatarPreview.classList.add('hidden');
+                avatarFilename.textContent = '点击选择图片';
+                clearAvatarBtn.classList.add('hidden');
+                updatePreview();  // 更新预览
+            });
         }
         
         // 初始化3D预览
@@ -1367,6 +1434,12 @@
             clearBtn.onclick = () => {
                 form.reset();
                 configuredSkills = [];
+                currentAvatarData = null;
+                avatarModified = false;  // 重置修改标志
+                document.getElementById('animal-avatar-input').value = '';
+                document.getElementById('avatar-preview').classList.add('hidden');
+                document.getElementById('avatar-filename').textContent = '点击选择图片';
+                document.getElementById('clear-avatar-btn').classList.add('hidden');
                 cancelEdit();
                 renderConfiguredSkills();
                 updatePreview();
@@ -1376,6 +1449,12 @@
             cancelEditBtn.onclick = () => {
                 form.reset();
                 configuredSkills = [];
+                currentAvatarData = null;
+                avatarModified = false;  // 重置修改标志
+                document.getElementById('animal-avatar-input').value = '';
+                document.getElementById('avatar-preview').classList.add('hidden');
+                document.getElementById('avatar-filename').textContent = '点击选择图片';
+                document.getElementById('clear-avatar-btn').classList.add('hidden');
                 cancelEdit();
                 renderConfiguredSkills();
                 updatePreview();
@@ -1406,10 +1485,18 @@
 
             const elementClass = data.element ? `element-${data.element}` : 'bg-gray-700';
             const rarityClass = data.rarity ? `rarity-${data.rarity}` : 'bg-gray-700';
+            
+            // 头像或颜色预览
+            let avatarHtml;
+            if (currentAvatarData) {
+                avatarHtml = `<img src="${currentAvatarData}" class="color-preview object-cover" alt="头像预览">`;
+            } else {
+                avatarHtml = `<div class="color-preview" style="background-color: ${data.color}"></div>`;
+            }
 
             preview.innerHTML = `
                 <div class="flex items-start gap-3">
-                    <div class="color-preview" style="background-color: ${data.color}"></div>
+                    ${avatarHtml}
                     <div class="flex-1">
                         <div class="flex items-center gap-2 mb-2">
                             <h4 class="text-lg font-bold text-white">${data.name}</h4>
@@ -1506,6 +1593,7 @@
                 skills: configuredSkills.map(s => ({...s})), // 复制技能配置
                 modelData: modelData, // 保存自定义模型数据（如果不太大）
                 modelShape: currentShape, // 保存模型形状
+                avatarData: currentAvatarData, // 保存头像数据
                 createdAt: new Date().toISOString()
             };
 
@@ -1563,6 +1651,8 @@
                 skills: configuredSkills.map(s => ({...s})),
                 modelData: modelData,
                 modelShape: currentShape,
+                // 如果头像被修改过，使用新值；否则保留原有值
+                avatarData: avatarModified ? currentAvatarData : animals[editingIndex].avatarData,
                 createdAt: animals[editingIndex].createdAt,
                 updatedAt: new Date().toISOString()
             };
@@ -1596,6 +1686,7 @@
         // 编辑动物模板
         function editAnimal(index) {
             editingIndex = index;
+            avatarModified = false;  // 重置头像修改标志
             const animal = animals[index];
             
             // 填充表单
@@ -1677,6 +1768,20 @@
             configuredSkills = animal.skills ? animal.skills.map(s => ({...s})) : [];
             renderConfiguredSkills();
             updateSkillSlotsDisplay();
+            
+            // 恢复头像
+            if (animal.avatarData) {
+                currentAvatarData = animal.avatarData;
+                document.getElementById('avatar-preview-img').src = animal.avatarData;
+                document.getElementById('avatar-preview').classList.remove('hidden');
+                document.getElementById('avatar-filename').textContent = '已加载保存的头像';
+                document.getElementById('clear-avatar-btn').classList.remove('hidden');
+            } else {
+                currentAvatarData = null;
+                document.getElementById('avatar-preview').classList.add('hidden');
+                document.getElementById('avatar-filename').textContent = '点击选择图片';
+                document.getElementById('clear-avatar-btn').classList.add('hidden');
+            }
             
             // 恢复3D模型
             if (animal.modelData) {
@@ -1766,10 +1871,19 @@
             animalsList.innerHTML = animals.map((animal, index) => {
                 const elementClass = `element-${animal.element}`;
                 const rarityClass = `rarity-${animal.rarity}`;
+                
+                // 头像或颜色球
+                let avatarHtml;
+                if (animal.avatarData) {
+                    avatarHtml = `<img src="${animal.avatarData}" class="w-12 h-12 rounded-full border-2 border-white object-cover" alt="${animal.name}">`;
+                } else {
+                    avatarHtml = `<div class="w-12 h-12 rounded-full border-2 border-white" style="background-color: ${animal.color}"></div>`;
+                }
+                
                 return `
                     <div class="animal-card bg-gray-800 rounded-lg p-3 border border-gray-600">
                         <div class="flex items-start gap-2">
-                            <div class="w-12 h-12 rounded-full border-2 border-white" style="background-color: ${animal.color}"></div>
+                            ${avatarHtml}
                             <div class="flex-1 min-w-0">
                                 <div class="flex items-center gap-2 mb-1 flex-wrap">
                                     <h5 class="text-sm font-bold text-white">${animal.name}</h5>
@@ -1782,7 +1896,6 @@
                                     <span class="text-red-400">⚔️${animal.attack}</span>
                                     <span class="text-blue-400">🛡️${animal.defense}</span>
                                     <span class="text-yellow-400">⚡${animal.agility}</span>
-                                    <span class="text-gray-400">⚖️${animal.weight}</span>
                                 </div>
                             </div>
                             <div class="flex gap-1 flex-shrink-0">

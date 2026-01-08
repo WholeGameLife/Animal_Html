@@ -577,6 +577,57 @@ const BREEDING_CONFIG = {
         '极电×异能': { '异能': 25, '极电': 25, '圣辉': 12.5, '暗蚀': 12.5, legendary: { '源晶': 1, '雷煌': 1, 'random': 3 }, fail: 20 }
     },
     
+    // 变异类型继承概率 - 精英级×传说级
+    mutation_inheritance_elite_legendary: {
+        // 高亲和：同链进化
+        '暗蚀×永夜': { elite: { '暗蚀': 60 }, legendary: { '永夜': 5 }, other_elite: 20, basic: 15 },
+        '永夜×暗蚀': { elite: { '暗蚀': 60 }, legendary: { '永夜': 5 }, other_elite: 20, basic: 15 },
+        '圣辉×永耀': { elite: { '圣辉': 60 }, legendary: { '永耀': 5 }, other_elite: 20, basic: 15 },
+        '永耀×圣辉': { elite: { '圣辉': 60 }, legendary: { '永耀': 5 }, other_elite: 20, basic: 15 },
+        '异能×源晶': { elite: { '异能': 60 }, legendary: { '源晶': 5 }, other_elite: 20, basic: 15 },
+        '源晶×异能': { elite: { '异能': 60 }, legendary: { '源晶': 5 }, other_elite: 20, basic: 15 },
+        '极电×雷煌': { elite: { '极电': 60 }, legendary: { '雷煌': 5 }, other_elite: 20, basic: 15 },
+        '雷煌×极电': { elite: { '极电': 60 }, legendary: { '雷煌': 5 }, other_elite: 20, basic: 15 },
+        
+        // 中亲和：同大系融合
+        '暗蚀×雷煌': { elite: { '暗蚀': 45 }, legendary: { '雷煌': 3 }, other_elite: 27, basic: 25 },
+        '雷煌×暗蚀': { elite: { '暗蚀': 45 }, legendary: { '雷煌': 3 }, other_elite: 27, basic: 25 },
+        '极电×永夜': { elite: { '极电': 45 }, legendary: { '永夜': 3 }, other_elite: 27, basic: 25 },
+        '永夜×极电': { elite: { '极电': 45 }, legendary: { '永夜': 3 }, other_elite: 27, basic: 25 },
+        '圣辉×源晶': { elite: { '圣辉': 45 }, legendary: { '源晶': 3 }, other_elite: 27, basic: 25 },
+        '源晶×圣辉': { elite: { '圣辉': 45 }, legendary: { '源晶': 3 }, other_elite: 27, basic: 25 },
+        '异能×永耀': { elite: { '异能': 45 }, legendary: { '永耀': 3 }, other_elite: 27, basic: 25 },
+        '永耀×异能': { elite: { '异能': 45 }, legendary: { '永耀': 3 }, other_elite: 27, basic: 25 },
+        
+        // 低亲和/中立
+        '暗蚀×永耀': { elite: { '暗蚀': 40 }, legendary: { '永耀': 2 }, other_elite: 33, basic: 25 },
+        '永耀×暗蚀': { elite: { '暗蚀': 40 }, legendary: { '永耀': 2 }, other_elite: 33, basic: 25 },
+        '暗蚀×源晶': { elite: { '暗蚀': 40 }, legendary: { '源晶': 2 }, other_elite: 33, basic: 25 },
+        '源晶×暗蚀': { elite: { '暗蚀': 40 }, legendary: { '源晶': 2 }, other_elite: 33, basic: 25 },
+        '圣辉×永夜': { elite: { '圣辉': 40 }, legendary: { '永夜': 2 }, other_elite: 33, basic: 25 },
+        '永夜×圣辉': { elite: { '圣辉': 40 }, legendary: { '永夜': 2 }, other_elite: 33, basic: 25 },
+        '圣辉×雷煌': { elite: { '圣辉': 40 }, legendary: { '雷煌': 2 }, other_elite: 33, basic: 25 },
+        '雷煌×圣辉': { elite: { '圣辉': 40 }, legendary: { '雷煌': 2 }, other_elite: 33, basic: 25 },
+        '异能×永夜': { elite: { '异能': 40 }, legendary: { '永夜': 2 }, other_elite: 33, basic: 25 },
+        '永夜×异能': { elite: { '异能': 40 }, legendary: { '永夜': 2 }, other_elite: 33, basic: 25 },
+        '异能×雷煌': { elite: { '异能': 40 }, legendary: { '雷煌': 2 }, other_elite: 33, basic: 25 },
+        '雷煌×异能': { elite: { '异能': 40 }, legendary: { '雷煌': 2 }, other_elite: 33, basic: 25 },
+        '极电×永耀': { elite: { '极电': 40 }, legendary: { '永耀': 2 }, other_elite: 33, basic: 25 },
+        '永耀×极电': { elite: { '极电': 40 }, legendary: { '永耀': 2 }, other_elite: 33, basic: 25 },
+        '极电×源晶': { elite: { '极电': 40 }, legendary: { '源晶': 2 }, other_elite: 33, basic: 25 },
+        '源晶×极电': { elite: { '极电': 40 }, legendary: { '源晶': 2 }, other_elite: 33, basic: 25 },
+        
+        // 高冲突：对立链（重复条目已移除）
+        '暗蚀×永耀': { elite: { '暗蚀': 30 }, legendary: { '永耀': 1 }, other_elite: 44, basic: 25 },
+        '永耀×暗蚀': { elite: { '暗蚀': 30 }, legendary: { '永耀': 1 }, other_elite: 44, basic: 25 },
+        '圣辉×永夜': { elite: { '圣辉': 30 }, legendary: { '永夜': 1 }, other_elite: 44, basic: 25 },
+        '永夜×圣辉': { elite: { '圣辉': 30 }, legendary: { '永夜': 1 }, other_elite: 44, basic: 25 },
+        '异能×雷煌': { elite: { '异能': 30 }, legendary: { '雷煌': 1 }, other_elite: 44, basic: 25 },
+        '雷煌×异能': { elite: { '异能': 30 }, legendary: { '雷煌': 1 }, other_elite: 44, basic: 25 },
+        '极电×源晶': { elite: { '极电': 30 }, legendary: { '源晶': 1 }, other_elite: 44, basic: 25 },
+        '源晶×极电': { elite: { '极电': 30 }, legendary: { '源晶': 1 }, other_elite: 44, basic: 25 }
+    },
+    
     // 变异类型继承概率 - 传说级×传说级
     mutation_inheritance_legendary_legendary: {
         '永夜×永夜': { legendary: { '永夜': 80 }, elite: 15, basic: 5 },

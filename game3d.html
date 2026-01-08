@@ -3583,9 +3583,9 @@
         // --- 新的页面跳转和数据处理逻辑 ---
 
         function openAnimalManagementPage() {
-            // 移除无法序列化的 'mesh' 属性
+            // 移除无法序列化的 'mesh' 和大型的 'avatarData' 属性
             const serializableGameState = JSON.parse(JSON.stringify(gameState, (key, value) => {
-                if (key === 'mesh') return undefined;
+                if (key === 'mesh' || key === 'avatarData') return undefined;
                 return value;
             }));
 
@@ -3594,9 +3594,9 @@
         }
 
         function openExplorationPage() {
-             // 移除无法序列化的 'mesh' 属性
+             // 移除无法序列化的 'mesh' 和大型的 'avatarData' 属性
             const serializableGameState = JSON.parse(JSON.stringify(gameState, (key, value) => {
-                if (key === 'mesh') return undefined;
+                if (key === 'mesh' || key === 'avatarData') return undefined;
                 return value;
             }));
             localStorage.setItem('gameState', JSON.stringify(serializableGameState));
@@ -3604,9 +3604,9 @@
         }
 
         function openMiningPage() {
-             // 移除无法序列化的 'mesh' 属性
+             // 移除无法序列化的 'mesh' 和大型的 'avatarData' 属性
             const serializableGameState = JSON.parse(JSON.stringify(gameState, (key, value) => {
-                if (key === 'mesh') return undefined;
+                if (key === 'mesh' || key === 'avatarData') return undefined;
                 return value;
             }));
             localStorage.setItem('gameState', JSON.stringify(serializableGameState));
@@ -3614,9 +3614,9 @@
         }
 
         function openWorldMapPage() {
-            // Save state before leaving
+            // 移除无法序列化的 'mesh' 和大型的 'avatarData' 属性
             const serializableGameState = JSON.parse(JSON.stringify(gameState, (key, value) => {
-                if (key === 'mesh') return undefined;
+                if (key === 'mesh' || key === 'avatarData') return undefined;
                 return value;
             }));
             localStorage.setItem('gameState', JSON.stringify(serializableGameState));
@@ -3926,6 +3926,15 @@
                 animalGroup.remove(originalWildAnimal.mesh);
                 // 2. 从数据数组中移除
                 gameState.wildAnimals.splice(wildAnimalIndex, 1);
+            }
+            
+            // 如果有模板key，从模板恢复头像数据
+            if (capturedAnimalData.templateKey && !capturedAnimalData.avatarData) {
+                const animalPool = JSON.parse(localStorage.getItem('ANIMAL_POOL') || '[]');
+                const template = animalPool.find(t => t.key === capturedAnimalData.templateKey);
+                if (template && template.avatarData) {
+                    capturedAnimalData.avatarData = template.avatarData;
+                }
             }
 
             // 修复：转换 combatSkills 数据结构以匹配 animal_management.html 的期望格式

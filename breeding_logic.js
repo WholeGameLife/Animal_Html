@@ -146,10 +146,13 @@ function calculateOffspringMutation(parent1, parent2) {
     } else if ((p1Rarity === 'basic' && p2Rarity === 'elite') || (p1Rarity === 'elite' && p2Rarity === 'basic')) {
         key = `${p1Mutation}×${p2Mutation}`;
         probTable = BREEDING_CONFIG.mutation_inheritance_basic_elite[key];
+    } else if ((p1Rarity === 'elite' && p2Rarity === 'legendary') || (p1Rarity === 'legendary' && p2Rarity === 'elite')) {
+        key = `${p1Mutation}×${p2Mutation}`;
+        probTable = BREEDING_CONFIG.mutation_inheritance_elite_legendary?.[key];
     }
     
     if (!probTable) {
-        console.warn('未找到变异继承配置:', key);
+        console.warn('未找到变异继承配置:', key, `(${p1Rarity} × ${p2Rarity})`);
         // 随机继承父母之一
         return Math.random() < 0.5 ? p1Mutation : p2Mutation;
     }
@@ -165,14 +168,24 @@ function calculateOffspringMutation(parent1, parent2) {
     
     // 处理基础级结果
     if (probTable.basic) {
-        for (const [mutation, prob] of Object.entries(probTable.basic)) {
-            cumulative += prob;
-            if (roll < cumulative) return mutation;
+        if (typeof probTable.basic === 'object') {
+            // 基础×基础 和 基础×精英格式
+            for (const [mutation, prob] of Object.entries(probTable.basic)) {
+                cumulative += prob;
+                if (roll < cumulative) return mutation;
+            }
+        } else {
+            // 数值型：传说×传说、精英×传说
+            cumulative += probTable.basic;
+            if (roll < cumulative) {
+                const basicMutations = Object.keys(MUTATION_CONFIG.tier1.basic);
+                return basicMutations[Math.floor(Math.random() * basicMutations.length)];
+            }
         }
     } else {
         // 直接的基础级概率（基础×基础）
         for (const [mutation, prob] of Object.entries(probTable)) {
-            if (mutation === 'elite' || mutation === 'legendary' || mutation === 'fail') continue;
+            if (mutation === 'elite' || mutation === 'legendary' || mutation === 'fail' || mutation === 'other_elite') continue;
             cumulative += prob;
             if (roll < cumulative) return mutation;
         }
@@ -195,29 +208,37 @@ function calculateOffspringMutation(parent1, parent2) {
         }
     }
     
-    // 处理传说级结果
-    if (probTable.legendary) {
-        for (const [mutation, prob] of Object.entries(probTable.legendary)) {
-            if (mutation === 'random') {
-                // 随机选择一个传说级
-                cumulative += prob;
-                if (roll < cumulative) {
-                    const legendaryMutations = Object.keys(MUTATION_CONFIG.tier1.legendary);
-                    return legendaryMutations[Math.floor(Math.random() * legendaryMutations.length)];
-                }
-            } else {
-                cumulative += prob;
-                if (roll < cumulative) return mutation;
+    // 处理"其他精英级"（精英×传说特有）
+    if (probTable.other_elite) {
+        cumulative += probTable.other_elite;
+        if (roll < cumulative) {
+            // 从精英池中随机选择，排除父母类型
+            const eliteMutations = Object.keys(MUTATION_CONFIG.tier1.elite);
+            const parentEliteMutation = p1Rarity === 'elite' ? p1Mutation : p2Mutation;
+            const otherElites = eliteMutations.filter(m => m !== parentEliteMutation);
+            if (otherElites.length > 0) {
+                return otherElites[Math.floor(Math.random() * otherElites.length)];
             }
+            return eliteMutations[Math.floor(Math.random() * eliteMutations.length)];
         }
     }
     
-    // 处理基础级回退（传说×传说）
-    if (probTable.basic && typeof probTable.basic === 'number') {
-        cumulative += probTable.basic;
-        if (roll < cumulative) {
-            const basicMutations = Object.keys(MUTATION_CONFIG.tier1.basic);
-            return basicMutations[Math.floor(Math.random() * basicMutations.length)];
+    // 处理传说级结果
+    if (probTable.legendary) {
+        if (typeof probTable.legendary === 'object') {
+            for (const [mutation, prob] of Object.entries(probTable.legendary)) {
+                if (mutation === 'random') {
+                    // 随机选择一个传说级
+                    cumulative += prob;
+                    if (roll < cumulative) {
+                        const legendaryMutations = Object.keys(MUTATION_CONFIG.tier1.legendary);
+                        return legendaryMutations[Math.floor(Math.random() * legendaryMutations.length)];
+                    }
+                } else {
+                    cumulative += prob;
+                    if (roll < cumulative) return mutation;
+                }
+            }
         }
     }
     

@@ -607,6 +607,8 @@
     <script src="animal_config.js"></script>
     <!-- 引入繁育逻辑 -->
     <script src="breeding_logic.js"></script>
+    <!-- 引入变异逻辑 -->
+    <script src="mutation_logic.js"></script>
     
     <script>
         // 调试对象将由 debug.js 提供
@@ -739,8 +741,13 @@
         }
 
         function saveGameState() {
-            // 清理掉临时的选择状态再保存
-            const stateToSave = { ...gameState };
+            // 清理掉临时的选择状态和大型数据再保存
+            const stateToSave = JSON.parse(JSON.stringify(gameState, (key, value) => {
+                // 移除大型的 avatarData 以提升保存和加载性能
+                if (key === 'avatarData') return undefined;
+                return value;
+            }));
+            
             delete stateToSave.selectedAnimalsForBreeding;
             delete stateToSave.selectedAnimalsForFusion;
 
@@ -1514,29 +1521,87 @@
                 ui.animalList.innerHTML = '<p class="text-sm text-gray-500 p-2">栖息地中还没有动物。</p>';
                 return;
             }
+            
+            // 一次性读取动物池（用于查找头像）
+            const animalPool = JSON.parse(localStorage.getItem('ANIMAL_POOL') || '[]');
+            
+            // 创建网格容器
+            const gridContainer = document.createElement('div');
+            gridContainer.className = 'grid grid-cols-2 gap-3';
+            
             gameState.animals.forEach(animal => {
                 const colorHex = '#' + animal.color.toString(16).padStart(6, '0');
-                const listItem = document.createElement('div');
-                let itemClass = 'roster-item flex items-center justify-between p-2 rounded-md hover:bg-gray-700 cursor-pointer transition-colors duration-150';
+                const card = document.createElement('div');
+                let cardClass = 'roster-item bg-gray-800 rounded-lg p-3 cursor-pointer transition-all duration-200 hover:bg-gray-700 hover:scale-105 border-2';
                 if (animal.id === selectedAnimalId) {
-                    itemClass += ' selected-detail';
+                    cardClass += ' selected-detail border-indigo-400';
+                } else {
+                    cardClass += ' border-gray-700';
                 }
-                listItem.className = itemClass;
-                listItem.innerHTML = `
-                    <div class="flex items-center space-x-2">
-                        <div style="background-color: ${colorHex};" class="w-4 h-4 rounded-full border border-gray-400"></div>
-                        <span class="font-medium text-indigo-300">${animal.name}</span>
-                        <span title="${animal.element}" class="w-5 text-center">${ELEMENT_ICONS[animal.element] || ELEMENT_ICONS['默认']}</span>
-                        <span class="text-xs text-gray-400">${animal.isPlaced ? ' (已放置)' : ''}</span>
+                card.className = cardClass;
+                
+                // 稀有度图标
+                const rarityIcons = {
+                    '普通': '',
+                    '闪光': '✨',
+                    '幻彩': '🌈',
+                    '星芒': '⭐'
+                };
+                const rarityIcon = rarityIcons[animal.rarity] || '';
+                
+                // 头像或颜色球 - 按需从模板读取头像数据
+                let avatarHtml;
+                let avatarData = animal.avatarData;
+                
+                // 如果没有头像数据但有模板key，从已读取的池中查找
+                if (!avatarData && animal.templateKey && animalPool.length > 0) {
+                    const template = animalPool.find(t => t.key === animal.templateKey);
+                    if (template && template.avatarData) {
+                        avatarData = template.avatarData;
+                    }
+                }
+                
+                if (avatarData && avatarData.trim() !== '') {
+                    avatarHtml = `<img src="${avatarData}" class="w-16 h-16 rounded-full border-4 border-gray-600 mb-2 shadow-lg object-cover" alt="${animal.name}">`;
+                } else {
+                    avatarHtml = `<div style="background-color: ${colorHex};" class="w-16 h-16 rounded-full border-4 border-gray-600 mb-2 shadow-lg"></div>`;
+                }
+                
+                card.innerHTML = `
+                    <div class="flex flex-col items-center text-center">
+                        <!-- 头像或颜色球 -->
+                        ${avatarHtml}
+                        
+                        <!-- 名字和稀有度 -->
+                        <div class="font-bold text-indigo-300 mb-1 flex items-center gap-1">
+                            ${rarityIcon}
+                            <span>${animal.name}</span>
+                        </div>
+                        
+                        <!-- 等级和元素 -->
+                        <div class="flex items-center gap-2 mb-2">
+                            <span class="bg-yellow-600 px-2 py-0.5 rounded text-xs font-bold">Lv.${animal.level}</span>
+                            <span title="${animal.element}" class="text-lg">${ELEMENT_ICONS[animal.element] || ELEMENT_ICONS['默认']}</span>
+                        </div>
+                        
+                        <!-- 状态标签 -->
+                        <div class="flex flex-wrap gap-1 justify-center">
+                            ${animal.isPlaced ? '<span class="text-xs bg-green-600 px-2 py-0.5 rounded">已放置</span>' : ''}
+                            ${animal.workingBuildingId ? '<span class="text-xs bg-blue-600 px-2 py-0.5 rounded">工作中</span>' : ''}
+                            ${animal.isInjured ? '<span class="text-xs bg-red-600 px-2 py-0.5 rounded">受伤</span>' : ''}
+                        </div>
                     </div>
-                    <span class="text-sm text-yellow-400">Lv. ${animal.level}</span>`;
-                listItem.addEventListener('click', () => {
+                `;
+                
+                card.addEventListener('click', () => {
                     selectedAnimalId = animal.id;
                     showAnimalDetails(animal.id);
                     renderAnimalList(); // 重绘列表以更新高亮
                 });
-                ui.animalList.appendChild(listItem);
+                gridContainer.appendChild(card);
             });
+            
+            ui.animalList.appendChild(gridContainer);
         }
 
         function showAnimalDetails(animalId) {
@@ -1637,9 +1702,31 @@
                 listElement.innerHTML = '<p class="text-sm text-gray-500 p-2">没有可用的动物。</p>';
                 return;
             }
+            
+            // 一次性读取动物池（用于查找头像）
+            const animalPool = JSON.parse(localStorage.getItem('ANIMAL_POOL') || '[]');
+            
             gameState.animals.forEach(animal => {
                 const isSelected = selectionArray.includes(animal.id);
                 const colorHex = '#' + animal.color.toString(16).padStart(6, '0');
+                
+                // 获取头像数据
+                let avatarData = animal.avatarData;
+                if (!avatarData && animal.templateKey && animalPool.length > 0) {
+                    const template = animalPool.find(t => t.key === animal.templateKey);
+                    if (template && template.avatarData) {
+                        avatarData = template.avatarData;
+                    }
+                }
+                
+                // 头像或颜色球
+                let avatarHtml;
+                if (avatarData && avatarData.trim() !== '') {
+                    avatarHtml = `<img src="${avatarData}" class="w-8 h-8 rounded-full border-2 border-gray-400 object-cover" alt="${animal.name}">`;
+                } else {
+                    avatarHtml = `<div style="background-color: ${colorHex};" class="w-8 h-8 rounded-full border-2 border-gray-400"></div>`;
+                }
+                
                 let listItemClass = 'roster-item flex items-center justify-between p-2 rounded-md hover:bg-gray-700 cursor-pointer transition-colors duration-150';
                 if (isSelected) {
                     listItemClass += ' selected-for-breeding';
@@ -1650,14 +1737,14 @@
                     <div class="flex-1">
                         <div class="flex items-center justify-between">
                             <div class="flex items-center space-x-2">
-                                <div style="background-color: ${colorHex};" class="w-4 h-4 rounded-full border border-gray-400"></div>
+                                ${avatarHtml}
                                 <span class="font-medium text-indigo-300">${animal.name}</span>
                                 <span title="${animal.element}" class="w-5 text-center">${ELEMENT_ICONS[animal.element] || ELEMENT_ICONS['默认']}</span>
                                 <span class="text-xs ${animal.gender === '雄' ? 'text-blue-400' : 'text-pink-400'}">${animal.gender === '雄' ? '♂' : '♀'}</span>
                             </div>
                             <span class="text-sm text-yellow-400">Lv. ${animal.level}</span>
                         </div>
-                        <div class="text-xs text-gray-400 mt-1 pl-6">
+                        <div class="text-xs text-gray-400 mt-1 pl-10">
                             <span>${animal.developmentStage}</span> | <span>潜力: ${animal.potential}</span>
                         </div>
                     </div>
@@ -1668,6 +1755,9 @@
         }
 
         function renderBreedingPanel() {
+            // 一次性读取动物池
+            const animalPool = JSON.parse(localStorage.getItem('ANIMAL_POOL') || '[]');
+            
             // 渲染两个父框
             const parentSlots = [ui.parentDisplay1, ui.parentDisplay2];
             const placeholderTexts = ['点击下方列表<br>选择父代 1', '点击下方列表<br>选择父代 2'];
@@ -1679,6 +1769,23 @@
 
                 if (parentAnimal) {
                     const colorHex = '#' + parentAnimal.color.toString(16).padStart(6, '0');
+                    
+                    // 获取头像数据
+                    let avatarData = parentAnimal.avatarData;
+                    if (!avatarData && parentAnimal.templateKey && animalPool.length > 0) {
+                        const template = animalPool.find(t => t.key === parentAnimal.templateKey);
+                        if (template && template.avatarData) {
+                            avatarData = template.avatarData;
+                        }
+                    }
+                    
+                    // 头像或颜色球
+                    let avatarHtml;
+                    if (avatarData && avatarData.trim() !== '') {
+                        avatarHtml = `<img src="${avatarData}" class="w-12 h-12 rounded-full border-2 border-gray-400 object-cover" alt="${parentAnimal.name}">`;
+                    } else {
+                        avatarHtml = `<div style="background-color: ${colorHex};" class="w-12 h-12 rounded-full border-2 border-gray-400"></div>`;
+                    }
                     
                     // 检查各项条件
                     const isAdult = parentAnimal.developmentStage === BREEDING_CONFIG.requirements.development_stage;
@@ -1693,18 +1800,20 @@
                     if (isInCooldown) statusIndicators += `<span class="text-xs bg-purple-600 px-1 rounded ml-1">冷却${cooldownHours}h</span>`;
                     
                     slot.innerHTML = `
-                        <div class="p-2 text-left w-full">
-                            <div class="flex items-center justify-between">
-                                <div class="flex items-center space-x-2">
-                                    <div style="background-color: ${colorHex};" class="w-5 h-5 rounded-full border border-gray-400"></div>
-                                    <span class="font-bold text-indigo-300">${parentAnimal.name}</span>
-                                    <span class="text-sm ${parentAnimal.gender === '雄' ? 'text-blue-400' : 'text-pink-400'}">${parentAnimal.gender === '雄' ? '♂' : '♀'}</span>
+                        <div class="p-2 text-left w-full flex items-center gap-3">
+                            ${avatarHtml}
+                            <div class="flex-1">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center space-x-2">
+                                        <span class="font-bold text-indigo-300">${parentAnimal.name}</span>
+                                        <span class="text-sm ${parentAnimal.gender === '雄' ? 'text-blue-400' : 'text-pink-400'}">${parentAnimal.gender === '雄' ? '♂' : '♀'}</span>
+                                    </div>
+                                    <span class="text-md text-yellow-400">Lv. ${parentAnimal.level}</span>
                                 </div>
-                                <span class="text-md text-yellow-400">Lv. ${parentAnimal.level}</span>
-                            </div>
-                            <div class="text-xs text-gray-400 mt-1 pl-7">
-                                <div>${parentAnimal.developmentStage} | 潜力: ${parentAnimal.potential}</div>
-                                <div class="mt-1">体力: ${parentAnimal.stamina}/${parentAnimal.maxStamina} ${statusIndicators}</div>
+                                <div class="text-xs text-gray-400 mt-1">
+                                    <div>${parentAnimal.developmentStage} | 潜力: ${parentAnimal.potential}</div>
+                                    <div class="mt-1">体力: ${parentAnimal.stamina}/${parentAnimal.maxStamina} ${statusIndicators}</div>
+                                </div>
                             </div>
                         </div>`;
                     slot.classList.remove('border-dashed', 'items-center', 'justify-center');
@@ -1728,6 +1837,9 @@
         }
 
         function renderFusionPanel() {
+            // 一次性读取动物池
+            const animalPool = JSON.parse(localStorage.getItem('ANIMAL_POOL') || '[]');
+            
             // 渲染两个材料框
             const materialSlots = [ui.fusionMaterialDisplay1, ui.fusionMaterialDisplay2];
             const placeholderTexts = ['点击下方列表<br>选择材料 1', '点击下方列表<br>选择材料 2'];
@@ -1739,18 +1851,38 @@
 
                 if (materialAnimal) {
                     const colorHex = '#' + materialAnimal.color.toString(16).padStart(6, '0');
+                    
+                    // 获取头像数据
+                    let avatarData = materialAnimal.avatarData;
+                    if (!avatarData && materialAnimal.templateKey && animalPool.length > 0) {
+                        const template = animalPool.find(t => t.key === materialAnimal.templateKey);
+                        if (template && template.avatarData) {
+                            avatarData = template.avatarData;
+                        }
+                    }
+                    
+                    // 头像或颜色球
+                    let avatarHtml;
+                    if (avatarData && avatarData.trim() !== '') {
+                        avatarHtml = `<img src="${avatarData}" class="w-12 h-12 rounded-full border-2 border-gray-400 object-cover" alt="${materialAnimal.name}">`;
+                    } else {
+                        avatarHtml = `<div style="background-color: ${colorHex};" class="w-12 h-12 rounded-full border-2 border-gray-400"></div>`;
+                    }
+                    
                     slot.innerHTML = `
-                        <div class="p-2 text-left w-full">
-                            <div class="flex items-center justify-between">
-                                <div class="flex items-center space-x-2">
-                                    <div style="background-color: ${colorHex};" class="w-5 h-5 rounded-full border border-gray-400"></div>
-                                    <span class="font-bold text-indigo-300">${materialAnimal.name}</span>
-                                    <span class="text-sm ${materialAnimal.gender === '雄' ? 'text-blue-400' : 'text-pink-400'}">${materialAnimal.gender === '雄' ? '♂' : '♀'}</span>
+                        <div class="p-2 text-left w-full flex items-center gap-3">
+                            ${avatarHtml}
+                            <div class="flex-1">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center space-x-2">
+                                        <span class="font-bold text-indigo-300">${materialAnimal.name}</span>
+                                        <span class="text-sm ${materialAnimal.gender === '雄' ? 'text-blue-400' : 'text-pink-400'}">${materialAnimal.gender === '雄' ? '♂' : '♀'}</span>
+                                    </div>
+                                    <span class="text-md text-yellow-400">Lv. ${materialAnimal.level}</span>
                                 </div>
-                                <span class="text-md text-yellow-400">Lv. ${materialAnimal.level}</span>
-                            </div>
-                            <div class="text-xs text-gray-400 mt-2 pl-7">
-                                <span>${materialAnimal.developmentStage}</span> | <span>潜力: ${materialAnimal.potential}</span>
+                                <div class="text-xs text-gray-400 mt-1">
+                                    <span>${materialAnimal.developmentStage}</span> | <span>潜力: ${materialAnimal.potential}</span>
+                                </div>
                             </div>
                         </div>`;
                     slot.classList.remove('border-dashed', 'items-center', 'justify-center');
@@ -2096,495 +2228,6 @@
             }, 2000);
         }
 
-        function performTier1Mutation(animal, currentMutation, currentRarity) {
-            let targetRarity, mutationName, config;
-            
-            if (!currentMutation) {
-                // 首次变异 - 使用标准概率
-                const roll = Math.random() * 100;
-                const prob = MUTATION_PROBABILITY.first_mutation;
-                if (roll < prob.basic) {
-                    targetRarity = 'basic';
-                    const options = Object.keys(MUTATION_CONFIG.tier1.basic);
-                    mutationName = options[Math.floor(Math.random() * options.length)];
-                } else if (roll < prob.basic + prob.elite) {
-                    targetRarity = 'elite';
-                    const options = Object.keys(MUTATION_CONFIG.tier1.elite);
-                    mutationName = options[Math.floor(Math.random() * options.length)];
-                } else {
-                    targetRarity = 'legendary';
-                    const options = Object.keys(MUTATION_CONFIG.tier1.legendary);
-                    mutationName = options[Math.floor(Math.random() * options.length)];
-                }
-            } else {
-                // 已有变异 - 使用亲和链规则
-                const result = calculateAffinityMutation(currentMutation, currentRarity);
-                targetRarity = result.rarity;
-                mutationName = result.mutation;
-            }
-
-            // 修正：确保 config 被正确赋值
-            config = MUTATION_CONFIG.tier1[targetRarity]?.[mutationName];
-            
-            // 如果 config 未定义，说明出现错误，提前退出
-            if (!config) {
-                console.error("Mutation failed: Could not find config for", targetRarity, mutationName);
-                return { success: false, log: "变异失败：未找到配置。", changeDesc: "<p>变异失败，请重试。</p>" };
-            }
-            
-            // 初始化变异历史数组
-            if (!animal.mutations.history) {
-                animal.mutations.history = [];
-            }
-            
-            // 应用变异
-            const oldMutation = animal.mutations.tier1;
-            const oldRarity = currentRarity;
-            
-            // 判断是否为稀有度提升
-            const isRarityUpgrade = oldMutation && getRarityLevel(targetRarity) > getRarityLevel(oldRarity);
-            
-            // 管理技能：根据技能数量限制处理
-            const skillLimits = SKILL_LIMITS.mutation;
-            
-            // 如果是进阶（稀有度提升），保留旧变异到历史
-            if (isRarityUpgrade) {
-                const oldConfig = getMutationConfig(oldMutation);
-                if (oldConfig && !animal.mutations.history.some(h => h.name === oldMutation)) {
-                    animal.mutations.history.push({
-                        name: oldMutation,
-                        rarity: oldRarity,
-                        icon: oldConfig.icon
-                    });
-                }
-                // 稀有度提升时，保留所有旧技能（不移除）
-            } else if (oldMutation) {
-                // 同级转换：强制替换技能
-                const skillsToRemove = animal.mutations.currentSkills || (getMutationConfig(oldMutation)?.skills || []);
-                
-                if (skillsToRemove && skillsToRemove.length > 0) {
-                    // 从变异技能列表中移除旧变异的技能
-                    animal.mutations.skills = animal.mutations.skills.filter(s => !skillsToRemove.includes(s));
-                    
-                    // 从装备槽中移除旧的变异技能
-                    if (animal.combatSkills && animal.combatSkills.equipped) {
-                        animal.combatSkills.equipped = animal.combatSkills.equipped.map(skillKey => {
-                            if (skillKey && skillsToRemove.includes(skillKey)) {
-                                return null;
-                            }
-                            return skillKey;
-                        });
-                    }
-                }
-            }
-            
-            // 更新当前变异
-            animal.mutations.tier1 = mutationName;
-            
-            // 从技能池中获取对应变异类型的技能
-            let mutationSkills = getSkillsFromPool(mutationName);
-            
-            // 如果技能池为空，使用预定义技能
-            if (mutationSkills.length === 0) {
-                mutationSkills = config.skills || [];
-            }
-            
-            // 计算应获得的技能数量（考虑跨级奖励）
-            let skillCount = mutationSkills.length;
-            if (isRarityUpgrade) {
-                const rarityDiff = getRarityLevel(targetRarity) - getRarityLevel(oldRarity);
-                if (rarityDiff === 1) {
-                    // 普通->精英 或 精英->传说：+1技能
-                    skillCount = Math.min(skillCount + 1, skillLimits[targetRarity]);
-                } else if (rarityDiff === 2) {
-                    // 普通->传说：+2技能
-                    skillCount = Math.min(skillCount + 2, skillLimits[targetRarity]);
-                }
-            }
-            
-            // 从技能池中随机选择技能
-            const selectedSkills = mutationSkills.slice(0, skillCount);
-
-            // 记录当前变异带来的技能，供下次变异时移除
-            animal.mutations.currentSkills = [...selectedSkills];
-
-            // 添加新技能到拥有的技能列表
-            // 确保即使 selectedSkills 为空，也从 config.skills 添加
-            const skillsToAdd = selectedSkills.length > 0 ? selectedSkills : (config.skills || []);
-
-            skillsToAdd.forEach(skillKey => {
-                if (!animal.mutations.skills.includes(skillKey)) {
-                    animal.mutations.skills.push(skillKey);
-                }
-            });
-            
-            // 检查并限制技能数量
-            limitMutationSkills(animal, skillLimits);
-            
-            // 应用属性加成
-            applyMutationStats(animal, config.stats);
-            
-            // 增加变异次数
-            animal.mutationCount = (animal.mutationCount || 0) + 1;
-            
-            // 暂时移除24小时冷却期
-            // animal.mutationCooldownUntil = Date.now() + (24 * 60 * 60 * 1000);
-            
-            const rarityText = { basic: '基础', elite: '精英', legendary: '传说' }[targetRarity];
-            const isUpgrade = oldMutation && getRarityLevel(targetRarity) > getRarityLevel(oldRarity);
-            let log = `✅ 一级变异成功！\n[${rarityText}级] ${oldMutation || '无'} → ${mutationName}\n`;
-            if (isUpgrade) {
-                log += `🎉 稀有度提升！旧变异已保留到历史记录\n`;
-            }
-            
-            // 获取技能名称（从技能池或预定义）
-            const skillNames = getSkillNames(mutationSkills.length > 0 ? mutationSkills : config.skills);
-            log += `获得技能: ${skillNames.join(', ')}`;
-            
-            const changeDesc = `
-                <div class="space-y-2">
-                    <div class="flex justify-between items-center bg-gray-700 p-3 rounded">
-                        <span class="text-gray-400">变异类型</span>
-                        <span class="text-yellow-400 font-bold">${config.icon} ${mutationName}</span>
-                    </div>
-                    <div class="flex justify-between items-center bg-gray-700 p-3 rounded">
-                        <span class="text-gray-400">稀有度</span>
-                        <span class="text-purple-400 font-bold">${rarityText}级</span>
-                    </div>
-                    ${isUpgrade ? `
-                    <div class="bg-green-900/20 border border-green-500/40 p-3 rounded">
-                        <div class="text-green-400 mb-1">🎉 稀有度提升！</div>
-                        <div class="text-xs text-gray-400">旧变异 "${oldMutation}" 已保留到历史记录</div>
-                    </div>
-                    ` : ''}
-                    <div class="bg-gray-700 p-3 rounded">
-                        <div class="text-gray-400 mb-2">新增技能:</div>
-                        ${getSkillDisplayHtml(mutationSkills.length > 0 ? mutationSkills : config.skills)}
-                    </div>
-                </div>
-            `;
-            
-            return { success: true, log, changeDesc };
-        }
-
-        function performTier2Mutation(animal) {
-            const roll = Math.random() * 100;
-            
-            // 暂时移除二级变异冷却期
-            // animal.tier2MutationCooldownUntil = Date.now() + (24 * 60 * 60 * 1000);
-            
-            if (roll > MUTATION_PROBABILITY.tier2.success_rate) {
-                return {
-                    success: false,
-                    log: '❌ 二级变异失败！基因序列不稳定。\n进入24小时冷却修养期。',
-                    changeDesc: '<p class="text-center text-gray-400">二级变异失败，动物需要休息。</p>'
-                };
-            }
-            
-            let mutationName;
-            const tierRoll = Math.random() * 100;
-            const dist = MUTATION_PROBABILITY.tier2.distribution;
-            if (tierRoll < dist['阴']) {
-                mutationName = '阴';
-            } else if (tierRoll < dist['阴'] + dist['阳']) {
-                mutationName = '阳';
-            } else {
-                mutationName = '玄';
-            }
-            
-            const config = MUTATION_CONFIG.tier2[mutationName];
-            const oldTier2 = animal.mutations.tier2;
-            
-            // 如果已有二级变异，移除旧的属性加成（通过反向应用）
-            if (oldTier2 && MUTATION_CONFIG.tier2[oldTier2]) {
-                const oldConfig = MUTATION_CONFIG.tier2[oldTier2];
-                const reverseStats = {};
-                for (const [key, value] of Object.entries(oldConfig.stats)) {
-                    reverseStats[key] = -value;
-                }
-                applyMutationStats(animal, reverseStats);
-            }
-            
-            animal.mutations.tier2 = mutationName;
-            
-            applyMutationStats(animal, config.stats);
-            
-            let log = `✅ 二级变异成功！\n${oldTier2 || '无'} → ${mutationName}\n`;
-            log += `属性提升: ${Object.entries(config.stats).map(([k, v]) => `${k}+${v}`).join(', ')}`;
-            
-            const changeDesc = `
-                <div class="space-y-2">
-                    <div class="flex justify-between items-center bg-gray-700 p-3 rounded">
-                        <span class="text-gray-400">二级变异</span>
-                        <span class="text-yellow-400 font-bold">${config.icon} ${mutationName}</span>
-                    </div>
-                    <div class="bg-gray-700 p-3 rounded">
-                        <div class="text-gray-400 mb-2">属性加成:</div>
-                        ${Object.entries(config.stats).map(([k, v]) => `<div class="text-sm">${k}: +${v}</div>`).join('')}
-                    </div>
-                </div>
-            `;
-            
-            return { success: true, log, changeDesc };
-        }
-
-        function applyMutationStats(animal, stats) {
-            if (stats.attack) animal.abilities.combat.attack += stats.attack;
-            if (stats.defense) animal.abilities.combat.defense += stats.defense;
-            if (stats.agility) animal.abilities.combat.agility += stats.agility;
-            if (stats.stamina) {
-                animal.stamina += stats.stamina;
-                animal.maxStamina += stats.stamina;
-            }
-        }
-
-        function getRarityLevel(rarity) {
-            return MUTATION_RARITY_LEVELS[rarity] || 0;
-        }
-        
-        // 新增：基于亲和链计算变异结果
-        function calculateAffinityMutation(currentMutation, currentRarity) {
-            const currentConfig = getMutationConfig(currentMutation);
-            const currentChain = currentConfig?.chain;
-            
-            if (!currentChain) {
-                // 如果没有链信息，回退到随机
-                return { rarity: currentRarity, mutation: currentMutation };
-            }
-            
-            const chainInfo = AFFINITY_CHAINS[currentChain];
-            const oppositeChain = chainInfo.opposite;
-            
-            if (currentRarity === 'basic') {
-                // 从基础级变异
-                const roll = Math.random() * 100;
-                const prob = MUTATION_PROBABILITY.from_basic;
-                
-                if (roll < prob.same_tier) {
-                    return selectSameTierMutation('basic', currentMutation, currentChain, oppositeChain);
-                } else if (roll < prob.same_tier + prob.upgrade_elite) {
-                    return selectUpgradeMutation('elite', currentChain, oppositeChain);
-                } else {
-                    return selectUpgradeMutation('legendary', currentChain, oppositeChain);
-                }
-            } else if (currentRarity === 'elite') {
-                // 从精英级变异
-                const roll = Math.random() * 100;
-                const prob = MUTATION_PROBABILITY.from_elite;
-                
-                if (roll < prob.same_tier) {
-                    return selectSameTierMutation('elite', currentMutation, currentChain, oppositeChain);
-                } else {
-                    return selectUpgradeMutation('legendary', currentChain, oppositeChain);
-                }
-            } else {
-                // 传说级只能同级转换
-                return selectSameTierMutation('legendary', currentMutation, currentChain, oppositeChain);
-            }
-        }
-        
-        // 新增：选择同级变异
-        function selectSameTierMutation(rarity, currentMutation, currentChain, oppositeChain) {
-            const tier = MUTATION_CONFIG.tier1[rarity];
-            const candidates = Object.keys(tier).filter(m => m !== currentMutation);
-            
-            // 按亲和度分类
-            const opposite = candidates.filter(m => tier[m].chain === oppositeChain);
-            const neutral = candidates.filter(m => tier[m].chain !== currentChain && tier[m].chain !== oppositeChain);
-            
-            // 计算概率
-            const roll = Math.random() * 100;
-            let selected;
-            
-            if (rarity === 'legendary') {
-                // 传说级：对立15%，中立各42.5%
-                const oppositeChance = MUTATION_PROBABILITY.same_tier_opposite.legendary;
-                if (roll < oppositeChance && opposite.length > 0) {
-                    selected = opposite[Math.floor(Math.random() * opposite.length)];
-                } else if (neutral.length > 0) {
-                    selected = neutral[Math.floor(Math.random() * neutral.length)];
-                } else {
-                    selected = candidates[Math.floor(Math.random() * candidates.length)];
-                }
-            } else {
-                // 基础级/精英级：对立较低概率，中立均分
-                const oppositeChance = MUTATION_PROBABILITY.same_tier_opposite[rarity];
-                if (roll < oppositeChance && opposite.length > 0) {
-                    selected = opposite[Math.floor(Math.random() * opposite.length)];
-                } else if (neutral.length > 0) {
-                    selected = neutral[Math.floor(Math.random() * neutral.length)];
-                } else {
-                    selected = candidates[Math.floor(Math.random() * candidates.length)];
-                }
-            }
-            
-            return { rarity, mutation: selected };
-        }
-        
-        // 新增：选择升级变异
-        function selectUpgradeMutation(targetRarity, currentChain, oppositeChain) {
-            const tier = MUTATION_CONFIG.tier1[targetRarity];
-            const candidates = Object.keys(tier);
-            
-            // 按亲和度分类
-            const affinity = candidates.filter(m => tier[m].chain === currentChain);
-            const opposite = candidates.filter(m => tier[m].chain === oppositeChain);
-            const neutral = candidates.filter(m => tier[m].chain !== currentChain && tier[m].chain !== oppositeChain);
-            
-            // 计算概率
-            const roll = Math.random() * 100;
-            let selected;
-            
-            if (targetRarity === 'elite') {
-                // 升级到精英：使用配置的概率
-                const prob = MUTATION_PROBABILITY.affinity.to_elite;
-                if (roll < prob.affinity_chain && affinity.length > 0) {
-                    selected = affinity[Math.floor(Math.random() * affinity.length)];
-                } else if (roll < prob.affinity_chain + prob.opposite_chain && opposite.length > 0) {
-                    selected = opposite[Math.floor(Math.random() * opposite.length)];
-                } else if (neutral.length > 0) {
-                    selected = neutral[Math.floor(Math.random() * neutral.length)];
-                } else {
-                    selected = candidates[Math.floor(Math.random() * candidates.length)];
-                }
-            } else {
-                // 升级到传说：使用配置的概率
-                const prob = MUTATION_PROBABILITY.affinity.to_legendary;
-                
-                if (roll < prob.affinity_chain && affinity.length > 0) {
-                    selected = affinity[Math.floor(Math.random() * affinity.length)];
-                } else if (roll < prob.affinity_chain + prob.opposite_chain && opposite.length > 0) {
-                    selected = opposite[Math.floor(Math.random() * opposite.length)];
-                } else if (neutral.length > 0) {
-                    selected = neutral[Math.floor(Math.random() * neutral.length)];
-                } else {
-                    selected = candidates[Math.floor(Math.random() * candidates.length)];
-                }
-            }
-            
-            return { rarity: targetRarity, mutation: selected };
-        }
-        
-        // 新增：限制变异技能数量
-        function limitMutationSkills(animal, skillLimits) {
-            if (!animal.mutations || !animal.mutations.skills) return;
-            
-            // 读取技能池以支持自定义技能
-            const skillPool = JSON.parse(localStorage.getItem('SKILL_POOL') || '[]');
-            
-            // 按稀有度分类技能
-            const skillsByRarity = { basic: [], elite: [], legendary: [] };
-            
-            animal.mutations.skills.forEach(skillKey => {
-                let found = false;
-                
-                // 首先在预定义配置中查找
-                for (const [rarity, mutations] of Object.entries(MUTATION_CONFIG.tier1)) {
-                    for (const mutConfig of Object.values(mutations)) {
-                        if (mutConfig.skills && mutConfig.skills.includes(skillKey)) {
-                            skillsByRarity[rarity].push(skillKey);
-                            found = true;
-                            return;
-                        }
-                    }
-                }
-                
-                // 如果是自定义技能，从技能池中推断稀有度
-                if (!found) {
-                    const customSkill = skillPool.find(s => s.key === skillKey);
-                    if (customSkill && customSkill.category) {
-                        // 根据category推断稀有度
-                        // mutation-dark, mutation-light, mutation-crystal, mutation-shadow -> basic
-                        // mutation-chaos, mutation-holy, mutation-psychic, mutation-thunder -> elite
-                        // mutation-eternal-*, mutation-source-*, mutation-thunder-lord -> legendary
-                        let rarity = 'basic'; // 默认为basic
-                        if (customSkill.category.includes('chaos') ||
-                            customSkill.category.includes('holy') ||
-                            customSkill.category.includes('psychic') ||
-                            (customSkill.category.includes('thunder') && !customSkill.category.includes('lord'))) {
-                            rarity = 'elite';
-                        } else if (customSkill.category.includes('eternal') ||
-                                   customSkill.category.includes('source') ||
-                                   customSkill.category.includes('lord')) {
-                            rarity = 'legendary';
-                        }
-                        skillsByRarity[rarity].push(skillKey);
-                    } else {
-                        // 如果完全找不到，保留该技能（归类到basic）
-                        skillsByRarity.basic.push(skillKey);
-                    }
-                }
-            });
-            
-            // 限制每个稀有度的技能数量
-            let limitedSkills = [];
-            for (const [rarity, skills] of Object.entries(skillsByRarity)) {
-                const limit = skillLimits[rarity];
-                limitedSkills = limitedSkills.concat(skills.slice(0, limit));
-            }
-            
-            // 更新技能列表
-            animal.mutations.skills = limitedSkills;
-            
-            // 从装备槽中移除超出限制的技能
-            if (animal.combatSkills && animal.combatSkills.equipped) {
-                animal.combatSkills.equipped = animal.combatSkills.equipped.map(skillKey => {
-                    if (skillKey && !limitedSkills.includes(skillKey)) {
-                        return null;
-                    }
-                    return skillKey;
-                });
-            }
-        }
-        
-        // 新增：从技能池中获取对应变异类型的技能
-        function getSkillsFromPool(mutationType) {
-            const skillPool = JSON.parse(localStorage.getItem('SKILL_POOL') || '[]');
-            
-            const category = MUTATION_TO_CATEGORY_MAP[mutationType];
-            if (!category) return [];
-            
-            // 筛选出对应类别的技能
-            const matchingSkills = skillPool.filter(skill => skill.category === category);
-            
-            // 随机选择技能（基础级1个，精英级2个，传说级2个）
-            const config = getMutationConfig(mutationType);
-            const maxSkills = config?.rarity === 'basic' ? 1 : 2;
-            
-            // 打乱并选择
-            const shuffled = matchingSkills.sort(() => Math.random() - 0.5);
-            return shuffled.slice(0, maxSkills).map(s => s.key);
-        }
-        
-        // 新增：获取技能名称列表
-        function getSkillNames(skillKeys) {
-            const skillPool = JSON.parse(localStorage.getItem('SKILL_POOL') || '[]');
-            return skillKeys.map(skillKey => {
-                const skill = MUTATION_SKILLS[skillKey];
-                if (skill) return skill.name;
-                
-                const customSkill = skillPool.find(s => s.key === skillKey);
-                return customSkill ? customSkill.name : '未知技能';
-            });
-        }
-        
-        // 新增：获取技能显示HTML
-        function getSkillDisplayHtml(skillKeys) {
-            const skillPool = JSON.parse(localStorage.getItem('SKILL_POOL') || '[]');
-            return skillKeys.map(skillKey => {
-                const skill = MUTATION_SKILLS[skillKey];
-                if (skill) {
-                    return `<div class="text-sm">${skill.icon} ${skill.name}</div>`;
-                }
-                
-                const customSkill = skillPool.find(s => s.key === skillKey);
-                if (customSkill) {
-                    return `<div class="text-sm">${customSkill.icon} ${customSkill.name}</div>`;
-                }
-                
-                return `<div class="text-sm">❓ 未知技能</div>`;
-            }).join('');
-        }
 
         // --- 逻辑处理函数 ---
 
@@ -3037,6 +2680,7 @@
                 name: `${ANIMAL_NAMES[nameIndex]}${gameState.animals.length + 1}`,
                 originalName: `${ANIMAL_NAMES[nameIndex]}${gameState.animals.length + 1}`,
                 color: color,
+                avatarData: null,
                 isWild: false,
                 isPlaced: false,
                 level: 1,
@@ -3273,6 +2917,7 @@
                     name: template.name,  // 使用模板名字
                     originalName: template.name,
                     color: parseInt(template.color.replace('#', ''), 16),  // 使用模板颜色
+                    avatarData: template.avatarData || null,  // 使用模板头像
                     isWild: false,
                     isPlaced: false,
                     level: 1,  // 子代总是从等级1开始

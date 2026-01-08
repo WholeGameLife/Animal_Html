@@ -684,6 +684,7 @@
             const animalData = {
                 id: id,
                 animalId: template.animalId,  // 设置物种ID（重要！）
+                avatarData: null,  // 不直接继承头像数据，将在需要时从模板读取
                 name: template.name,
                 level: template.level || 1,
                 gender: Math.random() > 0.5 ? '雄' : '雌',
@@ -893,6 +894,7 @@
             return {
                 id: id,
                 animalId: null,  // 默认生成的动物没有物种ID（因为不是基于模板）
+                avatarData: null,  // 初始化头像数据
                 name: rarity.prefix ? `${rarity.prefix}·野生${element}兽` : `野生${element}兽`,
                 level: level,
                 gender: Math.random() > 0.5 ? '雄' : '雌',
@@ -1013,6 +1015,8 @@
                 // 修复：转换 combatSkills 数据结构以匹配 animal_management.html 的期望格式
                 capturedAnimalData.isWild = false;
                 capturedAnimalData.isPlaced = false;
+                
+                // 不需要在这里恢复头像数据，将在渲染列表时按需读取
                 
                 // 将简单数组格式转换为对象格式
                 if (Array.isArray(capturedAnimalData.combatSkills)) {
