@@ -638,14 +638,14 @@
             'buff_attack': { name: '增攻', params: ['effect-source', 'target', 'bonus'] },
             'buff_defense': { name: '增防', params: ['effect-source', 'target', 'bonus'] },
             'buff_speed': { name: '增速', params: ['effect-source', 'target', 'bonus'] },
-            'buff_status_enemy': { name: '为敌方附加异常', params: ['status-type', 'status-chance'] },
+            'buff_status_enemy': { name: '为敌方附加异常', params: ['status-type', 'status-chance', 'status-stacks'] },
             'buff_purify': { name: '净化', params: ['target', 'purify-type'] },
             'buff_heal_amp': { name: '增加治疗量', params: ['effect-source', 'target', 'bonus'] },
             'buff_element_damage': { name: '属性增伤', params: ['target', 'element-type', 'damage-bonus'] },
             'debuff_attack': { name: '减攻', params: ['effect-source', 'target', 'bonus'] },
             'debuff_defense': { name: '减防', params: ['effect-source', 'target', 'bonus'] },
             'debuff_speed': { name: '减速', params: ['effect-source', 'target', 'bonus'] },
-            'debuff_status_self': { name: '为自身附加异常', params: ['status-type', 'status-chance'] },
+            'debuff_status_self': { name: '为自身附加异常', params: ['status-type', 'status-chance', 'status-stacks'] },
             'debuff_no_heal': { name: '禁疗', params: ['target'] },
             'debuff_heal_reduce': { name: '减疗', params: ['effect-source', 'target', 'bonus'] },
             'debuff_element_damage': { name: '属性减伤', params: ['target', 'element-type', 'damage-reduce'] },
@@ -659,6 +659,25 @@
         // 技能池存储
         let skills = JSON.parse(localStorage.getItem('SKILL_POOL') || '[]');
         let editingIndex = -1;
+        
+        // 获取状态选项
+        function getStatusOptions() {
+            const statusPool = JSON.parse(localStorage.getItem('STATUS_POOL') || '[]');
+            
+            if (statusPool.length === 0) {
+                return '<option value="">暂无可用状态，请先创建</option>';
+            }
+            
+            let options = '';
+            statusPool.forEach(status => {
+                // 显示状态图标（如果有）
+                const displayName = status.iconImage ?
+                    `${status.name}` : status.name;
+                options += `<option value="${status.key}">${displayName}</option>`;
+            });
+            
+            return options;
+        }
 
         // DOM元素
         const form = document.getElementById('skill-form');
@@ -751,6 +770,25 @@
                 .map(checkbox => checkbox.value);
             
             dynamicParams.innerHTML = '';
+            
+            // 检查是否包含异常状态效果
+            const hasStatusEffect = selectedEffects.some(effect =>
+                effect === 'buff_status_enemy' || effect === 'debuff_status_self'
+            );
+            
+            // 隐藏或显示通用参数中的持续回合和每回合次数
+            const durationField = document.getElementById('param-duration').parentElement;
+            const countField = document.getElementById('param-count').parentElement;
+            
+            if (hasStatusEffect) {
+                // 如果有异常状态效果，隐藏持续回合和每回合次数
+                durationField.style.display = 'none';
+                countField.style.display = 'none';
+            } else {
+                // 否则显示
+                durationField.style.display = 'block';
+                countField.style.display = 'block';
+            }
             
             if (selectedEffects.length === 0) return;
 
@@ -957,18 +995,22 @@
                 case 'status-type':
                     return `<div><label class="block text-xs font-medium text-gray-400 mb-1">异常状态类型</label>
                         <select id="${paramId}" class="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white text-sm">
-                            <option value="stun">眩晕</option>
-                            <option value="poison">中毒</option>
-                            <option value="bleed">流血</option>
-                            <option value="frostbite">冻伤</option>
-                            <option value="burn">烧伤</option>
-                            <option value="paralyze">麻痹</option>
-                        </select></div>`;
+                            ${getStatusOptions()}
+                        </select>
+                        <p class="text-xs text-gray-500 mt-1">来自状态池 | <a href="status_designer.html" class="text-blue-400 hover:text-blue-300" target="_blank">创建新状态</a></p>
+                    </div>`;
                 
                 case 'status-chance':
                     return `<div><label class="block text-xs font-medium text-gray-400 mb-1">施加概率 (%)</label>
-                        <input type="number" id="${paramId}" min="0" max="100" value="50"
-                            class="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white text-sm"></div>`;
+                        <input type="number" id="${paramId}" min="0" max="100" value="100"
+                            class="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white text-sm">
+                        <p class="text-xs text-gray-500 mt-1">成功施加状态的概率</p></div>`;
+                
+                case 'status-stacks':
+                    return `<div><label class="block text-xs font-medium text-gray-400 mb-1">施加层数</label>
+                        <input type="number" id="${paramId}" min="1" max="99" value="1"
+                            class="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white text-sm">
+                        <p class="text-xs text-gray-500 mt-1">一次施加的状态层数</p></div>`;
                 
                 case 'purify-type':
                     return `<div><label class="block text-xs font-medium text-gray-400 mb-1">可驱散的异常状态</label>
@@ -1288,6 +1330,33 @@
             return names[source] || source || '未选择';
         }
 
+        // 获取状态显示信息
+        function getStatusDisplay(statusKey) {
+            const statusPool = JSON.parse(localStorage.getItem('STATUS_POOL') || '[]');
+            const status = statusPool.find(s => s.key === statusKey);
+            
+            if (status) {
+                // 如果找到状态，显示图片或名称
+                if (status.iconImage) {
+                    return `<img src="${status.iconImage}" class="w-5 h-5 inline-block object-contain" title="${status.name}">`;
+                }
+                return status.name;
+            }
+            
+            // 如果是内置状态（兼容旧数据）
+            const builtInNames = {
+                'stun': '😵 眩晕',
+                'poison': '🤢 中毒',
+                'bleed': '🩸 流血',
+                'frostbite': '❄️ 冻伤',
+                'burn': '🔥 灼烧',
+                'paralyze': '⚡ 麻痹',
+                'no-heal': '🚫 禁疗',
+                'heal-reduce': '📉 减疗'
+            };
+            return builtInNames[statusKey] || statusKey;
+        }
+
         // 战斗测试相关
         let testSkill = null;
         let currentTurn = 1;
@@ -1296,25 +1365,13 @@
             self: {
                 hp: 1000, maxHp: 1000, attack: 100, defense: 50, agility: 80,
                 baseAttack: 100, baseDefense: 50, baseAgility: 80, turnDamage: 0,
-                status: [], element: 'water'
+                statuses: [], element: 'water' // 改为对象数组：[{key, stacks, duration}]
             },
             enemy: {
                 hp: 800, maxHp: 800, attack: 90, defense: 40, agility: 70,
                 baseAttack: 90, baseDefense: 40, baseAgility: 70, turnDamage: 0,
-                status: [], element: 'fire'
+                statuses: [], element: 'fire' // 改为对象数组：[{key, stacks, duration}]
             }
-        };
-
-        // 异常状态名称映射
-        const statusNames = {
-            'stun': '😵 眩晕',
-            'poison': '🤢 中毒',
-            'bleed': '🩸 流血',
-            'frostbite': '❄️ 冻伤',
-            'burn': '🔥 灼烧',
-            'paralyze': '⚡ 麻痹',
-            'no-heal': '🚫 禁疗',
-            'heal-reduce': '📉 减疗'
         };
 
         let selectedTestSkills = [];
@@ -1392,14 +1449,33 @@
         function enemyAttack() {
             addLog(`━━━━━ 敌人回合 ━━━━━`, 'red');
             
+            // 检查敌人是否能够行动
+            if (battleState.enemy.cannotAct) {
+                addLog(`❌ 敌人无法行动！`, 'purple');
+                return;
+            }
+            
+            // 检查敌人是否能够攻击
+            if (battleState.enemy.cannotAttack) {
+                addLog(`❌ 敌人无法攻击！`, 'purple');
+                return;
+            }
+            
             // 计算敌人的攻击伤害
             const rawDamage = battleState.enemy.attack;
-            const actualDamage = Math.max(1, rawDamage - battleState.self.defense);
+            
+            // 检查我方是否能够防御
+            const defense = battleState.self.cannotDefend ? 0 : battleState.self.defense;
+            if (battleState.self.cannotDefend) {
+                addLog(`⚠️ 我方无法防御！`, 'yellow');
+            }
+            
+            const actualDamage = Math.max(1, rawDamage - defense);
             
             battleState.self.hp -= actualDamage;
             battleState.enemy.turnDamage += actualDamage;
             
-            addLog(`敌人攻击: ${rawDamage} - ${battleState.self.defense}(我方防御) = ${actualDamage} 点伤害`, 'red');
+            addLog(`敌人攻击: ${rawDamage} - ${defense}(我方防御) = ${actualDamage} 点伤害`, 'red');
             
             updateBattleUI();
             
@@ -1525,13 +1601,13 @@
                 self: {
                     hp: selfHp, maxHp: selfHp, attack: selfAttack, defense: selfDefense, agility: selfAgility,
                     baseAttack: selfAttack, baseDefense: selfDefense, baseAgility: selfAgility, turnDamage: 0,
-                    status: [], element: selfElement,
+                    statuses: [], element: selfElement,
                     elementDamageBonus: {}
                 },
                 enemy: {
                     hp: enemyHp, maxHp: enemyHp, attack: enemyAttack, defense: enemyDefense, agility: enemyAgility,
                     baseAttack: enemyAttack, baseDefense: enemyDefense, baseAgility: enemyAgility, turnDamage: 0,
-                    status: [], element: enemyElement,
+                    statuses: [], element: enemyElement,
                     elementDamageReduce: {}
                 }
             };
@@ -1546,6 +1622,17 @@
             battleState.enemy.turnDamage = 0;
             
             addLog(`━━━━━ 第${currentTurn}回合开始 ━━━━━`, 'blue');
+            
+            // 重置属性到基础值（清除上回合的状态加成）
+            resetAttributesToBase();
+            
+            // 回合开始：先递减状态持续时间（这样新增的层不会在同回合被递减）
+            decreaseStatusDurations('self');
+            decreaseStatusDurations('enemy');
+            
+            // 处理本回合的状态效果（移除过期+自增长+触发）
+            processStatuses('self');
+            processStatuses('enemy');
             
             // 清除临时增益效果（duration=0的效果）
             clearTemporaryBuffs();
@@ -1597,7 +1684,7 @@
                                 }
                                 addLog(`× 属性增伤效果已结束(${getElementName(elementType)}系)`, 'gray');
                             } else if (effect.effectKey === 'debuff_element_damage') {
-                                const elementType = params[`${effect.effectKey}_element-type`] || 'fire';
+                                const elementType = params[`${effectKey}_element-type`] || 'fire';
                                 if (battleState.enemy.elementDamageReduce) {
                                     delete battleState.enemy.elementDamageReduce[elementType];
                                 }
@@ -1622,7 +1709,393 @@
             if (battleState.enemy.hp <= 0) {
                 addLog('💀 敌人被击败！', 'red');
             }
+            
             addLog(`━━━━━ 第${currentTurn}回合结束 ━━━━━`, 'blue');
+        }
+        
+        // 重置属性到基础值
+        function resetAttributesToBase() {
+            addLog(`━ 重置属性到基础值`, 'gray');
+            
+            // 我方
+            battleState.self.attack = battleState.self.baseAttack;
+            battleState.self.defense = battleState.self.baseDefense;
+            battleState.self.agility = battleState.self.baseAgility;
+            
+            // 清除临时标记
+            battleState.self.damageBonus = 0;
+            battleState.self.damageReduce = 0;
+            battleState.self.ignoreDefense = 0;
+            battleState.self.elementBonus = 0;
+            battleState.self.elementAdvantage = 1;
+            battleState.self.cannotAct = false;
+            battleState.self.cannotAttack = false;
+            battleState.self.cannotDefend = false;
+            battleState.self.firstStrike = false;
+            battleState.self.doubleAction = false;
+            battleState.self.cooldownReset = false;
+            
+            // 敌方
+            battleState.enemy.attack = battleState.enemy.baseAttack;
+            battleState.enemy.defense = battleState.enemy.baseDefense;
+            battleState.enemy.agility = battleState.enemy.baseAgility;
+            
+            // 清除临时标记
+            battleState.enemy.damageBonus = 0;
+            battleState.enemy.damageReduce = 0;
+            battleState.enemy.ignoreDefense = 0;
+            battleState.enemy.elementBonus = 0;
+            battleState.enemy.elementAdvantage = 1;
+            battleState.enemy.cannotAct = false;
+            battleState.enemy.cannotAttack = false;
+            battleState.enemy.cannotDefend = false;
+            battleState.enemy.firstStrike = false;
+            battleState.enemy.doubleAction = false;
+            battleState.enemy.cooldownReset = false;
+        }
+        
+        // 处理状态效果（每回合）
+        function processStatuses(target) {
+            const unit = battleState[target];
+            if (unit.statuses.length === 0) return;
+            
+            addLog(`━ 处理${target === 'self' ? '我方' : '敌方'}状态`, 'cyan');
+            
+            // 处理每个状态：先自增长，再移除过期层
+            unit.statuses.forEach(status => {
+                // 兼容性：旧格式转换为新格式
+                if (!status.stackDurations && status.duration !== undefined) {
+                    const duration = status.duration === -1 ? 999 : status.duration;
+                    const stacks = status.stacks || 1;
+                    status.stackDurations = Array(stacks).fill(duration);
+                }
+                
+                const statusData = status.data;
+                const statusName = statusData ? statusData.name : status.key;
+                
+                // 如果状态有自增长属性（在移除过期层之前判断并增长）
+                // 即使当前所有层的持续时间都<=0，只要状态还存在就要自增长
+                if (statusData?.autoGrow && !statusData?.isPermanent) {
+                    const growRate = statusData.growRate || 1;
+                    const maxStacks = statusData.maxStacks || 99;
+                    const currentStacks = status.stackDurations ? status.stackDurations.length : 0;
+                    const canAdd = Math.min(maxStacks - currentStacks, growRate);
+                    
+                    if (canAdd > 0) {
+                        const durationPerStack = statusData.durationPerStack || 3;
+                        if (!status.stackDurations) status.stackDurations = [];
+                        
+                        for (let i = 0; i < canAdd; i++) {
+                            status.stackDurations.push(durationPerStack);
+                        }
+                        addLog(`[${statusName}] 层数自增长: ${currentStacks}→${status.stackDurations.length}层 (新层各${durationPerStack}回合)`, 'cyan');
+                    }
+                }
+                
+                // 现在移除持续时间<=0的过期层
+                if (status.stackDurations) {
+                    const beforeStacks = status.stackDurations.length;
+                    status.stackDurations = status.stackDurations.filter(d => d > 0);
+                    const afterStacks = status.stackDurations.length;
+                    
+                    if (beforeStacks > afterStacks) {
+                        addLog(`[${statusName}] 移除${beforeStacks - afterStacks}个过期层`, 'gray');
+                    }
+                }
+            });
+            
+            // 移除过期状态（状态持续时间<=0）
+            const beforeCount = unit.statuses.length;
+            unit.statuses = unit.statuses.filter(status => {
+                // 永久状态保留
+                if (status.data?.isPermanent) {
+                    return true;
+                }
+                
+                // 检查状态持续时间
+                const statusDuration = status.statusDuration !== undefined ? status.statusDuration : 999;
+                if (statusDuration <= 0) {
+                    const statusName = status.data ? status.data.name : status.key;
+                    addLog(`× ${statusName} 状态持续时间结束`, 'gray');
+                    return false;
+                }
+                
+                return true;
+            });
+            
+            if (beforeCount !== unit.statuses.length) {
+                addLog(`移除${beforeCount - unit.statuses.length}个过期状态`, 'gray');
+            }
+            
+            // 触发剩余状态的效果
+            unit.statuses.forEach(status => {
+                const statusData = status.data;
+                const statusName = statusData ? statusData.name : status.key;
+                const hasStacks = statusData?.hasStacks !== false;
+                
+                if (hasStacks) {
+                    const stacks = status.stackDurations?.length || 0;
+                    if (stacks === 0) return;
+                    
+                    const statusDurationText = statusData?.isPermanent ? '永久' : `状态${status.statusDuration}回合`;
+                    addLog(`[${statusName}] (${statusDurationText}) ×${stacks}层 回合数:[${status.stackDurations.join(',')}]`, 'yellow');
+                } else {
+                    // 无层数状态
+                    const statusDurationText = statusData?.isPermanent ? '永久' : `状态${status.statusDuration}回合`;
+                    addLog(`[${statusName}] (${statusDurationText}) 无层数`, 'yellow');
+                }
+                
+                // 触发状态效果
+                if (statusData && statusData.effects) {
+                    statusData.effects.forEach(effectKey => {
+                        applyStatusEffect(target, status, effectKey);
+                    });
+                }
+            });
+        }
+        
+        // 递减状态持续时间（回合开始时调用）
+        function decreaseStatusDurations(target) {
+            const unit = battleState[target];
+            if (unit.statuses.length === 0) return;
+            
+            addLog(`━ ${target === 'self' ? '我方' : '敌方'}状态时间递减`, 'gray');
+            
+            unit.statuses.forEach(status => {
+                if (status.data?.isPermanent) return; // 永久状态不递减
+                
+                const statusName = status.data ? status.data.name : status.key;
+                
+                // 递减状态本身的持续时间
+                if (status.statusDuration !== undefined && status.statusDuration > 0) {
+                    const before = status.statusDuration;
+                    status.statusDuration = status.statusDuration - 1;
+                    addLog(`→ ${statusName} 状态: ${before} → ${status.statusDuration}回合`, 'gray');
+                }
+                
+                // 递减每层的持续时间（仅对有层数系统且层数不是永久的状态）
+                const hasStacks = status.data?.hasStacks !== false;
+                if (hasStacks) {
+                    if (status.stackDurations && !status.data?.isStackPermanent) {
+                        const before = status.stackDurations.join(',');
+                        status.stackDurations = status.stackDurations.map(d => d - 1);
+                        const after = status.stackDurations.join(',');
+                        addLog(`→ ${statusName} 各层: [${before}] → [${after}]`, 'gray');
+                    } else if (status.data?.isStackPermanent) {
+                        addLog(`→ ${statusName} 层数永久存在`, 'gray');
+                    }
+                } else {
+                    // 无层数状态无需递减层数
+                    addLog(`→ ${statusName} 无层数`, 'gray');
+                }
+            });
+        }
+        
+        // 应用状态效果
+        function applyStatusEffect(target, status, effectKey) {
+            const unit = battleState[target];
+            const otherUnit = battleState[target === 'self' ? 'enemy' : 'self'];
+            const statusData = status.data;
+            const effectConfig = statusData?.effectConfigs?.[effectKey];
+            if (!effectConfig) return;
+            
+            const hasStacks = statusData?.hasStacks !== false;
+            const stacks = hasStacks ? (statusData?.uniqueEffect ? 1 : (status.stackDurations?.length || 0)) : 1; // 无层数时视为1层
+            
+            if (stacks === 0) return;
+            
+            const getSourceValue = (source) => {
+                const mapping = {
+                    // caster = 施加者 = otherUnit
+                    'caster-current-attack': otherUnit.attack,
+                    'caster-base-attack': otherUnit.baseAttack,
+                    'caster-current-defense': otherUnit.defense,
+                    'caster-base-defense': otherUnit.baseDefense,
+                    'caster-current-agility': otherUnit.agility,
+                    'caster-base-agility': otherUnit.baseAgility,
+                    'caster-max-hp': otherUnit.maxHp,
+                    // target = 承受者 = unit
+                    'target-current-attack': unit.attack,
+                    'target-base-attack': unit.baseAttack,
+                    'target-current-defense': unit.defense,
+                    'target-base-defense': unit.baseDefense,
+                    'target-current-agility': unit.agility,
+                    'target-base-agility': unit.baseAgility,
+                    'target-max-hp': unit.maxHp,
+                    'target-current-hp': unit.hp,
+                    'target-lost-hp': unit.maxHp - unit.hp
+                };
+                return mapping[source] || 0;
+            };
+            
+            const statusName = statusData.name;
+            
+            switch(effectKey) {
+                case 'dot-damage': {
+                    // 持续扣血 - 扣承受状态的单位的血
+                    const sourceValue = getSourceValue(effectConfig.source);
+                    const value = effectConfig.value || 0.05;
+                    const damage = Math.round(sourceValue * value * stacks);
+                    unit.hp -= damage;  // 修正：应该扣unit的血，不是otherUnit
+                    addLog(`→ ${statusName}: 造成 ${damage} 点伤害 (${stacks}层)`, 'red');
+                    break;
+                }
+                case 'hot-heal': {
+                    // 持续回血 - 给承受状态的单位回血
+                    const sourceValue = getSourceValue(effectConfig.source);
+                    const value = effectConfig.value || 0.03;
+                    const heal = Math.round(sourceValue * value * stacks);
+                    unit.hp = Math.min(unit.maxHp, unit.hp + heal);
+                    addLog(`→ ${statusName}: 恢复 ${heal} 生命 (${stacks}层)`, 'green');
+                    break;
+                }
+                case 'boost-attack': {
+                    // 提升攻击
+                    const sourceValue = getSourceValue(effectConfig.source);
+                    const value = effectConfig.value || 0.1;
+                    const increase = Math.round(sourceValue * value * stacks);
+                    unit.attack += increase;
+                    addLog(`→ ${statusName}: 攻击力 +${increase} (${stacks}层)`, 'green');
+                    break;
+                }
+                case 'boost-defense': {
+                    // 提升防御
+                    const sourceValue = getSourceValue(effectConfig.source);
+                    const value = effectConfig.value || 0.1;
+                    const increase = Math.round(sourceValue * value * stacks);
+                    unit.defense += increase;
+                    addLog(`→ ${statusName}: 防御力 +${increase} (${stacks}层)`, 'green');
+                    break;
+                }
+                case 'boost-speed': {
+                    // 提升速度
+                    const sourceValue = getSourceValue(effectConfig.source);
+                    const value = effectConfig.value || 0.1;
+                    const increase = Math.round(sourceValue * value * stacks);
+                    unit.agility += increase;
+                    addLog(`→ ${statusName}: 敏捷 +${increase} (${stacks}层)`, 'green');
+                    break;
+                }
+                case 'boost-damage': {
+                    // 提升伤害（作为伤害加成标记）
+                    const sourceValue = getSourceValue(effectConfig.source);
+                    const value = effectConfig.value || 0.1;
+                    const bonus = value * stacks;
+                    if (!unit.damageBonus) unit.damageBonus = 0;
+                    unit.damageBonus += bonus;
+                    addLog(`→ ${statusName}: 伤害提升 ${Math.round(bonus * 100)}% (${stacks}层)`, 'green');
+                    break;
+                }
+                case 'reduce-attack': {
+                    // 降低攻击
+                    const sourceValue = getSourceValue(effectConfig.source);
+                    const value = effectConfig.value || 0.1;
+                    const decrease = Math.round(sourceValue * value * stacks);
+                    unit.attack = Math.max(0, unit.attack - decrease);
+                    addLog(`→ ${statusName}: 攻击力 -${decrease} (${stacks}层)`, 'purple');
+                    break;
+                }
+                case 'reduce-defense': {
+                    // 降低防御
+                    const sourceValue = getSourceValue(effectConfig.source);
+                    const value = effectConfig.value || 0.1;
+                    const decrease = Math.round(sourceValue * value * stacks);
+                    unit.defense = Math.max(0, unit.defense - decrease);
+                    addLog(`→ ${statusName}: 防御力 -${decrease} (${stacks}层)`, 'purple');
+                    break;
+                }
+                case 'reduce-agility': {
+                    // 降低速度
+                    const sourceValue = getSourceValue(effectConfig.source);
+                    const value = effectConfig.value || 0.1;
+                    const decrease = Math.round(sourceValue * value * stacks);
+                    unit.agility = Math.max(0, unit.agility - decrease);
+                    addLog(`→ ${statusName}: 敏捷 -${decrease} (${stacks}层)`, 'purple');
+                    break;
+                }
+                case 'reduce-damage': {
+                    // 降低伤害（作为伤害减免标记）
+                    const sourceValue = getSourceValue(effectConfig.source);
+                    const value = effectConfig.value || 0.1;
+                    const reduce = value * stacks;
+                    if (!unit.damageReduce) unit.damageReduce = 0;
+                    unit.damageReduce += reduce;
+                    addLog(`→ ${statusName}: 伤害降低 ${Math.round(reduce * 100)}% (${stacks}层)`, 'purple');
+                    break;
+                }
+                case 'ignore-defense': {
+                    // 无视防御
+                    const value = effectConfig.value || 0.1;
+                    const percent = Math.min(1, value * stacks);
+                    if (!unit.ignoreDefense) unit.ignoreDefense = 0;
+                    unit.ignoreDefense += percent;
+                    addLog(`→ ${statusName}: 无视 ${Math.round(percent * 100)}% 防御 (${stacks}层)`, 'green');
+                    break;
+                }
+                case 'element-bonus': {
+                    // 属性增伤
+                    const sourceValue = getSourceValue(effectConfig.source);
+                    const value = effectConfig.value || 0.2;
+                    const bonus = value * stacks;
+                    if (!unit.elementBonus) unit.elementBonus = 0;
+                    unit.elementBonus += bonus;
+                    addLog(`→ ${statusName}: 属性增伤 ${Math.round(bonus * 100)}% (${stacks}层)`, 'green');
+                    break;
+                }
+                case 'element-advantage': {
+                    // 属性克制
+                    const value = effectConfig.value || 1.5;
+                    const multiplier = Math.pow(value, stacks);
+                    if (!unit.elementAdvantage) unit.elementAdvantage = 1;
+                    unit.elementAdvantage *= multiplier;
+                    addLog(`→ ${statusName}: 克制倍率 ×${multiplier.toFixed(2)} (${stacks}层)`, 'green');
+                    break;
+                }
+                case 'cannot-act': {
+                    // 无法行动
+                    unit.cannotAct = true;
+                    addLog(`→ ${statusName}: 无法行动`, 'purple');
+                    break;
+                }
+                case 'cannot-attack': {
+                    // 无法攻击
+                    unit.cannotAttack = true;
+                    addLog(`→ ${statusName}: 无法攻击`, 'purple');
+                    break;
+                }
+                case 'cannot-defend': {
+                    // 无法防御
+                    unit.cannotDefend = true;
+                    addLog(`→ ${statusName}: 无法防御`, 'purple');
+                    break;
+                }
+                case 'first-strike': {
+                    // 无视敏捷直接行动
+                    unit.firstStrike = true;
+                    addLog(`→ ${statusName}: 先手行动`, 'green');
+                    break;
+                }
+                case 'double-action': {
+                    // 行动两次
+                    unit.doubleAction = true;
+                    addLog(`→ ${statusName}: 可行动两次`, 'green');
+                    break;
+                }
+                case 'reverse-stats': {
+                    // 属性反转
+                    const tempAtk = unit.attack;
+                    unit.attack = unit.defense;
+                    unit.defense = tempAtk;
+                    addLog(`→ ${statusName}: 攻防反转 (攻:${unit.attack} 防:${unit.defense})`, 'purple');
+                    break;
+                }
+                case 'reset-cooldown': {
+                    // 重置冷却（标记）
+                    unit.cooldownReset = true;
+                    addLog(`→ ${statusName}: 技能冷却已重置`, 'green');
+                    break;
+                }
+            }
         }
 
         function updateTurnDisplay() {
@@ -1642,12 +2115,23 @@
 
             // 更新我方异常状态
             const selfStatusEl = document.getElementById('self-status');
-            if (battleState.self.status.length === 0) {
+            if (battleState.self.statuses.length === 0) {
                 selfStatusEl.innerHTML = '<span class="text-xs text-gray-500">无</span>';
             } else {
-                selfStatusEl.innerHTML = battleState.self.status.map(s =>
-                    `<span class="bg-red-500/30 text-red-300 px-2 py-0.5 rounded text-xs">${statusNames[s] || s}</span>`
-                ).join('');
+                selfStatusEl.innerHTML = battleState.self.statuses.map(s => {
+                    const display = getStatusDisplay(s.key);
+                    const hasStacks = s.data?.hasStacks !== false;
+                    
+                    if (hasStacks) {
+                        if (!s.stackDurations || s.stackDurations.length === 0) return '';
+                        const stacks = s.stackDurations.length;
+                        const minDuration = s.data?.isPermanent ? '永久' : Math.min(...s.stackDurations);
+                        return `<span class="bg-red-500/30 text-red-300 px-2 py-0.5 rounded text-xs inline-flex items-center gap-1" title="各层剩余回合: ${s.stackDurations.join(',')}">${display} ×${stacks} (${minDuration})</span>`;
+                    } else {
+                        const statusDuration = s.data?.isPermanent ? '永久' : (s.statusDuration || '?');
+                        return `<span class="bg-red-500/30 text-red-300 px-2 py-0.5 rounded text-xs inline-flex items-center gap-1" title="状态持续回合: ${statusDuration}">${display} (${statusDuration})</span>`;
+                    }
+                }).filter(h => h).join('');
             }
 
             // 更新敌方
@@ -1661,12 +2145,23 @@
 
             // 更新敌方异常状态
             const enemyStatusEl = document.getElementById('enemy-status');
-            if (battleState.enemy.status.length === 0) {
+            if (battleState.enemy.statuses.length === 0) {
                 enemyStatusEl.innerHTML = '<span class="text-xs text-gray-500">无</span>';
             } else {
-                enemyStatusEl.innerHTML = battleState.enemy.status.map(s =>
-                    `<span class="bg-red-500/30 text-red-300 px-2 py-0.5 rounded text-xs">${statusNames[s] || s}</span>`
-                ).join('');
+                enemyStatusEl.innerHTML = battleState.enemy.statuses.map(s => {
+                    const display = getStatusDisplay(s.key);
+                    const hasStacks = s.data?.hasStacks !== false;
+                    
+                    if (hasStacks) {
+                        if (!s.stackDurations || s.stackDurations.length === 0) return '';
+                        const stacks = s.stackDurations.length;
+                        const minDuration = s.data?.isPermanent ? '永久' : Math.min(...s.stackDurations);
+                        return `<span class="bg-red-500/30 text-red-300 px-2 py-0.5 rounded text-xs inline-flex items-center gap-1" title="各层剩余回合: ${s.stackDurations.join(',')}">${display} ×${stacks} (${minDuration})</span>`;
+                    } else {
+                        const statusDuration = s.data?.isPermanent ? '永久' : (s.statusDuration || '?');
+                        return `<span class="bg-red-500/30 text-red-300 px-2 py-0.5 rounded text-xs inline-flex items-center gap-1" title="状态持续回合: ${statusDuration}">${display} (${statusDuration})</span>`;
+                    }
+                }).filter(h => h).join('');
             }
 
             // 更新回合信息
@@ -1721,6 +2216,21 @@
         }
 
         function useSkillInternal() {
+            // 检查是否能够行动
+            if (battleState.self.cannotAct) {
+                addLog(`❌ 我方无法行动！`, 'purple');
+                return;
+            }
+            
+            // 检查是否能够攻击（仅对攻击型技能）
+            const isAttackSkill = testSkill.effects.some(e =>
+                e.includes('attack') || e.includes('damage')
+            );
+            if (isAttackSkill && battleState.self.cannotAttack) {
+                addLog(`❌ 我方无法攻击！`, 'purple');
+                return;
+            }
+            
             const count = testSkill.params.count || 1;
             addLog(`使用技能【${testSkill.name}】`, 'blue');
             if (count > 1) {
@@ -2078,29 +2588,81 @@
                     const purifyType = params[`${effectKey}_purify-type`] || 'all';
                     
                     if (target === 'self' || target === 'ally-all') {
-                        const beforeCount = battleState.self.status.length;
+                        const beforeCount = battleState.self.statuses.length;
                         if (purifyType === 'all') {
-                            battleState.self.status = [];
+                            battleState.self.statuses = [];
                             addLog(`净化: 清除我方所有异常状态 (${beforeCount}个)`, 'green');
                         } else {
-                            battleState.self.status = battleState.self.status.filter(s => s !== purifyType);
-                            addLog(`净化: 清除我方 ${statusNames[purifyType] || purifyType}`, 'green');
+                            battleState.self.statuses = battleState.self.statuses.filter(s => s.key !== purifyType);
+                            const statusPool = JSON.parse(localStorage.getItem('STATUS_POOL') || '[]');
+                            const status = statusPool.find(s => s.key === purifyType);
+                            const statusName = status ? status.name : purifyType;
+                            addLog(`净化: 清除我方 ${statusName}`, 'green');
                         }
                     }
                     break;
                 }
                 case 'buff_status_enemy': {
                     // 为敌方附加异常状态
-                    const statusType = params[`${effectKey}_status-type`] || 'poison';
-                    const statusChance = params[`${effectKey}_status-chance`] || 50;
+                    const statusType = params[`${effectKey}_status-type`];
+                    const statusChance = params[`${effectKey}_status-chance`] || 100;
+                    const statusStacks = params[`${effectKey}_status-stacks`] || 1;
                     const random = Math.random() * 100;
                     
                     if (random <= statusChance) {
-                        if (!battleState.enemy.status.includes(statusType)) {
-                            battleState.enemy.status.push(statusType);
-                            addLog(`施加异常: 敌方获得 ${statusNames[statusType] || statusType} (${statusChance}%概率成功)`, 'purple');
+                        const statusPool = JSON.parse(localStorage.getItem('STATUS_POOL') || '[]');
+                        const statusData = statusPool.find(s => s.key === statusType);
+                        const statusName = statusData ? statusData.name : statusType;
+                        
+                        // 查找是否已有此状态
+                        const existingStatus = battleState.enemy.statuses.find(s => s.key === statusType);
+                        
+                        if (existingStatus) {
+                            // 已有状态，增加层数（每层独立持续时间）
+                            const maxStacks = statusData?.maxStacks || 99;
+                            const oldStacks = existingStatus.stackDurations.length;
+                            const durationPerStack = statusData?.durationPerStack || 3;
+                            const canAdd = Math.min(maxStacks - oldStacks, statusStacks);
+                            
+                            if (canAdd > 0) {
+                                for (let i = 0; i < canAdd; i++) {
+                                    existingStatus.stackDurations.push(durationPerStack);
+                                }
+                                addLog(`施加异常: 敌方 ${statusName} ${oldStacks}→${existingStatus.stackDurations.length}层，新层各${durationPerStack}回合`, 'purple');
+                                // 立即触发新层的效果
+                                if (statusData && statusData.effects) {
+                                    addLog(`→ 新层立即生效`, 'cyan');
+                                    statusData.effects.forEach(effectKey => {
+                                        applyStatusEffect('enemy', existingStatus, effectKey);
+                                    });
+                                }
+                            } else {
+                                addLog(`施加异常: 敌方 ${statusName} 已达最大层数`, 'gray');
+                            }
                         } else {
-                            addLog(`施加异常: 敌方已有 ${statusNames[statusType] || statusType}`, 'gray');
+                            // 新状态（每层独立持续时间）
+                            const durationPerStack = statusData?.durationPerStack || 3;
+                            const stackDurations = [];
+                            
+                            for (let i = 0; i < statusStacks; i++) {
+                                stackDurations.push(durationPerStack);
+                            }
+                            
+                            const newStatus = {
+                                key: statusType,
+                                stackDurations: stackDurations,
+                                data: statusData
+                            };
+                            battleState.enemy.statuses.push(newStatus);
+                            addLog(`施加异常: 敌方获得 ${statusName} ×${statusStacks}层，各${durationPerStack}回合 (${statusChance}%概率成功)`, 'purple');
+                            
+                            // 立即触发新状态的效果
+                            if (statusData && statusData.effects) {
+                                addLog(`→ 状态立即生效`, 'cyan');
+                                statusData.effects.forEach(effectKey => {
+                                    applyStatusEffect('enemy', newStatus, effectKey);
+                                });
+                            }
                         }
                     } else {
                         addLog(`施加异常: 未触发 (${Math.round(random)}% > ${statusChance}%)`, 'gray');
@@ -2109,16 +2671,82 @@
                 }
                 case 'debuff_status_self': {
                     // 为自身附加异常状态
-                    const statusType = params[`${effectKey}_status-type`] || 'poison';
-                    const statusChance = params[`${effectKey}_status-chance`] || 50;
+                    const statusType = params[`${effectKey}_status-type`];
+                    const statusChance = params[`${effectKey}_status-chance`] || 100;
+                    const statusStacks = params[`${effectKey}_status-stacks`] || 1;
                     const random = Math.random() * 100;
                     
                     if (random <= statusChance) {
-                        if (!battleState.self.status.includes(statusType)) {
-                            battleState.self.status.push(statusType);
-                            addLog(`自身异常: 获得 ${statusNames[statusType] || statusType} (${statusChance}%概率成功)`, 'purple');
+                        const statusPool = JSON.parse(localStorage.getItem('STATUS_POOL') || '[]');
+                        const statusData = statusPool.find(s => s.key === statusType);
+                        const statusName = statusData ? statusData.name : statusType;
+                        
+                        // 查找是否已有此状态
+                        const existingStatus = battleState.self.statuses.find(s => s.key === statusType);
+                        
+                        if (existingStatus) {
+                            // 已有状态，增加层数（每层独立持续时间）
+                            const maxStacks = statusData?.maxStacks || 99;
+                            const oldStacks = existingStatus.stackDurations.length;
+                            const durationPerStack = statusData?.durationPerStack || 3;
+                            const canAdd = Math.min(maxStacks - oldStacks, statusStacks);
+                            
+                            if (canAdd > 0) {
+                                for (let i = 0; i < canAdd; i++) {
+                                    existingStatus.stackDurations.push(durationPerStack);
+                                }
+                                addLog(`自身异常: ${statusName} ${oldStacks}→${existingStatus.stackDurations.length}层，新层各${durationPerStack}回合`, 'purple');
+                                // 立即触发新层的效果
+                                if (statusData && statusData.effects) {
+                                    addLog(`→ 新层立即生效`, 'cyan');
+                                    statusData.effects.forEach(effectKey => {
+                                        applyStatusEffect('self', existingStatus, effectKey);
+                                    });
+                                }
+                            } else {
+                                addLog(`自身异常: ${statusName} 已达最大层数`, 'gray');
+                            }
                         } else {
-                            addLog(`自身异常: 已有 ${statusNames[statusType] || statusType}`, 'gray');
+                            // 新状态（包含状态持续时间和层数持续时间）
+                            const statusDuration = statusData?.isPermanent ? 999 : (statusData?.statusDuration || 10);
+                            const hasStacks = statusData?.hasStacks !== false; // 默认true兼容旧数据
+                            
+                            const newStatus = {
+                                key: statusType,
+                                statusDuration: statusDuration, // 状态本身的持续时间
+                                data: statusData
+                            };
+                            
+                            let logMessage = `自身异常: 获得 ${statusName}`;
+                            const statusDurationText = statusData?.isPermanent ? '永久' : `${statusDuration}回合`;
+                            
+                            if (hasStacks) {
+                                // 有层数系统
+                                const durationPerStack = statusData?.isStackPermanent ? 999 : (statusData?.durationPerStack || 3);
+                                const stackDurations = [];
+                                
+                                for (let i = 0; i < statusStacks; i++) {
+                                    stackDurations.push(durationPerStack);
+                                }
+                                
+                                newStatus.stackDurations = stackDurations;
+                                const stackDurationText = statusData?.isStackPermanent ? '层数永久' : `层各${durationPerStack}回合`;
+                                logMessage += ` (状态${statusDurationText}，×${statusStacks}${stackDurationText})`;
+                            } else {
+                                // 无层数系统
+                                logMessage += ` (状态${statusDurationText})`;
+                            }
+                            
+                            battleState.self.statuses.push(newStatus);
+                            addLog(`${logMessage} (${statusChance}%概率)`, 'purple');
+                            
+                            // 立即触发新状态的效果
+                            if (statusData && statusData.effects) {
+                                addLog(`→ 状态立即生效`, 'cyan');
+                                statusData.effects.forEach(effectKey => {
+                                    applyStatusEffect('self', newStatus, effectKey);
+                                });
+                            }
                         }
                     } else {
                         addLog(`自身异常: 未触发 (${Math.round(random)}% > ${statusChance}%)`, 'gray');
@@ -2126,23 +2754,25 @@
                     break;
                 }
                 case 'debuff_no_heal': {
-                    // 禁疗
+                    // 禁疗（作为特殊状态标记处理）
                     const target = params[`${effectKey}_target`];
                     if (target === 'enemy-single' || target === 'enemy-all') {
-                        if (!battleState.enemy.status.includes('no-heal')) {
-                            battleState.enemy.status.push('no-heal');
+                        const hasNoHeal = battleState.enemy.statuses.some(s => s.key === 'no-heal');
+                        if (!hasNoHeal) {
+                            battleState.enemy.statuses.push({ key: 'no-heal', stackDurations: [999], data: { isPermanent: true } });
                             addLog(`禁疗: 敌方无法恢复生命`, 'purple');
                         }
                     }
                     break;
                 }
                 case 'debuff_heal_reduce': {
-                    // 减疗
+                    // 减疗（作为特殊状态标记处理）
                     const target = params[`${effectKey}_target`];
                     const bonus = params[`${effectKey}_bonus`] || 0.5;
                     if (target === 'enemy-single' || target === 'enemy-all') {
-                        if (!battleState.enemy.status.includes('heal-reduce')) {
-                            battleState.enemy.status.push('heal-reduce');
+                        const hasHealReduce = battleState.enemy.statuses.some(s => s.key === 'heal-reduce');
+                        if (!hasHealReduce) {
+                            battleState.enemy.statuses.push({ key: 'heal-reduce', stackDurations: [999], data: { isPermanent: true } });
                             addLog(`减疗: 敌方治疗效果降低 ${Math.round(bonus * 100)}%`, 'purple');
                         }
                     }

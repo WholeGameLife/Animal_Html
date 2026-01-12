@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>状态池查看器</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .status-card {
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            position: relative;
+            cursor: pointer;
+        }
+        
+        .status-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+        }
+        
+        .filter-btn {
+            transition: all 0.2s ease;
+        }
+        
+        .filter-btn.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .type-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        
+        /* 悬浮提示框样式 */
+        .status-tooltip {
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%) translateY(-10px);
+            background: rgba(17, 24, 39, 0.98);
+            border: 2px solid rgba(139, 92, 246, 0.5);
+            border-radius: 12px;
+            padding: 16px;
+            min-width: 320px;
+            max-width: 400px;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease, transform 0.3s ease;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+        }
+        
+        .status-card:hover .status-tooltip {
+            opacity: 1;
+            transform: translateX(-50%) translateY(-5px);
+            pointer-events: auto;
+        }
+        
+        .status-tooltip::after {
+            content: '';
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 8px solid transparent;
+            border-top-color: rgba(139, 92, 246, 0.5);
+        }
+        
+        .param-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .param-item:last-child {
+            border-bottom: none;
+        }
+        
+        .param-label {
+            color: #9ca3af;
+            font-size: 0.875rem;
+        }
+        
+        .param-value {
+            color: #a78bfa;
+            font-weight: 600;
+            font-size: 0.875rem;
+        }
+    </style>
+</head>
+<body class="p-6">
+    <div class="max-w-7xl mx-auto">
+        <!-- 标题 -->
+        <div class="text-center mb-8">
+            <h1 class="text-4xl font-bold text-white mb-2">🔮 状态池查看器</h1>
+            <p class="text-white/80">查看和筛选所有可用状态</p>
+        </div>
+
+        <!-- 统计信息 -->
+        <div class="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
+            <div class="bg-white/10 backdrop-blur-md rounded-lg p-4 text-white">
+                <div class="text-sm opacity-80">总状态数</div>
+                <div class="text-3xl font-bold" id="total-count">0</div>
+            </div>
+            <div class="bg-white/10 backdrop-blur-md rounded-lg p-4 text-white">
+                <div class="text-sm opacity-80">增益状态</div>
+                <div class="text-3xl font-bold" id="buff-count">0</div>
+            </div>
+            <div class="bg-white/10 backdrop-blur-md rounded-lg p-4 text-white">
+                <div class="text-sm opacity-80">减益状态</div>
+                <div class="text-3xl font-bold" id="debuff-count">0</div>
+            </div>
+            <div class="bg-white/10 backdrop-blur-md rounded-lg p-4 text-white">
+                <div class="text-sm opacity-80">控制状态</div>
+                <div class="text-3xl font-bold" id="control-count">0</div>
+            </div>
+            <div class="bg-white/10 backdrop-blur-md rounded-lg p-4 text-white">
+                <div class="text-sm opacity-80">特殊状态</div>
+                <div class="text-3xl font-bold" id="special-count">0</div>
+            </div>
+        </div>
+
+        <!-- 筛选器 -->
+        <div class="bg-white/10 backdrop-blur-md rounded-lg p-6 mb-6">
+            <div>
+                <h3 class="text-white font-bold mb-3">按类型筛选</h3>
+                <div class="flex flex-wrap gap-2" id="type-filters">
+                    <button class="filter-btn active px-4 py-2 rounded-lg bg-white/20 text-white" data-type="all">
+                        全部
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 状态列表 -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="statuses-container">
+            <!-- 状态卡片将在这里动态生成 -->
+        </div>
+
+        <!-- 返回按钮 -->
+        <div class="mt-8 text-center flex gap-4 justify-center">
+            <button onclick="location.href='status_designer.html'" class="px-6 py-3 bg-white/20 hover:bg-white/30 text-white rounded-lg backdrop-blur-md transition-all">
+                ✏️ 状态设计器
+            </button>
+            <button onclick="window.history.back()" class="px-6 py-3 bg-white/20 hover:bg-white/30 text-white rounded-lg backdrop-blur-md transition-all">
+                ← 返回
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // 状态类型映射
+        const TYPE_MAP = {
+            'buff': { name: '💚 增益', color: 'bg-green-600 text-white' },
+            'debuff': { name: '💔 减益', color: 'bg-red-600 text-white' },
+            'control': { name: '🎭 控制', color: 'bg-purple-600 text-white' },
+            'dot': { name: '🩸 持续伤害', color: 'bg-orange-600 text-white' },
+            'special': { name: '✨ 特殊', color: 'bg-blue-600 text-white' }
+        };
+
+        const EFFECT_MAP = {
+            'damage': '造成伤害',
+            'heal': '恢复生命',
+            'buff_attack': '增加攻击',
+            'buff_defense': '增加防御',
+            'buff_speed': '增加敏捷',
+            'debuff_attack': '降低攻击',
+            'debuff_defense': '降低防御',
+            'debuff_speed': '降低敏捷',
+            'stun': '眩晕',
+            'silence': '沉默',
+            'freeze': '冰冻',
+            'burn': '灼烧',
+            'poison': '中毒',
+            'bleed': '流血',
+            'frostbite': '冻伤',
+            'paralyze': '麻痹',
+            'shield': '护盾',
+            'immunity': '免疫',
+            'reflect': '反弹',
+            'lifesteal': '生命汲取',
+            'regen': '回复',
+            'purify': '净化',
+            'dispel': '驱散',
+            'no_heal': '禁疗',
+            'heal_reduce': '减疗',
+            'invincible': '无敌',
+            'stealth': '隐身',
+            'taunt': '嘲讽',
+            'dot-damage': '持续扣血',
+            'hot-heal': '持续回血',
+            'cannot-act': '无法行动',
+            'cannot-attack': '无法攻击',
+            'cannot-defend': '无法防御',
+            'boost-damage': '提升伤害',
+            'boost-attack': '提升攻击',
+            'boost-defense': '提升防御',
+            'boost-speed': '提升速度',
+            'reduce-damage': '降低伤害',
+            'reduce-attack': '降低攻击',
+            'reduce-defense': '降低防御',
+            'reduce-agility': '降低速度',
+            'ignore-defense': '无视防御',
+            'first-strike': '无视敏捷直接行动',
+            'double-action': '行动两次',
+            'reverse-stats': '属性反转',
+            'element-advantage': '属性克制',
+            'element-bonus': '属性增伤',
+            'reset-cooldown': '重置冷却'
+        };
+
+        let allStatuses = [];
+        let currentType = 'all';
+
+        // 加载状态池
+        async function loadStatuses() {
+            try {
+                const statusPool = JSON.parse(localStorage.getItem('STATUS_POOL') || '[]');
+                allStatuses = statusPool;
+                
+                // 更新统计
+                updateStatistics();
+                
+                // 生成筛选器
+                generateFilters();
+                
+                // 显示状态
+                displayStatuses();
+            } catch (error) {
+                console.error('加载状态失败:', error);
+                document.getElementById('statuses-container').innerHTML = 
+                    '<div class="col-span-full text-center text-white">加载状态失败，请确保状态池数据存在</div>';
+            }
+        }
+
+        // 更新统计信息
+        function updateStatistics() {
+            document.getElementById('total-count').textContent = allStatuses.length;
+            document.getElementById('buff-count').textContent =
+                allStatuses.filter(s => (s.type || inferStatusType(s.effects)) === 'buff').length;
+            document.getElementById('debuff-count').textContent =
+                allStatuses.filter(s => (s.type || inferStatusType(s.effects)) === 'debuff').length;
+            document.getElementById('control-count').textContent =
+                allStatuses.filter(s => (s.type || inferStatusType(s.effects)) === 'control').length;
+            document.getElementById('special-count').textContent =
+                allStatuses.filter(s => {
+                    const type = s.type || inferStatusType(s.effects);
+                    return type === 'special' || type === 'dot';
+                }).length;
+        }
+        
+        // 自动推断状态类型
+        function inferStatusType(effects) {
+            if (!effects || effects.length === 0) return 'special';
+            
+            // 检查是否包含特定效果
+            const hasControl = effects.some(e => ['cannot-act', 'cannot-attack', 'cannot-defend'].includes(e));
+            const hasDot = effects.some(e => ['dot-damage', 'hot-heal'].includes(e));
+            const hasDebuff = effects.some(e => ['reduce-defense', 'reduce-damage', 'reduce-agility'].includes(e));
+            const hasBuff = effects.some(e => ['hot-heal'].includes(e));
+            
+            if (hasControl) return 'control';
+            if (hasDot) return 'dot';
+            if (hasDebuff) return 'debuff';
+            if (hasBuff) return 'buff';
+            return 'special';
+        }
+
+        // 生成筛选器
+        function generateFilters() {
+            // 获取所有唯一的类型（包括推断的）
+            const types = [...new Set(allStatuses.map(s => s.type || inferStatusType(s.effects)))].filter(Boolean);
+            const typeContainer = document.getElementById('type-filters');
+            
+            types.forEach(type => {
+                const typeInfo = TYPE_MAP[type] || { name: type, color: 'bg-gray-600' };
+                const btn = document.createElement('button');
+                btn.className = 'filter-btn px-4 py-2 rounded-lg bg-white/20 text-white';
+                btn.dataset.type = type;
+                btn.textContent = typeInfo.name;
+                btn.onclick = () => filterByType(type);
+                typeContainer.appendChild(btn);
+            });
+        }
+
+        // 按类型筛选
+        function filterByType(type) {
+            currentType = type;
+            
+            // 更新按钮状态
+            document.querySelectorAll('[data-type]').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.type === type);
+            });
+            
+            displayStatuses();
+        }
+        
+        // 初始化"全部"按钮
+        function initializeAllButtons() {
+            const typeAllBtn = document.querySelector('[data-type="all"]');
+            if (typeAllBtn) {
+                typeAllBtn.onclick = () => filterByType('all');
+            }
+        }
+
+        // 显示状态
+        function displayStatuses() {
+            const container = document.getElementById('statuses-container');
+            
+            // 筛选状态
+            let filteredStatuses = allStatuses;
+            
+            if (currentType !== 'all') {
+                filteredStatuses = filteredStatuses.filter(s => (s.type || inferStatusType(s.effects)) === currentType);
+            }
+
+            // 生成状态卡片
+            if (filteredStatuses.length === 0) {
+                container.innerHTML = '<div class="col-span-full text-center text-white">没有找到符合条件的状态</div>';
+                return;
+            }
+
+            container.innerHTML = filteredStatuses.map(status => createStatusCard(status)).join('');
+        }
+
+        // 创建状态卡片
+        function createStatusCard(status) {
+            // 自动推断类型（如果没有type字段）
+            const statusType = status.type || inferStatusType(status.effects);
+            const typeInfo = TYPE_MAP[statusType] || { name: statusType, color: 'bg-gray-600' };
+            const effects = status.effects || [];
+            
+            // 支持状态设计器的effect名称映射
+            const EFFECT_NAME_MAP = {
+                'dot-damage': '持续扣血',
+                'hot-heal': '持续回血',
+                'cannot-act': '无法行动',
+                'cannot-attack': '无法攻击',
+                'cannot-defend': '无法防御',
+                'reduce-defense': '永久减防',
+                'reduce-damage': '永久减伤',
+                'reduce-agility': '永久减速',
+                'ignore-defense': '无视防御',
+                'first-strike': '无视敏捷直接行动',
+                'double-action': '行动两次',
+                'reverse-stats': '属性反转',
+                'element-advantage': '属性克制',
+                'element-bonus': '属性增伤'
+            };
+            
+            const effectBadges = effects.map(effect => {
+                 const effectName = EFFECT_NAME_MAP[effect] || EFFECT_MAP[effect] || effect;
+                 return `<span class="bg-gray-700 text-gray-300 px-2 py-1 rounded-md text-xs">${effectName}</span>`;
+            }).join('');
+            
+            // 解析参数 - 支持状态设计器的数据结构
+            let paramsHtml = '';
+            
+            const paramDisplay = (label, value) => {
+                if (value !== undefined && value !== 0 && value !== '' && value !== null) {
+                    return `<div class="param-item"><span class="param-label">${label}</span><span class="param-value">${value}</span></div>`;
+                }
+                return '';
+            };
+
+            paramsHtml += paramDisplay('持续方式', status.isPermanent ? '战斗内永久' : `每层${status.durationPerStack || 3}回合`);
+            paramsHtml += paramDisplay('最大层数', status.maxStacks > 1 ? status.maxStacks : undefined);
+            paramsHtml += paramDisplay('可驱散', status.canPurify === false ? '否' : (status.canPurify === true ? '是' : undefined));
+            paramsHtml += paramDisplay('唯一效果', status.uniqueEffect ? '是' : undefined);
+            paramsHtml += paramDisplay('层数自增长', status.autoGrow ? '是' : undefined);
+            paramsHtml += paramDisplay('每回合增加', status.autoGrow && status.growRate ? `${status.growRate}层` : undefined);
+            
+            // 图标显示 - 支持iconImage（图片）或icon（emoji）
+            let iconDisplay = '';
+            if (status.iconImage) {
+                iconDisplay = `<img src="${status.iconImage}" class="w-12 h-12 object-contain" style="max-height: 48px;">`;
+            } else if (status.icon) {
+                iconDisplay = status.icon;
+            } else {
+                iconDisplay = '❓';
+            }
+            
+            let iconDisplaySmall = '';
+            if (status.iconImage) {
+                iconDisplaySmall = `<img src="${status.iconImage}" class="w-12 h-12 object-contain" style="max-height: 48px;">`;
+            } else if (status.icon) {
+                iconDisplaySmall = status.icon;
+            } else {
+                iconDisplaySmall = '❓';
+            }
+            
+            const tooltipHtml = `
+                <div class="status-tooltip">
+                    <div class="flex items-start gap-4 mb-3">
+                        <div class="text-4xl mt-1 flex items-center justify-center" style="min-width: 48px;">${iconDisplay}</div>
+                        <div>
+                            <h4 class="font-bold text-xl text-white">${status.name}</h4>
+                            <p class="text-sm text-gray-400">${status.description || '无描述'}</p>
+                        </div>
+                    </div>
+                    ${effectBadges ? `<div class="space-y-2 mb-3">
+                         <div class="flex flex-wrap gap-2">${effectBadges}</div>
+                    </div>` : ''}
+                    ${paramsHtml ? `<div class="bg-black/20 rounded-lg p-3">${paramsHtml}</div>` : ''}
+                </div>
+            `;
+
+            return `
+                <div class="status-card bg-white/10 backdrop-blur-md rounded-lg p-4 text-white">
+                    ${tooltipHtml}
+                    <div class="flex items-center gap-3">
+                        <div class="text-3xl flex items-center justify-center" style="min-width: 48px; min-height: 48px;">${iconDisplaySmall}</div>
+                        <div class="flex-1">
+                            <h3 class="font-bold">${status.name}</h3>
+                            <div class="flex gap-2 mt-1.5 flex-wrap">
+                                <span class="type-badge ${typeInfo.color}">
+                                    ${typeInfo.name}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // 页面加载时初始化
+        window.onload = function() {
+            initializeAllButtons();
+            loadStatuses();
+        };
+    </script>
+</body>
+</html>

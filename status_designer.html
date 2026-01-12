@@ -1,0 +1,1106 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>状态设计器 - 电子盆栽</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background: linear-gradient(135deg, #1e3a8a 0%, #312e81 100%);
+            min-height: 100vh;
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .status-card {
+            transition: all 0.3s ease;
+        }
+        
+        .status-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+        
+        .effect-checkbox {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body class="p-6">
+    <div class="max-w-7xl mx-auto">
+        <!-- 标题 -->
+        <div class="text-center mb-8">
+            <h1 class="text-4xl font-bold text-white mb-2">🔮 状态设计器 🔮</h1>
+            <p class="text-blue-200 mb-3">设计战斗中的状态效果 - 层数叠加、持续伤害与控制</p>
+            <div class="flex justify-center gap-3">
+                <a href="status_viewer.html"
+                   class="inline-flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-6 rounded-lg transition-colors">
+                    <span>👁️</span>
+                    <span>查看状态池</span>
+                </a>
+                <button onclick="window.history.back()"
+                        class="inline-flex items-center gap-2 bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-6 rounded-lg transition-colors">
+                    <span>←</span>
+                    <span>返回</span>
+                </button>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- 左侧：状态设计表单 -->
+            <div class="lg:col-span-2 bg-gray-900/80 backdrop-blur-lg rounded-xl p-6 border border-gray-700">
+                <h2 class="text-2xl font-bold text-white mb-6">🎨 创建新状态</h2>
+                
+                <form id="status-form" class="space-y-4">
+                    <!-- 基础信息 -->
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">状态名称 *</label>
+                            <input type="text" id="status-name" required
+                                class="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">状态图标 * (仅支持上传图片)</label>
+                            <div class="space-y-2">
+                                <div class="flex gap-2">
+                                    <label for="icon-upload"
+                                        class="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg cursor-pointer flex items-center justify-center gap-2">
+                                        <span>📁</span>
+                                        <span>选择图片上传</span>
+                                    </label>
+                                    <input type="file" id="icon-upload" accept="image/*" class="hidden">
+                                    <button type="button" id="clear-icon-btn"
+                                        class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg">
+                                        清除
+                                    </button>
+                                </div>
+                                <div id="icon-preview" class="hidden bg-gray-800 border border-gray-600 rounded-lg p-2 flex items-center justify-center" style="height: 60px;">
+                                    <img id="icon-preview-img" class="max-h-full max-w-full object-contain" style="max-height: 50px;">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 状态描述 -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-2">状态描述</label>
+                        <textarea id="status-description" rows="2" placeholder="描述这个状态的效果..."
+                            class="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500 resize-none"></textarea>
+                    </div>
+
+                    <!-- 状态参数 -->
+                    <div class="grid grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">状态持续回合 *</label>
+                            <div class="space-y-2">
+                                <input type="number" id="status-duration" min="1" value="10" required
+                                    class="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500">
+                                <label class="flex items-center gap-2 text-white text-sm cursor-pointer">
+                                    <input type="checkbox" id="status-permanent" class="w-4 h-4 cursor-pointer">
+                                    <span>状态永久存在</span>
+                                </label>
+                                <p class="text-xs text-gray-500">状态本身的持续时间</p>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">层数系统</label>
+                            <select id="status-hasStacks"
+                                class="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500">
+                                <option value="true">启用层数</option>
+                                <option value="false">不使用层数</option>
+                            </select>
+                            <p class="text-xs text-gray-500 mt-1">控制、眩晕等状态可不使用层数</p>
+                        </div>
+                    </div>
+                    <div id="stack-params" class="grid grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">每层持续回合 *</label>
+                            <div class="space-y-2">
+                                <input type="number" id="status-durationPerStack" min="1" value="3" required
+                                    class="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500">
+                                <label class="flex items-center gap-2 text-white text-sm cursor-pointer">
+                                    <input type="checkbox" id="status-stackPermanent" class="w-4 h-4 cursor-pointer">
+                                    <span>层数永久存在</span>
+                                </label>
+                                <p class="text-xs text-gray-500">每一层的持续时间</p>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">最大层数</label>
+                            <input type="number" id="status-maxStacks" min="1" value="1"
+                                class="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">可被净化</label>
+                            <select id="status-canPurify"
+                                class="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500">
+                                <option value="true">是</option>
+                                <option value="false">否</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">唯一效果</label>
+                            <select id="status-uniqueEffect"
+                                class="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500">
+                                <option value="false">否</option>
+                                <option value="true">是</option>
+                            </select>
+                            <p class="text-xs text-gray-500 mt-1">是：无论多少层仅生效一个</p>
+                        </div>
+                    </div>
+                    <div id="stack-grow-params" class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">层数自增长</label>
+                            <div class="space-y-2">
+                                <select id="status-autoGrow"
+                                    class="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500">
+                                    <option value="false">否</option>
+                                    <option value="true">是</option>
+                                </select>
+                                <p class="text-xs text-gray-500">是：状态存在时每回合自动增加层数</p>
+                            </div>
+                        </div>
+                        <div id="grow-rate-container" style="display: none;">
+                            <label class="block text-sm font-medium text-gray-300 mb-2">每回合增加层数</label>
+                            <input type="number" id="status-growRate" min="1" value="1"
+                                class="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500">
+                            <p class="text-xs text-gray-500 mt-1">每回合自动增加的层数</p>
+                        </div>
+                    </div>
+
+                    <!-- 状态效果选择 -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-2">状态效果 * (可多选)</label>
+                        <div class="bg-gray-800 border border-gray-600 rounded-lg p-4 space-y-3 max-h-96 overflow-y-auto">
+                            <!-- 伤害/治疗类 -->
+                            <div>
+                                <div class="text-xs font-bold text-red-400 mb-2">💔 伤害/治疗类</div>
+                                <div class="grid grid-cols-2 gap-2">
+                                    <label class="flex items-center gap-2 text-white text-sm cursor-pointer hover:bg-gray-700 p-2 rounded">
+                                        <input type="checkbox" class="effect-checkbox" data-effect="dot-damage">
+                                        <span>持续扣血</span>
+                                    </label>
+                                    <label class="flex items-center gap-2 text-white text-sm cursor-pointer hover:bg-gray-700 p-2 rounded">
+                                        <input type="checkbox" class="effect-checkbox" data-effect="hot-heal">
+                                        <span>持续回血</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- 控制类 -->
+                            <div>
+                                <div class="text-xs font-bold text-purple-400 mb-2">🚫 控制类</div>
+                                <div class="grid grid-cols-2 gap-2">
+                                    <label class="flex items-center gap-2 text-white text-sm cursor-pointer hover:bg-gray-700 p-2 rounded">
+                                        <input type="checkbox" class="effect-checkbox" data-effect="cannot-act">
+                                        <span>无法行动</span>
+                                    </label>
+                                    <label class="flex items-center gap-2 text-white text-sm cursor-pointer hover:bg-gray-700 p-2 rounded">
+                                        <input type="checkbox" class="effect-checkbox" data-effect="cannot-attack">
+                                        <span>无法攻击</span>
+                                    </label>
+                                    <label class="flex items-center gap-2 text-white text-sm cursor-pointer hover:bg-gray-700 p-2 rounded">
+                                        <input type="checkbox" class="effect-checkbox" data-effect="cannot-defend">
+                                        <span>无法防御</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- 属性增益类 -->
+                            <div>
+                                <div class="text-xs font-bold text-green-400 mb-2">💪 属性增益类</div>
+                                <div class="grid grid-cols-2 gap-2">
+                                    <label class="flex items-center gap-2 text-white text-sm cursor-pointer hover:bg-gray-700 p-2 rounded">
+                                        <input type="checkbox" class="effect-checkbox" data-effect="boost-damage">
+                                        <span>提升伤害</span>
+                                    </label>
+                                    <label class="flex items-center gap-2 text-white text-sm cursor-pointer hover:bg-gray-700 p-2 rounded">
+                                        <input type="checkbox" class="effect-checkbox" data-effect="boost-attack">
+                                        <span>提升攻击</span>
+                                    </label>
+                                    <label class="flex items-center gap-2 text-white text-sm cursor-pointer hover:bg-gray-700 p-2 rounded">
+                                        <input type="checkbox" class="effect-checkbox" data-effect="boost-defense">
+                                        <span>提升防御</span>
+                                    </label>
+                                    <label class="flex items-center gap-2 text-white text-sm cursor-pointer hover:bg-gray-700 p-2 rounded">
+                                        <input type="checkbox" class="effect-checkbox" data-effect="boost-speed">
+                                        <span>提升速度</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- 属性减益类 -->
+                            <div>
+                                <div class="text-xs font-bold text-red-400 mb-2">🔻 属性减益类</div>
+                                <div class="grid grid-cols-2 gap-2">
+                                    <label class="flex items-center gap-2 text-white text-sm cursor-pointer hover:bg-gray-700 p-2 rounded">
+                                        <input type="checkbox" class="effect-checkbox" data-effect="reduce-damage">
+                                        <span>降低伤害</span>
+                                    </label>
+                                    <label class="flex items-center gap-2 text-white text-sm cursor-pointer hover:bg-gray-700 p-2 rounded">
+                                        <input type="checkbox" class="effect-checkbox" data-effect="reduce-attack">
+                                        <span>降低攻击</span>
+                                    </label>
+                                    <label class="flex items-center gap-2 text-white text-sm cursor-pointer hover:bg-gray-700 p-2 rounded">
+                                        <input type="checkbox" class="effect-checkbox" data-effect="reduce-defense">
+                                        <span>降低防御</span>
+                                    </label>
+                                    <label class="flex items-center gap-2 text-white text-sm cursor-pointer hover:bg-gray-700 p-2 rounded">
+                                        <input type="checkbox" class="effect-checkbox" data-effect="reduce-agility">
+                                        <span>降低速度</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- 特殊效果类 -->
+                            <div>
+                                <div class="text-xs font-bold text-cyan-400 mb-2">✨ 特殊效果类</div>
+                                <div class="grid grid-cols-2 gap-2">
+                                    <label class="flex items-center gap-2 text-white text-sm cursor-pointer hover:bg-gray-700 p-2 rounded">
+                                        <input type="checkbox" class="effect-checkbox" data-effect="ignore-defense">
+                                        <span>无视防御</span>
+                                    </label>
+                                    <label class="flex items-center gap-2 text-white text-sm cursor-pointer hover:bg-gray-700 p-2 rounded">
+                                        <input type="checkbox" class="effect-checkbox" data-effect="first-strike">
+                                        <span>无视敏捷直接行动</span>
+                                    </label>
+                                    <label class="flex items-center gap-2 text-white text-sm cursor-pointer hover:bg-gray-700 p-2 rounded">
+                                        <input type="checkbox" class="effect-checkbox" data-effect="double-action">
+                                        <span>行动两次</span>
+                                    </label>
+                                    <label class="flex items-center gap-2 text-white text-sm cursor-pointer hover:bg-gray-700 p-2 rounded">
+                                        <input type="checkbox" class="effect-checkbox" data-effect="reverse-stats">
+                                        <span>属性反转</span>
+                                    </label>
+                                    <label class="flex items-center gap-2 text-white text-sm cursor-pointer hover:bg-gray-700 p-2 rounded">
+                                        <input type="checkbox" class="effect-checkbox" data-effect="element-advantage">
+                                        <span>属性克制</span>
+                                    </label>
+                                    <label class="flex items-center gap-2 text-white text-sm cursor-pointer hover:bg-gray-700 p-2 rounded">
+                                        <input type="checkbox" class="effect-checkbox" data-effect="element-bonus">
+                                        <span>属性增伤</span>
+                                    </label>
+                                    <label class="flex items-center gap-2 text-white text-sm cursor-pointer hover:bg-gray-700 p-2 rounded">
+                                        <input type="checkbox" class="effect-checkbox" data-effect="reset-cooldown">
+                                        <span>重置冷却</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 动态效果值配置 -->
+                    <div id="effect-values-container" class="space-y-3 bg-gray-800/50 rounded-lg p-4 border border-gray-600">
+                        <h3 class="text-sm font-bold text-gray-300 mb-3">📊 效果数值配置（每层）</h3>
+                        <div id="effect-values" class="space-y-2">
+                            <p class="text-xs text-gray-500">选择状态效果后，这里将显示对应的数值配置</p>
+                        </div>
+                    </div>
+
+                    <!-- 按钮 -->
+                    <div class="flex gap-4 pt-4">
+                        <button type="submit" id="submit-btn"
+                            class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition-colors">
+                            <span id="submit-text">✨ 创建状态</span>
+                        </button>
+                        <button type="button" id="cancel-edit-btn" class="hidden bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-3 px-6 rounded-lg transition-colors">
+                            ❌ 取消编辑
+                        </button>
+                        <button type="button" id="clear-btn"
+                            class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-3 px-6 rounded-lg transition-colors">
+                            🔄 清空
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- 右侧：状态预览和列表 -->
+            <div class="space-y-6">
+                <!-- 状态预览 -->
+                <div class="bg-gray-900/80 backdrop-blur-lg rounded-xl p-6 border border-gray-700">
+                    <h3 class="text-xl font-bold text-white mb-4">👁️ 状态预览</h3>
+                    <div id="status-preview" class="status-card bg-gray-800 rounded-lg p-4 border-2 border-gray-600">
+                        <div class="text-center text-gray-500">
+                            <div class="text-4xl mb-2">❓</div>
+                            <div class="text-sm">填写表单查看预览</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 已创建状态列表 -->
+                <div class="bg-gray-900/80 backdrop-blur-lg rounded-xl p-6 border border-gray-700">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-xl font-bold text-white">📋 状态列表 (<span id="status-count">0</span>)</h3>
+                        <div class="flex gap-2">
+                            <label for="import-file"
+                                class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold py-2 px-4 rounded-lg transition-colors cursor-pointer">
+                                📤 导入
+                            </label>
+                            <input type="file" id="import-file" accept=".json" class="hidden">
+                            <button id="export-btn"
+                                class="bg-green-600 hover:bg-green-700 text-white text-sm font-bold py-2 px-4 rounded-lg transition-colors">
+                                📥 导出
+                            </button>
+                        </div>
+                    </div>
+                    <div id="status-list" class="space-y-3 max-h-96 overflow-y-auto">
+                        <div class="text-center text-gray-500 text-sm py-8">
+                            暂无状态
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 效果配置
+        const EFFECT_CONFIG = {
+            'dot-damage': { name: '持续扣血', needsSource: true, needsValue: true, label: '每层伤害比例', defaultValue: 0.05, min: 0, step: 0.01 },
+            'hot-heal': { name: '持续回血', needsSource: true, needsValue: true, label: '每层治疗比例', defaultValue: 0.03, min: 0, step: 0.01 },
+            'cannot-act': { name: '无法行动', needsSource: false, needsValue: false },
+            'cannot-attack': { name: '无法攻击', needsSource: false, needsValue: false },
+            'cannot-defend': { name: '无法防御', needsSource: false, needsValue: false },
+            'boost-damage': { name: '提升伤害', needsSource: true, needsValue: true, label: '每层提升比例', defaultValue: 0.1, min: 0, step: 0.05 },
+            'boost-attack': { name: '提升攻击', needsSource: true, needsValue: true, label: '每层提升比例', defaultValue: 0.1, min: 0, step: 0.05 },
+            'boost-defense': { name: '提升防御', needsSource: true, needsValue: true, label: '每层提升比例', defaultValue: 0.1, min: 0, step: 0.05 },
+            'boost-speed': { name: '提升速度', needsSource: true, needsValue: true, label: '每层提升比例', defaultValue: 0.1, min: 0, step: 0.05 },
+            'reduce-damage': { name: '降低伤害', needsSource: true, needsValue: true, label: '每层降低比例', defaultValue: 0.1, min: 0, max: 1, step: 0.05 },
+            'reduce-attack': { name: '降低攻击', needsSource: true, needsValue: true, label: '每层降低比例', defaultValue: 0.1, min: 0, max: 1, step: 0.05 },
+            'reduce-defense': { name: '降低防御', needsSource: true, needsValue: true, label: '每层降低比例', defaultValue: 0.1, min: 0, max: 1, step: 0.05 },
+            'reduce-agility': { name: '降低速度', needsSource: true, needsValue: true, label: '每层降低比例', defaultValue: 0.1, min: 0, max: 1, step: 0.05 },
+            'ignore-defense': { name: '无视防御', needsSource: false, needsValue: true, label: '每层无视百分比', defaultValue: 0.1, min: 0, max: 1, step: 0.05 },
+            'first-strike': { name: '无视敏捷直接行动', needsSource: false, needsValue: false },
+            'double-action': { name: '行动两次', needsSource: false, needsValue: false },
+            'reverse-stats': { name: '属性反转', needsSource: false, needsValue: false },
+            'element-advantage': { name: '属性克制', needsSource: false, needsValue: true, label: '每层增伤倍率', defaultValue: 1.5, min: 1, step: 0.1 },
+            'element-bonus': { name: '属性增伤', needsSource: true, needsValue: true, label: '每层增伤百分比', defaultValue: 0.2, min: 0, step: 0.05 },
+            'reset-cooldown': { name: '重置冷却', needsSource: false, needsValue: false }
+        };
+
+        // 状态池存储
+        let statuses = JSON.parse(localStorage.getItem('STATUS_POOL') || '[]');
+        let editingIndex = -1;
+
+        // DOM元素
+        const form = document.getElementById('status-form');
+        const preview = document.getElementById('status-preview');
+        const statusList = document.getElementById('status-list');
+        const statusCount = document.getElementById('status-count');
+        const effectValues = document.getElementById('effect-values');
+
+        // 图片数据存储
+        let iconImageData = null;
+
+        // 初始化
+        function init() {
+            renderStatusList();
+            setupFormListeners();
+            updateStatusCount();
+        }
+
+        // 设置表单监听器
+        function setupFormListeners() {
+            // 表单输入变化时更新预览
+            form.querySelectorAll('input, select, textarea').forEach(input => {
+                input.addEventListener('input', updatePreview);
+            });
+
+            // 效果复选框变化时更新效果值配置
+            document.querySelectorAll('.effect-checkbox').forEach(checkbox => {
+                checkbox.addEventListener('change', () => {
+                    updateEffectValues();
+                    updatePreview();
+                });
+            });
+            
+            // 状态永久存在复选框
+            document.getElementById('status-permanent').addEventListener('change', (e) => {
+                const statusDurationInput = document.getElementById('status-duration');
+                if (e.target.checked) {
+                    statusDurationInput.disabled = true;
+                    statusDurationInput.classList.add('opacity-50');
+                    statusDurationInput.required = false;
+                } else {
+                    statusDurationInput.disabled = false;
+                    statusDurationInput.classList.remove('opacity-50');
+                    statusDurationInput.required = true;
+                }
+                updatePreview();
+            });
+            
+            // 层数永久存在复选框
+            document.getElementById('status-stackPermanent').addEventListener('change', (e) => {
+                const stackDurationInput = document.getElementById('status-durationPerStack');
+                if (e.target.checked) {
+                    stackDurationInput.disabled = true;
+                    stackDurationInput.classList.add('opacity-50');
+                    stackDurationInput.required = false;
+                } else {
+                    stackDurationInput.disabled = false;
+                    stackDurationInput.classList.remove('opacity-50');
+                    stackDurationInput.required = true;
+                }
+                updatePreview();
+            });
+            
+            // 层数系统选择器
+            document.getElementById('status-hasStacks').addEventListener('change', (e) => {
+                const hasStacks = e.target.value === 'true';
+                const stackParams = document.getElementById('stack-params');
+                const stackGrowParams = document.getElementById('stack-grow-params');
+                
+                if (hasStacks) {
+                    stackParams.style.display = 'grid';
+                    stackGrowParams.style.display = 'grid';
+                    document.getElementById('status-durationPerStack').required = true;
+                } else {
+                    stackParams.style.display = 'none';
+                    stackGrowParams.style.display = 'none';
+                    document.getElementById('status-durationPerStack').required = false;
+                }
+                updatePreview();
+            });
+            
+            // 层数自增长复选框
+            document.getElementById('status-autoGrow').addEventListener('change', (e) => {
+                const growRateContainer = document.getElementById('grow-rate-container');
+                if (e.target.value === 'true') {
+                    growRateContainer.style.display = 'block';
+                } else {
+                    growRateContainer.style.display = 'none';
+                }
+                updatePreview();
+            });
+
+            // 图标上传
+            document.getElementById('icon-upload').onchange = handleIconUpload;
+            document.getElementById('clear-icon-btn').onclick = clearIcon;
+
+            // 表单提交
+            form.onsubmit = (e) => {
+                e.preventDefault();
+                if (editingIndex >= 0) {
+                    updateStatus();
+                } else {
+                    createStatus();
+                }
+            };
+
+            // 清空按钮
+            document.getElementById('clear-btn').onclick = () => {
+                form.reset();
+                clearIcon();
+                cancelEdit();
+                effectValues.innerHTML = '<p class="text-xs text-gray-500">选择状态效果后，这里将显示对应的数值配置</p>';
+                updatePreview();
+            };
+
+            // 取消编辑按钮
+            document.getElementById('cancel-edit-btn').onclick = () => {
+                form.reset();
+                clearIcon();
+                cancelEdit();
+                effectValues.innerHTML = '<p class="text-xs text-gray-500">选择状态效果后，这里将显示对应的数值配置</p>';
+                updatePreview();
+            };
+
+            // 导入导出
+            document.getElementById('export-btn').onclick = exportStatuses;
+            document.getElementById('import-file').onchange = importStatuses;
+        }
+        
+        // 处理图标上传
+        function handleIconUpload(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            if (!file.type.startsWith('image/')) {
+                alert('请上传图片文件！');
+                return;
+            }
+            
+            // 检查文件大小（限制为 500KB）
+            if (file.size > 500 * 1024) {
+                alert('图片文件过大！请上传小于 500KB 的图片，或使用图片压缩工具压缩后再上传。');
+                return;
+            }
+            
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                const img = new Image();
+                img.onload = () => {
+                    // 压缩图片到合适尺寸
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    
+                    // 限制最大尺寸为 64x64
+                    const maxSize = 64;
+                    let width = img.width;
+                    let height = img.height;
+                    
+                    if (width > height) {
+                        if (width > maxSize) {
+                            height *= maxSize / width;
+                            width = maxSize;
+                        }
+                    } else {
+                        if (height > maxSize) {
+                            width *= maxSize / height;
+                            height = maxSize;
+                        }
+                    }
+                    
+                    canvas.width = width;
+                    canvas.height = height;
+                    ctx.drawImage(img, 0, 0, width, height);
+                    
+                    // 转换为 base64，质量设为 0.8
+                    iconImageData = canvas.toDataURL('image/jpeg', 0.8);
+                    
+                    // 显示预览
+                    const preview = document.getElementById('icon-preview');
+                    const previewImg = document.getElementById('icon-preview-img');
+                    previewImg.src = iconImageData;
+                    preview.classList.remove('hidden');
+                    
+                    // 更新主预览
+                    updatePreview();
+                };
+                img.src = event.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+        
+        // 清除图标
+        function clearIcon() {
+            iconImageData = null;
+            document.getElementById('icon-preview').classList.add('hidden');
+            document.getElementById('icon-upload').value = '';
+            updatePreview();
+        }
+
+        // 生成效果来源选择器HTML
+        function getSourceSelectHTML(effectKey) {
+            return `
+                <select id="source-${effectKey}" class="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white text-sm">
+                    <optgroup label="施加者属性">
+                        <option value="caster-current-attack">施加者当前攻击力</option>
+                        <option value="caster-base-attack">施加者基础攻击力</option>
+                        <option value="caster-current-defense">施加者当前防御力</option>
+                        <option value="caster-base-defense">施加者基础防御力</option>
+                        <option value="caster-current-agility">施加者当前敏捷</option>
+                        <option value="caster-base-agility">施加者基础敏捷</option>
+                        <option value="caster-max-hp">施加者最大生命</option>
+                    </optgroup>
+                    <optgroup label="承受者属性">
+                        <option value="target-current-attack">承受者当前攻击力</option>
+                        <option value="target-base-attack">承受者基础攻击力</option>
+                        <option value="target-current-defense">承受者当前防御力</option>
+                        <option value="target-base-defense">承受者基础防御力</option>
+                        <option value="target-current-agility">承受者当前敏捷</option>
+                        <option value="target-base-agility">承受者基础敏捷</option>
+                        <option value="target-max-hp" selected>承受者最大生命</option>
+                        <option value="target-current-hp">承受者当前生命</option>
+                        <option value="target-lost-hp">承受者已损失生命</option>
+                    </optgroup>
+                </select>
+            `;
+        }
+
+        // 更新效果值配置界面
+        function updateEffectValues() {
+            const selectedEffects = Array.from(document.querySelectorAll('.effect-checkbox:checked'))
+                .map(cb => cb.dataset.effect);
+            
+            if (selectedEffects.length === 0) {
+                effectValues.innerHTML = '<p class="text-xs text-gray-500">选择状态效果后，这里将显示对应的数值配置</p>';
+                return;
+            }
+
+            const html = selectedEffects.map(effect => {
+                const config = EFFECT_CONFIG[effect];
+                if (!config.needsSource && !config.needsValue) return '';
+                
+                let effectHtml = `<div class="border border-gray-600 rounded-lg p-3 bg-gray-700/30 space-y-2">
+                    <div class="text-sm font-bold text-blue-300 mb-2">📋 ${config.name}</div>`;
+                
+                // 如果需要效果来源
+                if (config.needsSource) {
+                    effectHtml += `
+                        <div>
+                            <label class="block text-xs text-gray-400 mb-1">⚡ 效果来源</label>
+                            ${getSourceSelectHTML(effect)}
+                            <p class="text-xs text-gray-500 mt-1">效果 = 效果来源 × 数值比例 × 层数</p>
+                        </div>`;
+                }
+                
+                // 如果需要数值配置
+                if (config.needsValue) {
+                    effectHtml += `
+                        <div>
+                            <label class="block text-xs text-gray-400 mb-1">${config.label}</label>
+                            <input type="number" id="value-${effect}"
+                                   value="${config.defaultValue}"
+                                   min="${config.min || 0}"
+                                   max="${config.max || 999}"
+                                   step="${config.step || 0.01}"
+                                   class="w-full bg-gray-700 border border-gray-600 rounded px-3 py-1 text-white text-sm">
+                        </div>`;
+                }
+                
+                effectHtml += `</div>`;
+                return effectHtml;
+            }).filter(h => h).join('');
+
+            effectValues.innerHTML = html || '<p class="text-xs text-gray-500">所选效果无需配置数值</p>';
+            
+            // 为新生成的输入框和选择器添加事件监听
+            effectValues.querySelectorAll('input, select').forEach(input => {
+                input.addEventListener('input', updatePreview);
+                input.addEventListener('change', updatePreview);
+            });
+        }
+
+        // 更新预览
+        function updatePreview() {
+            const name = document.getElementById('status-name').value;
+            const description = document.getElementById('status-description').value;
+            const isPermanent = document.getElementById('status-permanent').checked;
+            const statusDuration = document.getElementById('status-duration').value;
+            const hasStacks = document.getElementById('status-hasStacks').value === 'true';
+            const isStackPermanent = document.getElementById('status-stackPermanent').checked;
+            const durationPerStack = document.getElementById('status-durationPerStack').value;
+            const maxStacks = document.getElementById('status-maxStacks').value;
+            const canPurify = document.getElementById('status-canPurify').value === 'true';
+            const uniqueEffect = document.getElementById('status-uniqueEffect').value === 'true';
+            const autoGrow = document.getElementById('status-autoGrow').value === 'true';
+            const growRate = autoGrow ? document.getElementById('status-growRate').value : 0;
+
+            if (!name) {
+                preview.innerHTML = `
+                    <div class="text-center text-gray-500">
+                        <div class="text-4xl mb-2">❓</div>
+                        <div class="text-sm">填写表单查看预览</div>
+                    </div>`;
+                return;
+            }
+
+            const selectedEffects = Array.from(document.querySelectorAll('.effect-checkbox:checked'))
+                .map(cb => cb.dataset.effect);
+
+            const effectLabels = selectedEffects.map(effect =>
+                `<span class="bg-purple-600/30 text-purple-300 px-2 py-1 rounded text-xs">${EFFECT_CONFIG[effect].name}</span>`
+            ).join(' ');
+
+            // 图标显示：使用上传的图片
+            let iconDisplay = '';
+            if (iconImageData) {
+                iconDisplay = `<img src="${iconImageData}" class="w-12 h-12 object-contain flex-shrink-0">`;
+            } else {
+                iconDisplay = `<div class="w-12 h-12 bg-gray-700 rounded flex items-center justify-center text-2xl flex-shrink-0">❓</div>`;
+            }
+            
+            // 持续时间显示
+            const statusDurationText = isPermanent ? '状态永久' : `状态${statusDuration}回合`;
+            const stackDurationText = hasStacks ? (isStackPermanent ? '层数永久' : `每层${durationPerStack}回合`) : '无层数';
+
+            preview.innerHTML = `
+                <div class="flex items-start gap-3">
+                    ${iconDisplay}
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-center gap-2 mb-2">
+                            <h4 class="text-lg font-bold text-white">${name}</h4>
+                            ${canPurify ? '<span class="text-xs bg-green-600/30 text-green-300 px-2 py-0.5 rounded">可净化</span>' : '<span class="text-xs bg-red-600/30 text-red-300 px-2 py-0.5 rounded">不可净化</span>'}
+                        </div>
+                        ${description ? `<p class="text-xs text-gray-400 italic mb-2">${description}</p>` : ''}
+                        ${effectLabels ? `<div class="flex flex-wrap gap-1 mb-2">${effectLabels}</div>` : ''}
+                        <div class="flex flex-wrap gap-2 text-xs">
+                            <span class="bg-blue-600/30 text-blue-300 px-2 py-1 rounded">${statusDurationText}</span>
+                            <span class="bg-indigo-600/30 text-indigo-300 px-2 py-1 rounded">${stackDurationText}</span>
+                            ${hasStacks && maxStacks > 1 ? `<span class="bg-yellow-600/30 text-yellow-300 px-2 py-1 rounded">最多${maxStacks}层</span>` : ''}
+                            ${uniqueEffect ? `<span class="bg-purple-600/30 text-purple-300 px-2 py-1 rounded">唯一效果</span>` : ''}
+                            ${hasStacks && autoGrow ? `<span class="bg-cyan-600/30 text-cyan-300 px-2 py-1 rounded">每回合+${growRate}层</span>` : ''}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // 获取表单数据
+        function getFormData() {
+            const selectedEffects = Array.from(document.querySelectorAll('.effect-checkbox:checked'))
+                .map(cb => cb.dataset.effect);
+            
+            const effectConfigs = {};
+            selectedEffects.forEach(effect => {
+                const config = EFFECT_CONFIG[effect];
+                const effectData = {};
+                
+                // 如果需要效果来源
+                if (config.needsSource) {
+                    const sourceSelect = document.getElementById(`source-${effect}`);
+                    effectData.source = sourceSelect ? sourceSelect.value : 'target-max-hp';
+                }
+                
+                // 如果需要数值配置
+                if (config.needsValue) {
+                    const valueInput = document.getElementById(`value-${effect}`);
+                    effectData.value = valueInput ? parseFloat(valueInput.value) : config.defaultValue;
+                }
+                
+                effectConfigs[effect] = effectData;
+            });
+
+            const isPermanent = document.getElementById('status-permanent').checked;
+            const hasStacks = document.getElementById('status-hasStacks').value === 'true';
+            const isStackPermanent = hasStacks ? document.getElementById('status-stackPermanent').checked : false;
+            const autoGrow = hasStacks ? (document.getElementById('status-autoGrow').value === 'true') : false;
+            
+            return {
+                name: document.getElementById('status-name').value,
+                iconImage: iconImageData,
+                description: document.getElementById('status-description').value,
+                statusDuration: parseInt(document.getElementById('status-duration').value) || 10,
+                hasStacks: hasStacks,
+                durationPerStack: hasStacks ? parseInt(document.getElementById('status-durationPerStack').value) || 3 : 0,
+                isPermanent: isPermanent,
+                isStackPermanent: isStackPermanent,
+                maxStacks: hasStacks ? parseInt(document.getElementById('status-maxStacks').value) : 1,
+                canPurify: document.getElementById('status-canPurify').value === 'true',
+                uniqueEffect: document.getElementById('status-uniqueEffect').value === 'true',
+                autoGrow: autoGrow,
+                growRate: autoGrow ? parseInt(document.getElementById('status-growRate').value) : 0,
+                effects: selectedEffects,
+                effectConfigs: effectConfigs
+            };
+        }
+
+        // 创建状态
+        function createStatus() {
+            const data = getFormData();
+            
+            if (data.effects.length === 0) {
+                alert('请至少选择一个状态效果！');
+                return;
+            }
+            
+            if (!data.iconImage) {
+                alert('请上传状态图标图片！');
+                return;
+            }
+
+            const statusKey = `STATUS_${Date.now()}`;
+            const status = {
+                key: statusKey,
+                ...data,
+                createdAt: new Date().toISOString()
+            };
+
+            statuses.push(status);
+            saveStatusPool();
+            
+            renderStatusList();
+            updateStatusCount();
+            form.reset();
+            clearIcon();
+            effectValues.innerHTML = '<p class="text-xs text-gray-500">选择状态效果后，这里将显示对应的数值配置</p>';
+            updatePreview();
+            
+            alert(`✅ 状态 "${data.name}" 已创建！`);
+        }
+
+        // 更新状态
+        function updateStatus() {
+            const data = getFormData();
+            
+            if (data.effects.length === 0) {
+                alert('请至少选择一个状态效果！');
+                return;
+            }
+            
+            if (!data.iconImage) {
+                alert('请上传状态图标图片！');
+                return;
+            }
+            
+            const status = {
+                key: statuses[editingIndex].key,
+                ...data,
+                createdAt: statuses[editingIndex].createdAt,
+                updatedAt: new Date().toISOString()
+            };
+
+            statuses[editingIndex] = status;
+            saveStatusPool();
+            
+            renderStatusList();
+            form.reset();
+            clearIcon();
+            cancelEdit();
+            effectValues.innerHTML = '<p class="text-xs text-gray-500">选择状态效果后，这里将显示对应的数值配置</p>';
+            updatePreview();
+            
+            alert(`✅ 状态 "${data.name}" 已更新！`);
+        }
+
+        // 编辑状态
+        function editStatus(index) {
+            const status = statuses[index];
+            editingIndex = index;
+            
+            // 填充基本信息
+            document.getElementById('status-name').value = status.name;
+            document.getElementById('status-description').value = status.description || '';
+            document.getElementById('status-duration').value = status.statusDuration || 10;
+            document.getElementById('status-canPurify').value = status.canPurify ? 'true' : 'false';
+            document.getElementById('status-uniqueEffect').value = status.uniqueEffect ? 'true' : 'false';
+            
+            // 处理层数系统
+            const hasStacks = status.hasStacks !== false; // 默认为true以兼容旧数据
+            document.getElementById('status-hasStacks').value = hasStacks ? 'true' : 'false';
+            const stackParams = document.getElementById('stack-params');
+            const stackGrowParams = document.getElementById('stack-grow-params');
+            if (hasStacks) {
+                stackParams.style.display = 'grid';
+                stackGrowParams.style.display = 'grid';
+                document.getElementById('status-durationPerStack').value = status.durationPerStack || 3;
+                document.getElementById('status-maxStacks').value = status.maxStacks || 1;
+            } else {
+                stackParams.style.display = 'none';
+                stackGrowParams.style.display = 'none';
+            }
+            
+            // 处理层数自增长
+            document.getElementById('status-autoGrow').value = status.autoGrow ? 'true' : 'false';
+            const growRateContainer = document.getElementById('grow-rate-container');
+            if (status.autoGrow) {
+                growRateContainer.style.display = 'block';
+                document.getElementById('status-growRate').value = status.growRate || 1;
+            } else {
+                growRateContainer.style.display = 'none';
+            }
+            
+            // 处理永久状态
+            const isPermanent = status.isPermanent;
+            document.getElementById('status-permanent').checked = isPermanent;
+            const statusDurationInput = document.getElementById('status-duration');
+            if (isPermanent) {
+                statusDurationInput.value = status.statusDuration || 10;
+                statusDurationInput.disabled = true;
+                statusDurationInput.classList.add('opacity-50');
+                statusDurationInput.required = false;
+            } else {
+                statusDurationInput.value = status.statusDuration || 10;
+                statusDurationInput.disabled = false;
+                statusDurationInput.classList.remove('opacity-50');
+                statusDurationInput.required = true;
+            }
+            
+            // 处理永久层数
+            const isStackPermanent = status.isStackPermanent;
+            document.getElementById('status-stackPermanent').checked = isStackPermanent;
+            const stackDurationInput = document.getElementById('status-durationPerStack');
+            if (isStackPermanent) {
+                stackDurationInput.value = status.durationPerStack || 3;
+                stackDurationInput.disabled = true;
+                stackDurationInput.classList.add('opacity-50');
+                stackDurationInput.required = false;
+            } else {
+                stackDurationInput.value = status.durationPerStack || 3;
+                stackDurationInput.disabled = false;
+                stackDurationInput.classList.remove('opacity-50');
+                stackDurationInput.required = true;
+            }
+            
+            // 设置图标
+            if (status.iconImage) {
+                iconImageData = status.iconImage;
+                const iconPreview = document.getElementById('icon-preview');
+                const previewImg = document.getElementById('icon-preview-img');
+                previewImg.src = iconImageData;
+                iconPreview.classList.remove('hidden');
+            }
+            
+            // 选中效果复选框
+            document.querySelectorAll('.effect-checkbox').forEach(cb => cb.checked = false);
+            status.effects.forEach(effect => {
+                const checkbox = document.querySelector(`.effect-checkbox[data-effect="${effect}"]`);
+                if (checkbox) checkbox.checked = true;
+            });
+            
+            // 更新效果值配置
+            updateEffectValues();
+            
+            // 填充效果配置值
+            setTimeout(() => {
+                status.effects.forEach(effect => {
+                    const config = status.effectConfigs?.[effect];
+                    if (config) {
+                        if (config.source) {
+                            const sourceSelect = document.getElementById(`source-${effect}`);
+                            if (sourceSelect) sourceSelect.value = config.source;
+                        }
+                        if (config.value !== undefined) {
+                            const valueInput = document.getElementById(`value-${effect}`);
+                            if (valueInput) valueInput.value = config.value;
+                        }
+                    }
+                });
+                updatePreview();
+            }, 100);
+            
+            // 更新按钮状态
+            document.getElementById('submit-text').textContent = '💾 更新状态';
+            document.getElementById('submit-btn').classList.remove('bg-blue-600', 'hover:bg-blue-700');
+            document.getElementById('submit-btn').classList.add('bg-green-600', 'hover:bg-green-700');
+            document.getElementById('cancel-edit-btn').classList.remove('hidden');
+            
+            // 滚动到顶部
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // 取消编辑
+        function cancelEdit() {
+            editingIndex = -1;
+            document.getElementById('submit-text').textContent = '✨ 创建状态';
+            document.getElementById('submit-btn').classList.remove('bg-green-600', 'hover:bg-green-700');
+            document.getElementById('submit-btn').classList.add('bg-blue-600', 'hover:bg-blue-700');
+            document.getElementById('cancel-edit-btn').classList.add('hidden');
+        }
+
+        // 保存状态池
+        function saveStatusPool() {
+            try {
+                localStorage.setItem('STATUS_POOL', JSON.stringify(statuses));
+            } catch (e) {
+                if (e.name === 'QuotaExceededError') {
+                    alert('❌ 存储空间不足！图片占用空间过大，请：\n1. 删除一些不需要的状态\n2. 使用更小的图片（建议 < 500KB）\n3. 导出备份后清空状态池');
+                } else {
+                    alert('❌ 保存失败：' + e.message);
+                }
+                throw e;
+            }
+        }
+
+        // 渲染状态列表
+        function renderStatusList() {
+            if (statuses.length === 0) {
+                statusList.innerHTML = '<div class="text-center text-gray-500 text-sm py-8">暂无状态</div>';
+                return;
+            }
+
+            statusList.innerHTML = statuses.map((status, index) => {
+                const effectLabels = status.effects.map(effect =>
+                    `<span class="bg-purple-600/30 text-purple-300 px-1.5 py-0.5 rounded text-xs">${EFFECT_CONFIG[effect]?.name || effect}</span>`
+                ).join(' ');
+                
+                // 图标显示：只使用上传的图片
+                let iconDisplay = '';
+                if (status.iconImage) {
+                    iconDisplay = `<img src="${status.iconImage}" class="w-10 h-10 object-contain flex-shrink-0">`;
+                } else {
+                    iconDisplay = `<div class="w-10 h-10 bg-gray-700 rounded flex items-center justify-center text-lg flex-shrink-0">❓</div>`;
+                }
+                
+                return `
+                    <div class="status-card bg-gray-800 rounded-lg p-3 border border-gray-600">
+                        <div class="flex items-start gap-2">
+                            ${iconDisplay}
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-center gap-2 mb-1">
+                                    <h5 class="text-sm font-bold text-white truncate">${status.name}</h5>
+                                    ${status.canPurify ? '<span class="text-xs bg-green-600/30 text-green-300 px-1.5 py-0.5 rounded flex-shrink-0">可净化</span>' : '<span class="text-xs bg-red-600/30 text-red-300 px-1.5 py-0.5 rounded flex-shrink-0">不可净化</span>'}
+                                </div>
+                                ${status.description ? `<p class="text-xs text-gray-500 italic mb-1 line-clamp-2">${status.description}</p>` : ''}
+                                <div class="text-xs text-gray-400 mb-1">
+                                    ${status.isPermanent ? '状态永久' : `状态${status.statusDuration || 10}回合`} · ${status.hasStacks === false ? '无层数' : (status.isStackPermanent ? '层数永久' : `每层${status.durationPerStack || 3}回合`)} ${status.hasStacks !== false && status.maxStacks > 1 ? `· 最多${status.maxStacks}层` : ''} ${status.uniqueEffect ? '· 唯一效果' : ''} ${status.hasStacks !== false && status.autoGrow ? `· 每回合+${status.growRate}层` : ''}
+                                </div>
+                                ${effectLabels ? `<div class="flex flex-wrap gap-1">${effectLabels}</div>` : ''}
+                            </div>
+                            <div class="flex gap-1 flex-shrink-0">
+                                <button onclick="editStatus(${index})"
+                                    class="text-blue-400 hover:text-blue-300 text-lg px-2" title="编辑">✏️</button>
+                                <button onclick="deleteStatus(${index})"
+                                    class="text-red-400 hover:text-red-300 text-xl" title="删除">×</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // 删除状态
+        function deleteStatus(index) {
+            if (confirm('确定要删除这个状态吗？')) {
+                statuses.splice(index, 1);
+                saveStatusPool();
+                renderStatusList();
+                updateStatusCount();
+            }
+        }
+
+        // 更新状态数量
+        function updateStatusCount() {
+            statusCount.textContent = statuses.length;
+        }
+
+        // 导出状态池
+        function exportStatuses() {
+            if (statuses.length === 0) {
+                alert('状态池为空！');
+                return;
+            }
+
+            const dataStr = JSON.stringify(statuses, null, 2);
+            const blob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `status_pool_${Date.now()}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        // 导入状态
+        function importStatuses(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                try {
+                    const importedStatuses = JSON.parse(event.target.result);
+                    
+                    if (!Array.isArray(importedStatuses)) {
+                        alert('❌ 无效的JSON格式！');
+                        return;
+                    }
+
+                    const existingKeys = new Set(statuses.map(s => s.key));
+                    const newStatuses = importedStatuses.filter(s => !existingKeys.has(s.key));
+                    
+                    statuses = [...statuses, ...newStatuses];
+                    saveStatusPool();
+                    
+                    renderStatusList();
+                    updateStatusCount();
+                    alert(`✅ 成功导入 ${newStatuses.length} 个新状态！`);
+                } catch (error) {
+                    alert('❌ 导入失败：' + error.message);
+                }
+            };
+            reader.readAsText(file);
+            
+            e.target.value = '';
+        }
+
+        // 初始化应用
+        init();
+    </script>
+</body>
+</html>

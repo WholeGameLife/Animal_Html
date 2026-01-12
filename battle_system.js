@@ -155,6 +155,9 @@ class BattleSystem {
         document.getElementById('player-atk').textContent = this.playerStats.attack;
         document.getElementById('player-def').textContent = this.playerStats.defense;
         document.getElementById('player-agi').textContent = this.playerStats.agility;
+        
+        // 初始化异常状态显示
+        this.updateStatusUI();
     }
 
     renderOpponentInfo() {
@@ -168,6 +171,9 @@ class BattleSystem {
         document.getElementById('opponent-atk').textContent = this.opponentStats.attack;
         document.getElementById('opponent-def').textContent = this.opponentStats.defense;
         document.getElementById('opponent-agi').textContent = this.opponentStats.agility;
+        
+        // 初始化异常状态显示
+        this.updateStatusUI();
     }
     
     renderPlayerSkillSlots() {
@@ -933,6 +939,52 @@ class BattleSystem {
         const opponentHealthPercent = Math.max(0, (this.opponentCurrentHealth / this.opponentData.stamina) * 100);
         document.getElementById('opponent-health-bar').style.width = `${opponentHealthPercent}%`;
         document.getElementById('opponent-health-text').textContent = `${this.opponentCurrentHealth} / ${this.opponentData.stamina}`;
+        
+        // 更新异常状态显示
+        this.updateStatusUI();
+    }
+    
+    // 异常状态名称映射
+    getStatusNames() {
+        return {
+            'stun': '😵 眩晕',
+            'poison': '🤢 中毒',
+            'bleed': '🩸 流血',
+            'frostbite': '❄️ 冻伤',
+            'burn': '🔥 灼烧',
+            'paralyze': '⚡ 麻痹',
+            'no-heal': '🚫 禁疗',
+            'heal-reduce': '📉 减疗'
+        };
+    }
+    
+    // 更新异常状态UI
+    updateStatusUI() {
+        const statusNames = this.getStatusNames();
+        
+        // 更新玩家异常状态
+        const playerStatusEl = document.getElementById('player-status');
+        if (playerStatusEl) {
+            if (this.playerStats.status.length === 0) {
+                playerStatusEl.innerHTML = '<span class="text-xs text-gray-500">无</span>';
+            } else {
+                playerStatusEl.innerHTML = this.playerStats.status.map(s =>
+                    `<span class="bg-red-500/30 text-red-300 px-2 py-0.5 rounded text-xs">${statusNames[s] || s}</span>`
+                ).join('');
+            }
+        }
+        
+        // 更新敌方异常状态
+        const opponentStatusEl = document.getElementById('opponent-status');
+        if (opponentStatusEl) {
+            if (this.opponentStats.status.length === 0) {
+                opponentStatusEl.innerHTML = '<span class="text-xs text-gray-500">无</span>';
+            } else {
+                opponentStatusEl.innerHTML = this.opponentStats.status.map(s =>
+                    `<span class="bg-red-500/30 text-red-300 px-2 py-0.5 rounded text-xs">${statusNames[s] || s}</span>`
+                ).join('');
+            }
+        }
     }
 
     async checkBattleEnd() {
@@ -1330,6 +1382,90 @@ class BattleSystem {
                     attackerStats.elementDamageBonus[elementType] =
                         (attackerStats.elementDamageBonus[elementType] || 0) + damageBonus;
                     this.addLog(`属性增伤: ${isPlayer ? '我方' : '敌方'}对${this.getElementName(elementType)}系伤害 +${Math.round(damageBonus * 100)}%`, 'text-green-300');
+                }
+                break;
+            }
+            
+            case 'buff_status_enemy': {
+                // 为敌方附加异常状态
+                const statusType = params[`${effectKey}_status-type`] || 'poison';
+                const statusChance = params[`${effectKey}_status-chance`] || 50;
+                const random = Math.random() * 100;
+                const statusNames = this.getStatusNames();
+                
+                if (random <= statusChance) {
+                    if (!defenderStats.status.includes(statusType)) {
+                        defenderStats.status.push(statusType);
+                        this.addLog(`施加异常: ${defenderName}获得 ${statusNames[statusType] || statusType} (${statusChance}%概率成功)`, 'text-purple-300');
+                    } else {
+                        this.addLog(`施加异常: ${defenderName}已有 ${statusNames[statusType] || statusType}`, 'text-gray-400');
+                    }
+                } else {
+                    this.addLog(`施加异常: 未触发 (${Math.round(random)}% > ${statusChance}%)`, 'text-gray-400');
+                }
+                break;
+            }
+            
+            case 'debuff_status_self': {
+                // 为自身附加异常状态
+                const statusType = params[`${effectKey}_status-type`] || 'poison';
+                const statusChance = params[`${effectKey}_status-chance`] || 50;
+                const random = Math.random() * 100;
+                const statusNames = this.getStatusNames();
+                
+                if (random <= statusChance) {
+                    if (!attackerStats.status.includes(statusType)) {
+                        attackerStats.status.push(statusType);
+                        this.addLog(`自身异常: ${attackerName}获得 ${statusNames[statusType] || statusType} (${statusChance}%概率成功)`, 'text-purple-300');
+                    } else {
+                        this.addLog(`自身异常: ${attackerName}已有 ${statusNames[statusType] || statusType}`, 'text-gray-400');
+                    }
+                } else {
+                    this.addLog(`自身异常: 未触发 (${Math.round(random)}% > ${statusChance}%)`, 'text-gray-400');
+                }
+                break;
+            }
+            
+            case 'buff_purify': {
+                // 净化：清除异常状态
+                const target = params[`${effectKey}_target`];
+                const purifyType = params[`${effectKey}_purify-type`] || 'all';
+                const statusNames = this.getStatusNames();
+                
+                if (target === 'self' || target === 'ally-all') {
+                    const beforeCount = attackerStats.status.length;
+                    if (purifyType === 'all') {
+                        attackerStats.status = [];
+                        this.addLog(`净化: 清除${attackerName}所有异常状态 (${beforeCount}个)`, 'text-green-300');
+                    } else {
+                        attackerStats.status = attackerStats.status.filter(s => s !== purifyType);
+                        this.addLog(`净化: 清除${attackerName} ${statusNames[purifyType] || purifyType}`, 'text-green-300');
+                    }
+                }
+                break;
+            }
+            
+            case 'debuff_no_heal': {
+                // 禁疗
+                const target = params[`${effectKey}_target`];
+                if (target === 'enemy-single' || target === 'enemy-all') {
+                    if (!defenderStats.status.includes('no-heal')) {
+                        defenderStats.status.push('no-heal');
+                        this.addLog(`禁疗: ${defenderName}无法恢复生命`, 'text-purple-300');
+                    }
+                }
+                break;
+            }
+            
+            case 'debuff_heal_reduce': {
+                // 减疗
+                const target = params[`${effectKey}_target`];
+                const bonus = params[`${effectKey}_bonus`] || 0.5;
+                if (target === 'enemy-single' || target === 'enemy-all') {
+                    if (!defenderStats.status.includes('heal-reduce')) {
+                        defenderStats.status.push('heal-reduce');
+                        this.addLog(`减疗: ${defenderName}治疗效果降低 ${Math.round(bonus * 100)}%`, 'text-purple-300');
+                    }
                 }
                 break;
             }
