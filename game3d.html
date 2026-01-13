@@ -3270,7 +3270,7 @@
 
         // --- 图鉴系统逻辑 ---
 
-        // 图鉴解锁检查 - 基于物种ID和稀有度
+        // 图鉴解锁检查 - 基于物种ID、稀有度和变异
         function checkEncyclopediaUnlock(animal) {
             if (!animal || !animal.animalId) return;
             
@@ -3280,21 +3280,39 @@
             }
             
             const animalId = animal.animalId;
-            if (!gameState.unlockedEncyclopedia[animalId]) {
-                gameState.unlockedEncyclopedia[animalId] = {
+            const mutationKey = getMutationKey(animal);
+            const entryKey = mutationKey ? `${animalId}_${mutationKey}` : animalId;
+            
+            if (!gameState.unlockedEncyclopedia[entryKey]) {
+                gameState.unlockedEncyclopedia[entryKey] = {
                     animalId: animalId,
+                    mutationKey: mutationKey,
                     unlockedAt: Date.now(),
                     templateKey: animal.templateKey,
-                    rarity: animal.rarity || 'common'
+                    rarity: animal.rarity || 'common',
+                    mutations: {
+                        tier1: animal.mutations?.tier1 || null,
+                        tier2: animal.mutations?.tier2 || null
+                    }
                 };
                 
                 // 获取动物名称
                 const animalPool = JSON.parse(localStorage.getItem('ANIMAL_POOL') || '[]');
                 const template = animalPool.find(t => t.key === animal.templateKey);
                 const speciesName = template ? template.name : animal.name;
+                const mutationName = mutationKey ? ` - ${mutationKey}` : '';
                 
-                showStatus(`📖 新图鉴解锁: ${speciesName}!`, 3000);
+                showStatus(`📖 新图鉴解锁: ${speciesName}${mutationName}!`, 3000);
             }
+        }
+        
+        // 获取变异键（用于区分不同变异版本）
+        function getMutationKey(animal) {
+            if (!animal.mutations) return null;
+            const parts = [];
+            if (animal.mutations.tier1) parts.push(animal.mutations.tier1);
+            if (animal.mutations.tier2) parts.push(animal.mutations.tier2);
+            return parts.length > 0 ? parts.join('+') : null;
         }
 
         // 跳转到图鉴页面
