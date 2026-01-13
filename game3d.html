@@ -8,6 +8,8 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- 引入 Three.js CDN -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <!-- 引入背包系统 -->
+    <script src="inventory_system.js"></script>
     <style>
         /* 确保画布全屏且不显示滚动条 */
         body { margin: 0; overflow: hidden; font-family: 'Inter', sans-serif; background-color: #0a1120; }
@@ -349,15 +351,143 @@
         </div>
 
         <!-- 新增：背包面板 -->
-        <div id="inventory-panel" class="control-panel centered-panel p-6 rounded-xl text-white hidden w-full max-w-2xl">
+        <div id="inventory-panel" class="control-panel centered-panel p-6 rounded-xl text-white hidden w-full max-w-6xl max-h-[90vh]">
             <div class="flex justify-between items-center mb-4">
                 <h3 class="text-2xl font-bold text-blue-400">🎒 我的背包</h3>
                 <button id="btn-close-inventory" class="text-3xl text-gray-500 hover:text-white">&times;</button>
             </div>
-            <div id="inventory-items-container" class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <!-- 物品列表由 JS 生成 -->
+            
+            <div class="flex gap-4 h-[calc(90vh-100px)]">
+                <!-- 左侧：出战队伍 - 占据全部左侧高度 -->
+                <div class="w-2/5 p-4 bg-gradient-to-br from-purple-900/30 to-indigo-900/30 rounded-xl border border-purple-500/50 overflow-y-auto">
+                    <h4 class="text-lg font-bold text-purple-300 mb-4 flex items-center sticky top-0 bg-purple-900/30 pb-2">
+                        <span class="mr-2">⚔️</span>出战队伍 (6个槽位)
+                    </h4>
+                    <div id="battle-team-slots" class="space-y-2">
+                        <!-- 出战槽位由 JS 生成 -->
+                    </div>
+                </div>
+                    
+                <!-- 右侧：动物详情 -->
+                <div class="w-3/5 p-4 bg-gradient-to-br from-gray-800/50 to-gray-900/50 rounded-xl border border-gray-600/50 overflow-y-auto">
+                    <div id="inventory-animal-detail" class="hidden">
+                        <h4 class="text-lg font-bold text-purple-300 mb-4 flex items-center">
+                            <span class="mr-2">📋</span>动物详情
+                        </h4>
+                        
+                        <!-- 动物信息 -->
+                        <div class="mb-4 pb-4 border-b border-gray-700">
+                            <div class="flex items-center justify-between mb-3">
+                                <div class="flex items-center space-x-3">
+                                    <div id="inv-detail-avatar" class="w-16 h-16 rounded-full border-2" style="background-color: #60a5fa;"></div>
+                                    <div>
+                                        <h5 id="inv-detail-name" class="text-lg font-bold text-white">动物名称</h5>
+                                        <div class="flex items-center space-x-2 text-sm mt-1">
+                                            <span id="inv-detail-level" class="bg-purple-600 px-2 py-0.5 rounded">Lv. 1</span>
+                                            <span id="inv-detail-gender" class="px-2 py-0.5 rounded"></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- 系别、稀有度、变异 -->
+                            <div class="flex items-center gap-2 flex-wrap mb-2">
+                                <span class="bg-cyan-900/50 text-cyan-300 px-3 py-1 rounded-full text-sm font-bold flex items-center gap-1">
+                                    <span>🌀</span>
+                                    <span id="inv-detail-element">水</span>
+                                </span>
+                                <span id="inv-detail-rarity" class="px-3 py-1 rounded-full text-sm font-bold hidden">
+                                    <!-- 稀有度标签 -->
+                                </span>
+                                <span id="inv-detail-mutation" class="px-3 py-1 rounded-full text-sm font-bold hidden">
+                                    <!-- 变异标签 -->
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <!-- 经验条 -->
+                        <div class="mb-4">
+                            <div class="flex justify-between text-xs text-gray-400 mb-1">
+                                <span>经验值</span>
+                                <span id="inv-detail-exp-text">0 / 100</span>
+                            </div>
+                            <div class="w-full bg-gray-700 rounded-full h-2">
+                                <div id="inv-detail-exp-bar" class="bg-yellow-400 h-2 rounded-full transition-all" style="width: 0%"></div>
+                            </div>
+                        </div>
+                        
+                        <!-- 属性 -->
+                        <div class="grid grid-cols-2 gap-3 mb-4 text-sm">
+                            <div class="bg-gray-900/50 p-3 rounded">
+                                <span class="text-gray-400">⚡ 体力</span>
+                                <div id="inv-detail-stamina" class="text-green-400 font-mono text-lg mt-1">0/0</div>
+                            </div>
+                            <div class="bg-gray-900/50 p-3 rounded">
+                                <span class="text-gray-400">✨ 潜力</span>
+                                <div id="inv-detail-potential" class="font-bold text-lg mt-1">平庸</div>
+                            </div>
+                        </div>
+                        
+                        <!-- 战斗属性 -->
+                        <div class="grid grid-cols-3 gap-3 mb-4 text-sm">
+                            <div class="bg-gray-900/50 p-3 rounded text-center">
+                                <span class="text-gray-400 text-xs">⚔️ 攻击</span>
+                                <div id="inv-detail-attack" class="text-red-400 font-mono text-xl mt-1">0</div>
+                            </div>
+                            <div class="bg-gray-900/50 p-3 rounded text-center">
+                                <span class="text-gray-400 text-xs">🛡️ 防御</span>
+                                <div id="inv-detail-defense" class="text-blue-400 font-mono text-xl mt-1">0</div>
+                            </div>
+                            <div class="bg-gray-900/50 p-3 rounded text-center">
+                                <span class="text-gray-400 text-xs">💨 敏捷</span>
+                                <div id="inv-detail-agility" class="text-yellow-400 font-mono text-xl mt-1">0</div>
+                            </div>
+                        </div>
+                        
+                        <!-- 战斗技能 -->
+                        <div class="mb-4 pb-4 border-b border-gray-700">
+                            <h5 class="text-sm font-bold text-indigo-300 mb-2">⚔️ 战斗技能</h5>
+                            <div id="inv-detail-combat-skills" class="grid grid-cols-4 gap-2">
+                                <!-- 技能槽位由 JS 生成 -->
+                            </div>
+                        </div>
+                        
+                        <!-- 操作按钮 -->
+                        <div class="space-y-2">
+                            <button id="inv-detail-btn-set-first" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-lg transition-colors">
+                                ⭐ 设置为首发
+                            </button>
+                            <button id="inv-detail-btn-feed" class="w-full bg-orange-600 hover:bg-orange-700 text-white font-bold py-3 px-4 rounded-lg transition-colors">
+                                🍎 喂养升级 (消耗 10 食物)
+                            </button>
+                            <button id="inv-detail-btn-remove" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg transition-colors">
+                                ❌ 从队伍移除
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- 空状态提示 -->
+                    <div id="inventory-detail-empty" class="flex flex-col items-center justify-center h-full text-gray-500">
+                        <div class="text-6xl mb-4">👈</div>
+                        <p class="text-lg">点击左侧动物查看详情</p>
+                    </div>
+                </div>
             </div>
-            <p id="inventory-empty-msg" class="text-center text-gray-500 hidden py-8">背包空空如也...</p>
+        </div>
+
+        <!-- 新增：出战队伍选择面板 -->
+        <div id="team-selector-panel" class="control-panel centered-panel p-5 rounded-lg text-white hidden w-full md:w-[500px] z-[60]">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-bold text-purple-300">选择出战动物</h3>
+                <button id="btn-close-team-selector" class="text-2xl text-gray-400 hover:text-white">&times;</button>
+            </div>
+            <div class="mb-3 text-sm text-gray-400">
+                <span>当前槽位：</span>
+                <span id="current-slot-info" class="text-yellow-400 font-bold">-</span>
+            </div>
+            <div id="team-animal-list" class="space-y-2 max-h-96 overflow-y-auto custom-scrollbar">
+                <!-- 可选动物列表 -->
+            </div>
         </div>
 
         <!-- 新增：道具目标选择面板 -->
@@ -424,6 +554,21 @@
             </div>
         </div>
 
+
+        <!-- 新增：技能选择面板 -->
+        <div id="skill-selector-panel" class="control-panel centered-panel p-5 rounded-xl text-white hidden w-full md:w-[600px]" style="z-index: 100;">
+            <div class="flex justify-between items-center mb-4 pb-3 border-b border-purple-500/50">
+                <h3 class="text-xl font-bold text-purple-300">选择战斗技能</h3>
+                <button id="btn-close-skill-selector" class="text-2xl text-gray-400 hover:text-white">&times;</button>
+            </div>
+            <div class="mb-3 text-sm text-gray-400">
+                <span>当前槽位：</span>
+                <span id="current-skill-slot-info" class="text-yellow-400 font-bold">-</span>
+            </div>
+            <div id="available-skills-list" class="grid grid-cols-2 gap-3 max-h-96 overflow-y-auto custom-scrollbar">
+                <!-- 可用技能列表 -->
+            </div>
+        </div>
 
         <!-- 建筑菜单容器 (右上角) -->
         <div id="build-menus-container" class="absolute top-4 right-4 flex flex-col space-y-2">
@@ -961,6 +1106,8 @@
             activeExplorations: [], // 新增：活跃的探索任务
             artifacts: [], // 新增：拥有的文物
             inventory: {}, // 新增：背包
+            battleTeam: [null, null, null, null, null, null], // 新增：出战队伍（6个槽位）
+            firstTeamMember: null, // 新增：首发动物ID
             unlockedEncyclopedia: {}, // 新增：已解锁的图鉴（对象格式：animalId -> 解锁信息）
             mining: { // 新增：挖矿状态
                 unlockedCheckpoints: [0],
@@ -1098,6 +1245,39 @@
             itemTargetSelector: document.getElementById('item-target-selector'),
             btnCloseTargetSelector: document.getElementById('btn-close-target-selector'),
             targetAnimalList: document.getElementById('target-animal-list'),
+            
+            // 新增：出战队伍UI
+            teamSelectorPanel: document.getElementById('team-selector-panel'),
+            btnCloseTeamSelector: document.getElementById('btn-close-team-selector'),
+            teamAnimalList: document.getElementById('team-animal-list'),
+            currentSlotInfo: document.getElementById('current-slot-info'),
+            battleTeamSlots: document.getElementById('battle-team-slots'),
+            
+            // 新增：背包内动物详情UI
+            inventoryAnimalDetail: document.getElementById('inventory-animal-detail'),
+            inventoryDetailEmpty: document.getElementById('inventory-detail-empty'),
+            invDetailAvatar: document.getElementById('inv-detail-avatar'),
+            invDetailName: document.getElementById('inv-detail-name'),
+            invDetailLevel: document.getElementById('inv-detail-level'),
+            invDetailGender: document.getElementById('inv-detail-gender'),
+            invDetailExpText: document.getElementById('inv-detail-exp-text'),
+            invDetailExpBar: document.getElementById('inv-detail-exp-bar'),
+            invDetailStamina: document.getElementById('inv-detail-stamina'),
+            invDetailPotential: document.getElementById('inv-detail-potential'),
+            invDetailElement: document.getElementById('inv-detail-element'),
+            invDetailAttack: document.getElementById('inv-detail-attack'),
+            invDetailDefense: document.getElementById('inv-detail-defense'),
+            invDetailAgility: document.getElementById('inv-detail-agility'),
+            invDetailBtnFeed: document.getElementById('inv-detail-btn-feed'),
+            invDetailBtnRemove: document.getElementById('inv-detail-btn-remove'),
+            invDetailBtnSetFirst: document.getElementById('inv-detail-btn-set-first'),
+            invDetailCombatSkills: document.getElementById('inv-detail-combat-skills'),
+            
+            // 技能选择面板
+            skillSelectorPanel: document.getElementById('skill-selector-panel'),
+            btnCloseSkillSelector: document.getElementById('btn-close-skill-selector'),
+            availableSkillsList: document.getElementById('available-skills-list'),
+            currentSkillSlotInfo: document.getElementById('current-skill-slot-info'),
         };
 
 
@@ -1212,8 +1392,14 @@
             document.getElementById('btn-place-bid').addEventListener('click', placeBid, false);
 
             // 修复：重新绑定建筑选择按钮的点击事件
-            ui.btnCloseInventory.addEventListener('click', closeInventoryPanel, false); // 新增
-            ui.btnCloseTargetSelector.addEventListener('click', closeTargetSelector, false); // 新增
+            ui.btnCloseInventory.addEventListener('click', closeInventoryPanel, false);
+            ui.btnCloseTargetSelector.addEventListener('click', closeTargetSelector, false);
+            if (ui.btnCloseTeamSelector) {
+                ui.btnCloseTeamSelector.addEventListener('click', closeTeamSelector, false);
+            }
+            if (ui.btnCloseSkillSelector) {
+                ui.btnCloseSkillSelector.addEventListener('click', closeSkillSelector, false);
+            }
             ui.btnCloseShop.addEventListener('click', closeShopPanel, false);
             ui.buildButtons.forEach(button => {
                 button.addEventListener('click', (event) => {
@@ -1247,6 +1433,8 @@
             closeAuctionBidPanel();
             closeInventoryPanel();
             closeTargetSelector();
+            if (typeof closeTeamSelector === 'function') closeTeamSelector();
+            if (typeof closeSkillSelector === 'function') closeSkillSelector();
         }
 
         // 新增：键盘按下事件处理
@@ -2731,7 +2919,22 @@
             const opponent = gameState.wildAnimals.find(a => a.id === wildAnimalId);
             if (!opponent) return;
 
-            // 重置战斗状态
+            // 检查是否有首发动物
+            if (gameState.firstTeamMember) {
+                const firstAnimal = gameState.animals.find(a => a.id === gameState.firstTeamMember);
+                // 验证首发动物可用（未放置、未受伤、在出战队伍中）
+                if (firstAnimal && !firstAnimal.isPlaced && !firstAnimal.isInjured && gameState.battleTeam.includes(firstAnimal.id)) {
+                    // 直接使用首发动物进入战斗
+                    gameState.battle = {
+                        opponent: opponent,
+                        playerAnimal: firstAnimal,
+                    };
+                    startCombat();
+                    return;
+                }
+            }
+
+            // 没有首发或首发不可用，显示选择面板
             gameState.battle = {
                 opponent: opponent,
                 playerAnimal: null,
@@ -2877,51 +3080,12 @@
             openShopPanel(); // 刷新界面显示余额和数量
         };
 
-        // --- 新增：背包系统逻辑 ---
+        // --- 背包系统逻辑已移至 inventory_system.js ---
 
-        function openInventoryPanel() {
-            closeAllDetailPanels();
-            renderInventoryItems();
-            ui.modalOverlay.classList.remove('hidden');
-            ui.inventoryPanel.classList.remove('hidden');
-        }
+        // 背包系统所有函数已移至 inventory_system.js
 
-        function closeInventoryPanel() {
-            ui.inventoryPanel.classList.add('hidden');
-            ui.modalOverlay.classList.add('hidden');
-        }
-
-        function renderInventoryItems() {
-            ui.inventoryItemsContainer.innerHTML = '';
-            const inventory = gameState.inventory || {};
-            let hasItems = false;
-
-            for (const [itemId, count] of Object.entries(inventory)) {
-                if (count > 0 && ITEMS[itemId]) {
-                    hasItems = true;
-                    const item = ITEMS[itemId];
-                    const itemDiv = document.createElement('div');
-                    itemDiv.className = 'bg-gray-800 p-3 rounded-lg flex flex-col items-center text-center border border-gray-700 hover:border-blue-500 transition-colors cursor-pointer relative group';
-                    
-                    itemDiv.innerHTML = `
-                        <div class="text-3xl mb-1">${item.icon}</div>
-                        <h4 class="font-bold text-sm text-white">${item.name}</h4>
-                        <div class="text-xs text-gray-400">x${count}</div>
-                        <div class="absolute bottom-full mb-2 hidden group-hover:block w-32 bg-black text-white text-xs rounded p-1 z-10 text-center shadow-lg">
-                            ${item.desc}
-                        </div>
-                    `;
-                    itemDiv.onclick = () => initiateUseItem(itemId);
-                    ui.inventoryItemsContainer.appendChild(itemDiv);
-                }
-            }
-
-            if (!hasItems) {
-                ui.inventoryEmptyMsg.classList.remove('hidden');
-            } else {
-                ui.inventoryEmptyMsg.classList.add('hidden');
-            }
-        }
+        // 已移除 renderInventoryItems() 函数，因为道具仓库已从背包面板中移除
+        // 道具可以通过商店面板购买和使用
 
         let currentItemToUse = null;
 
@@ -3619,6 +3783,7 @@
                 gameState.mining = storedState.mining || { unlockedCheckpoints: [0], currentRun: { isActive: false, team: [], currentDepth: 0, lastTick: 0 } };
                 gameState.artifacts = storedState.artifacts || [];
                 gameState.inventory = storedState.inventory || {};
+                gameState.battleTeam = storedState.battleTeam || [null, null, null, null, null, null];
                 gameState.auctions = storedState.auctions || { items: [], lastUpdate: null };
                 gameState.lastStockRefreshDate = storedState.lastStockRefreshDate || null;
                 gameState.exchangeStock = storedState.exchangeStock || [];

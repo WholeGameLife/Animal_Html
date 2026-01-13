@@ -182,7 +182,6 @@
                 <button class="mutation-filter-btn" data-tier="basic">🔹 基础级</button>
                 <button class="mutation-filter-btn" data-tier="elite">💜 精英级</button>
                 <button class="mutation-filter-btn" data-tier="legendary">✨ 传说级</button>
-                <button class="mutation-filter-btn" data-tier="tier2">⚡ 二级变异</button>
             </div>
         </div>
         
@@ -221,19 +220,17 @@
             stellar: { name: '星芒', icon: '⭐', color: 'text-purple-400', bgClass: 'rarity-stellar' }
         };
         
-        // 变异配置
+        // 变异配置（仅一级变异）
         const MUTATION_CONFIG = {
             tier1: {
                 basic: ['黑化', '白化', '晶化', '影化'],
                 elite: ['暗蚀', '圣辉', '异能', '极电'],
                 legendary: ['永夜', '永耀', '源晶', '雷煌']
             },
-            tier2: ['阴', '阳', '玄'],
             icons: {
                 '黑化': '🖤', '白化': '🤍', '晶化': '💎', '影化': '👤',
                 '暗蚀': '🌑', '圣辉': '✨', '异能': '🔮', '极电': '⚡',
-                '永夜': '🌙', '永耀': '☀️', '源晶': '💠', '雷煌': '⚡',
-                '阴': '☯️', '阳': '☀️', '玄': '🔯'
+                '永夜': '🌙', '永耀': '☀️', '源晶': '💠', '雷煌': '⚡'
             }
         };
         
@@ -586,8 +583,7 @@
                 mutationsToShow = [
                     ...MUTATION_CONFIG.tier1.basic,
                     ...MUTATION_CONFIG.tier1.elite,
-                    ...MUTATION_CONFIG.tier1.legendary,
-                    ...MUTATION_CONFIG.tier2
+                    ...MUTATION_CONFIG.tier1.legendary
                 ];
             } else if (mutationTier === 'basic') {
                 mutationsToShow = MUTATION_CONFIG.tier1.basic;
@@ -595,8 +591,6 @@
                 mutationsToShow = MUTATION_CONFIG.tier1.elite;
             } else if (mutationTier === 'legendary') {
                 mutationsToShow = MUTATION_CONFIG.tier1.legendary;
-            } else if (mutationTier === 'tier2') {
-                mutationsToShow = MUTATION_CONFIG.tier2;
             }
             
             // 为每个变异类型创建卡片

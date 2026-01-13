@@ -3297,13 +3297,15 @@
 
         // 新增：强制重置游戏数据（仅重置游戏内数据，保留技能设计器等游戏外数据）
         function resetGameData() {
-            const isConfirmed = confirm("警告：此操作将删除所有游戏进度和动物数据，但会保留技能设计器等游戏外数据。您确定要重新开始游戏吗？");
+            const isConfirmed = confirm("警告：此操作将删除所有游戏进度和动物数据，但会保留技能、动物、地图和状态设计器等游戏外数据。您确定要重新开始游戏吗？");
             if (isConfirmed) {
                 showStatus("正在清除游戏数据...", 2000);
                 
                 // 保存游戏外数据
                 const skillPool = localStorage.getItem('SKILL_POOL');
                 const animalPool = localStorage.getItem('ANIMAL_POOL');
+                const mapConfigs = localStorage.getItem('MAP_CONFIGS');
+                const statusPool = localStorage.getItem('STATUS_POOL');
                 
                 // 清除所有数据
                 localStorage.clear();
@@ -3314,6 +3316,12 @@
                 }
                 if (animalPool) {
                     localStorage.setItem('ANIMAL_POOL', animalPool);
+                }
+                if (mapConfigs) {
+                    localStorage.setItem('MAP_CONFIGS', mapConfigs);
+                }
+                if (statusPool) {
+                    localStorage.setItem('STATUS_POOL', statusPool);
                 }
                 
                 setTimeout(() => {

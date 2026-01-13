@@ -24,7 +24,11 @@
         <!-- Top Left: World Info & Return Button -->
         <div class="control-panel p-4 rounded-lg text-white">
             <h1 id="world-name" class="text-2xl font-bold text-yellow-300 mb-2">探索区域</h1>
-            <button id="btn-return-map" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg">返回世界地图</button>
+            <button id="btn-return-map" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg mb-2">返回世界地图</button>
+            <button id="btn-open-inventory" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg text-center">
+                🎒 我的背包<br><span class="text-xs"> (查看/使用)</span>
+            </button>
+            <div id="status-message" class="text-xs mt-3 h-4 text-gray-400"></div>
         </div>
 
         <!-- Animal Details Panel (新增) -->
@@ -111,6 +115,144 @@
         </div>
     </div>
 
+    <!-- 背包面板 (从game3d.html复制) -->
+    <div id="inventory-panel" class="hidden fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-gray-900/95 backdrop-blur-lg border-2 border-purple-500 rounded-xl p-6 w-11/12 max-w-7xl max-h-[90vh] overflow-y-auto z-50 shadow-2xl">
+        <div class="flex justify-between items-center mb-6 border-b border-gray-700 pb-4">
+            <h2 class="text-3xl font-bold text-purple-400">🎒 动物背包</h2>
+            <button id="btn-close-inventory" class="text-gray-400 hover:text-white text-3xl font-bold">×</button>
+        </div>
+        
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- 左侧：出战队伍 -->
+            <div class="lg:col-span-2">
+                <h3 class="text-xl font-bold text-yellow-300 mb-4">⚔️ 出战队伍 (6个槽位)</h3>
+                <div id="battle-team-slots" class="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    <!-- 队伍槽位由JS生成 -->
+                </div>
+            </div>
+            
+            <!-- 右侧：详情/空状态 -->
+            <div class="space-y-4">
+                <!-- 空状态提示 -->
+                <div id="inventory-detail-empty" class="bg-gray-800/50 rounded-lg p-8 text-center border-2 border-dashed border-gray-600">
+                    <div class="text-6xl mb-4">👈</div>
+                    <p class="text-gray-400 text-lg">点击左侧动物槽位</p>
+                    <p class="text-gray-500 text-sm mt-2">查看详情或添加动物</p>
+                </div>
+                
+                <!-- 动物详情 -->
+                <div id="inventory-animal-detail" class="hidden bg-gray-800/80 rounded-lg p-4 border border-purple-500/50">
+                    <div class="flex items-center space-x-4 mb-4">
+                        <div id="inv-detail-avatar" class="w-20 h-20 rounded-full border-4 border-white/30"></div>
+                        <div class="flex-1">
+                            <div class="flex items-center gap-2 mb-1">
+                                <h3 id="inv-detail-name" class="text-xl font-bold text-white">动物名称</h3>
+                                <span id="inv-detail-gender" class="text-sm px-2 py-0.5 rounded">雄</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span id="inv-detail-level" class="text-sm bg-purple-600 px-2 py-1 rounded font-bold">Lv. 1</span>
+                                <span id="inv-detail-rarity" class="hidden px-3 py-1 rounded-full text-sm font-bold"></span>
+                                <span id="inv-detail-mutation" class="hidden px-3 py-1 rounded-full text-sm font-bold"></span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 经验条 -->
+                    <div class="mb-4">
+                        <div class="flex justify-between text-xs text-gray-400 mb-1">
+                            <span>经验值</span>
+                            <span id="inv-detail-exp-text">0 / 100</span>
+                        </div>
+                        <div class="w-full bg-gray-700 rounded-full h-2">
+                            <div id="inv-detail-exp-bar" class="bg-yellow-400 h-2 rounded-full transition-all" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- 属性信息 -->
+                    <div class="grid grid-cols-2 gap-2 text-sm mb-4">
+                        <div class="bg-gray-900/50 p-2 rounded">
+                            <span class="text-gray-400">体力:</span>
+                            <span id="inv-detail-stamina" class="text-green-400 font-bold ml-1">100/100</span>
+                        </div>
+                        <div class="bg-gray-900/50 p-2 rounded">
+                            <span class="text-gray-400">潜力:</span>
+                            <span id="inv-detail-potential" class="text-yellow-400 font-bold ml-1">超常</span>
+                        </div>
+                        <div class="bg-gray-900/50 p-2 rounded">
+                            <span class="text-gray-400">系别:</span>
+                            <span id="inv-detail-element" class="text-cyan-400 font-bold ml-1">火</span>
+                        </div>
+                    </div>
+                    
+                    <!-- 战斗属性 -->
+                    <div class="bg-gray-900/50 p-3 rounded mb-4">
+                        <p class="text-sm font-bold text-purple-300 mb-2">战斗属性</p>
+                        <div class="grid grid-cols-3 gap-2 text-xs">
+                            <div>
+                                <span class="text-gray-400">⚔️ 攻击:</span>
+                                <span id="inv-detail-attack" class="text-red-400 font-bold ml-1">15</span>
+                            </div>
+                            <div>
+                                <span class="text-gray-400">🛡️ 防御:</span>
+                                <span id="inv-detail-defense" class="text-blue-400 font-bold ml-1">10</span>
+                            </div>
+                            <div>
+                                <span class="text-gray-400">⚡ 敏捷:</span>
+                                <span id="inv-detail-agility" class="text-yellow-400 font-bold ml-1">12</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 战斗技能 -->
+                    <div class="mb-4">
+                        <p class="text-sm font-bold text-purple-300 mb-2">战斗技能</p>
+                        <div id="inv-detail-combat-skills" class="grid grid-cols-4 gap-1">
+                            <!-- 技能槽位由JS生成 -->
+                        </div>
+                    </div>
+                    
+                    <!-- 操作按钮 -->
+                    <div class="space-y-2">
+                        <button id="inv-detail-btn-set-first" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-lg transition-colors">
+                            ⭐ 设置为首发
+                        </button>
+                        <button id="inv-detail-btn-feed" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition-colors">
+                            🍎 喂养升级
+                        </button>
+                        <button id="inv-detail-btn-remove" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg transition-colors">
+                            ❌ 移出队伍
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 队伍选择器面板 -->
+    <div id="team-selector-panel" class="hidden fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-gray-900/95 backdrop-blur-lg border-2 border-purple-500 rounded-xl p-6 w-11/12 max-w-2xl max-h-[80vh] overflow-y-auto z-50">
+        <div class="flex justify-between items-center mb-4 border-b border-gray-700 pb-3">
+            <h3 class="text-2xl font-bold text-purple-400">选择动物</h3>
+            <button id="btn-close-team-selector" class="text-gray-400 hover:text-white text-3xl font-bold">×</button>
+        </div>
+        <p id="current-slot-info" class="text-gray-400 mb-4">槽位 1</p>
+        <div id="team-animal-list" class="space-y-2">
+            <!-- 动物列表由JS生成 -->
+        </div>
+    </div>
+
+    <!-- 技能选择器面板 -->
+    <div id="skill-selector-panel" class="hidden fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-gray-900/95 backdrop-blur-lg border-2 border-purple-500 rounded-xl p-6 w-11/12 max-w-3xl max-h-[80vh] overflow-y-auto z-50">
+        <div class="flex justify-between items-center mb-4 border-b border-gray-700 pb-3">
+            <h3 class="text-2xl font-bold text-purple-400">选择技能</h3>
+            <button id="btn-close-skill-selector" class="text-gray-400 hover:text-white text-3xl font-bold">×</button>
+        </div>
+        <p id="current-skill-slot-info" class="text-gray-400 mb-4">技能槽位 1</p>
+        <div id="available-skills-list" class="grid grid-cols-2 gap-3">
+            <!-- 技能列表由JS生成 -->
+        </div>
+    </div>
+
+    <script src="inventory_system.js"></script>
     <script>
         // --- Config ---
         // 从地图配置器读取配置
@@ -190,6 +332,7 @@
         // --- UI Refs ---
         const ui = {
             modalOverlay: document.getElementById('modal-overlay'),
+            statusMessage: document.getElementById('status-message'),
             animalDetailsPanel: document.getElementById('animal-details-panel'),
             btnCloseAnimalDetails: document.getElementById('btn-close-animal-details'),
             btnChallengeAnimal: document.getElementById('btn-challenge-animal'),
@@ -198,6 +341,37 @@
             battleOpponentInfo: document.getElementById('battle-opponent-info'),
             battleTeamSelectionList: document.getElementById('battle-team-selection-list'),
             btnExecuteBattle: document.getElementById('btn-execute-battle'),
+            // 背包相关
+            btnOpenInventory: document.getElementById('btn-open-inventory'),
+            inventoryPanel: document.getElementById('inventory-panel'),
+            btnCloseInventory: document.getElementById('btn-close-inventory'),
+            battleTeamSlots: document.getElementById('battle-team-slots'),
+            inventoryDetailEmpty: document.getElementById('inventory-detail-empty'),
+            inventoryAnimalDetail: document.getElementById('inventory-animal-detail'),
+            invDetailAvatar: document.getElementById('inv-detail-avatar'),
+            invDetailName: document.getElementById('inv-detail-name'),
+            invDetailLevel: document.getElementById('inv-detail-level'),
+            invDetailGender: document.getElementById('inv-detail-gender'),
+            invDetailExpText: document.getElementById('inv-detail-exp-text'),
+            invDetailExpBar: document.getElementById('inv-detail-exp-bar'),
+            invDetailStamina: document.getElementById('inv-detail-stamina'),
+            invDetailPotential: document.getElementById('inv-detail-potential'),
+            invDetailElement: document.getElementById('inv-detail-element'),
+            invDetailAttack: document.getElementById('inv-detail-attack'),
+            invDetailDefense: document.getElementById('inv-detail-defense'),
+            invDetailAgility: document.getElementById('inv-detail-agility'),
+            invDetailCombatSkills: document.getElementById('inv-detail-combat-skills'),
+            invDetailBtnSetFirst: document.getElementById('inv-detail-btn-set-first'),
+            invDetailBtnFeed: document.getElementById('inv-detail-btn-feed'),
+            invDetailBtnRemove: document.getElementById('inv-detail-btn-remove'),
+            teamSelectorPanel: document.getElementById('team-selector-panel'),
+            btnCloseTeamSelector: document.getElementById('btn-close-team-selector'),
+            currentSlotInfo: document.getElementById('current-slot-info'),
+            teamAnimalList: document.getElementById('team-animal-list'),
+            skillSelectorPanel: document.getElementById('skill-selector-panel'),
+            btnCloseSkillSelector: document.getElementById('btn-close-skill-selector'),
+            currentSkillSlotInfo: document.getElementById('current-skill-slot-info'),
+            availableSkillsList: document.getElementById('available-skills-list'),
         };
 
         // --- Init ---
@@ -248,8 +422,34 @@
             ui.btnCloseBattleSetupPanel.addEventListener('click', closeBattleSetupPanel);
             ui.btnExecuteBattle.addEventListener('click', startCombat);
             
+            // 背包相关事件
+            ui.btnOpenInventory.addEventListener('click', openInventoryPanel);
+            ui.btnCloseInventory.addEventListener('click', closeInventoryPanel);
+            ui.btnCloseTeamSelector.addEventListener('click', closeTeamSelector);
+            ui.btnCloseSkillSelector.addEventListener('click', closeSkillSelector);
+            
             window.addEventListener('resize', onWindowResize, false);
             document.getElementById('container').addEventListener('mousedown', onPointerDown, false);
+        }
+
+        // 关闭所有详情面板（用于背包系统）
+        function closeAllDetailPanels() {
+            // 关闭野生动物详情面板
+            if (ui.animalDetailsPanel) {
+                ui.animalDetailsPanel.classList.add('hidden');
+            }
+            // 关闭战斗准备面板
+            if (ui.battleSetupPanel) {
+                ui.battleSetupPanel.classList.add('hidden');
+            }
+        }
+
+        // 显示临时状态消息
+        function showStatus(message, duration = 2500) {
+            ui.statusMessage.textContent = message;
+            setTimeout(() => {
+                ui.statusMessage.textContent = '';
+            }, duration);
         }
 
         // --- 3D Scene ---
@@ -926,23 +1126,29 @@
             const opponent = wildAnimals.find(a => a.id === wildAnimalId);
             if (!opponent) return;
 
-            // 标记该动物正在战斗
-            animalsInBattle.add(wildAnimalId);
+            // 检查是否有首发动物
+            if (!gameState.firstTeamMember) {
+                showStatus('❌ 请先在背包中设置首发动物！', 3000);
+                return;
+            }
+
+            // 获取首发动物
+            const firstAnimal = gameState.animals.find(a => a.id === gameState.firstTeamMember);
             
-            gameState.battle = { opponent: opponent, playerAnimal: null };
+            if (!firstAnimal) {
+                showStatus('❌ 首发动物不存在，请重新设置！', 3000);
+                gameState.firstTeamMember = null;
+                return;
+            }
 
-            ui.battleOpponentInfo.innerHTML = `
-                <div class="flex items-center space-x-3">
-                    <div style="background-color: #${opponent.color.toString(16).padStart(6, '0')};" class="w-5 h-5 rounded-full border-2 border-red-400"></div>
-                    <span class="font-bold text-red-400">${opponent.name}</span>
-                </div>
-                <span class="text-sm font-mono text-yellow-400">Lv. ${opponent.level}</span>
-            `;
+            // 检查首发动物是否可用（不在工作、不受伤等）
+            if (firstAnimal.isPlaced || firstAnimal.isInjured || firstAnimal.workingBuildingId || firstAnimal.exploringMissionId) {
+                showStatus('❌ 首发动物当前不可用，请更换首发或等待其恢复！', 3000);
+                return;
+            }
 
-            renderBattleSelectionList();
-            ui.btnExecuteBattle.disabled = true;
-            ui.modalOverlay.classList.remove('hidden');
-            ui.battleSetupPanel.classList.remove('hidden');
+            // 直接开始战斗，不显示选择面板
+            startCombatDirectly(opponent, firstAnimal);
         }
 
         function closeBattleSetupPanel() {
@@ -980,11 +1186,7 @@
             renderBattleSelectionList();
         }
 
-        function startCombat() {
-            if (!gameState.battle) return;
-            const { opponent, playerAnimal } = gameState.battle;
-            if (!opponent || !playerAnimal) return;
-
+        function startCombatDirectly(opponent, playerAnimal) {
             const getSerializableAnimal = (animal) => {
                 const serializableAnimal = { ...animal };
                 delete serializableAnimal.mesh;
@@ -998,6 +1200,14 @@
             localStorage.setItem('battlePlayerAnimal', JSON.stringify(getSerializableAnimal(playerAnimal)));
             localStorage.setItem('battleReturnUrl', window.location.href);
             window.location.href = 'battle.html';
+        }
+        
+        function startCombat() {
+            if (!gameState.battle) return;
+            const { opponent, playerAnimal } = gameState.battle;
+            if (!opponent || !playerAnimal) return;
+
+            startCombatDirectly(opponent, playerAnimal);
         }
         
         function processCapturedAnimal() {
