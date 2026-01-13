@@ -227,6 +227,9 @@
                 <div id="player-avatar" class="animal-avatar"></div>
                 <h2 id="player-name" class="text-2xl font-bold">玩家动物</h2>
                 <p id="player-level" class="text-sm text-gray-400">Lv. 1</p>
+                <div class="flex justify-center items-center gap-2 my-1">
+                    <span id="player-element" class="text-sm font-bold px-3 py-1 rounded-full bg-blue-600 text-white">💧 水系</span>
+                </div>
                 <div class="health-bar-container">
                     <div id="player-health-bar" class="health-bar"></div>
                 </div>
@@ -254,7 +257,13 @@
                 </div>
             </div>
 
-            <div class="vs-text">VS</div>
+            <!-- VS 和克制关系显示 -->
+            <div class="flex flex-col items-center gap-2">
+                <div class="vs-text">VS</div>
+                <div id="advantage-indicator" class="text-sm font-bold px-4 py-2 rounded-lg bg-gray-800 border border-gray-600 text-gray-400">
+                    无克制
+                </div>
+            </div>
 
             <!-- 敌方动物 -->
             <div id="opponent-card" class="animal-card opponent" style="position: relative;">
@@ -262,6 +271,9 @@
                 <div id="opponent-avatar" class="animal-avatar"></div>
                 <h2 id="opponent-name" class="text-2xl font-bold">野生动物</h2>
                 <p id="opponent-level" class="text-sm text-gray-400">Lv. 1</p>
+                <div class="flex justify-center items-center gap-2 my-1">
+                    <span id="opponent-element" class="text-sm font-bold px-3 py-1 rounded-full bg-red-600 text-white">🔥 火系</span>
+                </div>
                 <div class="health-bar-container">
                     <div id="opponent-health-bar" class="health-bar bg-red-500"></div>
                 </div>

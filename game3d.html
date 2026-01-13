@@ -424,17 +424,6 @@
             </div>
         </div>
 
-        <!-- 新增：动物图鉴面板 -->
-        <div id="encyclopedia-panel" class="control-panel centered-panel p-6 rounded-xl text-white hidden w-full max-w-4xl h-[80vh] z-[70]">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="text-2xl font-bold text-teal-400">📖 动物图鉴</h3>
-                <div class="text-sm text-gray-400">收集进度: <span id="encyclopedia-progress" class="text-white font-bold">0/0</span></div>
-                <button id="btn-close-encyclopedia" class="text-3xl text-gray-500 hover:text-white">&times;</button>
-            </div>
-            <div id="encyclopedia-grid" class="grid grid-cols-2 md:grid-cols-4 gap-4 overflow-y-auto custom-scrollbar h-[calc(100%-60px)] pr-2">
-                <!-- 图鉴条目由 JS 生成 -->
-            </div>
-        </div>
 
         <!-- 建筑菜单容器 (右上角) -->
         <div id="build-menus-container" class="absolute top-4 right-4 flex flex-col space-y-2">
@@ -749,18 +738,6 @@
             'mutation_serum': { name: '变异血清', icon: '💉', type: 'material', desc: '诱发动物基因突变的关键道具' }
         };
 
-        // 图鉴配置
-        const ANIMAL_SHAPES_CN = { 'sphere': '球', 'cube': '方块', 'torus': '环' };
-        const ENCYCLOPEDIA_ENTRIES = {};
-        // 自动生成图鉴条目
-        ['sphere', 'cube', 'torus'].forEach(shape => {
-            ANIMAL_ELEMENTS.forEach(element => { // 使用已定义的 ANIMAL_ELEMENTS
-                const id = `${shape}_${element}`;
-                const shapeName = ANIMAL_SHAPES_CN[shape] || '异形';
-                ENCYCLOPEDIA_ENTRIES[id] = { id, shape, element, name: `${element}系${shapeName}兽` };
-            });
-        });
-
         // 战斗技能配置
         const COMBAT_SKILLS = {
             'strike': { name: '猛击', desc: '造成120%攻击力的伤害', type: 'attack', power: 1.2, icon: '👊' },
@@ -984,7 +961,7 @@
             activeExplorations: [], // 新增：活跃的探索任务
             artifacts: [], // 新增：拥有的文物
             inventory: {}, // 新增：背包
-            unlockedEncyclopedia: [], // 新增：已解锁的图鉴ID
+            unlockedEncyclopedia: {}, // 新增：已解锁的图鉴（对象格式：animalId -> 解锁信息）
             mining: { // 新增：挖矿状态
                 unlockedCheckpoints: [0],
                 currentRun: {
@@ -1121,12 +1098,6 @@
             itemTargetSelector: document.getElementById('item-target-selector'),
             btnCloseTargetSelector: document.getElementById('btn-close-target-selector'),
             targetAnimalList: document.getElementById('target-animal-list'),
-
-            // 新增：图鉴 UI
-            encyclopediaPanel: document.getElementById('encyclopedia-panel'),
-            btnCloseEncyclopedia: document.getElementById('btn-close-encyclopedia'),
-            encyclopediaGrid: document.getElementById('encyclopedia-grid'),
-            encyclopediaProgress: document.getElementById('encyclopedia-progress'),
         };
 
 
@@ -1225,7 +1196,7 @@
 
             // 动物系统事件监听器
             ui.btnOpenAnimalSystem.addEventListener('click', openAnimalManagementPage, false);
-            ui.btnOpenEncyclopedia.addEventListener('click', openEncyclopediaPanel, false); // 新增
+            ui.btnOpenEncyclopedia.addEventListener('click', openEncyclopediaPage, false); // 修改：跳转到图鉴页面
             ui.btnOpenExploration.addEventListener('click', openExplorationPage, false);
             ui.btnOpenMining.addEventListener('click', openMiningPage, false);
             ui.btnOpenWorldMap.addEventListener('click', openWorldMapPage, false);
@@ -1239,7 +1210,6 @@
             ui.btnCloseExchange.addEventListener('click', closeExchangePanel, false);
             ui.btnCloseBidPanel.addEventListener('click', closeAuctionBidPanel, false);
             document.getElementById('btn-place-bid').addEventListener('click', placeBid, false);
-            ui.btnCloseEncyclopedia.addEventListener('click', closeEncyclopediaPanel, false); // 新增
 
             // 修复：重新绑定建筑选择按钮的点击事件
             ui.btnCloseInventory.addEventListener('click', closeInventoryPanel, false); // 新增
@@ -1277,7 +1247,6 @@
             closeAuctionBidPanel();
             closeInventoryPanel();
             closeTargetSelector();
-            closeEncyclopediaPanel();
         }
 
         // 新增：键盘按下事件处理
@@ -1968,10 +1937,14 @@
                 gameState.animalCount = gameState.animals.length;
             }
 
-            checkEncyclopediaUnlock(animalData); // 检查图鉴解锁
-
             animalGroup.add(mesh);
             updateUI();
+            
+            // 只对非野生动物检查图鉴（野生动物在捕获后才解锁，且需要animalId）
+            if (!isWild && animalData.animalId) {
+                checkEncyclopediaUnlock(animalData);
+            }
+            
             return animalData;
         }
         
@@ -3295,66 +3268,44 @@
             openExchangePanel(); // 刷新交易所
         };
 
-        // --- 新增：图鉴系统逻辑 ---
+        // --- 图鉴系统逻辑 ---
 
+        // 图鉴解锁检查 - 基于物种ID和稀有度
         function checkEncyclopediaUnlock(animal) {
-            if (!animal) return;
-            const id = `${animal.type}_${animal.element}`;
-            // 确保是有效条目且未解锁
-            if (ENCYCLOPEDIA_ENTRIES[id] && !gameState.unlockedEncyclopedia.includes(id)) {
-                gameState.unlockedEncyclopedia.push(id);
-                // 只有当不是初始化加载时才提示 (可以通过检查 gameState.animals 是否为空来判断，或者简单点总是提示)
-                // 为了避免刷屏，这里可以加个简单的判断，或者直接提示
-                showStatus(`📖 新图鉴解锁: ${ENCYCLOPEDIA_ENTRIES[id].name}!`, 3000);
+            if (!animal || !animal.animalId) return;
+            
+            // 初始化图鉴数据结构（对象格式）
+            if (!gameState.unlockedEncyclopedia) {
+                gameState.unlockedEncyclopedia = {};
+            }
+            
+            const animalId = animal.animalId;
+            if (!gameState.unlockedEncyclopedia[animalId]) {
+                gameState.unlockedEncyclopedia[animalId] = {
+                    animalId: animalId,
+                    unlockedAt: Date.now(),
+                    templateKey: animal.templateKey,
+                    rarity: animal.rarity || 'common'
+                };
+                
+                // 获取动物名称
+                const animalPool = JSON.parse(localStorage.getItem('ANIMAL_POOL') || '[]');
+                const template = animalPool.find(t => t.key === animal.templateKey);
+                const speciesName = template ? template.name : animal.name;
+                
+                showStatus(`📖 新图鉴解锁: ${speciesName}!`, 3000);
             }
         }
 
-        function openEncyclopediaPanel() {
-            closeAllDetailPanels();
-            const grid = ui.encyclopediaGrid;
-            grid.innerHTML = '';
-
-            const entries = Object.values(ENCYCLOPEDIA_ENTRIES);
-            const unlockedCount = gameState.unlockedEncyclopedia.length;
-            const totalCount = entries.length;
-            ui.encyclopediaProgress.textContent = `${unlockedCount}/${totalCount}`;
-
-            entries.forEach(entry => {
-                const isUnlocked = gameState.unlockedEncyclopedia.includes(entry.id);
-                const card = document.createElement('div');
-                card.className = `p-4 rounded-lg flex flex-col items-center justify-center text-center border transition-all ${isUnlocked ? 'bg-gray-800 border-teal-500 shadow-lg shadow-teal-900/20' : 'bg-gray-900 border-gray-700 opacity-60'}`;
-                
-                let icon = '❓';
-                let colorClass = 'text-gray-500';
-                
-                if (isUnlocked) {
-                    const elementIcons = { '水': '💧', '火': '🔥', '土': '🌍', '风': '💨', '雷': '⚡️', '木': '🌳', '光': '☀️', '暗': '🌙' };
-                    icon = elementIcons[entry.element] || '🐾';
-                    colorClass = 'text-white';
-                }
-
-                // 形状图标模拟
-                let shapeIcon = '';
-                if (entry.shape === 'cube') shapeIcon = '■';
-                else if (entry.shape === 'torus') shapeIcon = '◎';
-                else shapeIcon = '●';
-
-                card.innerHTML = `
-                    <div class="text-4xl mb-2 ${isUnlocked ? '' : 'grayscale blur-sm'}">${icon}</div>
-                    <div class="text-xs text-gray-400 mb-1">${isUnlocked ? shapeIcon : ''}</div>
-                    <h4 class="font-bold text-sm ${colorClass}">${isUnlocked ? entry.name : '???'}</h4>
-                    <div class="text-xs text-gray-500 mt-1">${isUnlocked ? entry.element + '系' : '未发现'}</div>
-                `;
-                grid.appendChild(card);
-            });
-
-            ui.modalOverlay.classList.remove('hidden');
-            ui.encyclopediaPanel.classList.remove('hidden');
-        }
-
-        function closeEncyclopediaPanel() {
-            ui.encyclopediaPanel.classList.add('hidden');
-            ui.modalOverlay.classList.add('hidden');
+        // 跳转到图鉴页面
+        function openEncyclopediaPage() {
+            // 移除无法序列化的 'mesh' 和大型的 'avatarData' 属性
+            const serializableGameState = JSON.parse(JSON.stringify(gameState, (key, value) => {
+                if (key === 'mesh' || key === 'avatarData') return undefined;
+                return value;
+            }));
+            localStorage.setItem('gameState', JSON.stringify(serializableGameState));
+            window.location.href = 'encyclopedia.html';
         }
 
         function generateRandomAnimalData() {
@@ -3575,7 +3526,10 @@
             // 将其添加到玩家动物列表
             gameState.animals.push(capturedAnimal);
             gameState.animalCount++;
-            checkEncyclopediaUnlock(capturedAnimal); // 检查图鉴
+            // 检查图鉴（仅当有animalId时）
+            if (capturedAnimal.animalId) {
+                checkEncyclopediaUnlock(capturedAnimal);
+            }
             updateUI();
             renderAnimalList(); // 刷新养成列表
         }
@@ -3650,7 +3604,7 @@
                 gameState.auctions = storedState.auctions || { items: [], lastUpdate: null };
                 gameState.lastStockRefreshDate = storedState.lastStockRefreshDate || null;
                 gameState.exchangeStock = storedState.exchangeStock || [];
-                gameState.unlockedEncyclopedia = storedState.unlockedEncyclopedia || [];
+                gameState.unlockedEncyclopedia = storedState.unlockedEncyclopedia || {};
 
                 // 创建一个旧动物mesh的映射，以便恢复位置
                 const oldMeshes = new Map();
@@ -3681,7 +3635,10 @@
 
                     animalData.mesh = newMesh;
                     animalGroup.add(newMesh);
-                    checkEncyclopediaUnlock(animalData); // 追溯解锁图鉴
+                    // 加载时追溯解锁图鉴（仅当有animalId时）
+                    if (animalData.animalId) {
+                        checkEncyclopediaUnlock(animalData);
+                    }
                     return animalData;
                 });
 
@@ -4000,8 +3957,11 @@
             // 3. 添加到游戏状态
             gameState.animals.push(capturedAnimalData);
             gameState.animalCount++;
-            checkEncyclopediaUnlock(capturedAnimalData); // 检查图鉴
             animalGroup.add(mesh);
+            // 检查图鉴（必须在添加到数组后，且仅当有animalId时）
+            if (capturedAnimalData.animalId) {
+                checkEncyclopediaUnlock(capturedAnimalData);
+            }
 
             // 4. 清理并通知
             localStorage.removeItem('capturedAnimal');

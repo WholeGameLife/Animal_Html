@@ -293,12 +293,8 @@
                                         <span>无视敏捷直接行动</span>
                                     </label>
                                     <label class="flex items-center gap-2 text-white text-sm cursor-pointer hover:bg-gray-700 p-2 rounded">
-                                        <input type="checkbox" class="effect-checkbox" data-effect="double-action">
-                                        <span>行动两次</span>
-                                    </label>
-                                    <label class="flex items-center gap-2 text-white text-sm cursor-pointer hover:bg-gray-700 p-2 rounded">
-                                        <input type="checkbox" class="effect-checkbox" data-effect="reverse-stats">
-                                        <span>属性反转</span>
+                                        <input type="checkbox" class="effect-checkbox" data-effect="reverse-element">
+                                        <span>系别反转</span>
                                     </label>
                                     <label class="flex items-center gap-2 text-white text-sm cursor-pointer hover:bg-gray-700 p-2 rounded">
                                         <input type="checkbox" class="effect-checkbox" data-effect="element-advantage">
@@ -399,8 +395,7 @@
             'reduce-agility': { name: '降低速度', needsSource: true, needsValue: true, label: '每层降低比例', defaultValue: 0.1, min: 0, max: 1, step: 0.05 },
             'ignore-defense': { name: '无视防御', needsSource: false, needsValue: true, label: '每层无视百分比', defaultValue: 0.1, min: 0, max: 1, step: 0.05 },
             'first-strike': { name: '无视敏捷直接行动', needsSource: false, needsValue: false },
-            'double-action': { name: '行动两次', needsSource: false, needsValue: false },
-            'reverse-stats': { name: '属性反转', needsSource: false, needsValue: false },
+            'reverse-element': { name: '系别反转', needsSource: false, needsValue: false },
             'element-advantage': { name: '属性克制', needsSource: false, needsValue: true, label: '每层增伤倍率', defaultValue: 1.5, min: 1, step: 0.1 },
             'element-bonus': { name: '属性增伤', needsSource: true, needsValue: true, label: '每层增伤百分比', defaultValue: 0.2, min: 0, step: 0.05 },
             'reset-cooldown': { name: '重置冷却', needsSource: false, needsValue: false }

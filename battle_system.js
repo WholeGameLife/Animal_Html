@@ -1,11 +1,43 @@
 // ========== 全局战斗逻辑函数（供skill_designer和battle_system共用） ==========
 
+// 计算属性克制倍率
+function getElementAdvantageMultiplier(attackerElement, defenderElement) {
+    // 克制关系：水→火→电→草→土→风→水
+    const advantages = {
+        'water': 'fire',    // 水克火
+        'fire': 'electric', // 火克电
+        'electric': 'grass',// 电克草
+        'grass': 'earth',   // 草克土
+        'earth': 'wind',    // 土克风
+        'wind': 'water'     // 风克水
+    };
+    
+    // 检查是否克制
+    if (advantages[attackerElement] === defenderElement) {
+        return 1.5; // 克制：1.5倍伤害
+    }
+    
+    // 检查是否被克制
+    if (advantages[defenderElement] === attackerElement) {
+        return 0.5; // 被克制：0.5倍伤害
+    }
+    
+    return 1.0; // 无克制关系：1倍伤害
+}
+
 // 重置属性到基础值
 function resetAttributesToBase(battleState) {
     // 我方
     battleState.self.attack = battleState.self.baseAttack;
     battleState.self.defense = battleState.self.baseDefense;
     battleState.self.agility = battleState.self.baseAgility;
+    
+    // 保存基础系别（如果还没有保存）
+    if (!battleState.self.baseElement) {
+        battleState.self.baseElement = battleState.self.element;
+    }
+    // 恢复系别到基础系别
+    battleState.self.element = battleState.self.baseElement;
     
     // 清除临时标记
     battleState.self.damageBonus = 0;
@@ -24,6 +56,13 @@ function resetAttributesToBase(battleState) {
     battleState.enemy.attack = battleState.enemy.baseAttack;
     battleState.enemy.defense = battleState.enemy.baseDefense;
     battleState.enemy.agility = battleState.enemy.baseAgility;
+    
+    // 保存基础系别（如果还没有保存）
+    if (!battleState.enemy.baseElement) {
+        battleState.enemy.baseElement = battleState.enemy.element;
+    }
+    // 恢复系别到基础系别
+    battleState.enemy.element = battleState.enemy.baseElement;
     
     // 清除临时标记
     battleState.enemy.damageBonus = 0;
@@ -110,8 +149,8 @@ function processStatuses(target, battleState, addLog, applyStatusEffectFn) {
         const hasStacks = statusData?.hasStacks !== false;
         
         if (hasStacks) {
-            // 自增长判断
-            if (statusData?.autoGrow && !statusData?.isPermanent && status.statusDuration > 0) {
+            // 自增长判断：只要层数不是永久的，且状态还在生效，就可以自增长
+            if (statusData?.autoGrow && !statusData?.isStackPermanent && status.statusDuration > 0) {
                 const growRate = statusData.growRate || 1;
                 const maxStacks = statusData.maxStacks || 99;
                 const currentStacks = status.stackDurations ? status.stackDurations.length : 0;
@@ -379,6 +418,32 @@ function applyStatusEffect(target, status, effectKey, battleState, addLog) {
             addLog(`→ ${statusName}: 攻防反转 (攻:${unit.attack} 防:${unit.defense})`, 'purple');
             break;
         }
+        case 'reverse-element': {
+            // 保存基础系别（如果还没有保存）
+            if (!unit.baseElement) {
+                unit.baseElement = unit.element;
+            }
+            if (!otherUnit.baseElement) {
+                otherUnit.baseElement = otherUnit.element;
+            }
+            
+            // 交换双方的系别
+            const tempElement = unit.element;
+            unit.element = otherUnit.element;
+            otherUnit.element = tempElement;
+            
+            // 获取系别名称
+            const getElementName = (element) => {
+                const names = {
+                    'water': '水', 'fire': '火', 'grass': '草',
+                    'wind': '风', 'electric': '电', 'earth': '土'
+                };
+                return names[element] || element;
+            };
+            
+            addLog(`→ ${statusName}: 系别反转 (我方:${getElementName(unit.element)} 敌方:${getElementName(otherUnit.element)})`, 'purple');
+            break;
+        }
         case 'reset-cooldown': {
             unit.cooldownReset = true;
             addLog(`→ ${statusName}: 技能冷却已重置`, 'green');
@@ -602,6 +667,9 @@ class BattleSystem {
         document.getElementById('player-def').textContent = this.playerStats.defense;
         document.getElementById('player-agi').textContent = this.playerStats.agility;
         
+        // 初始化系别显示
+        this.updateElementDisplay();
+        
         // 初始化异常状态显示
         this.updateStatusUI();
     }
@@ -617,6 +685,9 @@ class BattleSystem {
         document.getElementById('opponent-atk').textContent = this.opponentStats.attack;
         document.getElementById('opponent-def').textContent = this.opponentStats.defense;
         document.getElementById('opponent-agi').textContent = this.opponentStats.agility;
+        
+        // 初始化系别显示
+        this.updateElementDisplay();
         
         // 初始化异常状态显示
         this.updateStatusUI();
@@ -1137,6 +1208,11 @@ class BattleSystem {
         // 最终伤害就是所有技能伤害的总和
         let damage = Math.max(1, totalDamage);
         
+        // 应用属性克制倍率
+        if (damage > 0) {
+            damage = this.applyElementDamageModifiers(damage, isPlayer);
+        }
+        
         // 应用伤害（同时更新两套血量变量）
         if (isPlayer) {
             this.opponentCurrentHealth = Math.max(0, this.opponentCurrentHealth - damage);
@@ -1459,8 +1535,65 @@ class BattleSystem {
         document.getElementById('opponent-health-bar').style.width = `${opponentHealthPercent}%`;
         document.getElementById('opponent-health-text').textContent = `${this.opponentCurrentHealth} / ${this.opponentData.stamina}`;
         
+        // 更新系别显示和克制关系
+        this.updateElementDisplay();
+        
         // 更新异常状态显示
         this.updateStatusUI();
+    }
+    
+    updateElementDisplay() {
+        // 更新我方系别显示
+        const playerElementEl = document.getElementById('player-element');
+        if (playerElementEl) {
+            const playerElement = this.playerStats.element || 'water';
+            const elementInfo = this.getElementInfo(playerElement);
+            playerElementEl.textContent = `${elementInfo.icon} ${elementInfo.name}`;
+            playerElementEl.className = `text-sm font-bold px-3 py-1 rounded-full ${elementInfo.bgClass} text-white`;
+        }
+        
+        // 更新敌方系别显示
+        const opponentElementEl = document.getElementById('opponent-element');
+        if (opponentElementEl) {
+            const opponentElement = this.opponentStats.element || 'fire';
+            const elementInfo = this.getElementInfo(opponentElement);
+            opponentElementEl.textContent = `${elementInfo.icon} ${elementInfo.name}`;
+            opponentElementEl.className = `text-sm font-bold px-3 py-1 rounded-full ${elementInfo.bgClass} text-white`;
+        }
+        
+        // 更新克制关系指示器
+        const advantageEl = document.getElementById('advantage-indicator');
+        if (advantageEl) {
+            const playerElement = this.playerStats.element || 'water';
+            const opponentElement = this.opponentStats.element || 'fire';
+            const multiplier = getElementAdvantageMultiplier(playerElement, opponentElement);
+            
+            if (multiplier > 1) {
+                // 我方克制敌方
+                advantageEl.textContent = `我方克制敌方 ×${multiplier}`;
+                advantageEl.className = 'text-sm font-bold px-4 py-2 rounded-lg bg-green-600 border-2 border-green-400 text-white';
+            } else if (multiplier < 1) {
+                // 我方被克制，敌方对我方也是1.5倍
+                advantageEl.textContent = `敌方克制我方 ×1.5`;
+                advantageEl.className = 'text-sm font-bold px-4 py-2 rounded-lg bg-red-600 border-2 border-red-400 text-white';
+            } else {
+                // 无克制关系
+                advantageEl.textContent = '无克制关系';
+                advantageEl.className = 'text-sm font-bold px-4 py-2 rounded-lg bg-gray-800 border border-gray-600 text-gray-400';
+            }
+        }
+    }
+    
+    getElementInfo(element) {
+        const elementData = {
+            'water': { name: '水系', icon: '💧', bgClass: 'bg-blue-600' },
+            'fire': { name: '火系', icon: '🔥', bgClass: 'bg-red-600' },
+            'grass': { name: '草系', icon: '🌿', bgClass: 'bg-green-600' },
+            'wind': { name: '风系', icon: '💨', bgClass: 'bg-cyan-600' },
+            'electric': { name: '电系', icon: '⚡', bgClass: 'bg-yellow-600' },
+            'earth': { name: '土系', icon: '🪨', bgClass: 'bg-amber-700' }
+        };
+        return elementData[element] || { name: element, icon: '❓', bgClass: 'bg-gray-600' };
     }
     
     // 异常状态名称映射
@@ -1742,6 +1875,15 @@ class BattleSystem {
         const defenderStats = isPlayer ? this.opponentStats : this.playerStats;
         const attackerElement = attackerStats.element;
         const defenderElement = defenderStats.element;
+        
+        // 应用属性克制倍率
+        const advantageMultiplier = getElementAdvantageMultiplier(attackerElement, defenderElement);
+        if (advantageMultiplier !== 1.0) {
+            const oldDamage = finalDamage;
+            finalDamage = Math.round(finalDamage * advantageMultiplier);
+            const advantageText = advantageMultiplier > 1 ? '克制' : '被克制';
+            this.addLog(`  → 属性${advantageText}(${this.getElementName(attackerElement)}对${this.getElementName(defenderElement)}): ${oldDamage} × ${advantageMultiplier} = ${finalDamage}`, advantageMultiplier > 1 ? 'text-green-300' : 'text-red-300');
+        }
         
         // 应用攻击方的属性增伤
         if (attackerStats.elementDamageBonus && attackerStats.elementDamageBonus[defenderElement]) {

@@ -722,6 +722,10 @@
                 // 确保嵌套对象存在
                 gameState.selectedAnimalsForBreeding = gameState.selectedAnimalsForBreeding || [];
                 gameState.selectedAnimalsForFusion = gameState.selectedAnimalsForFusion || [];
+                // 初始化图鉴数据（对象格式）
+                if (!gameState.unlockedEncyclopedia || Array.isArray(gameState.unlockedEncyclopedia)) {
+                    gameState.unlockedEncyclopedia = {};
+                }
                 // 新增：初始化背包
                 if (!gameState.inventory || Object.keys(gameState.inventory).length === 0) {
                     gameState.inventory = {
@@ -2704,6 +2708,36 @@
             };
             gameState.animals.push(animalData);
             gameState.animalCount++;
+            
+            // 图鉴解锁检查
+            checkEncyclopediaUnlock(animalData);
+        }
+        
+        // 图鉴解锁检查
+        function checkEncyclopediaUnlock(animal) {
+            if (!animal || !animal.animalId) return;
+            
+            // 初始化图鉴数据结构
+            if (!gameState.unlockedEncyclopedia) {
+                gameState.unlockedEncyclopedia = {};
+            }
+            
+            const animalId = animal.animalId;
+            if (!gameState.unlockedEncyclopedia[animalId]) {
+                gameState.unlockedEncyclopedia[animalId] = {
+                    animalId: animalId,
+                    unlockedAt: Date.now(),
+                    templateKey: animal.templateKey,
+                    rarity: animal.rarity || 'common'
+                };
+                
+                // 获取动物名称
+                const animalPool = JSON.parse(localStorage.getItem('ANIMAL_POOL') || '[]');
+                const template = animalPool.find(t => t.key === animal.templateKey);
+                const speciesName = template ? template.name : animal.name;
+                
+                showStatus(`📖 新图鉴解锁: ${speciesName}!`, 3000);
+            }
         }
 
         function breedAnimal() {

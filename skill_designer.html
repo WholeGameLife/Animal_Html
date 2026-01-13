@@ -463,6 +463,13 @@
                         </div>
                     </div>
 
+                    <!-- 克制关系显示 -->
+                    <div class="bg-gray-800 border border-gray-600 rounded-lg p-3 text-center">
+                        <div id="advantage-indicator" class="text-sm font-bold px-4 py-2 rounded-lg bg-gray-700 text-gray-400">
+                            无克制关系
+                        </div>
+                    </div>
+
                     <!-- 战斗场景 -->
                     <div class="grid grid-cols-2 gap-4">
                         <!-- 我方 -->
@@ -1426,6 +1433,61 @@
             
             // 为自定义属性输入框添加实时更新监听器
             setupConfigInputListeners();
+            
+            // 为系别选择器添加监听器
+            setupElementListeners();
+        }
+        
+        function setupElementListeners() {
+            const selfElementSelect = document.getElementById('self-element');
+            const enemyElementSelect = document.getElementById('enemy-element');
+            
+            if (selfElementSelect) {
+                selfElementSelect.addEventListener('change', () => {
+                    const newElement = selfElementSelect.value;
+                    if (battleState.self) {
+                        battleState.self.element = newElement;
+                        battleState.self.baseElement = newElement; // 同时更新基础系别
+                        updateAdvantageIndicator();
+                        addLog(`⚙️ 我方系别已更新: ${getElementName(newElement)}`, 'cyan');
+                    }
+                });
+            }
+            
+            if (enemyElementSelect) {
+                enemyElementSelect.addEventListener('change', () => {
+                    const newElement = enemyElementSelect.value;
+                    if (battleState.enemy) {
+                        battleState.enemy.element = newElement;
+                        battleState.enemy.baseElement = newElement; // 同时更新基础系别
+                        updateAdvantageIndicator();
+                        addLog(`⚙️ 敌方系别已更新: ${getElementName(newElement)}`, 'cyan');
+                    }
+                });
+            }
+        }
+        
+        function updateAdvantageIndicator() {
+            const advantageEl = document.getElementById('advantage-indicator');
+            if (!advantageEl) return;
+            
+            const selfElement = battleState.self.element;
+            const enemyElement = battleState.enemy.element;
+            const multiplier = getElementAdvantageMultiplier(selfElement, enemyElement);
+            
+            if (multiplier > 1) {
+                // 我方克制敌方
+                advantageEl.textContent = `我方克制敌方 ×${multiplier}`;
+                advantageEl.className = 'text-sm font-bold px-4 py-2 rounded-lg bg-green-600 border-2 border-green-400 text-white';
+            } else if (multiplier < 1) {
+                // 我方被克制，敌方对我方也是1.5倍
+                advantageEl.textContent = `敌方克制我方 ×1.5`;
+                advantageEl.className = 'text-sm font-bold px-4 py-2 rounded-lg bg-red-600 border-2 border-red-400 text-white';
+            } else {
+                // 无克制关系
+                advantageEl.textContent = '无克制关系';
+                advantageEl.className = 'text-sm font-bold px-4 py-2 rounded-lg bg-gray-700 text-gray-400';
+            }
         }
         
         function setupConfigInputListeners() {
@@ -1638,18 +1700,19 @@
                 self: {
                     hp: selfHp, maxHp: selfHp, attack: selfAttack, defense: selfDefense, agility: selfAgility,
                     baseAttack: selfAttack, baseDefense: selfDefense, baseAgility: selfAgility, turnDamage: 0,
-                    statuses: [], element: selfElement,
+                    statuses: [], element: selfElement, baseElement: selfElement, // 添加baseElement
                     elementDamageBonus: {}
                 },
                 enemy: {
                     hp: enemyHp, maxHp: enemyHp, attack: enemyAttack, defense: enemyDefense, agility: enemyAgility,
                     baseAttack: enemyAttack, baseDefense: enemyDefense, baseAgility: enemyAgility, turnDamage: 0,
-                    statuses: [], element: enemyElement,
+                    statuses: [], element: enemyElement, baseElement: enemyElement, // 添加baseElement
                     elementDamageReduce: {}
                 }
             };
             updateBattleUI();
             updateTurnDisplay();
+            updateAdvantageIndicator();
             document.getElementById('battle-log').innerHTML = '<div class="text-center text-gray-500">战斗已重置，可以开始测试技能</div>';
         }
 
@@ -1742,6 +1805,7 @@
             
             updateBattleUI();
             updateTurnDisplay();
+            updateAdvantageIndicator();
             
             if (battleState.enemy.hp <= 0) {
                 addLog('💀 敌人被击败！', 'red');
@@ -1867,6 +1931,9 @@
 
             // 更新回合信息
             updateTurnDisplay();
+            
+            // 更新克制关系（系别可能被状态改变）
+            updateAdvantageIndicator();
         }
 
         function addLog(message, color = 'white') {
@@ -2543,6 +2610,15 @@
                 selfBonus: battleState.self.elementDamageBonus,
                 enemyReduce: battleState.enemy.elementDamageReduce
             });
+            
+            // 应用属性克制倍率
+            const advantageMultiplier = getElementAdvantageMultiplier(selfElement, enemyElement);
+            if (advantageMultiplier !== 1.0) {
+                const oldDamage = finalDamage;
+                finalDamage = Math.round(finalDamage * advantageMultiplier);
+                const advantageText = advantageMultiplier > 1 ? '克制' : '被克制';
+                addLog(`  → 属性${advantageText}(${getElementName(selfElement)}对${getElementName(enemyElement)}): ${oldDamage} × ${advantageMultiplier} = ${finalDamage}`, advantageMultiplier > 1 ? 'green' : 'red');
+            }
             
             // 应用我方的属性增伤（针对敌方系别）
             if (battleState.self.elementDamageBonus && battleState.self.elementDamageBonus[enemyElement]) {

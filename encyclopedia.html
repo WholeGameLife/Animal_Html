@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>动物图鉴 - 电子盆栽</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background: linear-gradient(135deg, #0a1120 0%, #1e293b 100%);
+            min-height: 100vh;
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .encyclopedia-filter-btn {
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            transition: all 0.2s;
+            background: rgba(55, 65, 81, 0.5);
+            border: 1px solid rgba(75, 85, 99, 0.5);
+            color: #9ca3af;
+        }
+        
+        .encyclopedia-filter-btn:hover {
+            background: rgba(75, 85, 99, 0.7);
+            color: #e5e7eb;
+        }
+        
+        .encyclopedia-filter-btn.active {
+            background: linear-gradient(135deg, #14b8a6, #0d9488);
+            border-color: #14b8a6;
+            color: white;
+            box-shadow: 0 4px 12px rgba(20, 184, 166, 0.4);
+        }
+        
+        .species-card {
+            transition: all 0.3s ease;
+        }
+        
+        .species-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .rarity-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: bold;
+        }
+        
+        .rarity-common { background: linear-gradient(135deg, #6b7280, #4b5563); }
+        .rarity-shiny { background: linear-gradient(135deg, #fbbf24, #f59e0b); }
+        .rarity-prismatic { background: linear-gradient(135deg, #ec4899, #8b5cf6); }
+        .rarity-stellar { background: linear-gradient(135deg, #fef3c7, #fbbf24); color: #92400e; }
+        
+        .element-badge {
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.375rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        
+        .element-water { background: linear-gradient(135deg, #3b82f6, #1d4ed8); }
+        .element-fire { background: linear-gradient(135deg, #ef4444, #dc2626); }
+        .element-grass { background: linear-gradient(135deg, #22c55e, #16a34a); }
+        .element-wind { background: linear-gradient(135deg, #06b6d4, #0891b2); }
+        .element-electric { background: linear-gradient(135deg, #eab308, #ca8a04); }
+        .element-earth { background: linear-gradient(135deg, #a16207, #854d0e); }
+        
+        .stat-bar {
+            height: 6px;
+            background: rgba(75, 85, 99, 0.3);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+        
+        .stat-bar-fill {
+            height: 100%;
+            border-radius: 3px;
+            transition: width 0.5s ease;
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: rgba(31, 41, 55, 0.5);
+            border-radius: 4px;
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(75, 85, 99, 0.8);
+            border-radius: 4px;
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: rgba(107, 114, 128, 1);
+        }
+    </style>
+</head>
+<body class="p-6">
+    <div class="max-w-7xl mx-auto">
+        <!-- 标题栏 -->
+        <div class="bg-gray-900/80 backdrop-blur-lg rounded-xl p-6 mb-6 border border-gray-700">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h1 class="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-teal-400 to-cyan-400 mb-2">📖 动物图鉴</h1>
+                    <p class="text-gray-400">探索和收集所有动物物种及其稀有度变体</p>
+                </div>
+                <button id="btn-back-to-game" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg transition-colors">
+                    ↩️ 返回栖息地
+                </button>
+            </div>
+            
+            <!-- 统计信息 -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
+                <div class="bg-gray-800/50 rounded-lg p-3 text-center">
+                    <div class="text-xs text-gray-400 mb-1">物种收集</div>
+                    <div class="text-2xl font-bold text-teal-400" id="species-progress">0/0</div>
+                </div>
+                <div class="bg-gray-800/50 rounded-lg p-3 text-center">
+                    <div class="text-xs text-gray-400 mb-1">稀有度收集</div>
+                    <div class="text-2xl font-bold text-cyan-400" id="rarity-progress">0/0</div>
+                </div>
+                <div class="bg-gray-800/50 rounded-lg p-3 text-center">
+                    <div class="text-xs text-gray-400 mb-1">完成度</div>
+                    <div class="text-2xl font-bold text-purple-400" id="completion-rate">0%</div>
+                </div>
+                <div class="bg-gray-800/50 rounded-lg p-3 text-center">
+                    <div class="text-xs text-gray-400 mb-1">最近解锁</div>
+                    <div class="text-sm font-bold text-yellow-400" id="latest-unlock">暂无</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 筛选栏 -->
+        <div class="bg-gray-900/80 backdrop-blur-lg rounded-xl p-4 mb-6 border border-gray-700">
+            <div class="flex flex-wrap gap-2">
+                <button class="encyclopedia-filter-btn active" data-filter="all">📚 全部</button>
+                <button class="encyclopedia-filter-btn" data-filter="unlocked">✅ 已解锁</button>
+                <button class="encyclopedia-filter-btn" data-filter="locked">🔒 未解锁</button>
+                <div class="flex-1"></div>
+                <button class="encyclopedia-filter-btn" data-element="water">💧 水系</button>
+                <button class="encyclopedia-filter-btn" data-element="fire">🔥 火系</button>
+                <button class="encyclopedia-filter-btn" data-element="grass">🌿 草系</button>
+                <button class="encyclopedia-filter-btn" data-element="wind">💨 风系</button>
+                <button class="encyclopedia-filter-btn" data-element="electric">⚡ 电系</button>
+                <button class="encyclopedia-filter-btn" data-element="earth">🪨 土系</button>
+            </div>
+        </div>
+        
+        <!-- 图鉴网格 -->
+        <div id="encyclopedia-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- 图鉴卡片由JS生成 -->
+        </div>
+    </div>
+    
+    <!-- 图鉴详情模态框 -->
+    <div id="detail-modal" class="hidden fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4">
+        <div class="bg-gray-900 rounded-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto border-2 border-teal-500">
+            <div class="sticky top-0 bg-gray-900 border-b border-gray-700 p-6 z-10">
+                <div class="flex justify-between items-center">
+                    <h3 id="detail-title" class="text-3xl font-bold text-teal-300">物种名称</h3>
+                    <button id="btn-close-detail" class="text-3xl text-gray-500 hover:text-white">&times;</button>
+                </div>
+            </div>
+            <div id="detail-content" class="p-6">
+                <!-- 详情内容由JS生成 -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 全局变量
+        let gameState = {};
+        let currentFilter = { type: 'all', element: null };
+        
+        // 稀有度配置
+        const RARITY_CONFIG = {
+            common: { name: '普通', icon: '⚪', color: 'text-gray-400', bgClass: 'rarity-common' },
+            shiny: { name: '闪光', icon: '✨', color: 'text-yellow-400', bgClass: 'rarity-shiny' },
+            prismatic: { name: '幻彩', icon: '🌈', color: 'text-pink-400', bgClass: 'rarity-prismatic' },
+            stellar: { name: '星芒', icon: '⭐', color: 'text-purple-400', bgClass: 'rarity-stellar' }
+        };
+        
+        // 元素配置
+        const ELEMENT_CONFIG = {
+            'water': { name: '水系', icon: '💧', bgClass: 'element-water' },
+            'fire': { name: '火系', icon: '🔥', bgClass: 'element-fire' },
+            'grass': { name: '草系', icon: '🌿', bgClass: 'element-grass' },
+            'wind': { name: '风系', icon: '💨', bgClass: 'element-wind' },
+            'electric': { name: '电系', icon: '⚡', bgClass: 'element-electric' },
+            'earth': { name: '土系', icon: '🪨', bgClass: 'element-earth' },
+            '水系': { name: '水系', icon: '💧', bgClass: 'element-water' },
+            '火系': { name: '火系', icon: '🔥', bgClass: 'element-fire' },
+            '草系': { name: '草系', icon: '🌿', bgClass: 'element-grass' },
+            '风系': { name: '风系', icon: '💨', bgClass: 'element-wind' },
+            '电系': { name: '电系', icon: '⚡', bgClass: 'element-electric' },
+            '土系': { name: '土系', icon: '🪨', bgClass: 'element-earth' }
+        };
+        
+        // 页面加载
+        window.onload = function() {
+            loadGameState();
+            setupEventListeners();
+            renderEncyclopedia();
+        };
+        
+        // 加载游戏状态
+        function loadGameState() {
+            const stateJSON = localStorage.getItem('gameState');
+            if (stateJSON) {
+                gameState = JSON.parse(stateJSON);
+                // 确保图鉴数据结构存在
+                if (!gameState.unlockedEncyclopedia) {
+                    gameState.unlockedEncyclopedia = {};
+                }
+            } else {
+                alert("游戏状态加载失败！将返回栖息地。");
+                window.location.href = 'game3d.html';
+            }
+        }
+        
+        // 保存游戏状态
+        function saveGameState() {
+            const stateToSave = JSON.parse(JSON.stringify(gameState, (key, value) => {
+                if (key === 'avatarData') return undefined;
+                return value;
+            }));
+            localStorage.setItem('gameState', JSON.stringify(stateToSave));
+        }
+        
+        // 返回游戏
+        function backToGame() {
+            saveGameState();
+            window.location.href = 'game3d.html';
+        }
+        
+        // 设置事件监听器
+        function setupEventListeners() {
+            document.getElementById('btn-back-to-game').addEventListener('click', backToGame);
+            document.getElementById('btn-close-detail').addEventListener('click', closeDetailModal);
+            
+            // 筛选按钮
+            document.querySelectorAll('.encyclopedia-filter-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    if (this.dataset.filter) {
+                        // 状态筛选
+                        document.querySelectorAll('[data-filter]').forEach(b => b.classList.remove('active'));
+                        this.classList.add('active');
+                        currentFilter.type = this.dataset.filter;
+                        currentFilter.element = null;
+                        document.querySelectorAll('[data-element]').forEach(b => b.classList.remove('active'));
+                    } else if (this.dataset.element) {
+                        // 元素筛选
+                        if (this.classList.contains('active')) {
+                            // 取消元素筛选
+                            this.classList.remove('active');
+                            currentFilter.element = null;
+                        } else {
+                            document.querySelectorAll('[data-element]').forEach(b => b.classList.remove('active'));
+                            this.classList.add('active');
+                            currentFilter.element = this.dataset.element;
+                        }
+                    }
+                    renderEncyclopedia();
+                });
+            });
+        }
+        
+        // 获取图鉴条目（从动物模板池）
+        function getEncyclopediaEntries() {
+            const animalPool = JSON.parse(localStorage.getItem('ANIMAL_POOL') || '[]');
+            const entries = {};
+            
+            animalPool.forEach(template => {
+                const animalId = template.animalId;
+                if (!animalId) return;
+                
+                // 提取基础ID（物种ID，去掉稀有度前缀）
+                const baseId = animalId.substring(1); // 例如 '0001'
+                const rarityPrefix = animalId.charAt(0); // '1', '2', '3', '4'
+                
+                // 映射稀有度前缀到稀有度名称
+                const rarityMap = { '1': 'common', '2': 'shiny', '3': 'prismatic', '4': 'stellar' };
+                const rarity = rarityMap[rarityPrefix] || 'common';
+                
+                if (!entries[baseId]) {
+                    entries[baseId] = {
+                        baseId: baseId,
+                        species: template.name.replace(/^(普通|闪光|幻彩|星芒)/, '').trim(), // 移除稀有度前缀
+                        element: template.element,
+                        variants: {}
+                    };
+                }
+                
+                // 添加稀有度变体
+                entries[baseId].variants[rarity] = {
+                    animalId: animalId,
+                    templateKey: template.key,
+                    rarity: rarity,
+                    name: template.name,
+                    color: template.color,
+                    modelShape: template.modelShape || 'sphere',
+                    avatarData: template.avatarData,
+                    desc: template.desc || '',
+                    stats: {
+                        level: template.level || 1,
+                        health: template.health || 100,
+                        stamina: template.stamina || 100,
+                        attack: template.attack || 10,
+                        defense: template.defense || 5,
+                        agility: template.agility || 8,
+                        baseExp: template.baseExp || 100,
+                        expGrowth: template.expGrowth || 1.2
+                    },
+                    skills: template.skills || [],
+                    growthTypes: template.growthTypes || null
+                };
+            });
+            
+            return entries;
+        }
+        
+        // 渲染图鉴
+        function renderEncyclopedia() {
+            const grid = document.getElementById('encyclopedia-grid');
+            grid.innerHTML = '';
+            
+            const entries = getEncyclopediaEntries();
+            const unlockedData = gameState.unlockedEncyclopedia || {};
+            
+            // 统计进度
+            let totalSpecies = 0;
+            let unlockedSpecies = 0;
+            let totalVariants = 0;
+            let unlockedVariants = 0;
+            let latestUnlock = null;
+            let latestUnlockTime = 0;
+            
+            // 收集所有物种和变体
+            const speciesList = Object.values(entries);
+            
+            speciesList.forEach(species => {
+                // 元素筛选
+                if (currentFilter.element) {
+                    const elementKey = currentFilter.element;
+                    const elementName = ELEMENT_CONFIG[elementKey]?.name;
+                    if (species.element !== elementKey && species.element !== elementName) {
+                        return; // 跳过不匹配的元素
+                    }
+                }
+                
+                totalSpecies++;
+                const variantCount = Object.keys(species.variants).length;
+                totalVariants += variantCount;
+                
+                // 检查该物种是否至少解锁了一个变体
+                const unlockedVariantsList = Object.values(species.variants).filter(v => unlockedData[v.animalId]);
+                const hasUnlocked = unlockedVariantsList.length > 0;
+                
+                if (hasUnlocked) unlockedSpecies++;
+                unlockedVariants += unlockedVariantsList.length;
+                
+                // 查找最近解锁
+                unlockedVariantsList.forEach(variant => {
+                    const unlockInfo = unlockedData[variant.animalId];
+                    if (unlockInfo && unlockInfo.unlockedAt > latestUnlockTime) {
+                        latestUnlockTime = unlockInfo.unlockedAt;
+                        latestUnlock = variant.name;
+                    }
+                });
+                
+                // 状态筛选
+                if (currentFilter.type === 'unlocked' && !hasUnlocked) return;
+                if (currentFilter.type === 'locked' && hasUnlocked) return;
+                
+                // 创建卡片
+                renderSpeciesCard(species, hasUnlocked, unlockedVariantsList, grid);
+            });
+            
+            // 更新统计
+            document.getElementById('species-progress').textContent = `${unlockedSpecies}/${totalSpecies}`;
+            document.getElementById('rarity-progress').textContent = `${unlockedVariants}/${totalVariants}`;
+            const completionRate = totalVariants > 0 ? Math.floor((unlockedVariants / totalVariants) * 100) : 0;
+            document.getElementById('completion-rate').textContent = `${completionRate}%`;
+            document.getElementById('latest-unlock').textContent = latestUnlock || '暂无';
+            
+            if (speciesList.length === 0) {
+                grid.innerHTML = '<div class="col-span-full text-center text-gray-500 py-12 text-lg">动物模板池为空<br><span class="text-sm mt-2 block">请先在动物设计器中创建模板</span></div>';
+            } else if (totalSpecies === 0) {
+                grid.innerHTML = '<div class="col-span-full text-center text-gray-500 py-12 text-lg">没有符合筛选条件的物种</div>';
+            }
+        }
+        
+        // 渲染物种卡片
+        function renderSpeciesCard(species, hasUnlocked, unlockedVariants, container) {
+            const card = document.createElement('div');
+            card.className = `species-card p-5 rounded-xl border transition-all ${
+                hasUnlocked 
+                    ? 'bg-gradient-to-br from-gray-800 to-gray-900 border-teal-500 shadow-xl hover:shadow-teal-500/50 cursor-pointer' 
+                    : 'bg-gray-900/50 border-gray-700 opacity-60'
+            }`;
+            
+            // 获取显示用的变体（优先显示已解锁的最高稀有度）
+            let displayVariant = null;
+            if (hasUnlocked) {
+                const rarityOrder = ['stellar', 'prismatic', 'shiny', 'common'];
+                for (const rarity of rarityOrder) {
+                    const variant = unlockedVariants.find(v => v.rarity === rarity);
+                    if (variant) {
+                        displayVariant = variant;
+                        break;
+                    }
+                }
+            }
+            if (!displayVariant) {
+                displayVariant = Object.values(species.variants)[0];
+            }
+            
+            // 元素图标和名称
+            const elementConfig = ELEMENT_CONFIG[species.element] || ELEMENT_CONFIG[species.element] || { icon: '❔', name: '未知', bgClass: 'bg-gray-700' };
+            
+            // 头像
+            let avatarHtml = '<div class="w-24 h-24 rounded-full mx-auto mb-3 flex items-center justify-center text-5xl grayscale blur-sm bg-gray-800 border-2 border-gray-600">❓</div>';
+            if (hasUnlocked) {
+                if (displayVariant.avatarData) {
+                    avatarHtml = `<img src="${displayVariant.avatarData}" class="w-24 h-24 rounded-full mx-auto mb-3 border-3 border-teal-400 object-cover shadow-lg" alt="${species.species}">`;
+                } else {
+                    avatarHtml = `<div class="w-24 h-24 rounded-full mx-auto mb-3 border-3 border-teal-400 shadow-lg" style="background-color: ${displayVariant.color}"></div>`;
+                }
+            }
+            
+            // 稀有度进度条
+            const rarityOrder = ['common', 'shiny', 'prismatic', 'stellar'];
+            const rarityBadges = rarityOrder.map(rarity => {
+                const variant = species.variants[rarity];
+                if (!variant) return '';
+                
+                const isUnlocked = gameState.unlockedEncyclopedia && gameState.unlockedEncyclopedia[variant.animalId];
+                const config = RARITY_CONFIG[rarity];
+                return `<span class="text-xl ${isUnlocked ? config.color : 'text-gray-700'}" title="${config.name}">${config.icon}</span>`;
+            }).join(' ');
+            
+            card.innerHTML = `
+                <div class="text-center">
+                    ${avatarHtml}
+                    
+                    <div class="flex items-center justify-center gap-2 mb-2">
+                        <span class="text-2xl">${elementConfig.icon}</span>
+                        <h3 class="text-xl font-bold ${hasUnlocked ? 'text-white' : 'text-gray-600'}">${hasUnlocked ? species.species : '???'}</h3>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <span class="element-badge ${elementConfig.bgClass} text-white text-xs">${hasUnlocked ? elementConfig.name : '???'}</span>
+                    </div>
+                    
+                    <div class="flex gap-1 justify-center mb-3">
+                        ${rarityBadges}
+                    </div>
+                    
+                    <div class="text-xs text-gray-400">
+                        ${unlockedVariants.length}/${Object.keys(species.variants).length} 变体已解锁
+                    </div>
+                    
+                    ${hasUnlocked ? '<div class="text-xs text-teal-400 mt-2">点击查看详情</div>' : ''}
+                </div>
+            `;
+            
+            if (hasUnlocked) {
+                card.onclick = () => openDetailModal(species);
+            }
+            
+            container.appendChild(card);
+        }
+        
+        // 打开详情模态框
+        function openDetailModal(species) {
+            const unlockedData = gameState.unlockedEncyclopedia || {};
+            const modal = document.getElementById('detail-modal');
+            const content = document.getElementById('detail-content');
+            
+            document.getElementById('detail-title').textContent = species.species;
+            
+            const elementConfig = ELEMENT_CONFIG[species.element] || { icon: '❔', name: '未知', bgClass: 'bg-gray-700' };
+            const skillPool = JSON.parse(localStorage.getItem('SKILL_POOL') || '[]');
+            
+            let html = `
+                <div class="mb-6 text-center">
+                    <div class="inline-flex items-center gap-3 bg-gray-800 rounded-lg px-6 py-3">
+                        <span class="text-4xl">${elementConfig.icon}</span>
+                        <div class="text-left">
+                            <h4 class="text-2xl font-bold text-white">${species.species}</h4>
+                            <p class="text-sm text-gray-400">${elementConfig.name}</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <h5 class="text-xl font-bold text-teal-300 mb-4 flex items-center gap-2">
+                    <span>🌈</span>
+                    <span>稀有度变体</span>
+                </h5>
+            `;
+            
+            // 按稀有度顺序渲染变体
+            const rarityOrder = ['common', 'shiny', 'prismatic', 'stellar'];
+            rarityOrder.forEach(rarity => {
+                const variant = species.variants[rarity];
+                if (!variant) return;
+                
+                const isUnlocked = unlockedData[variant.animalId];
+                const rarityConfig = RARITY_CONFIG[rarity];
+                
+                html += `
+                    <div class="mb-5 p-5 rounded-xl border-2 ${
+                        isUnlocked 
+                            ? 'bg-gradient-to-br from-gray-800 to-gray-900 border-gray-600' 
+                            : 'bg-gray-900/30 border-gray-800 opacity-50'
+                    }">
+                        <div class="flex items-start gap-4 mb-4">
+                            <!-- 头像 -->
+                            <div class="flex-shrink-0">
+                `;
+                
+                if (isUnlocked) {
+                    if (variant.avatarData) {
+                        html += `<img src="${variant.avatarData}" class="w-20 h-20 rounded-full border-3 border-teal-400 object-cover shadow-lg" alt="${variant.name}">`;
+                    } else {
+                        html += `<div class="w-20 h-20 rounded-full border-3 border-teal-400 shadow-lg" style="background-color: ${variant.color}"></div>`;
+                    }
+                } else {
+                    html += `<div class="w-20 h-20 rounded-full border-2 border-gray-700 bg-gray-800 flex items-center justify-center text-4xl grayscale blur-sm">❓</div>`;
+                }
+                
+                html += `
+                            </div>
+                            <!-- 基本信息 -->
+                            <div class="flex-1">
+                                <div class="flex items-center gap-2 mb-2">
+                                    <span class="rarity-badge ${rarityConfig.bgClass}">${rarityConfig.icon} ${rarityConfig.name}</span>
+                                    ${isUnlocked ? `<span class="text-xs bg-gray-700 px-2 py-1 rounded font-mono">${variant.animalId}</span>` : ''}
+                                </div>
+                                <h6 class="font-bold text-white text-lg mb-1">${isUnlocked ? variant.name : '未解锁'}</h6>
+                                ${isUnlocked && variant.desc ? `<p class="text-sm text-gray-400 mb-3">${variant.desc}</p>` : ''}
+                `;
+                
+                if (isUnlocked) {
+                    // 基础属性
+                    html += `
+                        <div class="grid grid-cols-2 gap-3 mb-3">
+                            <div class="bg-gray-900/50 rounded-lg p-2">
+                                <div class="text-xs text-gray-400 mb-1">💗 生命值</div>
+                                <div class="font-bold text-pink-300">${variant.stats.health}</div>
+                                <div class="stat-bar mt-1">
+                                    <div class="stat-bar-fill bg-pink-500" style="width: ${Math.min(100, variant.stats.health / 5)}%"></div>
+                                </div>
+                            </div>
+                            <div class="bg-gray-900/50 rounded-lg p-2">
+                                <div class="text-xs text-gray-400 mb-1">⚡ 体力</div>
+                                <div class="font-bold text-green-300">${variant.stats.stamina}</div>
+                                <div class="stat-bar mt-1">
+                                    <div class="stat-bar-fill bg-green-500" style="width: ${Math.min(100, variant.stats.stamina / 3)}%"></div>
+                                </div>
+                            </div>
+                            <div class="bg-gray-900/50 rounded-lg p-2">
+                                <div class="text-xs text-gray-400 mb-1">⚔️ 攻击</div>
+                                <div class="font-bold text-red-300">${variant.stats.attack}</div>
+                                <div class="stat-bar mt-1">
+                                    <div class="stat-bar-fill bg-red-500" style="width: ${Math.min(100, variant.stats.attack * 2)}%"></div>
+                                </div>
+                            </div>
+                            <div class="bg-gray-900/50 rounded-lg p-2">
+                                <div class="text-xs text-gray-400 mb-1">🛡️ 防御</div>
+                                <div class="font-bold text-blue-300">${variant.stats.defense}</div>
+                                <div class="stat-bar mt-1">
+                                    <div class="stat-bar-fill bg-blue-500" style="width: ${Math.min(100, variant.stats.defense * 3)}%"></div>
+                                </div>
+                            </div>
+                            <div class="bg-gray-900/50 rounded-lg p-2">
+                                <div class="text-xs text-gray-400 mb-1">💨 敏捷</div>
+                                <div class="font-bold text-yellow-300">${variant.stats.agility}</div>
+                                <div class="stat-bar mt-1">
+                                    <div class="stat-bar-fill bg-yellow-500" style="width: ${Math.min(100, variant.stats.agility * 2)}%"></div>
+                                </div>
+                            </div>
+                            <div class="bg-gray-900/50 rounded-lg p-2">
+                                <div class="text-xs text-gray-400 mb-1">📊 初始等级</div>
+                                <div class="font-bold text-purple-300">Lv.${variant.stats.level}</div>
+                            </div>
+                        </div>
+                    `;
+                    
+                    // 成长信息
+                    if (variant.growthTypes) {
+                        html += `
+                            <div class="bg-gradient-to-r from-blue-900/20 to-purple-900/20 rounded-lg p-3 mb-3 border border-blue-700/30">
+                                <div class="text-xs font-bold text-blue-300 mb-2">📈 成长潜力</div>
+                                <div class="grid grid-cols-3 gap-2 text-xs">
+                                    <div class="text-center">
+                                        <div class="text-gray-400">⭐ 平庸</div>
+                                        <div class="text-white font-mono">×1.0</div>
+                                    </div>
+                                    <div class="text-center">
+                                        <div class="text-blue-400">⭐⭐ 超常</div>
+                                        <div class="text-white font-mono">×1.5</div>
+                                    </div>
+                                    <div class="text-center">
+                                        <div class="text-purple-400">⭐⭐⭐ 璀璨</div>
+                                        <div class="text-white font-mono">×2.0</div>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    }
+                    
+                    // 技能列表
+                    if (variant.skills && variant.skills.length > 0) {
+                        html += `
+                            <div class="bg-purple-900/20 rounded-lg p-3 border border-purple-700/30">
+                                <div class="text-xs font-bold text-purple-300 mb-2">🎯 可学习技能 (${variant.skills.length})</div>
+                                <div class="space-y-1 max-h-48 overflow-y-auto custom-scrollbar">
+                        `;
+                        
+                        variant.skills.forEach(skillConfig => {
+                            const skill = skillPool.find(s => s.key === skillConfig.skillKey);
+                            if (skill) {
+                                const categoryNames = {
+                                    'element-water': '水系', 'element-fire': '火系', 'element-grass': '草系',
+                                    'element-wind': '风系', 'element-electric': '电系', 'element-earth': '土系',
+                                    'mutation-dark': '黑化', 'mutation-light': '白化', 'mutation-crystal': '晶化',
+                                    'mutation-shadow': '影化', 'mutation-thunder': '极电', 'mutation-holy': '圣辉',
+                                    'mutation-psychic': '异能', 'mutation-chaos': '暗蚀'
+                                };
+                                const categoryName = categoryNames[skill.category] || '';
+                                
+                                html += `
+                                    <div class="flex items-center justify-between bg-gray-900/50 rounded px-2 py-1">
+                                        <div class="flex items-center gap-2">
+                                            <span class="text-lg">${skill.icon}</span>
+                                            <span class="text-sm text-white">${skill.name}</span>
+                                            ${categoryName ? `<span class="text-xs text-purple-400">[${categoryName}]</span>` : ''}
+                                        </div>
+                                        <span class="text-xs text-gray-400">Lv.${skillConfig.unlockLevel}</span>
+                                    </div>
+                                `;
+                            }
+                        });
+                        
+                        html += `
+                                </div>
+                            </div>
+                        `;
+                    }
+                    
+                    // 解锁信息
+                    const unlockInfo = unlockedData[displayVariant.animalId];
+                    if (unlockInfo && unlockInfo.unlockedAt) {
+                        const date = new Date(unlockInfo.unlockedAt);
+                        html += `
+                            <div class="text-xs text-gray-500 mt-3 text-center">
+                                🕐 解锁于: ${date.toLocaleString('zh-CN')}
+                            </div>
+                        `;
+                    }
+                } else {
+                    html += `<div class="text-sm text-gray-500 italic text-center py-4">未解锁</div>`;
+                }
+                
+                html += `
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            content.innerHTML = html;
+            modal.classList.remove('hidden');
+        }
+        
+        // 关闭详情模态框
+        function closeDetailModal() {
+            document.getElementById('detail-modal').classList.add('hidden');
+        }
+    </script>
+</body>
+</html>
