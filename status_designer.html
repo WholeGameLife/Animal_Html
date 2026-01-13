@@ -93,16 +93,15 @@
                     <!-- 状态参数 -->
                     <div class="grid grid-cols-2 gap-4 mb-4">
                         <div>
-                            <label class="block text-sm font-medium text-gray-300 mb-2">状态持续回合 *</label>
-                            <div class="space-y-2">
-                                <input type="number" id="status-duration" min="1" value="10" required
-                                    class="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500">
-                                <label class="flex items-center gap-2 text-white text-sm cursor-pointer">
-                                    <input type="checkbox" id="status-permanent" class="w-4 h-4 cursor-pointer">
-                                    <span>状态永久存在</span>
-                                </label>
-                                <p class="text-xs text-gray-500">状态本身的持续时间</p>
-                            </div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">
+                                持续时间模式 *
+                            </label>
+                            <select id="duration-mode"
+                                class="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500">
+                                <option value="status">状态整体持续</option>
+                                <option value="stack">每层独立计时</option>
+                            </select>
+                            <p class="text-xs text-gray-500 mt-1">选择持续时间的计算方式</p>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-300 mb-2">层数系统</label>
@@ -114,11 +113,30 @@
                             <p class="text-xs text-gray-500 mt-1">控制、眩晕等状态可不使用层数</p>
                         </div>
                     </div>
-                    <div id="stack-params" class="grid grid-cols-2 gap-4 mb-4">
+                    
+                    <!-- 状态整体持续配置 -->
+                    <div id="status-duration-params" class="grid grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">状态持续回合 *</label>
+                            <div class="space-y-2">
+                                <input type="number" id="status-duration" min="1" value="10" required
+                                    class="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500">
+                                <label class="flex items-center gap-2 text-white text-sm cursor-pointer">
+                                    <input type="checkbox" id="status-permanent" class="w-4 h-4 cursor-pointer">
+                                    <span>状态永久存在</span>
+                                </label>
+                                <p class="text-xs text-gray-500">状态本身的持续时间</p>
+                            </div>
+                        </div>
+                        <div></div>
+                    </div>
+                    
+                    <!-- 每层独立计时配置 -->
+                    <div id="stack-params" class="grid grid-cols-2 gap-4 mb-4" style="display: none;">
                         <div>
                             <label class="block text-sm font-medium text-gray-300 mb-2">每层持续回合 *</label>
                             <div class="space-y-2">
-                                <input type="number" id="status-durationPerStack" min="1" value="3" required
+                                <input type="number" id="status-durationPerStack" min="1" value="3"
                                     class="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500">
                                 <label class="flex items-center gap-2 text-white text-sm cursor-pointer">
                                     <input type="checkbox" id="status-stackPermanent" class="w-4 h-4 cursor-pointer">
@@ -127,11 +145,17 @@
                                 <p class="text-xs text-gray-500">每一层的持续时间</p>
                             </div>
                         </div>
+                        <div></div>
+                    </div>
+                    
+                    <!-- 最大层数（通用配置，启用层数时显示） -->
+                    <div id="max-stacks-param" class="grid grid-cols-2 gap-4 mb-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-300 mb-2">最大层数</label>
                             <input type="number" id="status-maxStacks" min="1" value="1"
                                 class="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500">
                         </div>
+                        <div></div>
                     </div>
                     <div class="grid grid-cols-2 gap-4 mb-4">
                         <div>
@@ -418,6 +442,28 @@
                 });
             });
             
+            // 持续时间模式选择器
+            document.getElementById('duration-mode').addEventListener('change', (e) => {
+                const mode = e.target.value;
+                const statusDurationParams = document.getElementById('status-duration-params');
+                const stackParams = document.getElementById('stack-params');
+                
+                if (mode === 'status') {
+                    // 状态整体持续模式
+                    statusDurationParams.style.display = 'grid';
+                    stackParams.style.display = 'none';
+                    document.getElementById('status-duration').required = !document.getElementById('status-permanent').checked;
+                    document.getElementById('status-durationPerStack').required = false;
+                } else {
+                    // 每层独立计时模式
+                    statusDurationParams.style.display = 'none';
+                    stackParams.style.display = 'grid';
+                    document.getElementById('status-duration').required = false;
+                    document.getElementById('status-durationPerStack').required = !document.getElementById('status-stackPermanent').checked;
+                }
+                updatePreview();
+            });
+            
             // 状态永久存在复选框
             document.getElementById('status-permanent').addEventListener('change', (e) => {
                 const statusDurationInput = document.getElementById('status-duration');
@@ -451,16 +497,22 @@
             // 层数系统选择器
             document.getElementById('status-hasStacks').addEventListener('change', (e) => {
                 const hasStacks = e.target.value === 'true';
-                const stackParams = document.getElementById('stack-params');
                 const stackGrowParams = document.getElementById('stack-grow-params');
+                const maxStacksParam = document.getElementById('max-stacks-param');
                 
                 if (hasStacks) {
-                    stackParams.style.display = 'grid';
                     stackGrowParams.style.display = 'grid';
-                    document.getElementById('status-durationPerStack').required = true;
+                    maxStacksParam.style.display = 'grid';
+                    // 根据持续时间模式决定是否显示相关参数
+                    const mode = document.getElementById('duration-mode').value;
+                    if (mode === 'stack') {
+                        document.getElementById('stack-params').style.display = 'grid';
+                        document.getElementById('status-durationPerStack').required = !document.getElementById('status-stackPermanent').checked;
+                    }
                 } else {
-                    stackParams.style.display = 'none';
                     stackGrowParams.style.display = 'none';
+                    maxStacksParam.style.display = 'none';
+                    document.getElementById('stack-params').style.display = 'none';
                     document.getElementById('status-durationPerStack').required = false;
                 }
                 updatePreview();
@@ -670,12 +722,8 @@
         function updatePreview() {
             const name = document.getElementById('status-name').value;
             const description = document.getElementById('status-description').value;
-            const isPermanent = document.getElementById('status-permanent').checked;
-            const statusDuration = document.getElementById('status-duration').value;
+            const durationMode = document.getElementById('duration-mode').value;
             const hasStacks = document.getElementById('status-hasStacks').value === 'true';
-            const isStackPermanent = document.getElementById('status-stackPermanent').checked;
-            const durationPerStack = document.getElementById('status-durationPerStack').value;
-            const maxStacks = document.getElementById('status-maxStacks').value;
             const canPurify = document.getElementById('status-canPurify').value === 'true';
             const uniqueEffect = document.getElementById('status-uniqueEffect').value === 'true';
             const autoGrow = document.getElementById('status-autoGrow').value === 'true';
@@ -705,9 +753,21 @@
                 iconDisplay = `<div class="w-12 h-12 bg-gray-700 rounded flex items-center justify-center text-2xl flex-shrink-0">❓</div>`;
             }
             
-            // 持续时间显示
-            const statusDurationText = isPermanent ? '状态永久' : `状态${statusDuration}回合`;
-            const stackDurationText = hasStacks ? (isStackPermanent ? '层数永久' : `每层${durationPerStack}回合`) : '无层数';
+            // 持续时间显示（根据模式只显示一种）
+            let durationText = '';
+            if (durationMode === 'status') {
+                // 状态整体持续模式
+                const isPermanent = document.getElementById('status-permanent').checked;
+                const statusDuration = document.getElementById('status-duration').value;
+                durationText = isPermanent ? '状态永久' : `状态${statusDuration}回合`;
+            } else {
+                // 每层独立计时模式
+                const isStackPermanent = document.getElementById('status-stackPermanent').checked;
+                const durationPerStack = document.getElementById('status-durationPerStack').value;
+                durationText = hasStacks ? (isStackPermanent ? '层数永久' : `每层${durationPerStack}回合`) : '无层数';
+            }
+            
+            const maxStacks = document.getElementById('status-maxStacks').value;
 
             preview.innerHTML = `
                 <div class="flex items-start gap-3">
@@ -720,8 +780,7 @@
                         ${description ? `<p class="text-xs text-gray-400 italic mb-2">${description}</p>` : ''}
                         ${effectLabels ? `<div class="flex flex-wrap gap-1 mb-2">${effectLabels}</div>` : ''}
                         <div class="flex flex-wrap gap-2 text-xs">
-                            <span class="bg-blue-600/30 text-blue-300 px-2 py-1 rounded">${statusDurationText}</span>
-                            <span class="bg-indigo-600/30 text-indigo-300 px-2 py-1 rounded">${stackDurationText}</span>
+                            <span class="bg-blue-600/30 text-blue-300 px-2 py-1 rounded">${durationText}</span>
                             ${hasStacks && maxStacks > 1 ? `<span class="bg-yellow-600/30 text-yellow-300 px-2 py-1 rounded">最多${maxStacks}层</span>` : ''}
                             ${uniqueEffect ? `<span class="bg-purple-600/30 text-purple-300 px-2 py-1 rounded">唯一效果</span>` : ''}
                             ${hasStacks && autoGrow ? `<span class="bg-cyan-600/30 text-cyan-300 px-2 py-1 rounded">每回合+${growRate}层</span>` : ''}
@@ -756,18 +815,34 @@
                 effectConfigs[effect] = effectData;
             });
 
-            const isPermanent = document.getElementById('status-permanent').checked;
+            const durationMode = document.getElementById('duration-mode').value;
             const hasStacks = document.getElementById('status-hasStacks').value === 'true';
-            const isStackPermanent = hasStacks ? document.getElementById('status-stackPermanent').checked : false;
             const autoGrow = hasStacks ? (document.getElementById('status-autoGrow').value === 'true') : false;
+            
+            // 根据模式决定使用哪种持续时间
+            let isPermanent, statusDuration, isStackPermanent, durationPerStack;
+            
+            if (durationMode === 'status') {
+                // 状态整体持续模式
+                isPermanent = document.getElementById('status-permanent').checked;
+                statusDuration = parseInt(document.getElementById('status-duration').value) || 10;
+                isStackPermanent = true; // 层数永久
+                durationPerStack = 999; // 不使用
+            } else {
+                // 每层独立计时模式
+                isPermanent = true; // 状态永久
+                statusDuration = 999; // 不使用
+                isStackPermanent = document.getElementById('status-stackPermanent').checked;
+                durationPerStack = hasStacks ? parseInt(document.getElementById('status-durationPerStack').value) || 3 : 0;
+            }
             
             return {
                 name: document.getElementById('status-name').value,
                 iconImage: iconImageData,
                 description: document.getElementById('status-description').value,
-                statusDuration: parseInt(document.getElementById('status-duration').value) || 10,
+                statusDuration: statusDuration,
                 hasStacks: hasStacks,
-                durationPerStack: hasStacks ? parseInt(document.getElementById('status-durationPerStack').value) || 3 : 0,
+                durationPerStack: durationPerStack,
                 isPermanent: isPermanent,
                 isStackPermanent: isStackPermanent,
                 maxStacks: hasStacks ? parseInt(document.getElementById('status-maxStacks').value) : 1,
@@ -856,23 +931,63 @@
             // 填充基本信息
             document.getElementById('status-name').value = status.name;
             document.getElementById('status-description').value = status.description || '';
-            document.getElementById('status-duration').value = status.statusDuration || 10;
             document.getElementById('status-canPurify').value = status.canPurify ? 'true' : 'false';
             document.getElementById('status-uniqueEffect').value = status.uniqueEffect ? 'true' : 'false';
             
             // 处理层数系统
             const hasStacks = status.hasStacks !== false; // 默认为true以兼容旧数据
             document.getElementById('status-hasStacks').value = hasStacks ? 'true' : 'false';
-            const stackParams = document.getElementById('stack-params');
             const stackGrowParams = document.getElementById('stack-grow-params');
             if (hasStacks) {
-                stackParams.style.display = 'grid';
                 stackGrowParams.style.display = 'grid';
-                document.getElementById('status-durationPerStack').value = status.durationPerStack || 3;
                 document.getElementById('status-maxStacks').value = status.maxStacks || 1;
             } else {
-                stackParams.style.display = 'none';
                 stackGrowParams.style.display = 'none';
+            }
+            
+            // 判断持续时间模式（根据isPermanent和isStackPermanent判断）
+            let durationMode = 'status'; // 默认状态整体持续
+            if (status.isPermanent && !status.isStackPermanent) {
+                durationMode = 'stack'; // 每层独立计时
+            }
+            document.getElementById('duration-mode').value = durationMode;
+            
+            // 根据模式显示对应的配置
+            const statusDurationParams = document.getElementById('status-duration-params');
+            const stackParams = document.getElementById('stack-params');
+            
+            if (durationMode === 'status') {
+                statusDurationParams.style.display = 'grid';
+                stackParams.style.display = 'none';
+                
+                document.getElementById('status-duration').value = status.statusDuration || 10;
+                document.getElementById('status-permanent').checked = status.isPermanent;
+                const statusDurationInput = document.getElementById('status-duration');
+                if (status.isPermanent) {
+                    statusDurationInput.disabled = true;
+                    statusDurationInput.classList.add('opacity-50');
+                    statusDurationInput.required = false;
+                } else {
+                    statusDurationInput.disabled = false;
+                    statusDurationInput.classList.remove('opacity-50');
+                    statusDurationInput.required = true;
+                }
+            } else {
+                statusDurationParams.style.display = 'none';
+                stackParams.style.display = 'grid';
+                
+                document.getElementById('status-durationPerStack').value = status.durationPerStack || 3;
+                document.getElementById('status-stackPermanent').checked = status.isStackPermanent;
+                const stackDurationInput = document.getElementById('status-durationPerStack');
+                if (status.isStackPermanent) {
+                    stackDurationInput.disabled = true;
+                    stackDurationInput.classList.add('opacity-50');
+                    stackDurationInput.required = false;
+                } else {
+                    stackDurationInput.disabled = false;
+                    stackDurationInput.classList.remove('opacity-50');
+                    stackDurationInput.required = true;
+                }
             }
             
             // 处理层数自增长
@@ -883,38 +998,6 @@
                 document.getElementById('status-growRate').value = status.growRate || 1;
             } else {
                 growRateContainer.style.display = 'none';
-            }
-            
-            // 处理永久状态
-            const isPermanent = status.isPermanent;
-            document.getElementById('status-permanent').checked = isPermanent;
-            const statusDurationInput = document.getElementById('status-duration');
-            if (isPermanent) {
-                statusDurationInput.value = status.statusDuration || 10;
-                statusDurationInput.disabled = true;
-                statusDurationInput.classList.add('opacity-50');
-                statusDurationInput.required = false;
-            } else {
-                statusDurationInput.value = status.statusDuration || 10;
-                statusDurationInput.disabled = false;
-                statusDurationInput.classList.remove('opacity-50');
-                statusDurationInput.required = true;
-            }
-            
-            // 处理永久层数
-            const isStackPermanent = status.isStackPermanent;
-            document.getElementById('status-stackPermanent').checked = isStackPermanent;
-            const stackDurationInput = document.getElementById('status-durationPerStack');
-            if (isStackPermanent) {
-                stackDurationInput.value = status.durationPerStack || 3;
-                stackDurationInput.disabled = true;
-                stackDurationInput.classList.add('opacity-50');
-                stackDurationInput.required = false;
-            } else {
-                stackDurationInput.value = status.durationPerStack || 3;
-                stackDurationInput.disabled = false;
-                stackDurationInput.classList.remove('opacity-50');
-                stackDurationInput.required = true;
             }
             
             // 设置图标
@@ -1018,7 +1101,13 @@
                                 </div>
                                 ${status.description ? `<p class="text-xs text-gray-500 italic mb-1 line-clamp-2">${status.description}</p>` : ''}
                                 <div class="text-xs text-gray-400 mb-1">
-                                    ${status.isPermanent ? '状态永久' : `状态${status.statusDuration || 10}回合`} · ${status.hasStacks === false ? '无层数' : (status.isStackPermanent ? '层数永久' : `每层${status.durationPerStack || 3}回合`)} ${status.hasStacks !== false && status.maxStacks > 1 ? `· 最多${status.maxStacks}层` : ''} ${status.uniqueEffect ? '· 唯一效果' : ''} ${status.hasStacks !== false && status.autoGrow ? `· 每回合+${status.growRate}层` : ''}
+                                    ${status.isPermanent && status.isStackPermanent ?
+                                        '状态永久 · 层数永久' :
+                                        (status.isPermanent ?
+                                            (status.hasStacks === false ? '无层数' : `每层${status.durationPerStack || 3}回合`) :
+                                            (status.isStackPermanent ?
+                                                `状态${status.statusDuration || 10}回合` :
+                                                `状态${status.statusDuration || 10}回合 · 每层${status.durationPerStack || 3}回合`))} ${status.hasStacks !== false && status.maxStacks > 1 ? `· 最多${status.maxStacks}层` : ''} ${status.uniqueEffect ? '· 唯一效果' : ''} ${status.hasStacks !== false && status.autoGrow ? `· 每回合+${status.growRate}层` : ''}
                                 </div>
                                 ${effectLabels ? `<div class="flex flex-wrap gap-1">${effectLabels}</div>` : ''}
                             </div>
