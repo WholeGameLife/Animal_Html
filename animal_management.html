@@ -726,6 +726,10 @@
                 if (!gameState.unlockedEncyclopedia || Array.isArray(gameState.unlockedEncyclopedia)) {
                     gameState.unlockedEncyclopedia = {};
                 }
+                // 初始化技能图鉴
+                if (!gameState.unlockedSkills) {
+                    gameState.unlockedSkills = {};
+                }
                 // 新增：初始化背包
                 if (!gameState.inventory || Object.keys(gameState.inventory).length === 0) {
                     gameState.inventory = {
@@ -2488,6 +2492,10 @@
                         }
                         
                         console.log('[技能解锁] 解锁变异技能:', skill.name);
+                        
+                        // 记录到技能图鉴
+                        unlockSkillInEncyclopedia(skillConfig.skillKey, skill);
+                        
                         showStatus(`🧬 模板技能解锁！${animal.name} 学会了 ${skill.icon} ${skill.name}！`, 5000);
                     } else {
                         // 战斗技能
@@ -2507,6 +2515,10 @@
                         }
                         
                         console.log('[技能解锁] 解锁战斗技能:', skill.name);
+                        
+                        // 记录到技能图鉴
+                        unlockSkillInEncyclopedia(skillConfig.skillKey, skill);
+                        
                         showStatus(`🔓 模板技能解锁！${animal.name} 学会了 ${skill.icon} ${skill.name}！`, 5000);
                     }
                 }
@@ -2711,6 +2723,23 @@
             
             // 图鉴解锁检查
             checkEncyclopediaUnlock(animalData);
+        }
+        
+        // 新增：技能解锁到图鉴
+        function unlockSkillInEncyclopedia(skillKey, skill) {
+            if (!gameState.unlockedSkills) {
+                gameState.unlockedSkills = {};
+            }
+            
+            // 如果该技能尚未解锁，记录解锁时间
+            if (!gameState.unlockedSkills[skillKey]) {
+                gameState.unlockedSkills[skillKey] = {
+                    unlockedAt: Date.now(),
+                    name: skill.name,
+                    icon: skill.icon
+                };
+                console.log('[技能图鉴] 新技能解锁:', skill.name);
+            }
         }
         
         // 图鉴解锁检查 - 基于物种ID、稀有度和变异

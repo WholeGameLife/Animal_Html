@@ -137,8 +137,8 @@
                     <div class="text-2xl font-bold text-cyan-400" id="rarity-progress">0/0</div>
                 </div>
                 <div class="bg-gray-800/50 rounded-lg p-3 text-center">
-                    <div class="text-xs text-gray-400 mb-1">完成度</div>
-                    <div class="text-2xl font-bold text-purple-400" id="completion-rate">0%</div>
+                    <div class="text-xs text-gray-400 mb-1">技能收集</div>
+                    <div class="text-2xl font-bold text-purple-400" id="skill-progress">0/0</div>
                 </div>
                 <div class="bg-gray-800/50 rounded-lg p-3 text-center">
                     <div class="text-xs text-gray-400 mb-1">最近解锁</div>
@@ -155,6 +155,9 @@
                 </button>
                 <button id="tab-mutation" class="tab-btn flex-1 py-4 px-6 font-bold text-gray-400 hover:text-white hover:bg-gray-800 transition-colors">
                     🧬 变异图鉴
+                </button>
+                <button id="tab-skill" class="tab-btn flex-1 py-4 px-6 font-bold text-gray-400 hover:text-white hover:bg-gray-800 transition-colors">
+                    ⚔️ 技能图鉴
                 </button>
             </div>
         </div>
@@ -185,6 +188,73 @@
             </div>
         </div>
         
+        <!-- 技能图鉴筛选栏 -->
+        <div id="skill-filters" class="hidden bg-gray-900/80 backdrop-blur-lg rounded-xl p-4 mb-6 border border-gray-700">
+            <div class="space-y-3">
+                <!-- 状态筛选 -->
+                <div class="flex flex-wrap gap-2">
+                    <button class="encyclopedia-filter-btn active" data-filter="all">📚 全部</button>
+                    <button class="encyclopedia-filter-btn" data-filter="unlocked">✅ 已解锁</button>
+                    <button class="encyclopedia-filter-btn" data-filter="locked">🔒 未解锁</button>
+                </div>
+                
+                <!-- 系别筛选 -->
+                <div class="border-t border-gray-700 pt-3">
+                    <div class="text-xs text-gray-400 mb-2">系别分类</div>
+                    <div class="flex flex-wrap gap-2">
+                        <button class="encyclopedia-filter-btn" data-skill-category="element-water">💧 水系</button>
+                        <button class="encyclopedia-filter-btn" data-skill-category="element-fire">🔥 火系</button>
+                        <button class="encyclopedia-filter-btn" data-skill-category="element-grass">🌿 草系</button>
+                        <button class="encyclopedia-filter-btn" data-skill-category="element-wind">💨 风系</button>
+                        <button class="encyclopedia-filter-btn" data-skill-category="element-metal">🪙 金系</button>
+                        <button class="encyclopedia-filter-btn" data-skill-category="element-earth">🪨 土系</button>
+                    </div>
+                </div>
+                
+                <!-- 变异筛选 -->
+                <div class="border-t border-gray-700 pt-3">
+                    <div class="text-xs text-gray-400 mb-2">变异分类</div>
+                    <div class="flex flex-wrap gap-2">
+                        <button class="encyclopedia-filter-btn" data-skill-category="mutation-dark">🖤 黑化</button>
+                        <button class="encyclopedia-filter-btn" data-skill-category="mutation-light">🤍 白化</button>
+                        <button class="encyclopedia-filter-btn" data-skill-category="mutation-crystal">💎 晶化</button>
+                        <button class="encyclopedia-filter-btn" data-skill-category="mutation-shadow">👤 影化</button>
+                        <button class="encyclopedia-filter-btn" data-skill-category="mutation-chaos">🌑 暗蚀</button>
+                        <button class="encyclopedia-filter-btn" data-skill-category="mutation-holy">✨ 圣辉</button>
+                        <button class="encyclopedia-filter-btn" data-skill-category="mutation-psychic">🔮 异能</button>
+                        <button class="encyclopedia-filter-btn" data-skill-category="mutation-thunder">⚡ 极电</button>
+                        <button class="encyclopedia-filter-btn" data-skill-category="mutation-eternal-dark">🌙 永夜</button>
+                        <button class="encyclopedia-filter-btn" data-skill-category="mutation-eternal-light">☀️ 永耀</button>
+                        <button class="encyclopedia-filter-btn" data-skill-category="mutation-source-crystal">💠 源晶</button>
+                        <button class="encyclopedia-filter-btn" data-skill-category="mutation-thunder-lord">⚡ 雷煌</button>
+                    </div>
+                </div>
+                
+                <!-- 技能类型筛选 -->
+                <div class="border-t border-gray-700 pt-3">
+                    <div class="text-xs text-gray-400 mb-2">技能类型</div>
+                    <div class="flex flex-wrap gap-2">
+                        <button class="encyclopedia-filter-btn" data-skill-type="attack">⚔️ 攻击型</button>
+                        <button class="encyclopedia-filter-btn" data-skill-type="defense">🛡️ 防御型</button>
+                        <button class="encyclopedia-filter-btn" data-skill-type="agility">⚡ 敏捷型</button>
+                        <button class="encyclopedia-filter-btn" data-skill-type="buff">💪 增益型</button>
+                        <button class="encyclopedia-filter-btn" data-skill-type="debuff">🔻 减益型</button>
+                        <button class="encyclopedia-filter-btn" data-skill-type="heal">💚 治疗型</button>
+                    </div>
+                </div>
+                
+                <!-- 变异等级筛选 -->
+                <div class="border-t border-gray-700 pt-3">
+                    <div class="text-xs text-gray-400 mb-2">变异等级</div>
+                    <div class="flex flex-wrap gap-2">
+                        <button class="encyclopedia-filter-btn" data-mutation-tier="basic">🔹 基础级</button>
+                        <button class="encyclopedia-filter-btn" data-mutation-tier="elite">💜 精英级</button>
+                        <button class="encyclopedia-filter-btn" data-mutation-tier="legendary">✨ 传说级</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
         <!-- 图鉴网格 -->
         <div id="encyclopedia-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <!-- 图鉴卡片由JS生成 -->
@@ -209,8 +279,8 @@
     <script>
         // 全局变量
         let gameState = {};
-        let currentTab = 'rarity'; // 'rarity' 或 'mutation'
-        let currentFilter = { type: 'all', element: null, mutationTier: 'all' };
+        let currentTab = 'rarity'; // 'rarity', 'mutation', 或 'skill'
+        let currentFilter = { type: 'all', element: null, mutationTier: 'all', skillType: null, skillCategory: null };
         
         // 稀有度配置
         const RARITY_CONFIG = {
@@ -266,6 +336,9 @@
                 if (!gameState.unlockedEncyclopedia) {
                     gameState.unlockedEncyclopedia = {};
                 }
+                if (!gameState.unlockedSkills) {
+                    gameState.unlockedSkills = {};
+                }
             } else {
                 alert("游戏状态加载失败！将返回栖息地。");
                 window.location.href = 'game3d.html';
@@ -295,6 +368,7 @@
             // 标签页切换
             document.getElementById('tab-rarity').addEventListener('click', () => switchTab('rarity'));
             document.getElementById('tab-mutation').addEventListener('click', () => switchTab('mutation'));
+            document.getElementById('tab-skill').addEventListener('click', () => switchTab('skill'));
             
             // 稀有度图鉴筛选按钮
             document.querySelectorAll('.encyclopedia-filter-btn').forEach(btn => {
@@ -330,6 +404,55 @@
                     renderMutationEncyclopedia();
                 });
             });
+            
+            // 技能图鉴筛选按钮
+            document.querySelectorAll('#skill-filters .encyclopedia-filter-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    if (this.dataset.filter) {
+                        // 状态筛选
+                        document.querySelectorAll('#skill-filters [data-filter]').forEach(b => b.classList.remove('active'));
+                        this.classList.add('active');
+                        currentFilter.type = this.dataset.filter;
+                        currentFilter.skillType = null;
+                        currentFilter.skillCategory = null;
+                        currentFilter.mutationTier = null;
+                        document.querySelectorAll('#skill-filters [data-skill-type]').forEach(b => b.classList.remove('active'));
+                        document.querySelectorAll('#skill-filters [data-skill-category]').forEach(b => b.classList.remove('active'));
+                        document.querySelectorAll('#skill-filters [data-mutation-tier]').forEach(b => b.classList.remove('active'));
+                    } else if (this.dataset.skillCategory) {
+                        // 系别/变异筛选
+                        if (this.classList.contains('active')) {
+                            this.classList.remove('active');
+                            currentFilter.skillCategory = null;
+                        } else {
+                            document.querySelectorAll('#skill-filters [data-skill-category]').forEach(b => b.classList.remove('active'));
+                            this.classList.add('active');
+                            currentFilter.skillCategory = this.dataset.skillCategory;
+                        }
+                    } else if (this.dataset.skillType) {
+                        // 技能类型筛选
+                        if (this.classList.contains('active')) {
+                            this.classList.remove('active');
+                            currentFilter.skillType = null;
+                        } else {
+                            document.querySelectorAll('#skill-filters [data-skill-type]').forEach(b => b.classList.remove('active'));
+                            this.classList.add('active');
+                            currentFilter.skillType = this.dataset.skillType;
+                        }
+                    } else if (this.dataset.mutationTier) {
+                        // 变异等级筛选
+                        if (this.classList.contains('active')) {
+                            this.classList.remove('active');
+                            currentFilter.mutationTier = null;
+                        } else {
+                            document.querySelectorAll('#skill-filters [data-mutation-tier]').forEach(b => b.classList.remove('active'));
+                            this.classList.add('active');
+                            currentFilter.mutationTier = this.dataset.mutationTier;
+                        }
+                    }
+                    renderSkillEncyclopedia();
+                });
+            });
         }
         
         // 切换标签页
@@ -339,25 +462,34 @@
             // 更新标签按钮样式
             const rarityTab = document.getElementById('tab-rarity');
             const mutationTab = document.getElementById('tab-mutation');
+            const skillTab = document.getElementById('tab-skill');
+            
+            // 重置所有标签
+            [rarityTab, mutationTab, skillTab].forEach(t => {
+                t.classList.remove('active', 'bg-teal-600', 'text-white');
+                t.classList.add('text-gray-400', 'hover:bg-gray-800');
+            });
+            
+            // 隐藏所有筛选栏
+            document.getElementById('rarity-filters').classList.add('hidden');
+            document.getElementById('mutation-filters').classList.add('hidden');
+            document.getElementById('skill-filters').classList.add('hidden');
             
             if (tab === 'rarity') {
                 rarityTab.classList.add('active', 'bg-teal-600', 'text-white');
                 rarityTab.classList.remove('text-gray-400', 'hover:bg-gray-800');
-                mutationTab.classList.remove('active', 'bg-teal-600', 'text-white');
-                mutationTab.classList.add('text-gray-400', 'hover:bg-gray-800');
-                
                 document.getElementById('rarity-filters').classList.remove('hidden');
-                document.getElementById('mutation-filters').classList.add('hidden');
                 renderEncyclopedia();
-            } else {
+            } else if (tab === 'mutation') {
                 mutationTab.classList.add('active', 'bg-teal-600', 'text-white');
                 mutationTab.classList.remove('text-gray-400', 'hover:bg-gray-800');
-                rarityTab.classList.remove('active', 'bg-teal-600', 'text-white');
-                rarityTab.classList.add('text-gray-400', 'hover:bg-gray-800');
-                
-                document.getElementById('rarity-filters').classList.add('hidden');
                 document.getElementById('mutation-filters').classList.remove('hidden');
                 renderMutationEncyclopedia();
+            } else if (tab === 'skill') {
+                skillTab.classList.add('active', 'bg-teal-600', 'text-white');
+                skillTab.classList.remove('text-gray-400', 'hover:bg-gray-800');
+                document.getElementById('skill-filters').classList.remove('hidden');
+                renderSkillEncyclopedia();
             }
         }
         
@@ -984,6 +1116,281 @@
                     }
                 });
             });
+            
+            content.innerHTML = html;
+            modal.classList.remove('hidden');
+        }
+        
+        // 渲染技能图鉴
+        function renderSkillEncyclopedia() {
+            const grid = document.getElementById('encyclopedia-grid');
+            grid.innerHTML = '';
+            
+            const skillPool = JSON.parse(localStorage.getItem('SKILL_POOL') || '[]');
+            const unlockedSkills = gameState.unlockedSkills || {};
+            
+            // 统计
+            let totalSkills = skillPool.length;
+            let unlockedCount = Object.keys(unlockedSkills).length;
+            
+            // 更新统计显示
+            document.getElementById('skill-progress').textContent = `${unlockedCount}/${totalSkills}`;
+            
+            if (skillPool.length === 0) {
+                grid.innerHTML = '<div class="col-span-full text-center text-gray-500 py-12 text-lg">技能池为空<br><span class="text-sm mt-2 block">请先在技能设计器中创建技能</span></div>';
+                return;
+            }
+            
+            // 变异等级映射
+            const mutationTierMap = {
+                'mutation-dark': 'basic', 'mutation-light': 'basic', 'mutation-crystal': 'basic', 'mutation-shadow': 'basic',
+                'mutation-chaos': 'elite', 'mutation-holy': 'elite', 'mutation-psychic': 'elite', 'mutation-thunder': 'elite',
+                'mutation-eternal-dark': 'legendary', 'mutation-eternal-light': 'legendary',
+                'mutation-source-crystal': 'legendary', 'mutation-thunder-lord': 'legendary'
+            };
+            
+            // 筛选技能
+            const filteredSkills = skillPool.filter(skill => {
+                // 类型筛选
+                if (currentFilter.type === 'unlocked' && !unlockedSkills[skill.key]) return false;
+                if (currentFilter.type === 'locked' && unlockedSkills[skill.key]) return false;
+                
+                // 系别/变异筛选
+                if (currentFilter.skillCategory && skill.category !== currentFilter.skillCategory) return false;
+                
+                // 变异等级筛选（仅对变异技能生效）
+                if (currentFilter.mutationTier) {
+                    const skillTier = mutationTierMap[skill.category];
+                    if (skillTier !== currentFilter.mutationTier) return false;
+                }
+                
+                // 技能类型筛选
+                if (currentFilter.skillType && skill.type !== currentFilter.skillType) return false;
+                
+                return true;
+            });
+            
+            if (filteredSkills.length === 0) {
+                grid.innerHTML = '<div class="col-span-full text-center text-gray-500 py-12 text-lg">没有符合筛选条件的技能</div>';
+                return;
+            }
+            
+            // 渲染技能卡片
+            filteredSkills.forEach(skill => {
+                const isUnlocked = unlockedSkills[skill.key];
+                const card = document.createElement('div');
+                card.className = `species-card p-5 rounded-xl border transition-all ${
+                    isUnlocked
+                        ? 'bg-gradient-to-br from-gray-800 to-gray-900 border-purple-500 shadow-xl hover:shadow-purple-500/50 cursor-pointer'
+                        : 'bg-gray-900/50 border-gray-700 opacity-60'
+                }`;
+                
+                // 类别名称映射
+                const categoryNames = {
+                    'element-water': '💧 水系', 'element-fire': '🔥 火系', 'element-grass': '🌿 草系',
+                    'element-wind': '💨 风系', 'element-metal': '🪙 金系', 'element-earth': '🪨 土系',
+                    'mutation-dark': '🖤 黑化', 'mutation-light': '🤍 白化', 'mutation-crystal': '💎 晶化',
+                    'mutation-shadow': '👤 影化', 'mutation-chaos': '🌑 暗蚀', 'mutation-holy': '✨ 圣辉',
+                    'mutation-psychic': '🔮 异能', 'mutation-thunder': '⚡ 极电',
+                    'mutation-eternal-dark': '🌙 永夜', 'mutation-eternal-light': '☀️ 永耀',
+                    'mutation-source-crystal': '💠 源晶', 'mutation-thunder-lord': '⚡ 雷煌'
+                };
+                
+                const typeNames = {
+                    'attack': '⚔️ 攻击型',
+                    'defense': '🛡️ 防御型',
+                    'agility': '⚡ 敏捷型',
+                    'buff': '💪 增益型',
+                    'debuff': '🔻 减益型',
+                    'heal': '💚 治疗型'
+                };
+                
+                card.innerHTML = `
+                    <div class="text-center">
+                        <div class="text-6xl mb-3 ${isUnlocked ? '' : 'grayscale blur-sm'}">${isUnlocked ? skill.icon : '❓'}</div>
+                        <h3 class="text-xl font-bold mb-2 ${isUnlocked ? 'text-white' : 'text-gray-600'}">${isUnlocked ? skill.name : '???'}</h3>
+                        
+                        ${isUnlocked ? `
+                            <div class="flex flex-wrap gap-2 justify-center mb-3">
+                                <span class="text-xs bg-gradient-to-r from-purple-600 to-pink-600 px-3 py-1 rounded-full text-white font-bold">
+                                    ${categoryNames[skill.category] || skill.category}
+                                </span>
+                                <span class="text-xs bg-gray-700 px-3 py-1 rounded-full text-gray-300">
+                                    ${typeNames[skill.type] || skill.type}
+                                </span>
+                            </div>
+                            
+                            ${skill.description ? `<p class="text-xs text-gray-400 italic mb-3">${skill.description}</p>` : ''}
+                            
+                            <div class="bg-gray-800/50 rounded-lg p-3 text-left">
+                                <div class="text-xs text-gray-400 mb-2">技能效果:</div>
+                                <div class="flex flex-wrap gap-1">
+                                    ${(skill.effects || []).map(e => {
+                                        const effectNames = {
+                                            'direct_attack': '直接攻击', 'multi_attack': '多段攻击',
+                                            'dot_damage': '附加伤害', 'percent_damage': '百分比伤害',
+                                            'buff_attack': '增攻', 'buff_defense': '增防',
+                                            'heal_direct': '直接恢复', 'buff_purify': '净化'
+                                        };
+                                        return `<span class="text-xs bg-green-600/30 text-green-300 px-2 py-0.5 rounded">${effectNames[e] || e}</span>`;
+                                    }).join('')}
+                                </div>
+                            </div>
+                            
+                            ${skill.params && (skill.params.cooldown > 0 || skill.params.duration > 0) ? `
+                                <div class="flex gap-2 justify-center mt-3 text-xs">
+                                    ${skill.params.cooldown > 0 ? `<span class="bg-blue-600/30 text-blue-300 px-2 py-1 rounded">CD:${skill.params.cooldown}回合</span>` : ''}
+                                    ${skill.params.duration > 0 ? `<span class="bg-purple-600/30 text-purple-300 px-2 py-1 rounded">持续:${skill.params.duration}回合</span>` : ''}
+                                </div>
+                            ` : ''}
+                            
+                            ${unlockedSkills[skill.key] && unlockedSkills[skill.key].unlockedAt ? `
+                                <div class="text-xs text-gray-500 mt-3">
+                                    🕐 解锁于: ${new Date(unlockedSkills[skill.key].unlockedAt).toLocaleString('zh-CN')}
+                                </div>
+                            ` : ''}
+                            
+                            <div class="text-xs text-purple-400 mt-2">点击查看详情</div>
+                        ` : `
+                            <div class="text-sm text-gray-500 italic mt-3">尚未解锁</div>
+                        `}
+                    </div>
+                `;
+                
+                if (isUnlocked) {
+                    card.onclick = () => openSkillDetailModal(skill);
+                }
+                
+                grid.appendChild(card);
+            });
+        }
+        
+        // 打开技能详情模态框
+        function openSkillDetailModal(skill) {
+            const modal = document.getElementById('detail-modal');
+            const content = document.getElementById('detail-content');
+            const unlockedSkills = gameState.unlockedSkills || {};
+            
+            document.getElementById('detail-title').innerHTML = `${skill.icon} ${skill.name}`;
+            
+            const categoryNames = {
+                'element-water': '💧 水系', 'element-fire': '🔥 火系', 'element-grass': '🌿 草系',
+                'element-wind': '💨 风系', 'element-metal': '🪙 金系', 'element-earth': '🪨 土系',
+                'mutation-dark': '🖤 黑化', 'mutation-light': '🤍 白化', 'mutation-crystal': '💎 晶化',
+                'mutation-shadow': '👤 影化', 'mutation-chaos': '🌑 暗蚀', 'mutation-holy': '✨ 圣辉',
+                'mutation-psychic': '🔮 异能', 'mutation-thunder': '⚡ 极电',
+                'mutation-eternal-dark': '🌙 永夜', 'mutation-eternal-light': '☀️ 永耀',
+                'mutation-source-crystal': '💠 源晶', 'mutation-thunder-lord': '⚡ 雷煌'
+            };
+            
+            const typeNames = {
+                'attack': '⚔️ 攻击型',
+                'defense': '🛡️ 防御型',
+                'agility': '⚡ 敏捷型',
+                'buff': '💪 增益型',
+                'debuff': '🔻 减益型',
+                'heal': '💚 治疗型'
+            };
+            
+            const effectNames = {
+                'direct_attack': '直接攻击', 'multi_attack': '多段攻击',
+                'dot_damage': '附加伤害', 'percent_damage': '百分比伤害',
+                'direct_defense': '直接防御', 'continuous_defense': '持续防御',
+                'defense_counter': '防御反击', 'direct_speed': '直接增速',
+                'continuous_speed': '持续增速', 'buff_attack': '增攻',
+                'buff_defense': '增防', 'buff_speed': '增速',
+                'buff_status_enemy': '为敌方附加异常', 'buff_purify': '净化',
+                'buff_heal_amp': '增加治疗量', 'buff_element_damage': '属性增伤',
+                'debuff_attack': '减攻', 'debuff_defense': '减防',
+                'debuff_speed': '减速', 'debuff_status_self': '为自身附加异常',
+                'debuff_no_heal': '禁疗', 'debuff_heal_reduce': '减疗',
+                'debuff_element_damage': '属性减伤', 'debuff_hp_cost': '扣血',
+                'heal_direct': '直接恢复', 'heal_continuous': '持续恢复',
+                'heal_percent': '百分比恢复', 'heal_rebirth': '重生',
+                'heal_lifesteal': '生命汲取'
+            };
+            
+            let html = `
+                <div class="mb-6">
+                    <div class="flex items-center justify-center gap-4 mb-4">
+                        <div class="text-8xl">${skill.icon}</div>
+                        <div class="text-left">
+                            <h4 class="text-3xl font-bold text-white mb-2">${skill.name}</h4>
+                            <div class="flex gap-2">
+                                <span class="text-sm bg-gradient-to-r from-purple-600 to-pink-600 px-3 py-1 rounded-full text-white font-bold">
+                                    ${categoryNames[skill.category] || skill.category}
+                                </span>
+                                <span class="text-sm bg-gray-700 px-3 py-1 rounded-full text-gray-300">
+                                    ${typeNames[skill.type] || skill.type}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    ${skill.description ? `
+                        <div class="bg-gray-800/50 rounded-lg p-4 mb-4">
+                            <p class="text-gray-300 italic text-center">"${skill.description}"</p>
+                        </div>
+                    ` : ''}
+                </div>
+                
+                <!-- 技能效果 -->
+                <div class="mb-6">
+                    <h5 class="text-lg font-bold text-purple-300 mb-3 flex items-center gap-2">
+                        <span>✨</span>
+                        <span>技能效果</span>
+                    </h5>
+                    <div class="grid grid-cols-1 gap-2">
+                        ${(skill.effects || []).map(e => `
+                            <div class="bg-gray-800/50 rounded-lg p-3 border border-green-600/30">
+                                <span class="text-green-300 font-bold">${effectNames[e] || e}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+                
+                <!-- 技能参数 -->
+                ${skill.params ? `
+                    <div class="mb-6">
+                        <h5 class="text-lg font-bold text-cyan-300 mb-3 flex items-center gap-2">
+                            <span>⚙️</span>
+                            <span>技能参数</span>
+                        </h5>
+                        <div class="grid grid-cols-3 gap-3">
+                            ${skill.params.cooldown > 0 ? `
+                                <div class="bg-blue-900/30 rounded-lg p-3 text-center border border-blue-600/30">
+                                    <div class="text-xs text-gray-400 mb-1">冷却回合</div>
+                                    <div class="text-2xl font-bold text-blue-300">${skill.params.cooldown}</div>
+                                </div>
+                            ` : ''}
+                            ${skill.params.duration > 0 ? `
+                                <div class="bg-purple-900/30 rounded-lg p-3 text-center border border-purple-600/30">
+                                    <div class="text-xs text-gray-400 mb-1">持续回合</div>
+                                    <div class="text-2xl font-bold text-purple-300">${skill.params.duration}</div>
+                                </div>
+                            ` : ''}
+                            ${skill.params.count > 1 ? `
+                                <div class="bg-yellow-900/30 rounded-lg p-3 text-center border border-yellow-600/30">
+                                    <div class="text-xs text-gray-400 mb-1">每回合次数</div>
+                                    <div class="text-2xl font-bold text-yellow-300">${skill.params.count}</div>
+                                </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                ` : ''}
+                
+                <!-- 解锁信息 -->
+                ${unlockedSkills[skill.key] ? `
+                    <div class="bg-teal-900/20 rounded-lg p-4 border border-teal-600/30">
+                        <div class="text-sm text-teal-300 text-center">
+                            ✅ 已解锁<br>
+                            <span class="text-xs text-gray-400">
+                                ${new Date(unlockedSkills[skill.key].unlockedAt).toLocaleString('zh-CN')}
+                            </span>
+                        </div>
+                    </div>
+                ` : ''}
+            `;
             
             content.innerHTML = html;
             modal.classList.remove('hidden');

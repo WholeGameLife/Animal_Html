@@ -159,6 +159,16 @@
                     </div>
                     <div class="grid grid-cols-2 gap-4 mb-4">
                         <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">状态类型 *</label>
+                            <select id="status-type"
+                                class="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500">
+                                <option value="negative">🔻 负面状态</option>
+                                <option value="positive">💚 正面状态</option>
+                                <option value="neutral">⚪ 中性状态</option>
+                            </select>
+                            <p class="text-xs text-gray-500 mt-1">影响净化和驱散的目标</p>
+                        </div>
+                        <div>
                             <label class="block text-sm font-medium text-gray-300 mb-2">可被净化</label>
                             <select id="status-canPurify"
                                 class="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500">
@@ -166,6 +176,8 @@
                                 <option value="false">否</option>
                             </select>
                         </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4 mb-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-300 mb-2">唯一效果</label>
                             <select id="status-uniqueEffect"
@@ -175,6 +187,7 @@
                             </select>
                             <p class="text-xs text-gray-500 mt-1">是：无论多少层仅生效一个</p>
                         </div>
+                        <div></div>
                     </div>
                     <div id="stack-grow-params" class="grid grid-cols-2 gap-4">
                         <div>
@@ -713,6 +726,17 @@
             });
         }
 
+        // 获取状态类型徽章
+        function getStatusTypeBadge() {
+            const statusType = document.getElementById('status-type').value;
+            const badges = {
+                'negative': '<span class="text-xs bg-red-600/40 text-red-300 px-2 py-0.5 rounded border border-red-500">🔻 负面</span>',
+                'positive': '<span class="text-xs bg-green-600/40 text-green-300 px-2 py-0.5 rounded border border-green-500">💚 正面</span>',
+                'neutral': '<span class="text-xs bg-gray-600/40 text-gray-300 px-2 py-0.5 rounded border border-gray-500">⚪ 中性</span>'
+            };
+            return badges[statusType] || '';
+        }
+
         // 更新预览
         function updatePreview() {
             const name = document.getElementById('status-name').value;
@@ -768,8 +792,9 @@
                 <div class="flex items-start gap-3">
                     ${iconDisplay}
                     <div class="flex-1 min-w-0">
-                        <div class="flex items-center gap-2 mb-2">
+                        <div class="flex items-center gap-2 mb-2 flex-wrap">
                             <h4 class="text-lg font-bold text-white">${name}</h4>
+                            ${getStatusTypeBadge()}
                             ${canPurify ? '<span class="text-xs bg-green-600/30 text-green-300 px-2 py-0.5 rounded">可净化</span>' : '<span class="text-xs bg-red-600/30 text-red-300 px-2 py-0.5 rounded">不可净化</span>'}
                         </div>
                         ${description ? `<p class="text-xs text-gray-400 italic mb-2">${description}</p>` : ''}
@@ -835,6 +860,7 @@
                 name: document.getElementById('status-name').value,
                 iconImage: iconImageData,
                 description: document.getElementById('status-description').value,
+                statusType: document.getElementById('status-type').value,
                 statusDuration: statusDuration,
                 hasStacks: hasStacks,
                 durationPerStack: durationPerStack,
@@ -926,6 +952,7 @@
             // 填充基本信息
             document.getElementById('status-name').value = status.name;
             document.getElementById('status-description').value = status.description || '';
+            document.getElementById('status-type').value = status.statusType || 'negative';
             document.getElementById('status-canPurify').value = status.canPurify ? 'true' : 'false';
             document.getElementById('status-uniqueEffect').value = status.uniqueEffect ? 'true' : 'false';
             
@@ -1090,8 +1117,9 @@
                         <div class="flex items-start gap-2">
                             ${iconDisplay}
                             <div class="flex-1 min-w-0">
-                                <div class="flex items-center gap-2 mb-1">
+                                <div class="flex items-center gap-2 mb-1 flex-wrap">
                                     <h5 class="text-sm font-bold text-white truncate">${status.name}</h5>
+                                    ${getStatusTypeBadgeForList(status.statusType)}
                                     ${status.canPurify ? '<span class="text-xs bg-green-600/30 text-green-300 px-1.5 py-0.5 rounded flex-shrink-0">可净化</span>' : '<span class="text-xs bg-red-600/30 text-red-300 px-1.5 py-0.5 rounded flex-shrink-0">不可净化</span>'}
                                 </div>
                                 ${status.description ? `<p class="text-xs text-gray-500 italic mb-1 line-clamp-2">${status.description}</p>` : ''}
@@ -1181,6 +1209,16 @@
             reader.readAsText(file);
             
             e.target.value = '';
+        }
+
+        // 获取列表中的状态类型徽章
+        function getStatusTypeBadgeForList(statusType) {
+            const badges = {
+                'negative': '<span class="text-xs bg-red-600/40 text-red-300 px-1.5 py-0.5 rounded border border-red-500 flex-shrink-0">🔻 负面</span>',
+                'positive': '<span class="text-xs bg-green-600/40 text-green-300 px-1.5 py-0.5 rounded border border-green-500 flex-shrink-0">💚 正面</span>',
+                'neutral': '<span class="text-xs bg-gray-600/40 text-gray-300 px-1.5 py-0.5 rounded border border-gray-500 flex-shrink-0">⚪ 中性</span>'
+            };
+            return badges[statusType] || badges['negative'];
         }
 
         // 初始化应用

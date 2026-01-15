@@ -2,11 +2,11 @@
 
 // 计算属性克制倍率
 function getElementAdvantageMultiplier(attackerElement, defenderElement) {
-    // 克制关系：水→火→电→草→土→风→水
+    // 克制关系：水→火→金→草→土→风→水
     const advantages = {
         'water': 'fire',    // 水克火
-        'fire': 'electric', // 火克电
-        'electric': 'grass',// 电克草
+        'fire': 'metal',    // 火克金
+        'metal': 'grass',   // 金克草
         'grass': 'earth',   // 草克土
         'earth': 'wind',    // 土克风
         'wind': 'water'     // 风克水
@@ -494,7 +494,7 @@ const EFFECT_PARAMS_CONFIG = {
     'buff_defense': { name: '增防', params: ['effect-source', 'target', 'bonus'] },
     'buff_speed': { name: '增速', params: ['effect-source', 'target', 'bonus'] },
     'buff_status_enemy': { name: '为敌方附加异常', params: ['status-type', 'status-chance', 'status-stacks'] },
-    'buff_purify': { name: '净化', params: ['target', 'purify-type'] },
+    'buff_purify': { name: '净化', params: ['target', 'purify-type', 'purify-count'] },
     'buff_heal_amp': { name: '增加治疗量', params: ['effect-source', 'target', 'bonus'] },
     'buff_element_damage': { name: '属性增伤', params: ['target', 'element-type', 'damage-bonus'] },
     'debuff_attack': { name: '减攻', params: ['effect-source', 'target', 'bonus'] },
@@ -504,6 +504,7 @@ const EFFECT_PARAMS_CONFIG = {
     'debuff_no_heal': { name: '禁疗', params: ['target'] },
     'debuff_heal_reduce': { name: '减疗', params: ['effect-source', 'target', 'bonus'] },
     'debuff_element_damage': { name: '属性减伤', params: ['target', 'element-type', 'damage-reduce'] },
+    'debuff_hp_cost': { name: '扣血', params: ['effect-source', 'bonus', 'target'] },
     'heal_direct': { name: '直接恢复', params: ['effect-source', 'target', 'bonus'] },
     'heal_continuous': { name: '持续恢复', params: ['effect-source', 'target', 'bonus'] },
     'heal_percent': { name: '百分比恢复', params: ['effect-source', 'target', 'percent'] },
@@ -1590,7 +1591,7 @@ class BattleSystem {
             'fire': { name: '火系', icon: '🔥', bgClass: 'bg-red-600' },
             'grass': { name: '草系', icon: '🌿', bgClass: 'bg-green-600' },
             'wind': { name: '风系', icon: '💨', bgClass: 'bg-cyan-600' },
-            'electric': { name: '电系', icon: '⚡', bgClass: 'bg-yellow-600' },
+            'metal': { name: '金系', icon: '🪙', bgClass: 'bg-yellow-600' },
             'earth': { name: '土系', icon: '🪨', bgClass: 'bg-amber-700' }
         };
         return elementData[element] || { name: element, icon: '❓', bgClass: 'bg-gray-600' };
@@ -1907,7 +1908,7 @@ class BattleSystem {
     getElementName(element) {
         const names = {
             'water': '水', 'fire': '火', 'grass': '草',
-            'wind': '风', 'electric': '电', 'earth': '土'
+            'wind': '风', 'metal': '金', 'earth': '土'
         };
         return names[element] || element;
     }
@@ -2270,19 +2271,63 @@ class BattleSystem {
             }
             
             case 'buff_purify': {
-                // 净化：清除异常状态
+                // 净化：根据类型和数量清除异常状态
                 const target = params[`${effectKey}_target`];
                 const purifyType = params[`${effectKey}_purify-type`] || 'all';
-                const statusNames = this.getStatusNames();
+                const purifyCount = params[`${effectKey}_purify-count`] || 'all';
                 
                 if (target === 'self' || target === 'ally-all') {
-                    const beforeCount = attackerStats.status.length;
+                    const beforeCount = attackerStats.statuses.length;
+                    let targetStatuses = [];
+                    
+                    // 根据类型筛选要驱散的状态
                     if (purifyType === 'all') {
-                        attackerStats.status = [];
-                        this.addLog(`净化: 清除${attackerName}所有异常状态 (${beforeCount}个)`, 'text-green-300');
+                        targetStatuses = attackerStats.statuses;
+                    } else if (['negative', 'positive', 'neutral'].includes(purifyType)) {
+                        // 按状态类型筛选
+                        targetStatuses = attackerStats.statuses.filter(s => {
+                            const statusType = s.data?.statusType || 'negative';
+                            return statusType === purifyType;
+                        });
                     } else {
-                        attackerStats.status = attackerStats.status.filter(s => s !== purifyType);
-                        this.addLog(`净化: 清除${attackerName} ${statusNames[purifyType] || purifyType}`, 'text-green-300');
+                        // 指定状态key
+                        targetStatuses = attackerStats.statuses.filter(s => s.key === purifyType);
+                    }
+                    
+                    // 根据数量驱散（按施加时间从旧到新）
+                    let removedCount = 0;
+                    if (purifyCount === 'all') {
+                        // 移除所有符合条件的状态
+                        attackerStats.statuses = attackerStats.statuses.filter(s =>
+                            !targetStatuses.includes(s)
+                        );
+                        removedCount = targetStatuses.length;
+                    } else {
+                        // 移除指定数量
+                        const count = parseInt(purifyCount) || 1;
+                        const toRemove = targetStatuses.slice(0, count);
+                        attackerStats.statuses = attackerStats.statuses.filter(s =>
+                            !toRemove.includes(s)
+                        );
+                        removedCount = toRemove.length;
+                    }
+                    
+                    // 日志输出
+                    if (removedCount > 0) {
+                        const typeNames = {
+                            'all': '全部',
+                            'negative': '负面',
+                            'positive': '正面',
+                            'neutral': '中性'
+                        };
+                        const typeName = typeNames[purifyType] || (() => {
+                            const statusPool = JSON.parse(localStorage.getItem('STATUS_POOL') || '[]');
+                            const status = statusPool.find(s => s.key === purifyType);
+                            return status ? status.name : purifyType;
+                        })();
+                        this.addLog(`净化: 清除${attackerName} ${removedCount} 个${typeName}状态 (共${beforeCount}个)`, 'text-green-300');
+                    } else {
+                        this.addLog(`净化: 无可清除的目标状态`, 'text-gray-400');
                     }
                 }
                 break;

@@ -1075,8 +1075,8 @@
         const gameState = {
             food: 200000,
             gold: 10000,
-            wood: 200,
-            stone: 200,
+            wood: 20000,
+            stone: 20000,
             gems: 0,
             expGrass: 0, // 新增：经验草
             moonFlower: 0, // 新增：月光花
@@ -2040,7 +2040,12 @@
             if (point.x === 0 && point.z === 0) return false;
 
             // 检查是否与其他已放置建筑重叠
-            const isOverlapping = gameState.buildings.some(b => b.position.equals(point));
+            const isOverlapping = gameState.buildings.some(b => {
+                // 兼容普通对象和 Vector3 对象
+                const bPos = b.position;
+                return Math.abs(bPos.x - point.x) < 0.01 &&
+                       Math.abs(bPos.z - point.z) < 0.01;
+            });
             if (isOverlapping) return false;
 
             return true;
