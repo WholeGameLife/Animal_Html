@@ -471,14 +471,18 @@
                     <div class="flex justify-between items-center mb-4">
                         <h3 class="text-xl font-bold text-white">🦁 动物模板池 (<span id="animal-count">0</span>)</h3>
                         <div class="flex gap-2">
-                            <label for="import-file" 
+                            <label for="import-file"
                                 class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold py-2 px-4 rounded-lg transition-colors cursor-pointer">
                                 📤 导入
                             </label>
                             <input type="file" id="import-file" accept=".json" class="hidden">
                             <button id="export-btn"
                                 class="bg-green-600 hover:bg-green-700 text-white text-sm font-bold py-2 px-4 rounded-lg transition-colors">
-                                📥 导出
+                                📥 导出JSON
+                            </button>
+                            <button id="export-csv-btn"
+                                class="bg-teal-600 hover:bg-teal-700 text-white text-sm font-bold py-2 px-4 rounded-lg transition-colors">
+                                📊 导出CSV
                             </button>
                             <button id="apply-to-game-btn"
                                 class="bg-purple-600 hover:bg-purple-700 text-white text-sm font-bold py-2 px-4 rounded-lg transition-colors">
@@ -1462,6 +1466,7 @@
 
             // 导出按钮
             exportBtn.onclick = exportAnimals;
+            document.getElementById('export-csv-btn').onclick = exportAnimalsToCSV;
 
             // 导入按钮
             document.getElementById('import-file').onchange = importAnimals;
@@ -1926,7 +1931,7 @@
             }
         }
 
-        // 导出动物模板池
+        // 导出动物模板池（JSON格式）
         function exportAnimals() {
             if (animals.length === 0) {
                 alert('模板池为空！');
@@ -1941,6 +1946,155 @@
             a.download = `animal_pool_${Date.now()}.json`;
             a.click();
             URL.revokeObjectURL(url);
+        }
+
+        // 导出动物模板池（CSV格式 - 策划友好版）
+        function exportAnimalsToCSV() {
+            if (animals.length === 0) {
+                alert('模板池为空！');
+                return;
+            }
+
+            // 转义CSV字段
+            const escapeCSV = (value) => {
+                if (value === null || value === undefined) return '';
+                const str = String(value);
+                if (str.includes(',') || str.includes('"') || str.includes('\n')) {
+                    return `"${str.replace(/"/g, '""')}"`;
+                }
+                return str;
+            };
+
+            // 基础表头
+            const baseHeaders = [
+                '动物ID', '动物名称', '描述', '颜色', '系别', '稀有度',
+                '初始等级', '基础经验值', '经验增长系数',
+                '生命值', '体力', '攻击', '防御', '敏捷', '好感度',
+                '技能槽位数'
+            ];
+
+            // 成长配置表头
+            const growthHeaders = [
+                '平庸_生命', '平庸_体力', '平庸_攻击', '平庸_防御', '平庸_敏捷', '平庸_好感',
+                '超常_生命', '超常_体力', '超常_攻击', '超常_防御', '超常_敏捷', '超常_好感',
+                '璀璨_生命', '璀璨_体力', '璀璨_攻击', '璀璨_防御', '璀璨_敏捷', '璀璨_好感'
+            ];
+
+            // 技能配置表头
+            const skillHeaders = [
+                '技能1_名称', '技能1_解锁等级',
+                '技能2_名称', '技能2_解锁等级',
+                '技能3_名称', '技能3_解锁等级',
+                '技能4_名称', '技能4_解锁等级',
+                '技能5_名称', '技能5_解锁等级',
+                '技能6_名称', '技能6_解锁等级',
+                '技能7_名称', '技能7_解锁等级',
+                '技能8_名称', '技能8_解锁等级',
+                '技能9_名称', '技能9_解锁等级',
+                '技能10_名称', '技能10_解锁等级'
+            ];
+
+            const headers = [...baseHeaders, ...growthHeaders, ...skillHeaders,
+                '是否有3D模型', '是否有头像', '创建时间', '更新时间', '备注'];
+
+            // 构建CSV内容
+            let csvContent = headers.join(',') + '\n';
+
+            animals.forEach(animal => {
+                // 基础信息
+                const baseRow = [
+                    escapeCSV(animal.animalId || ''),
+                    escapeCSV(animal.name),
+                    escapeCSV(animal.desc || ''),
+                    escapeCSV(animal.color),
+                    escapeCSV(getElementName(animal.element)),
+                    escapeCSV(getRarityName(animal.rarity)),
+                    escapeCSV(animal.level),
+                    escapeCSV(animal.baseExp),
+                    escapeCSV(animal.expGrowth),
+                    escapeCSV(animal.health),
+                    escapeCSV(animal.stamina),
+                    escapeCSV(animal.attack),
+                    escapeCSV(animal.defense),
+                    escapeCSV(animal.agility),
+                    escapeCSV(animal.favorability),
+                    escapeCSV(animal.skillSlots)
+                ];
+
+                // 成长配置
+                const growthRow = [];
+                if (animal.growthTypes) {
+                    // 新格式
+                    ['mediocre', 'extraordinary', 'brilliant'].forEach(type => {
+                        const growth = animal.growthTypes[type] || {};
+                        growthRow.push(
+                            escapeCSV(growth.health || 0),
+                            escapeCSV(growth.stamina || 0),
+                            escapeCSV(growth.attack || 0),
+                            escapeCSV(growth.defense || 0),
+                            escapeCSV(growth.agility || 0),
+                            escapeCSV(growth.favorability || 0)
+                        );
+                    });
+                } else if (animal.growth) {
+                    // 旧格式兼容
+                    const baseGrowth = animal.growth;
+                    const mult = { '平庸': 1.0, '超常': 1.5, '璀璨': 2.0 }[animal.potential || '超常'] || 1.5;
+                    
+                    [1.0, 1.5, 2.0].forEach(factor => {
+                        const actualFactor = factor / mult;
+                        growthRow.push(
+                            escapeCSV(Math.round(baseGrowth.health * actualFactor)),
+                            escapeCSV(Math.round(baseGrowth.stamina * actualFactor)),
+                            escapeCSV(Math.round(baseGrowth.attack * actualFactor)),
+                            escapeCSV(Math.round(baseGrowth.defense * actualFactor)),
+                            escapeCSV(Math.round(baseGrowth.agility * actualFactor)),
+                            escapeCSV(Math.round(baseGrowth.favorability * actualFactor))
+                        );
+                    });
+                } else {
+                    // 无成长数据
+                    for (let i = 0; i < 18; i++) growthRow.push('');
+                }
+
+                // 技能配置
+                const skillRow = [];
+                const skills = animal.skills || [];
+                for (let i = 0; i < 10; i++) {
+                    if (i < skills.length) {
+                        const skillConfig = skills[i];
+                        const skill = skillPool.find(s => s.key === skillConfig.skillKey);
+                        skillRow.push(
+                            escapeCSV(skill ? skill.name : skillConfig.skillKey),
+                            escapeCSV(skillConfig.unlockLevel || 1)
+                        );
+                    } else {
+                        skillRow.push('', '');
+                    }
+                }
+
+                const row = [...baseRow, ...growthRow, ...skillRow,
+                    escapeCSV(animal.modelData ? '是' : '否'),
+                    escapeCSV(animal.avatarData ? '是' : '否'),
+                    escapeCSV(animal.createdAt ? new Date(animal.createdAt).toLocaleString('zh-CN') : ''),
+                    escapeCSV(animal.updatedAt ? new Date(animal.updatedAt).toLocaleString('zh-CN') : ''),
+                    ''
+                ];
+
+                csvContent += row.join(',') + '\n';
+            });
+
+            // 添加BOM
+            const BOM = '\uFEFF';
+            const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `动物配置表_${Date.now()}.csv`;
+            a.click();
+            URL.revokeObjectURL(url);
+
+            alert(`✅ 已导出 ${animals.length} 个动物模板到策划配置表（CSV格式）！\n\n表格特点：\n• 扁平化结构，便于Excel编辑\n• 中文列名，易于理解\n• 包含三种成长类型配置\n• 最多支持10个技能配置`);
         }
 
         // 导入动物模板

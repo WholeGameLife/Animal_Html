@@ -1,0 +1,1731 @@
+[
+  {
+    "key": "CUSTOM_1767595428450",
+    "name": "海啸三叠",
+    "icon": "🌊",
+    "description": "召唤一道向前推进的浪潮，最多可叠加三次，范围逐次扩大",
+    "category": "element-water",
+    "type": "attack",
+    "effects": [
+      "direct_attack"
+    ],
+    "params": {
+      "cooldown": 1,
+      "duration": 0,
+      "count": 1,
+      "direct_attack_effect-source": "self-current-attack",
+      "direct_attack_bonus": 1
+    },
+    "createdAt": "2026-01-05T06:43:48.451Z",
+    "updatedAt": "2026-01-15T01:40:33.414Z"
+  },
+  {
+    "key": "CUSTOM_1767599147105",
+    "name": "高压水刃",
+    "icon": "🌊",
+    "description": "将水流压缩为薄如蝉翼的利刃直线射出，具有极强穿透力",
+    "category": "element-water",
+    "type": "attack",
+    "effects": [
+      "multi_attack"
+    ],
+    "params": {
+      "cooldown": 2,
+      "duration": 0,
+      "count": 3,
+      "multi_attack_effect-source": "self-current-attack",
+      "multi_attack_multi-bonus": [
+        0.5,
+        0.7,
+        0.9
+      ]
+    },
+    "createdAt": "2026-01-05T07:45:47.105Z",
+    "updatedAt": "2026-01-15T01:40:51.438Z"
+  },
+  {
+    "key": "CUSTOM_1767599206496",
+    "name": "漩涡绞杀",
+    "icon": "🌊",
+    "description": "在敌人脚下生成急速旋转的漩涡，持续造成撕裂伤害并轻微牵引",
+    "category": "element-water",
+    "type": "attack",
+    "effects": [
+      "multi_attack"
+    ],
+    "params": {
+      "cooldown": 1,
+      "duration": 0,
+      "count": 1,
+      "multi_attack_effect-source": "self-current-attack",
+      "multi_attack_multi-bonus": [
+        0.5,
+        0.7,
+        0.9
+      ]
+    },
+    "createdAt": "2026-01-05T07:46:46.496Z",
+    "updatedAt": "2026-01-15T01:41:13.942Z"
+  },
+  {
+    "key": "CUSTOM_1767599253688",
+    "name": "水幕天华",
+    "icon": "🌊",
+    "description": "在身前展开一道流动的水幕，可吸收或偏转远程攻击",
+    "category": "element-water",
+    "type": "defense",
+    "effects": [
+      "direct_defense"
+    ],
+    "params": {
+      "cooldown": 1,
+      "duration": 0,
+      "count": 1,
+      "direct_defense_effect-source": "self-current-defense",
+      "direct_defense_bonus": 1
+    },
+    "createdAt": "2026-01-05T07:47:33.688Z",
+    "updatedAt": "2026-01-15T01:42:15.430Z"
+  },
+  {
+    "key": "CUSTOM_1767599307416",
+    "name": "水牢庇护",
+    "icon": "🌊",
+    "description": "创造一个全方位的水球护罩，完全隔绝内外",
+    "category": "element-water",
+    "type": "defense",
+    "effects": [
+      "direct_defense"
+    ],
+    "params": {
+      "cooldown": 1,
+      "duration": 0,
+      "count": 1,
+      "direct_defense_effect-source": "self-current-defense",
+      "direct_defense_bonus": 1
+    },
+    "createdAt": "2026-01-05T07:48:27.416Z",
+    "updatedAt": "2026-01-15T01:42:35.055Z"
+  },
+  {
+    "key": "CUSTOM_1767599349321",
+    "name": "镜面止水",
+    "icon": "🌊",
+    "description": "制造一片短暂静止的平整水面，如镜面般完美反射一次单体攻击",
+    "category": "element-water",
+    "type": "defense",
+    "effects": [
+      "defense_counter"
+    ],
+    "params": {
+      "cooldown": 1,
+      "duration": 0,
+      "count": 1,
+      "defense_counter_effect-source": "self-current-defense",
+      "defense_counter_defense-bonus": 1,
+      "defense_counter_counter-effect-source": "enemy-turn-damage",
+      "defense_counter_counter-bonus": 0.5
+    },
+    "createdAt": "2026-01-05T07:49:09.321Z",
+    "updatedAt": "2026-01-15T01:42:59.998Z"
+  },
+  {
+    "key": "CUSTOM_1767599396527",
+    "name": "踏浪而行",
+    "icon": "🌊",
+    "description": "脚底凝聚不易散开的水团，可在任何表面（包括垂直面）短暂疾行",
+    "category": "element-water",
+    "type": "agility",
+    "effects": [
+      "direct_speed"
+    ],
+    "params": {
+      "cooldown": 2,
+      "duration": 0,
+      "count": 1,
+      "direct_speed_effect-source": "self-current-agility",
+      "direct_speed_bonus": 1
+    },
+    "createdAt": "2026-01-05T07:49:56.527Z",
+    "updatedAt": "2026-01-15T01:43:18.726Z"
+  },
+  {
+    "key": "CUSTOM_1767599433249",
+    "name": "流水加速",
+    "icon": "🌊",
+    "description": "在体表覆盖一层定向流动的水膜，大幅降低空气阻力，提升直线速度",
+    "category": "element-water",
+    "type": "agility",
+    "effects": [
+      "direct_speed"
+    ],
+    "params": {
+      "cooldown": 2,
+      "duration": 0,
+      "count": 1,
+      "direct_speed_effect-source": "self-current-agility",
+      "direct_speed_bonus": 1
+    },
+    "createdAt": "2026-01-05T07:50:33.249Z",
+    "updatedAt": "2026-01-15T02:00:25.092Z"
+  },
+  {
+    "key": "CUSTOM_1767599517223",
+    "name": "清心活水",
+    "icon": "🌊",
+    "description": "引纯净水流洗涤目标，驱散疲乏",
+    "category": "element-water",
+    "type": "buff",
+    "effects": [
+      "buff_purify"
+    ],
+    "params": {
+      "cooldown": 2,
+      "duration": 0,
+      "count": 1,
+      "buff_purify_target": "self",
+      "buff_purify_purify-type": "negative",
+      "buff_purify_purify-count": "2"
+    },
+    "createdAt": "2026-01-05T07:51:57.223Z",
+    "updatedAt": "2026-01-15T02:32:51.189Z"
+  },
+  {
+    "key": "CUSTOM_1767599565248",
+    "name": "水之亲和",
+    "icon": "🌊",
+    "description": "暂时提升目标对水元素的掌控力，使其下一个水系技能效果增强",
+    "category": "element-water",
+    "type": "buff",
+    "effects": [
+      "buff_element_damage"
+    ],
+    "params": {
+      "cooldown": 2,
+      "duration": 0,
+      "count": 1,
+      "buff_element_damage_target": "self",
+      "buff_element_damage_element-type": "water",
+      "buff_element_damage_damage-bonus": 0.2
+    },
+    "createdAt": "2026-01-05T07:52:45.248Z",
+    "updatedAt": "2026-01-15T02:00:49.308Z"
+  },
+  {
+    "key": "CUSTOM_1767599602303",
+    "name": "深海重压",
+    "icon": "🌊",
+    "description": "使目标如同置身深海，承受无形水压，行动格外费力且难以跳跃",
+    "category": "element-water",
+    "type": "debuff",
+    "effects": [
+      "debuff_speed"
+    ],
+    "params": {
+      "cooldown": 1,
+      "duration": 0,
+      "count": 1,
+      "debuff_speed_effect-source": "enemy-current-agility",
+      "debuff_speed_target": "enemy-single",
+      "debuff_speed_bonus": 0.7
+    },
+    "createdAt": "2026-01-05T07:53:22.303Z",
+    "updatedAt": "2026-01-15T02:01:06.525Z"
+  },
+  {
+    "key": "CUSTOM_1767599641168",
+    "name": "生命潮汐",
+    "icon": "🌊",
+    "description": "模拟潮汐节奏，温和地推动目标体内气血循环，加速自然恢复",
+    "category": "element-water",
+    "type": "heal",
+    "effects": [
+      "heal_direct"
+    ],
+    "params": {
+      "cooldown": 1,
+      "duration": 0,
+      "count": 1,
+      "heal_direct_effect-source": "self-lost-hp",
+      "heal_direct_target": "self",
+      "heal_direct_bonus": 0.5
+    },
+    "createdAt": "2026-01-05T07:54:01.168Z",
+    "updatedAt": "2026-01-15T02:01:20.516Z"
+  },
+  {
+    "key": "CUSTOM_1767603815436",
+    "name": "清流涌动",
+    "icon": "🌊",
+    "description": "引导纯净水流洗涤自身",
+    "category": "element-water",
+    "type": "attack",
+    "effects": [
+      "buff_purify"
+    ],
+    "params": {
+      "cooldown": 2,
+      "duration": 0,
+      "count": 1,
+      "buff_purify_target": "self",
+      "buff_purify_purify-type": "negative",
+      "buff_purify_purify-count": "all"
+    },
+    "createdAt": "2026-01-05T09:03:35.436Z",
+    "updatedAt": "2026-01-15T02:33:06.604Z"
+  },
+  {
+    "key": "CUSTOM_1767603859844",
+    "name": "镜花水月",
+    "icon": "🌊",
+    "description": "在自身周围创造一片虚实交织的水域",
+    "category": "element-water",
+    "type": "attack",
+    "effects": [
+      "buff_attack",
+      "buff_defense"
+    ],
+    "params": {
+      "cooldown": 2,
+      "duration": 0,
+      "count": 1,
+      "buff_attack_effect-source": "self-current-attack",
+      "buff_attack_target": "self",
+      "buff_attack_bonus": 0.6,
+      "buff_defense_effect-source": "self-current-defense",
+      "buff_defense_target": "self",
+      "buff_defense_bonus": 0.6
+    },
+    "createdAt": "2026-01-05T09:04:19.844Z",
+    "updatedAt": "2026-01-15T02:01:57.548Z"
+  },
+  {
+    "key": "CUSTOM_1767603887716",
+    "name": "海魂觉醒",
+    "icon": "🌊",
+    "description": "唤醒沉睡于血脉的远古海魂之力",
+    "category": "element-water",
+    "type": "attack",
+    "effects": [
+      "buff_attack",
+      "buff_defense",
+      "buff_speed"
+    ],
+    "params": {
+      "cooldown": 2,
+      "duration": 0,
+      "count": 1,
+      "buff_attack_effect-source": "self-current-attack",
+      "buff_attack_target": "self",
+      "buff_attack_bonus": 0.6,
+      "buff_defense_effect-source": "self-current-defense",
+      "buff_defense_target": "self",
+      "buff_defense_bonus": 0.6,
+      "buff_speed_effect-source": "self-current-agility",
+      "buff_speed_target": "self",
+      "buff_speed_bonus": 0.7
+    },
+    "createdAt": "2026-01-05T09:04:47.716Z",
+    "updatedAt": "2026-01-15T02:02:33.763Z"
+  },
+  {
+    "key": "CUSTOM_1768294375328",
+    "name": "烈焰重击",
+    "icon": "🔥",
+    "description": "汇聚火焰重拳，造成纯粹的火属性伤害",
+    "category": "element-fire",
+    "type": "attack",
+    "effects": [
+      "direct_attack"
+    ],
+    "params": {
+      "cooldown": 0,
+      "duration": 0,
+      "count": 1,
+      "direct_attack_effect-source": "self-base-attack",
+      "direct_attack_bonus": 1.3
+    },
+    "createdAt": "2026-01-13T08:52:55.328Z"
+  },
+  {
+    "key": "CUSTOM_1768294521728",
+    "name": "熔岩护甲",
+    "icon": "🔥",
+    "description": "召唤熔岩覆盖全身，提升防御并减免后续伤害",
+    "category": "element-fire",
+    "type": "defense",
+    "effects": [
+      "continuous_defense"
+    ],
+    "params": {
+      "cooldown": 2,
+      "duration": 2,
+      "count": 1,
+      "continuous_defense_effect-source": "self-base-defense",
+      "continuous_defense_bonus": 1.2
+    },
+    "createdAt": "2026-01-13T08:55:21.728Z"
+  },
+  {
+    "key": "CUSTOM_1768294973584",
+    "name": "燃魂咆哮",
+    "icon": "🔥",
+    "description": "震碎敌方胆色，降低其防御并造成伤害",
+    "category": "element-fire",
+    "type": "attack",
+    "effects": [
+      "direct_attack",
+      "debuff_defense"
+    ],
+    "params": {
+      "cooldown": 1,
+      "duration": 0,
+      "count": 1,
+      "direct_attack_effect-source": "self-current-attack",
+      "direct_attack_bonus": 1.2,
+      "debuff_defense_effect-source": "enemy-current-defense",
+      "debuff_defense_target": "enemy-single",
+      "debuff_defense_bonus": 0.8
+    },
+    "createdAt": "2026-01-13T09:02:53.584Z"
+  },
+  {
+    "key": "CUSTOM_1768295043352",
+    "name": "火种呼吸",
+    "icon": "🔥",
+    "description": "通过深呼吸强化内脏火种，恢复生命并提升攻击力",
+    "category": "element-fire",
+    "type": "buff",
+    "effects": [
+      "buff_attack",
+      "heal_direct"
+    ],
+    "params": {
+      "cooldown": 3,
+      "duration": 2,
+      "count": 1,
+      "buff_attack_effect-source": "self-current-attack",
+      "buff_attack_target": "self",
+      "buff_attack_bonus": 1.3,
+      "heal_direct_effect-source": "self-max-hp",
+      "heal_direct_target": "self",
+      "heal_direct_bonus": 0.3
+    },
+    "createdAt": "2026-01-13T09:04:03.352Z"
+  },
+  {
+    "key": "CUSTOM_1768295148424",
+    "name": "绝望侵蚀",
+    "icon": "🖤",
+    "description": "将内心的绝望化为漆黑利刃",
+    "category": "mutation-dark",
+    "type": "attack",
+    "effects": [
+      "direct_attack",
+      "debuff_defense"
+    ],
+    "params": {
+      "cooldown": 0,
+      "duration": 0,
+      "count": 1,
+      "direct_attack_effect-source": "self-current-attack",
+      "direct_attack_bonus": 1.2,
+      "debuff_defense_effect-source": "enemy-current-defense",
+      "debuff_defense_target": "enemy-single",
+      "debuff_defense_bonus": 0.25
+    },
+    "createdAt": "2026-01-13T09:05:48.424Z"
+  },
+  {
+    "key": "CUSTOM_1768295299806",
+    "name": "暗影掠夺",
+    "icon": "🖤",
+    "description": "攻击并夺取目标生命能量",
+    "category": "mutation-dark",
+    "type": "attack",
+    "effects": [
+      "direct_attack",
+      "heal_lifesteal"
+    ],
+    "params": {
+      "cooldown": 2,
+      "duration": 0,
+      "count": 1,
+      "direct_attack_effect-source": "self-current-attack",
+      "direct_attack_bonus": 0.8,
+      "heal_lifesteal_effect-source": "enemy-max-hp",
+      "heal_lifesteal_bonus": 0.1
+    },
+    "createdAt": "2026-01-13T09:08:19.806Z"
+  },
+  {
+    "key": "CUSTOM_1768295885302",
+    "name": "漆黑狂热",
+    "icon": "🖤",
+    "description": "陷入黑化狂暴，牺牲理智换取极高攻速",
+    "category": "mutation-dark",
+    "type": "buff",
+    "effects": [
+      "buff_attack",
+      "buff_speed",
+      "debuff_hp_cost"
+    ],
+    "params": {
+      "cooldown": 2,
+      "duration": 1,
+      "count": 1,
+      "buff_attack_effect-source": "self-current-attack",
+      "buff_attack_target": "self",
+      "buff_attack_bonus": 1,
+      "buff_speed_effect-source": "self-current-attack",
+      "buff_speed_target": "self",
+      "buff_speed_bonus": 1,
+      "debuff_hp_cost_effect-source": "self-max-hp",
+      "debuff_hp_cost_bonus": 0.2,
+      "debuff_hp_cost_target": "self"
+    },
+    "createdAt": "2026-01-13T09:18:05.302Z",
+    "updatedAt": "2026-01-15T02:10:17.135Z"
+  },
+  {
+    "key": "CUSTOM_1768296088260",
+    "name": "负面爆发",
+    "icon": "🖤",
+    "description": "将本回合积攒的负面能量一次性爆发",
+    "category": "mutation-dark",
+    "type": "attack",
+    "effects": [
+      "multi_attack"
+    ],
+    "params": {
+      "cooldown": 2,
+      "duration": 0,
+      "count": 3,
+      "multi_attack_effect-source": "self-current-attack",
+      "multi_attack_multi-bonus": [
+        0.7,
+        1,
+        1.3
+      ]
+    },
+    "createdAt": "2026-01-13T09:21:28.260Z",
+    "updatedAt": "2026-01-13T09:38:44.905Z"
+  },
+  {
+    "key": "CUSTOM_1768296153555",
+    "name": "终焉诅咒",
+    "icon": "🖤",
+    "description": "对敌方灵魂施加黑化印记，按比例扣除生命",
+    "category": "mutation-dark",
+    "type": "attack",
+    "effects": [
+      "percent_damage",
+      "debuff_defense"
+    ],
+    "params": {
+      "cooldown": 3,
+      "duration": 0,
+      "count": 1,
+      "percent_damage_effect-source": "enemy-current-hp",
+      "percent_damage_percent": 0.6,
+      "debuff_defense_effect-source": "enemy-current-defense",
+      "debuff_defense_target": "enemy-single",
+      "debuff_defense_bonus": 0.4
+    },
+    "createdAt": "2026-01-13T09:22:33.555Z"
+  },
+  {
+    "key": "CUSTOM_1768296644675",
+    "name": "晶棱刺击",
+    "icon": "💎",
+    "description": "晶体化武器刺入，防御越高伤害越高",
+    "category": "mutation-crystal",
+    "type": "attack",
+    "effects": [
+      "dot_damage"
+    ],
+    "params": {
+      "cooldown": 2,
+      "duration": 1,
+      "count": 1,
+      "dot_damage_effect-source": "self-current-defense",
+      "dot_damage_bonus": 0.3
+    },
+    "createdAt": "2026-01-13T09:30:44.675Z",
+    "updatedAt": "2026-01-15T02:15:42.607Z"
+  },
+  {
+    "key": "CUSTOM_1768296744761",
+    "name": "折射装甲",
+    "icon": "💎",
+    "description": "利用晶体面折射攻击",
+    "category": "mutation-crystal",
+    "type": "defense",
+    "effects": [
+      "defense_counter"
+    ],
+    "params": {
+      "cooldown": 1,
+      "duration": 0,
+      "count": 1,
+      "defense_counter_effect-source": "self-current-defense",
+      "defense_counter_defense-bonus": 0.3,
+      "defense_counter_counter-effect-source": "enemy-turn-damage",
+      "defense_counter_counter-bonus": 0.6
+    },
+    "createdAt": "2026-01-13T09:32:24.761Z"
+  },
+  {
+    "key": "CUSTOM_1768296784993",
+    "name": "棱镜加速",
+    "icon": "💎",
+    "description": "晶体折射光能，大幅提升速度与输出",
+    "category": "mutation-crystal",
+    "type": "buff",
+    "effects": [
+      "buff_attack",
+      "buff_speed"
+    ],
+    "params": {
+      "cooldown": 2,
+      "duration": 0,
+      "count": 1,
+      "buff_attack_effect-source": "self-current-attack",
+      "buff_attack_target": "self",
+      "buff_attack_bonus": 0.3,
+      "buff_speed_effect-source": "self-current-agility",
+      "buff_speed_target": "self",
+      "buff_speed_bonus": 0.5
+    },
+    "createdAt": "2026-01-13T09:33:04.993Z"
+  },
+  {
+    "key": "CUSTOM_1768297047577",
+    "name": "晶神降临",
+    "icon": "💎",
+    "description": "进入完美结晶态，清除一切负面",
+    "category": "mutation-crystal",
+    "type": "buff",
+    "effects": [
+      "buff_purify"
+    ],
+    "params": {
+      "cooldown": 2,
+      "duration": 0,
+      "count": 1,
+      "buff_purify_target": "self",
+      "buff_purify_purify-type": "negative",
+      "buff_purify_purify-count": "all"
+    },
+    "createdAt": "2026-01-13T09:37:27.577Z",
+    "updatedAt": "2026-01-15T02:33:27.524Z"
+  },
+  {
+    "key": "CUSTOM_1768297115000",
+    "name": "碎晶风暴",
+    "icon": "💎",
+    "description": "漫天晶屑切割敌人",
+    "category": "mutation-crystal",
+    "type": "attack",
+    "effects": [
+      "multi_attack"
+    ],
+    "params": {
+      "cooldown": 1,
+      "duration": 0,
+      "count": 3,
+      "multi_attack_effect-source": "self-current-attack",
+      "multi_attack_multi-bonus": [
+        0.5,
+        0.7,
+        0.9
+      ]
+    },
+    "createdAt": "2026-01-13T09:38:35.000Z"
+  },
+  {
+    "key": "CUSTOM_1768297323880",
+    "name": "纯白洗礼",
+    "icon": "🤍",
+    "description": "释放纯净的光能冲击，造成伤害的同时移除自身一层负面状态",
+    "category": "mutation-light",
+    "type": "attack",
+    "effects": [
+      "direct_attack",
+      "buff_purify"
+    ],
+    "params": {
+      "cooldown": 2,
+      "duration": 0,
+      "count": 1,
+      "direct_attack_effect-source": "self-current-attack",
+      "direct_attack_bonus": 1.2,
+      "buff_purify_target": "self",
+      "buff_purify_purify-type": "negative",
+      "buff_purify_purify-count": "1"
+    },
+    "createdAt": "2026-01-13T09:42:03.880Z",
+    "updatedAt": "2026-01-15T02:33:47.597Z"
+  },
+  {
+    "key": "CUSTOM_1768297388425",
+    "name": "圣洁屏障",
+    "icon": "🤍",
+    "description": "召唤流动的白化光幕笼罩全身，三回合内降低伤害并每回合恢复少量生命",
+    "category": "mutation-light",
+    "type": "buff",
+    "effects": [
+      "heal_continuous"
+    ],
+    "params": {
+      "cooldown": 4,
+      "duration": 3,
+      "count": 1,
+      "heal_continuous_effect-source": "self-current-hp",
+      "heal_continuous_target": "self",
+      "heal_continuous_bonus": 0.5
+    },
+    "createdAt": "2026-01-13T09:43:08.425Z"
+  },
+  {
+    "key": "CUSTOM_1768297463952",
+    "name": "神性共振",
+    "icon": "🤍",
+    "description": "与高维度秩序产生共鸣，瞬间恢复大量生命值，并提升后续所有回血效果",
+    "category": "mutation-light",
+    "type": "heal",
+    "effects": [
+      "buff_heal_amp",
+      "heal_direct"
+    ],
+    "params": {
+      "cooldown": 99,
+      "duration": 99,
+      "count": 1,
+      "buff_heal_amp_effect-source": "self-max-hp",
+      "buff_heal_amp_target": "self",
+      "buff_heal_amp_bonus": 0.3,
+      "heal_direct_effect-source": "self-max-hp",
+      "heal_direct_target": "self",
+      "heal_direct_bonus": 0.15
+    },
+    "createdAt": "2026-01-13T09:44:23.952Z"
+  },
+  {
+    "key": "CUSTOM_1768297966999",
+    "name": "无瑕之境",
+    "icon": "🤍",
+    "description": "进入绝对冷静的防御姿态，期间受到的任何近战打击都将被圣光自动反弹",
+    "category": "mutation-light",
+    "type": "defense",
+    "effects": [
+      "defense_counter"
+    ],
+    "params": {
+      "cooldown": 2,
+      "duration": 0,
+      "count": 1,
+      "defense_counter_effect-source": "self-current-defense",
+      "defense_counter_defense-bonus": 0.4,
+      "defense_counter_counter-effect-source": "enemy-turn-damage",
+      "defense_counter_counter-bonus": 0.5
+    },
+    "createdAt": "2026-01-13T09:52:46.999Z"
+  },
+  {
+    "key": "CUSTOM_1768298062912",
+    "name": "纯白纪元",
+    "icon": "🤍",
+    "description": "开启纯白领域，移除自身所有负面状态，进入全属性大幅强化的秩序神态",
+    "category": "mutation-light",
+    "type": "buff",
+    "effects": [
+      "buff_attack",
+      "buff_defense",
+      "buff_speed",
+      "debuff_attack",
+      "debuff_defense",
+      "debuff_speed"
+    ],
+    "params": {
+      "cooldown": 6,
+      "duration": 3,
+      "count": 1,
+      "buff_attack_effect-source": "self-current-attack",
+      "buff_attack_target": "self",
+      "buff_attack_bonus": 0.4,
+      "buff_defense_effect-source": "self-current-defense",
+      "buff_defense_target": "self",
+      "buff_defense_bonus": 0.4,
+      "buff_speed_effect-source": "self-current-agility",
+      "buff_speed_target": "self",
+      "buff_speed_bonus": 0.4,
+      "debuff_attack_effect-source": "enemy-current-attack",
+      "debuff_attack_target": "enemy-single",
+      "debuff_attack_bonus": 0.3,
+      "debuff_defense_effect-source": "enemy-current-defense",
+      "debuff_defense_target": "self",
+      "debuff_defense_bonus": 0.3,
+      "debuff_speed_effect-source": "enemy-current-agility",
+      "debuff_speed_target": "self",
+      "debuff_speed_bonus": 0.3
+    },
+    "createdAt": "2026-01-13T09:54:22.912Z"
+  },
+  {
+    "key": "CUSTOM_1768298404326",
+    "name": "潜影刺杀",
+    "icon": "👤",
+    "description": "遁入阴影瞬间出现在敌人背后，造成基于速度的爆发伤害",
+    "category": "mutation-shadow",
+    "type": "attack",
+    "effects": [
+      "direct_attack"
+    ],
+    "params": {
+      "cooldown": 1,
+      "duration": 0,
+      "count": 1,
+      "direct_attack_effect-source": "self-current-agility",
+      "direct_attack_bonus": 0.6
+    },
+    "createdAt": "2026-01-13T10:00:04.326Z"
+  },
+  {
+    "key": "CUSTOM_1768298554374",
+    "name": "影缚咒印\t",
+    "icon": "👤",
+    "description": "强行操纵目标的影子缠绕其本体，大幅降低速度与护甲",
+    "category": "mutation-shadow",
+    "type": "debuff",
+    "effects": [
+      "debuff_defense",
+      "debuff_speed"
+    ],
+    "params": {
+      "cooldown": 2,
+      "duration": 0,
+      "count": 1,
+      "debuff_defense_effect-source": "enemy-current-defense",
+      "debuff_defense_target": "enemy-single",
+      "debuff_defense_bonus": 0.6,
+      "debuff_speed_effect-source": "enemy-current-agility",
+      "debuff_speed_target": "enemy-single",
+      "debuff_speed_bonus": 0.6
+    },
+    "createdAt": "2026-01-13T10:02:34.374Z"
+  },
+  {
+    "key": "CUSTOM_1768298663381",
+    "name": "影裂回响",
+    "icon": "👤",
+    "description": "影影绰绰的攻击产生二次回响，基于本回合已造成的伤害追加多次暗影打击",
+    "category": "mutation-shadow",
+    "type": "attack",
+    "effects": [
+      "multi_attack"
+    ],
+    "params": {
+      "cooldown": 3,
+      "duration": 0,
+      "count": 2,
+      "multi_attack_effect-source": "self-turn-damage",
+      "multi_attack_multi-bonus": [
+        0.7,
+        1.2
+      ]
+    },
+    "createdAt": "2026-01-13T10:04:23.381Z"
+  },
+  {
+    "key": "CUSTOM_1768298723719",
+    "name": "万影终焉",
+    "icon": "👤",
+    "description": "召唤全场阴影爆发，对敌人造成多次毁灭性打击，并全方位剥夺其战斗能力",
+    "category": "mutation-shadow",
+    "type": "debuff",
+    "effects": [
+      "multi_attack",
+      "debuff_attack"
+    ],
+    "params": {
+      "cooldown": 3,
+      "duration": 0,
+      "count": 3,
+      "multi_attack_effect-source": "self-current-attack",
+      "multi_attack_multi-bonus": [
+        1
+      ],
+      "debuff_attack_effect-source": "enemy-current-attack",
+      "debuff_attack_target": "enemy-single",
+      "debuff_attack_bonus": 0.8
+    },
+    "createdAt": "2026-01-13T10:05:23.719Z",
+    "updatedAt": "2026-01-15T02:35:28.581Z"
+  },
+  {
+    "key": "CUSTOM_1768300020085",
+    "name": "蚀骨剧毒",
+    "icon": "🌑",
+    "description": "阴冷能量腐蚀全身",
+    "category": "mutation-chaos",
+    "type": "debuff",
+    "effects": [
+      "buff_status_enemy"
+    ],
+    "params": {
+      "cooldown": 2,
+      "duration": 0,
+      "count": 1,
+      "buff_status_enemy_status-type": "STATUS_1768184706523",
+      "buff_status_enemy_status-chance": 100,
+      "buff_status_enemy_status-stacks": 1
+    },
+    "createdAt": "2026-01-13T10:27:00.085Z",
+    "updatedAt": "2026-01-15T02:35:48.412Z"
+  },
+  {
+    "key": "CUSTOM_1768300076733",
+    "name": "凋零领域",
+    "icon": "🌑",
+    "description": "领域内生机断绝",
+    "category": "mutation-chaos",
+    "type": "debuff",
+    "effects": [
+      "debuff_attack",
+      "debuff_no_heal"
+    ],
+    "params": {
+      "cooldown": 2,
+      "duration": 0,
+      "count": 1,
+      "debuff_attack_effect-source": "enemy-current-attack",
+      "debuff_attack_target": "enemy-single",
+      "debuff_attack_bonus": 0.7,
+      "debuff_no_heal_target": "self"
+    },
+    "createdAt": "2026-01-13T10:27:56.733Z"
+  },
+  {
+    "key": "CUSTOM_1768300114830",
+    "name": "虚无外壳",
+    "icon": "🌑",
+    "description": "暗能量形成的外壳，隔绝一切干扰",
+    "category": "mutation-chaos",
+    "type": "defense",
+    "effects": [
+      "direct_defense"
+    ],
+    "params": {
+      "cooldown": 2,
+      "duration": 0,
+      "count": 1,
+      "direct_defense_effect-source": "self-current-defense",
+      "direct_defense_bonus": 1.1
+    },
+    "createdAt": "2026-01-13T10:28:34.830Z",
+    "updatedAt": "2026-01-13T10:28:45.013Z"
+  },
+  {
+    "key": "CUSTOM_1768353894683",
+    "name": "影舞重生",
+    "icon": "🌑",
+    "description": "在濒死时化为纯粹的影流，复生后将此前损失的生命值按比例转化为攻击力与速度",
+    "category": "mutation-chaos",
+    "type": "buff",
+    "effects": [
+      "buff_attack",
+      "heal_rebirth"
+    ],
+    "params": {
+      "cooldown": 10,
+      "duration": 0,
+      "count": 1,
+      "buff_attack_effect-source": "self-max-hp",
+      "buff_attack_target": "self",
+      "buff_attack_bonus": 0.05,
+      "heal_rebirth_effect-source": "self-max-hp",
+      "heal_rebirth_target": "self",
+      "heal_rebirth_percent": 0.1,
+      "heal_rebirth_rebirth-condition": "death"
+    },
+    "createdAt": "2026-01-14T01:24:54.683Z",
+    "updatedAt": "2026-01-15T02:37:20.244Z"
+  },
+  {
+    "key": "CUSTOM_1768354179435",
+    "name": "审判金光",
+    "icon": "✨",
+    "description": "召唤神圣的审判光柱，对敌人造成伤害的同时，短时间内强行拔高自身的所有属性输出",
+    "category": "mutation-holy",
+    "type": "attack",
+    "effects": [
+      "direct_attack",
+      "buff_attack",
+      "buff_element_damage"
+    ],
+    "params": {
+      "cooldown": 2,
+      "duration": 0,
+      "count": 1,
+      "direct_attack_effect-source": "self-current-attack",
+      "direct_attack_bonus": 0.6,
+      "buff_attack_effect-source": "self-current-attack",
+      "buff_attack_target": "self",
+      "buff_attack_bonus": 1.4,
+      "buff_element_damage_target": "self",
+      "buff_element_damage_element-type": "water",
+      "buff_element_damage_damage-bonus": 0.2
+    },
+    "createdAt": "2026-01-14T01:29:39.435Z"
+  },
+  {
+    "key": "CUSTOM_1768354233589",
+    "name": "辉耀之镜",
+    "icon": "✨",
+    "description": "制造一面纯能量的圣辉之盾，完美抵挡攻击并将敌人攻击力的一部分化为神圣冲击反馈给对方",
+    "category": "mutation-holy",
+    "type": "defense",
+    "effects": [
+      "defense_counter"
+    ],
+    "params": {
+      "cooldown": 1,
+      "duration": 0,
+      "count": 1,
+      "defense_counter_effect-source": "self-current-defense",
+      "defense_counter_defense-bonus": 1,
+      "defense_counter_counter-effect-source": "enemy-current-attack",
+      "defense_counter_counter-bonus": 20
+    },
+    "createdAt": "2026-01-14T01:30:33.589Z",
+    "updatedAt": "2026-01-15T02:52:55.725Z"
+  },
+  {
+    "key": "CUSTOM_1768354282252",
+    "name": "烈日威压",
+    "icon": "✨",
+    "description": "如同烈日凌空，圣辉的威压让敌人动作迟缓、攻击力萎缩，并有概率因“失明”而无法命中",
+    "category": "mutation-holy",
+    "type": "debuff",
+    "effects": [
+      "buff_status_enemy"
+    ],
+    "params": {
+      "cooldown": 2,
+      "duration": 0,
+      "count": 1,
+      "buff_status_enemy_status-type": "STATUS_1768185372172",
+      "buff_status_enemy_status-chance": 100,
+      "buff_status_enemy_status-stacks": 1
+    },
+    "createdAt": "2026-01-14T01:31:22.252Z",
+    "updatedAt": "2026-01-15T02:53:10.142Z"
+  },
+  {
+    "key": "CUSTOM_1768354353562",
+    "name": "圣灵降临",
+    "icon": "✨",
+    "description": "召唤圣灵依附，即使战死也会立刻复生，并在此后一段时间内获得光速行动力与绝对防御",
+    "category": "mutation-holy",
+    "type": "buff",
+    "effects": [
+      "direct_defense",
+      "continuous_speed",
+      "heal_rebirth"
+    ],
+    "params": {
+      "cooldown": 5,
+      "duration": 0,
+      "count": 1,
+      "direct_defense_effect-source": "self-current-defense",
+      "direct_defense_bonus": 1,
+      "continuous_speed_effect-source": "self-current-agility",
+      "continuous_speed_bonus": 1,
+      "heal_rebirth_effect-source": "self-max-hp",
+      "heal_rebirth_target": "self",
+      "heal_rebirth_percent": 0.6,
+      "heal_rebirth_rebirth-condition": "death"
+    },
+    "createdAt": "2026-01-14T01:32:33.562Z",
+    "updatedAt": "2026-01-15T02:53:29.532Z"
+  },
+  {
+    "key": "CUSTOM_1768354429260",
+    "name": "终极神迹·天国之门\t",
+    "icon": "✨",
+    "description": "开启传说中的天国之门，进行毁天灭地的连续光雨打击，同时瞬间将自身状态补满",
+    "category": "mutation-holy",
+    "type": "buff",
+    "effects": [
+      "multi_attack",
+      "direct_defense",
+      "heal_direct"
+    ],
+    "params": {
+      "cooldown": 5,
+      "duration": 0,
+      "count": 2,
+      "multi_attack_effect-source": "self-current-attack",
+      "multi_attack_multi-bonus": [
+        2,
+        3
+      ],
+      "direct_defense_effect-source": "self-current-defense",
+      "direct_defense_bonus": 1,
+      "heal_direct_effect-source": "self-lost-hp",
+      "heal_direct_target": "self",
+      "heal_direct_bonus": 1
+    },
+    "createdAt": "2026-01-14T01:33:49.260Z"
+  },
+  {
+    "key": "CUSTOM_1768354581249",
+    "name": "空间震裂",
+    "icon": "🔮",
+    "description": "强行撕裂目标所处的空间造成震荡伤害，并将破碎的空间碎片化作临时的物理屏障",
+    "category": "mutation-psychic",
+    "type": "attack",
+    "effects": [
+      "direct_attack",
+      "direct_defense"
+    ],
+    "params": {
+      "cooldown": 1,
+      "duration": 0,
+      "count": 1,
+      "direct_attack_effect-source": "self-current-attack",
+      "direct_attack_bonus": 1,
+      "direct_defense_effect-source": "self-current-defense",
+      "direct_defense_bonus": 1
+    },
+    "createdAt": "2026-01-14T01:36:21.249Z"
+  },
+  {
+    "key": "CUSTOM_1768354693378",
+    "name": "维度修补",
+    "icon": "🔮",
+    "description": "从更高维度抽取纯净能量修复肉体，瞬间清除所有负面状态并大幅强化后续自愈力",
+    "category": "mutation-psychic",
+    "type": "buff",
+    "effects": [
+      "buff_purify",
+      "heal_direct"
+    ],
+    "params": {
+      "cooldown": 2,
+      "duration": 0,
+      "count": 1,
+      "buff_purify_target": "self",
+      "buff_purify_purify-type": "negative",
+      "buff_purify_purify-count": "all",
+      "heal_direct_effect-source": "self-lost-hp",
+      "heal_direct_target": "self",
+      "heal_direct_bonus": 0.4
+    },
+    "createdAt": "2026-01-14T01:38:13.378Z",
+    "updatedAt": "2026-01-15T03:03:17.549Z"
+  },
+  {
+    "key": "CUSTOM_1768354744112",
+    "name": "能量坍缩",
+    "icon": "🔮",
+    "description": "诱导目标体内的能量向核心坍缩，按比例重创生命，并使其分子结构受损无法被修复",
+    "category": "mutation-psychic",
+    "type": "attack",
+    "effects": [
+      "percent_damage",
+      "debuff_defense",
+      "debuff_no_heal"
+    ],
+    "params": {
+      "cooldown": 2,
+      "duration": 0,
+      "count": 1,
+      "percent_damage_effect-source": "self-current-attack",
+      "percent_damage_percent": 0.1,
+      "debuff_defense_effect-source": "self-current-attack",
+      "debuff_defense_target": "self",
+      "debuff_defense_bonus": 1,
+      "debuff_no_heal_target": "self"
+    },
+    "createdAt": "2026-01-14T01:39:04.112Z",
+    "updatedAt": "2026-01-15T03:03:44.774Z"
+  },
+  {
+    "key": "CUSTOM_1768354863608",
+    "name": "异能过载",
+    "icon": "🔮",
+    "description": "彻底解放大脑潜力上限，获得毁灭性的攻击提升，但由于负荷过重会导致自身进入“眩晕”",
+    "category": "mutation-psychic",
+    "type": "attack",
+    "effects": [
+      "dot_damage",
+      "debuff_status_self"
+    ],
+    "params": {
+      "cooldown": 2,
+      "duration": 0,
+      "count": 1,
+      "dot_damage_effect-source": "enemy-max-hp",
+      "dot_damage_bonus": 0.3,
+      "debuff_status_self_status-type": "STATUS_1768185372172",
+      "debuff_status_self_status-chance": 100,
+      "debuff_status_self_status-stacks": 1
+    },
+    "createdAt": "2026-01-14T01:41:03.608Z"
+  },
+  {
+    "key": "CUSTOM_1768354896112",
+    "name": "万象归虚",
+    "icon": "🔮",
+    "description": "异能的极致展现，将战场一切逻辑抹除，在彻底崩溃敌人的同时重构自身的完美状态",
+    "category": "mutation-psychic",
+    "type": "attack",
+    "effects": [
+      "direct_attack"
+    ],
+    "params": {
+      "cooldown": 3,
+      "duration": 0,
+      "count": 1,
+      "direct_attack_effect-source": "self-current-attack",
+      "direct_attack_bonus": 5
+    },
+    "createdAt": "2026-01-14T01:41:36.112Z"
+  },
+  {
+    "key": "CUSTOM_1768355021872",
+    "name": "瞬光雷袭",
+    "icon": "⚡",
+    "description": "化身一道雷光贯穿战场，对敌人造成重创的同时，极大地提升自身的反应速度",
+    "category": "mutation-thunder",
+    "type": "attack",
+    "effects": [
+      "direct_attack",
+      "direct_speed"
+    ],
+    "params": {
+      "cooldown": 2,
+      "duration": 0,
+      "count": 1,
+      "direct_attack_effect-source": "self-current-attack",
+      "direct_attack_bonus": 1,
+      "direct_speed_effect-source": "self-current-agility",
+      "direct_speed_bonus": 0.6
+    },
+    "createdAt": "2026-01-14T01:43:41.872Z",
+    "updatedAt": "2026-01-15T03:04:11.877Z"
+  },
+  {
+    "key": "CUSTOM_1768355073720",
+    "name": "极电千刃",
+    "icon": "⚡",
+    "description": "瞬间刺出成千上万道雷电细刃，攻击段数随使用者的敏捷值大幅增加",
+    "category": "mutation-thunder",
+    "type": "attack",
+    "effects": [
+      "multi_attack",
+      "dot_damage"
+    ],
+    "params": {
+      "cooldown": 2,
+      "duration": 0,
+      "count": 3,
+      "multi_attack_effect-source": "self-current-attack",
+      "multi_attack_multi-bonus": [
+        0.5,
+        0.7,
+        0.9
+      ],
+      "dot_damage_effect-source": "enemy-lost-hp",
+      "dot_damage_bonus": 0.2
+    },
+    "createdAt": "2026-01-14T01:44:33.720Z"
+  },
+  {
+    "key": "CUSTOM_1768355101696",
+    "name": "静电掠夺",
+    "icon": "⚡",
+    "description": "通过静电吸附抽取目标的生物能来治愈自己，同时让敌人的肌肉因失能而变得虚弱和缓慢",
+    "category": "mutation-thunder",
+    "type": "debuff",
+    "effects": [
+      "buff_status_enemy"
+    ],
+    "params": {
+      "cooldown": 3,
+      "duration": 0,
+      "count": 1,
+      "buff_status_enemy_status-type": "STATUS_1768185372172",
+      "buff_status_enemy_status-chance": 100,
+      "buff_status_enemy_status-stacks": 1
+    },
+    "createdAt": "2026-01-14T01:45:01.696Z"
+  },
+  {
+    "key": "CUSTOM_1768355214897",
+    "name": "雷霆浩劫",
+    "icon": "⚡",
+    "description": "引发一场覆盖全场的毁灭性雷暴，将速度发挥至极限，在无尽的连击中彻底粉碎敌人",
+    "category": "mutation-thunder",
+    "type": "attack",
+    "effects": [
+      "multi_attack",
+      "buff_attack",
+      "debuff_speed"
+    ],
+    "params": {
+      "cooldown": 2,
+      "duration": 0,
+      "count": 3,
+      "multi_attack_effect-source": "self-current-attack",
+      "multi_attack_multi-bonus": [
+        1,
+        1.2,
+        1.4
+      ],
+      "buff_attack_effect-source": "self-current-attack",
+      "buff_attack_target": "self",
+      "buff_attack_bonus": 0.6,
+      "debuff_speed_effect-source": "enemy-current-agility",
+      "debuff_speed_target": "enemy-single",
+      "debuff_speed_bonus": 0.4
+    },
+    "createdAt": "2026-01-14T01:46:54.897Z"
+  },
+  {
+    "key": "CUSTOM_1768355360199",
+    "name": "永夜·极寒寂灭\t",
+    "icon": "🌙",
+    "description": "释放永夜深处的绝对零度，不仅重创敌人，还通过极寒冻结其生机，使其无法回血且输出大幅萎缩",
+    "category": "mutation-eternal-dark",
+    "type": "debuff",
+    "effects": [
+      "debuff_attack",
+      "debuff_no_heal"
+    ],
+    "params": {
+      "cooldown": 2,
+      "duration": 0,
+      "count": 1,
+      "debuff_attack_effect-source": "enemy-current-attack",
+      "debuff_attack_target": "enemy-single",
+      "debuff_attack_bonus": 0.7,
+      "debuff_no_heal_target": "enemy-single"
+    },
+    "createdAt": "2026-01-14T01:49:20.199Z"
+  },
+  {
+    "key": "CUSTOM_1768355403702",
+    "name": "冥河祭礼",
+    "icon": "🌙",
+    "description": "强行剥离周围生灵的命力汇入冥河，在疯狂治愈自身伤势的同时，对目标造成无视护甲的灵魂损伤",
+    "category": "mutation-eternal-dark",
+    "type": "heal",
+    "effects": [
+      "debuff_defense",
+      "heal_direct"
+    ],
+    "params": {
+      "cooldown": 2,
+      "duration": 0,
+      "count": 1,
+      "debuff_defense_effect-source": "enemy-current-defense",
+      "debuff_defense_target": "enemy-single",
+      "debuff_defense_bonus": 1,
+      "heal_direct_effect-source": "self-current-attack",
+      "heal_direct_target": "self",
+      "heal_direct_bonus": 1
+    },
+    "createdAt": "2026-01-14T01:50:03.702Z",
+    "updatedAt": "2026-01-15T03:15:10.269Z"
+  },
+  {
+    "key": "CUSTOM_1768355455914",
+    "name": "感官剥夺·虚无囚笼\t",
+    "icon": "🌙",
+    "description": "将敌人拉入绝对黑暗的囚笼，使其失去视听感知，全属性在黑暗的压迫下产生永久性的结构崩塌",
+    "category": "mutation-eternal-dark",
+    "type": "debuff",
+    "effects": [
+      "debuff_attack",
+      "debuff_defense",
+      "debuff_speed"
+    ],
+    "params": {
+      "cooldown": 2,
+      "duration": 0,
+      "count": 1,
+      "debuff_attack_effect-source": "enemy-current-attack",
+      "debuff_attack_target": "enemy-single",
+      "debuff_attack_bonus": 0.7,
+      "debuff_defense_effect-source": "enemy-current-defense",
+      "debuff_defense_target": "enemy-single",
+      "debuff_defense_bonus": 0.7,
+      "debuff_speed_effect-source": "enemy-current-agility",
+      "debuff_speed_target": "enemy-single",
+      "debuff_speed_bonus": 0.7
+    },
+    "createdAt": "2026-01-14T01:50:55.914Z"
+  },
+  {
+    "key": "CUSTOM_1768355494631",
+    "name": "永夜涅槃",
+    "icon": "🌙",
+    "description": "黑夜永不消逝。在濒死之际遁入影位面完成涅槃，移除所有负面状态并以全盛的姿态重新降临",
+    "category": "mutation-eternal-dark",
+    "type": "heal",
+    "effects": [
+      "buff_purify",
+      "heal_rebirth"
+    ],
+    "params": {
+      "cooldown": 4,
+      "duration": 0,
+      "count": 1,
+      "buff_purify_target": "self",
+      "buff_purify_purify-type": "negative",
+      "buff_purify_purify-count": "all",
+      "heal_rebirth_effect-source": "self-current-attack",
+      "heal_rebirth_target": "self",
+      "heal_rebirth_percent": 0.1,
+      "heal_rebirth_rebirth-condition": "death"
+    },
+    "createdAt": "2026-01-14T01:51:34.631Z",
+    "updatedAt": "2026-01-15T03:15:37.293Z"
+  },
+  {
+    "key": "CUSTOM_1768355538269",
+    "name": "终焉·万古永夜",
+    "icon": "🌙",
+    "description": "开启万古永夜领域，将整场战斗积攒的负能量化为连续不断的寂灭冲击，主宰场上一切生灵的存亡",
+    "category": "mutation-eternal-dark",
+    "type": "attack",
+    "effects": [
+      "multi_attack"
+    ],
+    "params": {
+      "cooldown": 6,
+      "duration": 0,
+      "count": 6,
+      "multi_attack_effect-source": "self-current-attack",
+      "multi_attack_multi-bonus": [
+        1,
+        1.2,
+        1.4,
+        1.6,
+        1.8,
+        2
+      ]
+    },
+    "createdAt": "2026-01-14T01:52:18.269Z"
+  },
+  {
+    "key": "CUSTOM_1768355585229",
+    "name": "永耀·恒星爆发",
+    "icon": "☀️",
+    "description": "模拟恒星内部的剧变，释放摧毁性的光能冲击，并在数回合内大幅提升自身的破坏力",
+    "category": "mutation-eternal-light",
+    "type": "attack",
+    "effects": [
+      "direct_attack"
+    ],
+    "params": {
+      "cooldown": 2,
+      "duration": 0,
+      "count": 1,
+      "direct_attack_effect-source": "self-current-attack",
+      "direct_attack_bonus": 1
+    },
+    "createdAt": "2026-01-14T01:53:05.229Z"
+  },
+  {
+    "key": "CUSTOM_1768355621101",
+    "name": "日冕圣铠",
+    "icon": "☀️",
+    "description": "身体表面覆盖一层如同日冕般的高温等离子层，大幅减免伤害、提升护甲并每回合自愈",
+    "category": "mutation-eternal-light",
+    "type": "defense",
+    "effects": [
+      "direct_defense",
+      "heal_direct"
+    ],
+    "params": {
+      "cooldown": 2,
+      "duration": 0,
+      "count": 1,
+      "direct_defense_effect-source": "self-current-defense",
+      "direct_defense_bonus": 0.8,
+      "heal_direct_effect-source": "self-max-hp",
+      "heal_direct_target": "self",
+      "heal_direct_bonus": 0.7
+    },
+    "createdAt": "2026-01-14T01:53:41.101Z"
+  },
+  {
+    "key": "CUSTOM_1768355658501",
+    "name": "永耀审判：贯穿\t",
+    "icon": "☀️",
+    "description": "射出一道凝聚了极致光压的审判之矛，按比例重创敌人生命，并强行瓦解其所有的防御和攻击意图",
+    "category": "mutation-eternal-light",
+    "type": "attack",
+    "effects": [
+      "percent_damage"
+    ],
+    "params": {
+      "cooldown": 2,
+      "duration": 0,
+      "count": 1,
+      "percent_damage_effect-source": "enemy-max-hp",
+      "percent_damage_percent": 0.6
+    },
+    "createdAt": "2026-01-14T01:54:18.501Z"
+  },
+  {
+    "key": "CUSTOM_1768355699356",
+    "name": "不灭圣魂",
+    "icon": "☀️",
+    "description": "唤醒体内不灭的圣光灵魂，全方位提升战斗属性，即使肉体毁灭也能在强光中再度凝聚复生",
+    "category": "mutation-eternal-light",
+    "type": "buff",
+    "effects": [
+      "buff_attack",
+      "buff_defense"
+    ],
+    "params": {
+      "cooldown": 3,
+      "duration": 0,
+      "count": 1,
+      "buff_attack_effect-source": "self-current-attack",
+      "buff_attack_target": "self",
+      "buff_attack_bonus": 0.7,
+      "buff_defense_effect-source": "enemy-current-defense",
+      "buff_defense_target": "self",
+      "buff_defense_bonus": 0.8
+    },
+    "createdAt": "2026-01-14T01:54:59.356Z"
+  },
+  {
+    "key": "CUSTOM_1768355764805",
+    "name": "创世·永耀纪元",
+    "icon": "☀️",
+    "description": "开启一个充满永恒之光的领域，将自身的战力推向神之领域，彻底重塑战场的规则",
+    "category": "mutation-eternal-light",
+    "type": "attack",
+    "effects": [
+      "direct_attack",
+      "debuff_status_self",
+      "heal_percent"
+    ],
+    "params": {
+      "cooldown": 2,
+      "duration": 0,
+      "count": 1,
+      "direct_attack_effect-source": "self-current-attack",
+      "direct_attack_bonus": 1,
+      "debuff_status_self_status-type": "STATUS_1768189136979",
+      "debuff_status_self_status-chance": 100,
+      "debuff_status_self_status-stacks": 1,
+      "heal_percent_effect-source": "self-current-attack",
+      "heal_percent_target": "self",
+      "heal_percent_percent": 0.1
+    },
+    "createdAt": "2026-01-14T01:56:04.805Z",
+    "updatedAt": "2026-01-15T03:16:04.701Z"
+  },
+  {
+    "key": "CUSTOM_1768355826270",
+    "name": "源晶·地核冲击\t",
+    "icon": "💠",
+    "description": "将全身密度提升至极致发动撞击，造成的伤害完全取决于自身的防御力，并粉碎敌方护甲",
+    "category": "mutation-source-crystal",
+    "type": "attack",
+    "effects": [
+      "direct_attack"
+    ],
+    "params": {
+      "cooldown": 2,
+      "duration": 0,
+      "count": 1,
+      "direct_attack_effect-source": "self-current-defense",
+      "direct_attack_bonus": 2
+    },
+    "createdAt": "2026-01-14T01:57:06.270Z",
+    "updatedAt": "2026-01-15T03:16:27.981Z"
+  },
+  {
+    "key": "CUSTOM_1768355884862",
+    "name": "万象引力",
+    "icon": "💠",
+    "description": "操控源晶产生的强引力场，剥夺敌方的行动力与攻击强度，并将其动能转化为自身的瞬时速度",
+    "category": "mutation-source-crystal",
+    "type": "debuff",
+    "effects": [
+      "buff_speed",
+      "debuff_defense",
+      "debuff_speed"
+    ],
+    "params": {
+      "cooldown": 2,
+      "duration": 0,
+      "count": 1,
+      "buff_speed_effect-source": "enemy-current-agility",
+      "buff_speed_target": "self",
+      "buff_speed_bonus": 1,
+      "debuff_defense_effect-source": "self-current-attack",
+      "debuff_defense_target": "self",
+      "debuff_defense_bonus": 1,
+      "debuff_speed_effect-source": "enemy-current-agility",
+      "debuff_speed_target": "enemy-single",
+      "debuff_speed_bonus": 1
+    },
+    "createdAt": "2026-01-14T01:58:04.862Z",
+    "updatedAt": "2026-01-15T03:18:31.341Z"
+  },
+  {
+    "key": "CUSTOM_1768355919532",
+    "name": "源力超频装甲",
+    "icon": "💠",
+    "description": "强制激活源晶核心，进入超频形态。瞬间移除所有负面状态，并根据生命上限全方位拔高战斗数值",
+    "category": "mutation-source-crystal",
+    "type": "defense",
+    "effects": [
+      "direct_defense"
+    ],
+    "params": {
+      "cooldown": 1,
+      "duration": 0,
+      "count": 1,
+      "direct_defense_effect-source": "self-current-defense",
+      "direct_defense_bonus": 1
+    },
+    "createdAt": "2026-01-14T01:58:39.532Z"
+  },
+  {
+    "key": "CUSTOM_1768355977428",
+    "name": "星核崩裂",
+    "icon": "💠",
+    "description": "释放源晶内部储存的星核能量，引发大范围的物质崩塌，在绝对的质量压制面前，任何防御都毫无意义",
+    "category": "mutation-source-crystal",
+    "type": "attack",
+    "effects": [
+      "direct_attack"
+    ],
+    "params": {
+      "cooldown": 3,
+      "duration": 0,
+      "count": 1,
+      "direct_attack_effect-source": "self-current-attack",
+      "direct_attack_bonus": 1
+    },
+    "createdAt": "2026-01-14T01:59:37.428Z"
+  },
+  {
+    "key": "CUSTOM_1768356031852",
+    "name": "雷煌·极速瞬闪",
+    "icon": "⚡",
+    "description": "化身一道金色闪电瞬间贯穿敌人，在造成巨额爆发伤害的同时，使自身的行动速度和破坏力达到巅峰",
+    "category": "mutation-thunder-lord",
+    "type": "attack",
+    "effects": [
+      "direct_attack"
+    ],
+    "params": {
+      "cooldown": 1,
+      "duration": 0,
+      "count": 1,
+      "direct_attack_effect-source": "self-current-attack",
+      "direct_attack_bonus": 1
+    },
+    "createdAt": "2026-01-14T02:00:31.852Z"
+  },
+  {
+    "key": "CUSTOM_1768356058269",
+    "name": "九天雷降：湮灭",
+    "icon": "⚡",
+    "description": "引导九天之上的煌雷垂直轰击目标，毁灭性的能量会从分子层面瓦解敌方的防御结构，并彻底封死其生机",
+    "category": "mutation-thunder-lord",
+    "type": "attack",
+    "effects": [
+      "direct_attack",
+      "buff_status_enemy"
+    ],
+    "params": {
+      "cooldown": 3,
+      "duration": 0,
+      "count": 1,
+      "direct_attack_effect-source": "self-current-attack",
+      "direct_attack_bonus": 1,
+      "buff_status_enemy_status-type": "STATUS_1768185372172",
+      "buff_status_enemy_status-chance": 100,
+      "buff_status_enemy_status-stacks": 1
+    },
+    "createdAt": "2026-01-14T02:00:58.269Z",
+    "updatedAt": "2026-01-14T02:03:02.317Z"
+  },
+  {
+    "key": "CUSTOM_1768356095732",
+    "name": "雷神乱舞：千鸣",
+    "icon": "⚡",
+    "description": "以肉眼无法捕捉的速度进行千万次雷霆打击，攻击次数随当前速度暴增，且每一击都携带前序伤害的加成",
+    "category": "mutation-thunder-lord",
+    "type": "agility",
+    "effects": [
+      "direct_speed"
+    ],
+    "params": {
+      "cooldown": 2,
+      "duration": 0,
+      "count": 1,
+      "direct_speed_effect-source": "self-current-agility",
+      "direct_speed_bonus": 1
+    },
+    "createdAt": "2026-01-14T02:01:35.732Z",
+    "updatedAt": "2026-01-14T02:02:56.901Z"
+  },
+  {
+    "key": "CUSTOM_1768356131845",
+    "name": "煌曜重生",
+    "icon": "⚡",
+    "description": "哪怕肉体湮灭，残留的煌雷也会重塑躯壳。复生后将此前积攒的愤怒转化为极高的攻速增益与雷电防护",
+    "category": "mutation-thunder-lord",
+    "type": "heal",
+    "effects": [
+      "heal_rebirth"
+    ],
+    "params": {
+      "cooldown": 2,
+      "duration": 0,
+      "count": 1,
+      "heal_rebirth_effect-source": "self-lost-hp",
+      "heal_rebirth_target": "self",
+      "heal_rebirth_percent": 0.5,
+      "heal_rebirth_rebirth-condition": "death"
+    },
+    "createdAt": "2026-01-14T02:02:11.845Z"
+  },
+  {
+    "key": "CUSTOM_1768356166044",
+    "name": "煌灵·末日天罚\t",
+    "icon": "⚡",
+    "description": "降下真正的末日雷劫，自身进入光速状态，在无尽的连击中彻底抹除敌人，并吸收余波恢复自身",
+    "category": "mutation-thunder-lord",
+    "type": "attack",
+    "effects": [
+      "direct_attack",
+      "heal_direct"
+    ],
+    "params": {
+      "cooldown": 2,
+      "duration": 0,
+      "count": 1,
+      "direct_attack_effect-source": "self-current-attack",
+      "direct_attack_bonus": 1,
+      "heal_direct_effect-source": "self-current-attack",
+      "heal_direct_target": "self",
+      "heal_direct_bonus": 1
+    },
+    "createdAt": "2026-01-14T02:02:46.044Z"
+  }
+]

@@ -376,7 +376,11 @@
                             <input type="file" id="import-file" accept=".json" class="hidden">
                             <button id="export-btn"
                                 class="bg-green-600 hover:bg-green-700 text-white text-sm font-bold py-2 px-4 rounded-lg transition-colors">
-                                📥 导出
+                                📥 导出JSON
+                            </button>
+                            <button id="export-csv-btn"
+                                class="bg-teal-600 hover:bg-teal-700 text-white text-sm font-bold py-2 px-4 rounded-lg transition-colors">
+                                📊 导出CSV
                             </button>
                         </div>
                     </div>
@@ -571,6 +575,7 @@
 
             // 导入导出
             document.getElementById('export-btn').onclick = exportStatuses;
+            document.getElementById('export-csv-btn').onclick = exportStatusesToCSV;
             document.getElementById('import-file').onchange = importStatuses;
         }
         
@@ -1161,7 +1166,7 @@
             statusCount.textContent = statuses.length;
         }
 
-        // 导出状态池
+        // 导出状态池（JSON格式）
         function exportStatuses() {
             if (statuses.length === 0) {
                 alert('状态池为空！');
@@ -1176,6 +1181,163 @@
             a.download = `status_pool_${Date.now()}.json`;
             a.click();
             URL.revokeObjectURL(url);
+        }
+
+        // 导出状态池（CSV格式 - 策划友好版）
+        function exportStatusesToCSV() {
+            if (statuses.length === 0) {
+                alert('状态池为空！');
+                return;
+            }
+
+            // 转义CSV字段
+            const escapeCSV = (value) => {
+                if (value === null || value === undefined) return '';
+                const str = String(value);
+                if (str.includes(',') || str.includes('"') || str.includes('\n')) {
+                    return `"${str.replace(/"/g, '""')}"`;
+                }
+                return str;
+            };
+
+            // 基础表头
+            const baseHeaders = [
+                '状态ID', '状态名称', '状态描述', '状态类型',
+                '持续时间模式', '状态持续回合', '状态是否永久',
+                '每层持续回合', '层数是否永久', '最大层数',
+                '是否有层数', '是否可净化', '是否唯一效果',
+                '是否自动增长', '每回合增长层数'
+            ];
+
+            // 效果表头
+            const allEffects = [
+                'dot-damage', 'hot-heal', 'cannot-act', 'cannot-attack', 'cannot-defend',
+                'boost-damage', 'boost-attack', 'boost-defense', 'boost-speed',
+                'reduce-damage', 'reduce-attack', 'reduce-defense', 'reduce-agility',
+                'ignore-defense', 'first-strike', 'reverse-element', 'element-advantage',
+                'element-bonus', 'reset-cooldown'
+            ];
+
+            const effectHeaders = [];
+            allEffects.forEach(effectKey => {
+                const config = EFFECT_CONFIG[effectKey];
+                if (config) {
+                    const effectName = config.name;
+                    if (config.needsSource) {
+                        effectHeaders.push(`${effectName}_效果来源`);
+                    }
+                    if (config.needsValue) {
+                        effectHeaders.push(`${effectName}_数值`);
+                    }
+                }
+            });
+
+            const headers = [...baseHeaders, '效果列表', ...effectHeaders, '创建时间', '更新时间', '备注'];
+
+            // 构建CSV内容
+            let csvContent = headers.join(',') + '\n';
+
+            statuses.forEach(status => {
+                // 判断持续时间模式
+                let durationMode = '状态整体持续';
+                if (status.isPermanent && !status.isStackPermanent) {
+                    durationMode = '每层独立计时';
+                }
+
+                // 基础信息
+                const baseRow = [
+                    escapeCSV(status.key),
+                    escapeCSV(status.name),
+                    escapeCSV(status.description || ''),
+                    escapeCSV(getStatusTypeName(status.statusType)),
+                    escapeCSV(durationMode),
+                    escapeCSV(status.isPermanent ? '' : (status.statusDuration || 10)),
+                    escapeCSV(status.isPermanent ? '是' : '否'),
+                    escapeCSV(status.isStackPermanent ? '' : (status.durationPerStack || 3)),
+                    escapeCSV(status.isStackPermanent ? '是' : '否'),
+                    escapeCSV(status.maxStacks || 1),
+                    escapeCSV(status.hasStacks !== false ? '是' : '否'),
+                    escapeCSV(status.canPurify ? '是' : '否'),
+                    escapeCSV(status.uniqueEffect ? '是' : '否'),
+                    escapeCSV(status.autoGrow ? '是' : '否'),
+                    escapeCSV(status.autoGrow ? (status.growRate || 1) : '')
+                ];
+
+                // 效果列表
+                const effectList = (status.effects || []).map(e => EFFECT_CONFIG[e]?.name || e).join('; ');
+                baseRow.push(escapeCSV(effectList));
+
+                // 效果参数
+                const effectRow = [];
+                allEffects.forEach(effectKey => {
+                    const config = EFFECT_CONFIG[effectKey];
+                    if (config) {
+                        const effectConfig = status.effectConfigs?.[effectKey];
+                        
+                        if (config.needsSource) {
+                            const source = effectConfig?.source || '';
+                            effectRow.push(escapeCSV(getEffectSourceDisplayName(source)));
+                        }
+                        if (config.needsValue) {
+                            const value = effectConfig?.value;
+                            effectRow.push(escapeCSV(value !== undefined ? value : ''));
+                        }
+                    }
+                });
+
+                const row = [...baseRow, ...effectRow,
+                    escapeCSV(status.createdAt ? new Date(status.createdAt).toLocaleString('zh-CN') : ''),
+                    escapeCSV(status.updatedAt ? new Date(status.updatedAt).toLocaleString('zh-CN') : ''),
+                    ''
+                ];
+
+                csvContent += row.join(',') + '\n';
+            });
+
+            // 添加BOM
+            const BOM = '\uFEFF';
+            const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `状态配置表_${Date.now()}.csv`;
+            a.click();
+            URL.revokeObjectURL(url);
+
+            alert(`✅ 已导出 ${statuses.length} 个状态到策划配置表（CSV格式）！\n\n表格特点：\n• 扁平化结构，便于Excel编辑\n• 中文列名，易于理解\n• 所有参数独立成列\n• 只显示已配置的参数值`);
+        }
+
+        // 辅助函数：获取状态类型名称
+        function getStatusTypeName(type) {
+            const names = {
+                'negative': '负面状态',
+                'positive': '正面状态',
+                'neutral': '中性状态'
+            };
+            return names[type] || '未知';
+        }
+
+        // 辅助函数：获取效果来源显示名称
+        function getEffectSourceDisplayName(source) {
+            const names = {
+                'caster-current-attack': '施加者当前攻击',
+                'caster-base-attack': '施加者基础攻击',
+                'caster-current-defense': '施加者当前防御',
+                'caster-base-defense': '施加者基础防御',
+                'caster-current-agility': '施加者当前敏捷',
+                'caster-base-agility': '施加者基础敏捷',
+                'caster-max-hp': '施加者最大生命',
+                'target-current-attack': '承受者当前攻击',
+                'target-base-attack': '承受者基础攻击',
+                'target-current-defense': '承受者当前防御',
+                'target-base-defense': '承受者基础防御',
+                'target-current-agility': '承受者当前敏捷',
+                'target-base-agility': '承受者基础敏捷',
+                'target-max-hp': '承受者最大生命',
+                'target-current-hp': '承受者当前生命',
+                'target-lost-hp': '承受者已损失生命'
+            };
+            return names[source] || source || '';
         }
 
         // 导入状态

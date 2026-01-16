@@ -183,14 +183,18 @@
                     <div class="flex justify-between items-center mb-4">
                         <h3 class="text-xl font-bold text-white">🗺️ 地图配置 (<span id="map-count">0</span>)</h3>
                         <div class="flex gap-2">
-                            <label for="import-file" 
+                            <label for="import-file"
                                 class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold py-2 px-4 rounded-lg transition-colors cursor-pointer">
                                 📤 导入
                             </label>
                             <input type="file" id="import-file" accept=".json" class="hidden">
                             <button id="export-btn"
                                 class="bg-green-600 hover:bg-green-700 text-white text-sm font-bold py-2 px-4 rounded-lg transition-colors">
-                                📥 导出
+                                📥 导出JSON
+                            </button>
+                            <button id="export-csv-btn"
+                                class="bg-teal-600 hover:bg-teal-700 text-white text-sm font-bold py-2 px-4 rounded-lg transition-colors">
+                                📊 导出CSV
                             </button>
                             <button id="apply-to-game-btn"
                                 class="bg-purple-600 hover:bg-purple-700 text-white text-sm font-bold py-2 px-4 rounded-lg transition-colors">
@@ -1109,6 +1113,7 @@
 
             // 导出按钮
             exportBtn.onclick = exportMaps;
+            document.getElementById('export-csv-btn').onclick = exportMapsToCSV;
 
             // 导入按钮
             document.getElementById('import-file').onchange = importMaps;
@@ -1378,7 +1383,7 @@
             }
         }
 
-        // 导出地图配置
+        // 导出地图配置（JSON格式）
         function exportMaps() {
             if (maps.length === 0) {
                 alert('地图配置为空！');
@@ -1393,6 +1398,134 @@
             a.download = `map_configs_${Date.now()}.json`;
             a.click();
             URL.revokeObjectURL(url);
+        }
+
+        // 导出地图配置（CSV格式 - 策划友好版）
+        function exportMapsToCSV() {
+            if (maps.length === 0) {
+                alert('地图配置为空！');
+                return;
+            }
+
+            // 转义CSV字段
+            const escapeCSV = (value) => {
+                if (value === null || value === undefined) return '';
+                const str = String(value);
+                if (str.includes(',') || str.includes('"') || str.includes('\n')) {
+                    return `"${str.replace(/"/g, '""')}"`;
+                }
+                return str;
+            };
+
+            // 基础表头
+            const baseHeaders = [
+                '地图ID', '地图名称', '地图图标', '地图描述',
+                '地图等级', '生成间隔(秒)', '最大动物数量',
+                '子地图数量', '子地图列表',
+                '动物种类数量', '动物列表'
+            ];
+
+            // 动物配置表头（最多支持20种动物）
+            const animalHeaders = [];
+            for (let i = 1; i <= 20; i++) {
+                animalHeaders.push(
+                    `动物${i}_名称`,
+                    `动物${i}_稀有度`,
+                    `动物${i}_权重`,
+                    `动物${i}_平庸潜力%`,
+                    `动物${i}_超常潜力%`,
+                    `动物${i}_璀璨潜力%`,
+                    `动物${i}_使用变体模板`
+                );
+            }
+
+            const headers = [...baseHeaders, ...animalHeaders, '创建时间', '更新时间', '备注'];
+
+            // 构建CSV内容
+            let csvContent = headers.join(',') + '\n';
+
+            maps.forEach(map => {
+                // 子地图信息
+                const submaps = map.submaps || [];
+                const submapNames = submaps.map(s => {
+                    const submap = maps.find(m => m.key === s.mapKey);
+                    return submap ? submap.name : s.mapKey;
+                }).join('; ');
+
+                // 动物信息概览
+                const animals = map.animals || [];
+                const animalSummary = animals.map(a => {
+                    const animal = animalPool.find(ap => ap.key === a.animalKey);
+                    const rarityName = getRarityName(a.rarityType);
+                    return animal ? `${animal.name}(${rarityName})` : a.animalKey;
+                }).join('; ');
+
+                // 基础信息
+                const baseRow = [
+                    escapeCSV(map.key),
+                    escapeCSV(map.name),
+                    escapeCSV(map.icon),
+                    escapeCSV(map.desc || ''),
+                    escapeCSV(map.level),
+                    escapeCSV(map.spawnInterval),
+                    escapeCSV(map.maxAnimals),
+                    escapeCSV(submaps.length),
+                    escapeCSV(submapNames),
+                    escapeCSV(animals.length),
+                    escapeCSV(animalSummary)
+                ];
+
+                // 动物配置详情（最多20种）
+                const animalRow = [];
+                for (let i = 0; i < 20; i++) {
+                    if (i < animals.length) {
+                        const animalConfig = animals[i];
+                        const animal = animalPool.find(ap => ap.key === animalConfig.animalKey);
+                        const rarityType = animalConfig.rarityType || 'common';
+                        const growthRatios = animalConfig.growthRatios || { mediocre: 0, extraordinary: 0, brilliant: 0 };
+                        
+                        // 对于非普通稀有度，检查是否使用了变体模板
+                        let variantInfo = '';
+                        if (rarityType !== 'common' && animalConfig.selectedAnimalKey) {
+                            const variantAnimal = animalPool.find(ap => ap.key === animalConfig.selectedAnimalKey);
+                            variantInfo = variantAnimal ? variantAnimal.name : animalConfig.selectedAnimalKey;
+                        }
+                        
+                        animalRow.push(
+                            escapeCSV(animal ? animal.name : animalConfig.animalKey),
+                            escapeCSV(getRarityName(rarityType)),
+                            escapeCSV(animalConfig.weight || 0),
+                            escapeCSV(growthRatios.mediocre),
+                            escapeCSV(growthRatios.extraordinary),
+                            escapeCSV(growthRatios.brilliant),
+                            escapeCSV(variantInfo)
+                        );
+                    } else {
+                        // 空动物槽位
+                        animalRow.push('', '', '', '', '', '', '');
+                    }
+                }
+
+                const row = [...baseRow, ...animalRow,
+                    escapeCSV(map.createdAt ? new Date(map.createdAt).toLocaleString('zh-CN') : ''),
+                    escapeCSV(map.updatedAt ? new Date(map.updatedAt).toLocaleString('zh-CN') : ''),
+                    ''
+                ];
+
+                csvContent += row.join(',') + '\n';
+            });
+
+            // 添加BOM
+            const BOM = '\uFEFF';
+            const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `地图配置表_${Date.now()}.csv`;
+            a.click();
+            URL.revokeObjectURL(url);
+
+            alert(`✅ 已导出 ${maps.length} 个地图配置到策划配置表（CSV格式）！\n\n表格特点：\n• 扁平化结构，便于Excel编辑\n• 中文列名，易于理解\n• 包含子地图和动物配置详情\n• 最多支持20种动物配置\n• 显示变体模板使用情况`);
         }
 
         // 导入地图配置

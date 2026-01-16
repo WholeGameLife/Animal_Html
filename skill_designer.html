@@ -32,6 +32,7 @@
         }
         
         /* 系别颜色 */
+        .element-normal { background: linear-gradient(135deg, #9ca3af, #6b7280); }
         .element-water { background: linear-gradient(135deg, #3b82f6, #1d4ed8); }
         .element-fire { background: linear-gradient(135deg, #ef4444, #dc2626); }
         .element-grass { background: linear-gradient(135deg, #22c55e, #16a34a); }
@@ -136,6 +137,7 @@
                                 class="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500">
                                 <option value="">选择类别</option>
                                 <optgroup label="系别技能">
+                                    <option value="element-normal">⭕ 普通</option>
                                     <option value="element-water">💧 水系</option>
                                     <option value="element-fire">🔥 火系</option>
                                     <option value="element-grass">🌿 草系</option>
@@ -411,7 +413,11 @@
                             <input type="file" id="import-file" accept=".json" class="hidden">
                             <button id="export-btn"
                                 class="bg-green-600 hover:bg-green-700 text-white text-sm font-bold py-2 px-4 rounded-lg transition-colors">
-                                📥 导出
+                                📥 导出JSON
+                            </button>
+                            <button id="export-csv-btn"
+                                class="bg-teal-600 hover:bg-teal-700 text-white text-sm font-bold py-2 px-4 rounded-lg transition-colors">
+                                📊 导出CSV
                             </button>
                         </div>
                     </div>
@@ -743,6 +749,7 @@
             };
 
             document.getElementById('export-btn').onclick = exportSkills;
+            document.getElementById('export-csv-btn').onclick = exportSkillsToCSV;
             document.getElementById('import-file').onchange = importSkills;
         }
 
@@ -1022,6 +1029,7 @@
                 case 'element-type':
                     return `<div><label class="block text-xs font-medium text-gray-400 mb-1">属性类型</label>
                         <select id="${paramId}" class="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white text-sm">
+                            <option value="normal">普通</option>
                             <option value="water">水</option>
                             <option value="fire">火</option>
                             <option value="grass">草</option>
@@ -1308,7 +1316,7 @@
             }
         }
 
-        // 导出技能池
+        // 导出技能池（JSON格式）
         function exportSkills() {
             if (skills.length === 0) {
                 alert('技能池为空！');
@@ -1323,6 +1331,221 @@
             a.download = `skill_pool_${Date.now()}.json`;
             a.click();
             URL.revokeObjectURL(url);
+        }
+
+        // 导出技能池（CSV格式 - 策划友好版）
+        function exportSkillsToCSV() {
+            if (skills.length === 0) {
+                alert('技能池为空！');
+                return;
+            }
+
+            // 转义 CSV 字段
+            const escapeCSV = (value) => {
+                if (value === null || value === undefined) return '';
+                const str = String(value);
+                if (str.includes(',') || str.includes('"') || str.includes('\n')) {
+                    return `"${str.replace(/"/g, '""')}"`;
+                }
+                return str;
+            };
+
+            // 定义所有可能的效果参数列（策划配置用）
+            const allEffectParams = {
+                // 攻击类
+                'direct_attack': ['effect-source', 'bonus'],
+                'multi_attack': ['effect-source', 'multi-bonus'],
+                'dot_damage': ['effect-source', 'bonus'],
+                'percent_damage': ['effect-source', 'percent'],
+                // 防御类
+                'direct_defense': ['effect-source', 'bonus'],
+                'continuous_defense': ['effect-source', 'bonus'],
+                'defense_counter': ['effect-source', 'defense-bonus', 'counter-effect-source', 'counter-bonus'],
+                // 敏捷类
+                'direct_speed': ['effect-source', 'bonus'],
+                'continuous_speed': ['effect-source', 'bonus'],
+                // 增益类
+                'buff_attack': ['effect-source', 'bonus', 'target'],
+                'buff_defense': ['effect-source', 'bonus', 'target'],
+                'buff_speed': ['effect-source', 'bonus', 'target'],
+                'buff_status_enemy': ['status-type', 'status-chance', 'status-stacks'],
+                'buff_purify': ['target', 'purify-type', 'purify-count'],
+                'buff_heal_amp': ['effect-source', 'bonus', 'target'],
+                'buff_element_damage': ['target', 'element-type', 'damage-bonus'],
+                // 减益类
+                'debuff_attack': ['effect-source', 'bonus', 'target'],
+                'debuff_defense': ['effect-source', 'bonus', 'target'],
+                'debuff_speed': ['effect-source', 'bonus', 'target'],
+                'debuff_status_self': ['status-type', 'status-chance', 'status-stacks'],
+                'debuff_no_heal': ['target'],
+                'debuff_heal_reduce': ['target', 'bonus'],
+                'debuff_element_damage': ['target', 'element-type', 'damage-reduce'],
+                'debuff_hp_cost': ['effect-source', 'bonus', 'target'],
+                // 治疗类
+                'heal_direct': ['effect-source', 'bonus', 'target'],
+                'heal_continuous': ['effect-source', 'bonus', 'target'],
+                'heal_percent': ['effect-source', 'percent', 'target'],
+                'heal_rebirth': ['effect-source', 'percent', 'rebirth-condition'],
+                'heal_lifesteal': ['effect-source', 'bonus']
+            };
+
+            // 基础表头（策划易读）
+            const baseHeaders = [
+                '技能ID', '技能名称', '图标', '技能描述',
+                '技能类别', '技能类型', '技能效果列表',
+                '冷却回合', '持续回合', '每回合次数'
+            ];
+
+            // 构建效果参数表头
+            const effectHeaders = [];
+            const effectKeys = Object.keys(allEffectParams);
+            effectKeys.forEach(effectKey => {
+                const effectName = EFFECT_PARAMS_CONFIG[effectKey]?.name || effectKey;
+                allEffectParams[effectKey].forEach(param => {
+                    const paramName = getParamDisplayName(param);
+                    effectHeaders.push(`${effectName}_${paramName}`);
+                });
+            });
+
+            const headers = [...baseHeaders, ...effectHeaders, '创建时间', '更新时间', '备注'];
+
+            // 构建CSV内容
+            let csvContent = headers.join(',') + '\n';
+
+            skills.forEach(skill => {
+                const params = skill.params || {};
+                
+                // 基础信息
+                const baseRow = [
+                    escapeCSV(skill.key),
+                    escapeCSV(skill.name),
+                    escapeCSV(skill.icon),
+                    escapeCSV(skill.description || ''),
+                    escapeCSV(getCategoryName(skill.category)),
+                    escapeCSV(getTypeName(skill.type)),
+                    escapeCSV((skill.effects || []).map(e => EFFECT_PARAMS_CONFIG[e]?.name || e).join('; ')),
+                    escapeCSV(params.cooldown || 0),
+                    escapeCSV(params.duration || 0),
+                    escapeCSV(params.count || 1)
+                ];
+
+                // 效果参数
+                const effectRow = [];
+                effectKeys.forEach(effectKey => {
+                    allEffectParams[effectKey].forEach(param => {
+                        const paramKey = `${effectKey}_${param}`;
+                        let value = params[paramKey];
+                        
+                        // 特殊处理不同类型的参数
+                        if (value !== undefined && value !== null) {
+                            if (Array.isArray(value)) {
+                                value = value.join(';');
+                            } else if (param === 'effect-source' || param === 'counter-effect-source') {
+                                value = getEffectSourceName(value);
+                            } else if (param === 'target') {
+                                value = getTargetName(value);
+                            } else if (param === 'status-type') {
+                                const statusPool = JSON.parse(localStorage.getItem('STATUS_POOL') || '[]');
+                                const status = statusPool.find(s => s.key === value);
+                                value = status ? status.name : value;
+                            } else if (param === 'purify-type') {
+                                value = getPurifyTypeName(value);
+                            } else if (param === 'element-type') {
+                                value = getElementName(value);
+                            } else if (param === 'rebirth-condition') {
+                                value = value === 'death' ? '死亡后触发' : '低生命触发';
+                            }
+                        } else {
+                            value = '';
+                        }
+                        
+                        effectRow.push(escapeCSV(value));
+                    });
+                });
+
+                const row = [...baseRow, ...effectRow,
+                    escapeCSV(skill.createdAt ? new Date(skill.createdAt).toLocaleString('zh-CN') : ''),
+                    escapeCSV(skill.updatedAt ? new Date(skill.updatedAt).toLocaleString('zh-CN') : ''),
+                    ''  // 备注列留空
+                ];
+                
+                csvContent += row.join(',') + '\n';
+            });
+
+            // 添加 BOM 以支持 Excel 正确显示中文
+            const BOM = '\uFEFF';
+            const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `技能配置表_${Date.now()}.csv`;
+            a.click();
+            URL.revokeObjectURL(url);
+            
+            alert(`✅ 已导出 ${skills.length} 个技能到策划配置表（CSV格式）！\n\n表格特点：\n• 扁平化结构，便于Excel编辑\n• 中文列名，易于理解\n• 所有参数独立成列\n• 只显示已配置的参数值`);
+        }
+
+        // 辅助函数：获取参数显示名称
+        function getParamDisplayName(param) {
+            const names = {
+                'effect-source': '效果来源',
+                'bonus': '加成值',
+                'multi-bonus': '多段加成',
+                'percent': '百分比',
+                'defense-bonus': '防御加成',
+                'counter-effect-source': '反击效果来源',
+                'counter-bonus': '反击加成',
+                'damage-bonus': '增伤加成',
+                'damage-reduce': '减伤值',
+                'target': '目标',
+                'status-type': '状态类型',
+                'status-chance': '施加概率',
+                'status-stacks': '施加层数',
+                'purify-type': '驱散类型',
+                'purify-count': '驱散数量',
+                'element-type': '属性类型',
+                'rebirth-condition': '重生条件'
+            };
+            return names[param] || param;
+        }
+
+        // 辅助函数：获取类型名称
+        function getTypeName(type) {
+            const names = {
+                'attack': '⚔️ 攻击型',
+                'defense': '🛡️ 防御型',
+                'agility': '⚡ 敏捷型',
+                'buff': '💪 增益型',
+                'debuff': '🔻 减益型',
+                'heal': '💚 治疗型'
+            };
+            return names[type] || type;
+        }
+
+        // 辅助函数：获取目标名称
+        function getTargetName(target) {
+            const names = {
+                'self': '自身',
+                'ally-all': '我方全体',
+                'enemy-single': '敌方单体',
+                'enemy-all': '敌方全体'
+            };
+            return names[target] || target;
+        }
+
+        // 辅助函数：获取净化类型名称
+        function getPurifyTypeName(type) {
+            const names = {
+                'all': '全部状态',
+                'negative': '负面状态',
+                'positive': '正面状态',
+                'neutral': '中性状态'
+            };
+            if (names[type]) return names[type];
+            // 如果是具体状态key
+            const statusPool = JSON.parse(localStorage.getItem('STATUS_POOL') || '[]');
+            const status = statusPool.find(s => s.key === type);
+            return status ? status.name : type;
         }
 
         // 导入技能
@@ -1361,7 +1584,7 @@
         // 辅助函数
         function getCategoryName(category) {
             const names = {
-                'element-water': '水系', 'element-fire': '火系', 'element-grass': '草系',
+                'element-normal': '普通', 'element-water': '水系', 'element-fire': '火系', 'element-grass': '草系',
                 'element-wind': '风系', 'element-metal': '金系', 'element-earth': '土系',
                 'mutation-dark': '🖤 黑化', 'mutation-light': '🤍 白化', 'mutation-crystal': '💎 晶化',
                 'mutation-shadow': '👤 影化', 'mutation-chaos': '🌑 暗蚀', 'mutation-holy': '✨ 圣辉',
@@ -2668,7 +2891,7 @@
 
         function getElementName(element) {
             const names = {
-                'water': '水', 'fire': '火', 'grass': '草',
+                'normal': '普通', 'water': '水', 'fire': '火', 'grass': '草',
                 'wind': '风', 'metal': '金', 'earth': '土'
             };
             return names[element] || element;

@@ -2,6 +2,11 @@
 
 // 计算属性克制倍率
 function getElementAdvantageMultiplier(attackerElement, defenderElement) {
+    // 普通系不参与克制关系
+    if (attackerElement === 'normal' || defenderElement === 'normal') {
+        return 1.0; // 普通系：始终1倍伤害，无克制关系
+    }
+    
     // 克制关系：水→火→金→草→土→风→水
     const advantages = {
         'water': 'fire',    // 水克火
@@ -1587,6 +1592,7 @@ class BattleSystem {
     
     getElementInfo(element) {
         const elementData = {
+            'normal': { name: '普通', icon: '⭕', bgClass: 'bg-gray-600' },
             'water': { name: '水系', icon: '💧', bgClass: 'bg-blue-600' },
             'fire': { name: '火系', icon: '🔥', bgClass: 'bg-red-600' },
             'grass': { name: '草系', icon: '🌿', bgClass: 'bg-green-600' },
@@ -1907,7 +1913,7 @@ class BattleSystem {
     
     getElementName(element) {
         const names = {
-            'water': '水', 'fire': '火', 'grass': '草',
+            'normal': '普通', 'water': '水', 'fire': '火', 'grass': '草',
             'wind': '风', 'metal': '金', 'earth': '土'
         };
         return names[element] || element;
