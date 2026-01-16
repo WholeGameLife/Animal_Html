@@ -1,0 +1,1004 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>技能池配置器 - 电子盆栽</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background: linear-gradient(135deg, #581c87 0%, #7c2d12 100%);
+            min-height: 100vh;
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .pool-card {
+            transition: all 0.3s ease;
+        }
+        
+        .pool-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+    </style>
+</head>
+<body class="p-6">
+    <div class="max-w-7xl mx-auto">
+        <!-- 标题 -->
+        <div class="text-center mb-8">
+            <h1 class="text-4xl font-bold text-white mb-2">🎲 技能池配置器 🎲</h1>
+            <p class="text-purple-200 mb-3">预设技能池模板，动物选择技能池即可获得随机技能</p>
+            <div class="flex justify-center gap-3">
+                <button onclick="window.history.back()"
+                        class="inline-flex items-center gap-2 bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-6 rounded-lg transition-colors">
+                    <span>←</span>
+                    <span>返回</span>
+                </button>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+            <!-- 左侧：技能池设计表单 -->
+            <div class="lg:col-span-3 bg-gray-900/80 backdrop-blur-lg rounded-xl p-6 border border-gray-700">
+                <h2 class="text-2xl font-bold text-white mb-6">🎨 创建技能池</h2>
+                
+                <form id="pool-form" class="space-y-4">
+                    <!-- 基础信息 -->
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">技能池名称 *</label>
+                            <input type="text" id="pool-name" required
+                                class="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-purple-500"
+                                placeholder="例: 火系基础技能池">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">技能池图标 *</label>
+                            <input type="text" id="pool-icon" required maxlength="2" value="🎲"
+                                class="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-2 text-white text-center text-2xl focus:outline-none focus:border-purple-500">
+                        </div>
+                    </div>
+
+                    <!-- 描述 -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-2">技能池描述</label>
+                        <textarea id="pool-description" rows="2" placeholder="描述这个技能池的用途和特点..."
+                            class="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-purple-500 resize-none"></textarea>
+                    </div>
+
+                    <!-- 技能池配置 - 四个稀有度列 -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-2">🎯 技能池配置（按稀有度分类）</label>
+                        <p class="text-xs text-gray-400 mb-3">💡 设置各稀有度生成权重，池内技能按该权重平分</p>
+                        <div class="grid grid-cols-4 gap-3">
+                            <!-- 普通稀有度 -->
+                            <div class="bg-gray-800/50 rounded-lg p-3 border border-gray-600">
+                                <div class="flex justify-between items-center mb-2">
+                                    <h4 class="text-sm font-bold text-gray-300">⚪ 普通</h4>
+                                    <button type="button" onclick="addSkillToRarity('common')"
+                                        class="text-gray-400 hover:text-white text-lg">+</button>
+                                </div>
+                                <div class="mb-2">
+                                    <label class="text-xs text-gray-400">生成权重</label>
+                                    <div class="flex items-center gap-1">
+                                        <input type="number" id="rarity-weight-common" min="0" max="100" step="0.1" value="70"
+                                            onchange="updateRarityWeight()"
+                                            class="w-16 bg-gray-700 border border-gray-600 rounded px-2 py-1 text-white text-xs text-center focus:outline-none">
+                                        <span class="text-xs text-gray-400">%</span>
+                                    </div>
+                                </div>
+                                <div id="skills-common" class="space-y-2 min-h-[200px] max-h-96 overflow-y-auto">
+                                    <div class="text-center text-gray-500 text-xs py-4">点击+添加</div>
+                                </div>
+                            </div>
+
+                            <!-- 稀有稀有度 -->
+                            <div class="bg-yellow-900/30 rounded-lg p-3 border border-yellow-600">
+                                <div class="flex justify-between items-center mb-2">
+                                    <h4 class="text-sm font-bold text-yellow-300">✨ 稀有</h4>
+                                    <button type="button" onclick="addSkillToRarity('rare')"
+                                        class="text-yellow-400 hover:text-yellow-300 text-lg">+</button>
+                                </div>
+                                <div class="mb-2">
+                                    <label class="text-xs text-gray-400">生成权重</label>
+                                    <div class="flex items-center gap-1">
+                                        <input type="number" id="rarity-weight-rare" min="0" max="100" step="0.1" value="20"
+                                            onchange="updateRarityWeight()"
+                                            class="w-16 bg-gray-700 border border-gray-600 rounded px-2 py-1 text-white text-xs text-center focus:outline-none">
+                                        <span class="text-xs text-gray-400">%</span>
+                                    </div>
+                                </div>
+                                <div id="skills-rare" class="space-y-2 min-h-[200px] max-h-96 overflow-y-auto">
+                                    <div class="text-center text-gray-500 text-xs py-4">点击+添加</div>
+                                </div>
+                            </div>
+
+                            <!-- 史诗稀有度 -->
+                            <div class="bg-pink-900/30 rounded-lg p-3 border border-pink-600">
+                                <div class="flex justify-between items-center mb-2">
+                                    <h4 class="text-sm font-bold text-pink-300">🌈 史诗</h4>
+                                    <button type="button" onclick="addSkillToRarity('epic')"
+                                        class="text-pink-400 hover:text-pink-300 text-lg">+</button>
+                                </div>
+                                <div class="mb-2">
+                                    <label class="text-xs text-gray-400">生成权重</label>
+                                    <div class="flex items-center gap-1">
+                                        <input type="number" id="rarity-weight-epic" min="0" max="100" step="0.1" value="8"
+                                            onchange="updateRarityWeight()"
+                                            class="w-16 bg-gray-700 border border-gray-600 rounded px-2 py-1 text-white text-xs text-center focus:outline-none">
+                                        <span class="text-xs text-gray-400">%</span>
+                                    </div>
+                                </div>
+                                <div id="skills-epic" class="space-y-2 min-h-[200px] max-h-96 overflow-y-auto">
+                                    <div class="text-center text-gray-500 text-xs py-4">点击+添加</div>
+                                </div>
+                            </div>
+
+                            <!-- 传说稀有度 -->
+                            <div class="bg-orange-900/30 rounded-lg p-3 border border-orange-600">
+                                <div class="flex justify-between items-center mb-2">
+                                    <h4 class="text-sm font-bold text-orange-300">⭐ 传说</h4>
+                                    <button type="button" onclick="addSkillToRarity('legendary')"
+                                        class="text-orange-400 hover:text-orange-300 text-lg">+</button>
+                                </div>
+                                <div class="mb-2">
+                                    <label class="text-xs text-gray-400">生成权重</label>
+                                    <div class="flex items-center gap-1">
+                                        <input type="number" id="rarity-weight-legendary" min="0" max="100" step="0.1" value="2"
+                                            onchange="updateRarityWeight()"
+                                            class="w-16 bg-gray-700 border border-gray-600 rounded px-2 py-1 text-white text-xs text-center focus:outline-none">
+                                        <span class="text-xs text-gray-400">%</span>
+                                    </div>
+                                </div>
+                                <div id="skills-legendary" class="space-y-2 min-h-[200px] max-h-96 overflow-y-auto">
+                                    <div class="text-center text-gray-500 text-xs py-4">点击+添加</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 按钮 -->
+                    <div class="flex gap-4 pt-4">
+                        <button type="submit" id="submit-btn"
+                            class="flex-1 bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-6 rounded-lg transition-colors">
+                            <span id="submit-text">✨ 创建技能池</span>
+                        </button>
+                        <button type="button" id="cancel-edit-btn" class="hidden bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-3 px-6 rounded-lg transition-colors">
+                            ❌ 取消编辑
+                        </button>
+                        <button type="button" id="clear-btn"
+                            class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-3 px-6 rounded-lg transition-colors">
+                            🔄 清空
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- 右侧：预览和列表 -->
+            <div class="space-y-6">
+                <!-- 技能池预览 -->
+                <div class="bg-gray-900/80 backdrop-blur-lg rounded-xl p-6 border border-gray-700">
+                    <h3 class="text-xl font-bold text-white mb-4">👁️ 技能池预览</h3>
+                    <div id="pool-preview" class="pool-card bg-gray-800 rounded-lg p-4 border-2 border-gray-600">
+                        <div class="text-center text-gray-500">
+                            <div class="text-4xl mb-2">❓</div>
+                            <div class="text-sm">填写表单查看预览</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 技能池列表 -->
+                <div class="bg-gray-900/80 backdrop-blur-lg rounded-xl p-6 border border-gray-700">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-xl font-bold text-white">📋 技能池列表 (<span id="pool-count">0</span>)</h3>
+                        <div class="flex gap-2">
+                            <label for="import-file"
+                                class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold py-2 px-4 rounded-lg transition-colors cursor-pointer">
+                                📤 导入
+                            </label>
+                            <input type="file" id="import-file" accept=".json" class="hidden">
+                            <button id="export-btn"
+                                class="bg-green-600 hover:bg-green-700 text-white text-sm font-bold py-2 px-4 rounded-lg transition-colors">
+                                📥 导出JSON
+                            </button>
+                            <button id="export-csv-btn"
+                                class="bg-teal-600 hover:bg-teal-700 text-white text-sm font-bold py-2 px-4 rounded-lg transition-colors">
+                                📊 导出CSV
+                            </button>
+                        </div>
+                    </div>
+                    <div id="pools-list" class="space-y-3 max-h-96 overflow-y-auto">
+                        <div class="text-center text-gray-500 text-sm py-8">
+                            暂无技能池
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 技能选择模态框 -->
+    <div id="skill-select-modal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+        <div class="bg-gray-900 rounded-xl p-6 max-w-2xl w-full mx-4 border border-gray-700 max-h-[80vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-bold text-white">从技能库选择技能</h3>
+                <button id="close-skill-modal" class="text-gray-400 hover:text-white text-2xl">×</button>
+            </div>
+            <div id="skill-pool-list" class="space-y-2">
+                <!-- 技能列表 -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 技能池存储
+        let skillPools = JSON.parse(localStorage.getItem('SKILL_POOLS') || '[]');
+        // 技能库
+        let skillLibrary = JSON.parse(localStorage.getItem('SKILL_POOL') || '[]');
+        // 当前配置的技能（按稀有度分类）
+        let configuredSkills = {
+            common: [],    // 普通
+            rare: [],      // 稀有
+            epic: [],      // 史诗
+            legendary: []  // 传说
+        };
+        // 稀有度生成权重
+        let rarityWeights = {
+            common: 70,
+            rare: 20,
+            epic: 8,
+            legendary: 2
+        };
+        // 当前正在为哪个稀有度添加技能
+        let currentRarity = 'common';
+        // 当前编辑的索引
+        let editingIndex = -1;
+
+        // DOM元素
+        const form = document.getElementById('pool-form');
+        const preview = document.getElementById('pool-preview');
+        const poolsList = document.getElementById('pools-list');
+        const poolCount = document.getElementById('pool-count');
+
+        // 初始化
+        function init() {
+            renderPoolsList();
+            setupFormListeners();
+            updatePoolCount();
+            setupSkillModal();
+            renderConfiguredSkills(); // 初始化四列显示
+        }
+
+        // 更新技能池数量
+        function updatePoolCount() {
+            poolCount.textContent = skillPools.length;
+        }
+
+        // 更新稀有度权重并重新计算技能权重
+        window.updateRarityWeight = function() {
+            rarityWeights.common = parseFloat(document.getElementById('rarity-weight-common').value) || 0;
+            rarityWeights.rare = parseFloat(document.getElementById('rarity-weight-rare').value) || 0;
+            rarityWeights.epic = parseFloat(document.getElementById('rarity-weight-epic').value) || 0;
+            rarityWeights.legendary = parseFloat(document.getElementById('rarity-weight-legendary').value) || 0;
+            
+            // 重新计算每个技能的权重
+            recalculateSkillWeights();
+            renderConfiguredSkills();
+        }
+
+        // 重新计算所有技能的权重（基于稀有度权重平分）
+        function recalculateSkillWeights() {
+            Object.keys(configuredSkills).forEach(rarity => {
+                const skills = configuredSkills[rarity];
+                const rarityWeight = rarityWeights[rarity] || 0;
+                const skillCount = skills.length;
+                
+                if (skillCount > 0) {
+                    const weightPerSkill = rarityWeight / skillCount;
+                    skills.forEach(skill => {
+                        skill.weight = parseFloat(weightPerSkill.toFixed(2));
+                    });
+                }
+            });
+        }
+
+        // 设置表单监听器
+        function setupFormListeners() {
+            form.querySelectorAll('input, select, textarea').forEach(input => {
+                input.addEventListener('input', updatePreview);
+            });
+
+            form.onsubmit = (e) => {
+                e.preventDefault();
+                if (editingIndex >= 0) {
+                    updateSkillPool();
+                } else {
+                    createSkillPool();
+                }
+            };
+
+            document.getElementById('clear-btn').onclick = () => {
+                form.reset();
+                configuredSkills = { common: [], rare: [], epic: [], legendary: [] };
+                cancelEdit();
+                renderConfiguredSkills();
+                updatePreview();
+            };
+
+            document.getElementById('cancel-edit-btn').onclick = () => {
+                form.reset();
+                configuredSkills = { common: [], rare: [], epic: [], legendary: [] };
+                cancelEdit();
+                renderConfiguredSkills();
+                updatePreview();
+            };
+
+            document.getElementById('export-btn').onclick = exportSkillPools;
+            document.getElementById('export-csv-btn').onclick = exportSkillPoolsToCSV;
+            document.getElementById('import-file').onchange = importSkillPools;
+        }
+
+        // 为指定稀有度添加技能
+        window.addSkillToRarity = function(rarity) {
+            currentRarity = rarity;
+            renderSkillLibrary();
+            document.getElementById('skill-select-modal').classList.remove('hidden');
+        }
+
+        // 设置技能选择模态框
+        function setupSkillModal() {
+            const modal = document.getElementById('skill-select-modal');
+            const closeBtn = document.getElementById('close-skill-modal');
+
+            closeBtn.onclick = () => modal.classList.add('hidden');
+            modal.onclick = (e) => {
+                if (e.target === modal) modal.classList.add('hidden');
+            };
+        }
+
+        // 渲染技能库列表
+        function renderSkillLibrary() {
+            const skillPoolList = document.getElementById('skill-pool-list');
+            
+            if (skillLibrary.length === 0) {
+                skillPoolList.innerHTML = `
+                    <div class="text-center text-gray-500 py-8">
+                        <p class="mb-2">技能库为空</p>
+                        <p class="text-sm">请先在技能设计器中创建技能</p>
+                    </div>
+                `;
+                return;
+            }
+
+            // 过滤已配置到任何稀有度列的技能（同一技能不能重复添加）
+            const configuredKeys = new Set();
+            Object.values(configuredSkills).forEach(skills => {
+                skills.forEach(s => configuredKeys.add(s.skillKey));
+            });
+            const availableSkills = skillLibrary.filter(s => !configuredKeys.has(s.key));
+
+            if (availableSkills.length === 0) {
+                skillPoolList.innerHTML = `
+                    <div class="text-center text-gray-500 py-8">
+                        所有技能都已添加到池中
+                    </div>
+                `;
+                return;
+            }
+
+            const typeIcons = {
+                'attack': '⚔️',
+                'defense': '🛡️',
+                'agility': '⚡',
+                'buff': '💪',
+                'debuff': '🔻',
+                'heal': '💚'
+            };
+
+            skillPoolList.innerHTML = availableSkills.map(skill => {
+                const typeIcon = typeIcons[skill.type] || '';
+                const typeName = getTypeName(skill.type);
+                const effectList = (skill.effects || []).map(e => e).join(', ');
+                
+                return `
+                    <div class="bg-gray-800 rounded-lg p-3 border border-gray-600 hover:border-blue-500 cursor-pointer transition-colors"
+                         onclick="selectSkill('${skill.key}')">
+                        <div class="flex items-start gap-3">
+                            <div class="text-2xl">${skill.icon}</div>
+                            <div class="flex-1">
+                                <div class="flex items-center gap-2 mb-1 flex-wrap">
+                                    <h5 class="text-sm font-bold text-white">${skill.name}</h5>
+                                    <span class="bg-blue-600/30 text-blue-300 px-2 py-0.5 rounded text-xs">${typeIcon} ${typeName}</span>
+                                </div>
+                                ${skill.description ? `<p class="text-xs text-gray-400">${skill.description}</p>` : ''}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // 选择技能（添加到当前稀有度列）
+        function selectSkill(skillKey) {
+            const skill = skillLibrary.find(s => s.key === skillKey);
+            if (!skill) return;
+
+            // 计算该稀有度的平均权重
+            const rarityWeight = rarityWeights[currentRarity] || 0;
+            const currentSkillCount = configuredSkills[currentRarity].length;
+            const newSkillCount = currentSkillCount + 1;
+            const weightPerSkill = rarityWeight / newSkillCount;
+
+            // 添加新技能
+            configuredSkills[currentRarity].push({
+                skillKey: skill.key,
+                weight: parseFloat(weightPerSkill.toFixed(2)),
+                unlockLevel: 1
+            });
+
+            // 重新分配该稀有度所有技能的权重（平均分配）
+            configuredSkills[currentRarity].forEach(s => {
+                s.weight = parseFloat(weightPerSkill.toFixed(2));
+            });
+
+            renderConfiguredSkills();
+            document.getElementById('skill-select-modal').classList.add('hidden');
+        }
+
+        // 渲染已配置的技能（按四个稀有度列显示）
+        function renderConfiguredSkills() {
+            const rarities = ['common', 'rare', 'epic', 'legendary'];
+            
+            rarities.forEach(rarity => {
+                const list = document.getElementById(`skills-${rarity}`);
+                const skills = configuredSkills[rarity] || [];
+
+                if (skills.length === 0) {
+                    list.innerHTML = '<div class="text-center text-gray-500 text-xs py-4">点击+添加</div>';
+                    return;
+                }
+
+                list.innerHTML = skills.map((config, index) => {
+                    const skill = skillLibrary.find(s => s.key === config.skillKey);
+                    if (!skill) return '';
+
+                    const typeIcons = {
+                        'attack': '⚔️',
+                        'defense': '🛡️',
+                        'agility': '⚡',
+                        'buff': '💪',
+                        'debuff': '🔻',
+                        'heal': '💚'
+                    };
+                    const typeIcon = typeIcons[skill.type] || '';
+
+                    return `
+                        <div class="bg-gray-700/70 rounded-lg p-2 border border-gray-600 hover:border-gray-500 transition-colors">
+                            <div class="flex items-start gap-1">
+                                <div class="text-lg flex-shrink-0">${skill.icon}</div>
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex items-center gap-1 mb-1">
+                                        <span class="text-xs font-bold text-white truncate" title="${skill.name}">${skill.name}</span>
+                                        <span class="text-xs">${typeIcon}</span>
+                                    </div>
+                                    <div class="space-y-1">
+                                        <div class="flex items-center gap-1">
+                                            <span class="text-xs text-gray-400 whitespace-nowrap">获得</span>
+                                            <input type="number" min="0" max="100" step="0.01" value="${config.weight || 0}"
+                                                onchange="updateSkillWeight('${rarity}', ${index}, this.value)"
+                                                class="w-14 bg-gray-800 border border-gray-600 rounded px-1 py-0.5 text-white text-xs text-center focus:outline-none"
+                                                readonly
+                                                title="自动计算：稀有度权重 ÷ 技能数">
+                                            <span class="text-xs text-gray-400">%</span>
+                                        </div>
+                                        <div class="flex items-center gap-1">
+                                            <span class="text-xs text-gray-400 whitespace-nowrap">等级</span>
+                                            <input type="number" min="1" max="100" value="${config.unlockLevel || 1}"
+                                                onchange="updateSkillLevel('${rarity}', ${index}, this.value)"
+                                                class="w-12 bg-gray-800 border border-gray-600 rounded px-1 py-0.5 text-white text-xs text-center focus:outline-none">
+                                        </div>
+                                    </div>
+                                </div>
+                                <button onclick="removeSkill('${rarity}', ${index})"
+                                    class="text-red-400 hover:text-red-300 text-lg flex-shrink-0">
+                                    ×
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            });
+
+            updatePreview();
+        }
+
+        // 更新技能权重（不再手动修改，由稀有度权重自动计算）
+        window.updateSkillWeight = function(rarity, index, weight) {
+            // 技能权重现在是只读的，由稀有度权重自动分配
+            // 这个函数保留用于兼容，但不做任何操作
+        }
+
+        // 更新技能解锁等级
+        window.updateSkillLevel = function(rarity, index, level) {
+            if (configuredSkills[rarity] && configuredSkills[rarity][index]) {
+                configuredSkills[rarity][index].unlockLevel = parseInt(level) || 1;
+            }
+        }
+
+        // 移除技能（移除后重新计算权重）
+        window.removeSkill = function(rarity, index) {
+            if (configuredSkills[rarity]) {
+                configuredSkills[rarity].splice(index, 1);
+                
+                // 重新计算该稀有度的技能权重
+                const rarityWeight = rarityWeights[rarity] || 0;
+                const skillCount = configuredSkills[rarity].length;
+                if (skillCount > 0) {
+                    const weightPerSkill = rarityWeight / skillCount;
+                    configuredSkills[rarity].forEach(s => {
+                        s.weight = parseFloat(weightPerSkill.toFixed(2));
+                    });
+                }
+                
+                renderConfiguredSkills();
+            }
+        }
+
+        // 更新预览
+        function updatePreview() {
+            const name = document.getElementById('pool-name').value;
+            const icon = document.getElementById('pool-icon').value;
+            const description = document.getElementById('pool-description').value;
+
+            if (!name) {
+                preview.innerHTML = `
+                    <div class="text-center text-gray-500">
+                        <div class="text-4xl mb-2">❓</div>
+                        <div class="text-sm">填写表单查看预览</div>
+                    </div>`;
+                return;
+            }
+
+            // 计算每个稀有度的统计信息
+            const rarityStats = {
+                common: { count: configuredSkills.common.length, weight: rarityWeights.common },
+                rare: { count: configuredSkills.rare.length, weight: rarityWeights.rare },
+                epic: { count: configuredSkills.epic.length, weight: rarityWeights.epic },
+                legendary: { count: configuredSkills.legendary.length, weight: rarityWeights.legendary }
+            };
+
+            const totalSkills = rarityStats.common.count + rarityStats.rare.count + rarityStats.epic.count + rarityStats.legendary.count;
+            const totalRarityWeight = rarityWeights.common + rarityWeights.rare + rarityWeights.epic + rarityWeights.legendary;
+
+            const rarityLabels = {
+                'common': '⚪普通',
+                'rare': '✨稀有',
+                'epic': '🌈史诗',
+                'legendary': '⭐传说'
+            };
+
+            preview.innerHTML = `
+                <div class="space-y-3">
+                    <div class="flex items-center gap-3">
+                        <div class="text-4xl">${icon || '🎲'}</div>
+                        <div class="flex-1">
+                            <h4 class="text-lg font-bold text-white mb-1">${name}</h4>
+                            ${description ? `<p class="text-xs text-gray-400 italic">${description}</p>` : ''}
+                        </div>
+                    </div>
+                    <div class="border-t border-gray-600 pt-2">
+                        <div class="text-xs text-gray-400 mb-1">
+                            技能总数: <span class="text-white">${totalSkills}</span>
+                            <span class="ml-2">稀有度权重总和: <span class="${totalRarityWeight === 100 ? 'text-green-400' : 'text-yellow-400'}">${totalRarityWeight.toFixed(1)}%</span></span>
+                        </div>
+                        ${totalSkills > 0 ? `
+                            <div class="grid grid-cols-2 gap-1 text-xs mt-2">
+                                ${Object.entries(rarityStats).map(([r, stat]) =>
+                                    stat.count > 0 ? `
+                                        <div class="bg-gray-800/50 rounded px-2 py-1">
+                                            <span class="text-gray-400">${rarityLabels[r]}:</span>
+                                            <span class="text-white">${stat.count}个</span>
+                                            <span class="text-purple-300">${stat.weight.toFixed(1)}%</span>
+                                            ${stat.count > 0 ? `<span class="text-gray-500">(${(stat.weight / stat.count).toFixed(1)}%/个)</span>` : ''}
+                                        </div>
+                                    ` : ''
+                                ).join('')}
+                            </div>
+                        ` : ''}
+                    </div>
+                </div>
+            `;
+        }
+
+        // 获取表单数据
+        function getFormData() {
+            // 将四列技能合并为一个数组，每个技能保留稀有度信息
+            const allSkills = [];
+            Object.entries(configuredSkills).forEach(([rarity, skills]) => {
+                skills.forEach(skill => {
+                    allSkills.push({
+                        ...skill,
+                        rarity: rarity
+                    });
+                });
+            });
+
+            return {
+                name: document.getElementById('pool-name').value,
+                icon: document.getElementById('pool-icon').value,
+                description: document.getElementById('pool-description').value,
+                skills: allSkills,
+                // 保存稀有度权重
+                rarityWeights: {...rarityWeights},
+                // 同时保存分类结构（便于编辑）
+                skillsByRarity: {
+                    common: configuredSkills.common.map(s => ({...s})),
+                    rare: configuredSkills.rare.map(s => ({...s})),
+                    epic: configuredSkills.epic.map(s => ({...s})),
+                    legendary: configuredSkills.legendary.map(s => ({...s}))
+                }
+            };
+        }
+
+        // 创建技能池
+        function createSkillPool() {
+            const data = getFormData();
+            
+            const totalSkills = configuredSkills.common.length + configuredSkills.rare.length +
+                               configuredSkills.epic.length + configuredSkills.legendary.length;
+            
+            if (totalSkills === 0) {
+                alert('❌ 请至少添加一个技能到技能池！');
+                return;
+            }
+
+            const poolKey = `SKILLPOOL_${Date.now()}`;
+            const pool = {
+                key: poolKey,
+                ...data,
+                createdAt: new Date().toISOString()
+            };
+
+            skillPools.push(pool);
+            saveSkillPools();
+            
+            renderPoolsList();
+            updatePoolCount();
+            form.reset();
+            configuredSkills = { common: [], rare: [], epic: [], legendary: [] };
+            renderConfiguredSkills();
+            updatePreview();
+            
+            const stats = `⚪${configuredSkills.common.length} ✨${configuredSkills.rare.length} 🌈${configuredSkills.epic.length} ⭐${configuredSkills.legendary.length}`;
+            alert(`✅ 技能池 "${data.name}" 已创建！\n包含 ${totalSkills} 个技能\n${stats}`);
+        }
+
+        // 更新技能池
+        function updateSkillPool() {
+            const data = getFormData();
+            
+            const totalSkills = configuredSkills.common.length + configuredSkills.rare.length +
+                               configuredSkills.epic.length + configuredSkills.legendary.length;
+            
+            if (totalSkills === 0) {
+                alert('❌ 请至少添加一个技能到技能池！');
+                return;
+            }
+
+            const pool = {
+                key: skillPools[editingIndex].key,
+                ...data,
+                createdAt: skillPools[editingIndex].createdAt,
+                updatedAt: new Date().toISOString()
+            };
+
+            skillPools[editingIndex] = pool;
+            saveSkillPools();
+            
+            renderPoolsList();
+            form.reset();
+            configuredSkills = { common: [], rare: [], epic: [], legendary: [] };
+            cancelEdit();
+            renderConfiguredSkills();
+            updatePreview();
+            
+            alert(`✅ 技能池 "${data.name}" 已更新！`);
+        }
+
+        // 编辑技能池
+        function editSkillPool(index) {
+            editingIndex = index;
+            const pool = skillPools[index];
+            
+            document.getElementById('pool-name').value = pool.name;
+            document.getElementById('pool-icon').value = pool.icon;
+            document.getElementById('pool-description').value = pool.description || '';
+            
+            // 恢复稀有度权重
+            if (pool.rarityWeights) {
+                rarityWeights = {...pool.rarityWeights};
+                document.getElementById('rarity-weight-common').value = rarityWeights.common;
+                document.getElementById('rarity-weight-rare').value = rarityWeights.rare;
+                document.getElementById('rarity-weight-epic').value = rarityWeights.epic;
+                document.getElementById('rarity-weight-legendary').value = rarityWeights.legendary;
+            }
+            
+            // 恢复技能配置（优先使用分类结构）
+            if (pool.skillsByRarity) {
+                configuredSkills = {
+                    common: pool.skillsByRarity.common.map(s => ({...s})),
+                    rare: pool.skillsByRarity.rare.map(s => ({...s})),
+                    epic: pool.skillsByRarity.epic.map(s => ({...s})),
+                    legendary: pool.skillsByRarity.legendary.map(s => ({...s}))
+                };
+            } else if (pool.skills) {
+                // 兼容旧格式：按稀有度分类
+                configuredSkills = { common: [], rare: [], epic: [], legendary: [] };
+                pool.skills.forEach(skill => {
+                    const rarity = skill.rarity || 'common';
+                    if (configuredSkills[rarity]) {
+                        configuredSkills[rarity].push({...skill});
+                    }
+                });
+            }
+            renderConfiguredSkills();
+            
+            document.getElementById('submit-text').textContent = '💾 保存修改';
+            document.getElementById('submit-btn').classList.remove('bg-purple-600', 'hover:bg-purple-700');
+            document.getElementById('submit-btn').classList.add('bg-green-600', 'hover:bg-green-700');
+            document.getElementById('cancel-edit-btn').classList.remove('hidden');
+            
+            updatePreview();
+            form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        // 取消编辑
+        function cancelEdit() {
+            editingIndex = -1;
+            document.getElementById('submit-text').textContent = '✨ 创建技能池';
+            document.getElementById('submit-btn').classList.remove('bg-green-600', 'hover:bg-green-700');
+            document.getElementById('submit-btn').classList.add('bg-purple-600', 'hover:bg-purple-700');
+            document.getElementById('cancel-edit-btn').classList.add('hidden');
+        }
+
+        // 删除技能池
+        function deleteSkillPool(index) {
+            if (confirm('确定要删除这个技能池吗？')) {
+                skillPools.splice(index, 1);
+                saveSkillPools();
+                renderPoolsList();
+                updatePoolCount();
+            }
+        }
+
+        // 保存技能池
+        function saveSkillPools() {
+            localStorage.setItem('SKILL_POOLS', JSON.stringify(skillPools));
+        }
+
+        // 渲染技能池列表
+        function renderPoolsList() {
+            if (skillPools.length === 0) {
+                poolsList.innerHTML = '<div class="text-center text-gray-500 text-sm py-8">暂无技能池</div>';
+                return;
+            }
+
+            poolsList.innerHTML = skillPools.map((pool, index) => {
+                const skills = pool.skills || [];
+                
+                // 按稀有度统计
+                const rarityStats = {
+                    common: skills.filter(s => s.rarity === 'common').length,
+                    rare: skills.filter(s => s.rarity === 'rare').length,
+                    epic: skills.filter(s => s.rarity === 'epic').length,
+                    legendary: skills.filter(s => s.rarity === 'legendary').length
+                };
+
+                const rarityLabels = {
+                    'common': '⚪',
+                    'rare': '✨',
+                    'epic': '🌈',
+                    'legendary': '⭐'
+                };
+
+                return `
+                    <div class="pool-card bg-gray-800 rounded-lg p-3 border border-gray-600">
+                        <div class="flex items-start gap-2">
+                            <div class="text-2xl">${pool.icon}</div>
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-center gap-2 mb-1 flex-wrap">
+                                    <h5 class="text-sm font-bold text-white">${pool.name}</h5>
+                                    <span class="bg-purple-600/30 text-purple-300 px-2 py-0.5 rounded text-xs">${skills.length}个技能</span>
+                                </div>
+                                ${pool.description ? `<p class="text-xs text-gray-500 italic mb-1 line-clamp-1">${pool.description}</p>` : ''}
+                                <div class="flex gap-1 text-xs">
+                                    ${Object.entries(rarityStats).filter(([r, c]) => c > 0).map(([r, c]) =>
+                                        `<span class="text-gray-400">${rarityLabels[r]}${c}</span>`
+                                    ).join(' ')}
+                                </div>
+                            </div>
+                            <div class="flex gap-1 flex-shrink-0">
+                                <button onclick="editSkillPool(${index})"
+                                    class="text-blue-400 hover:text-blue-300 text-lg px-2" title="编辑">✏️</button>
+                                <button onclick="deleteSkillPool(${index})"
+                                    class="text-red-400 hover:text-red-300 text-xl" title="删除">×</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // 导出技能池（JSON）
+        function exportSkillPools() {
+            if (skillPools.length === 0) {
+                alert('技能池为空！');
+                return;
+            }
+
+            const dataStr = JSON.stringify(skillPools, null, 2);
+            const blob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `skill_pools_${Date.now()}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        // 导出技能池（CSV）
+        function exportSkillPoolsToCSV() {
+            if (skillPools.length === 0) {
+                alert('技能池为空！');
+                return;
+            }
+
+            const escapeCSV = (value) => {
+                if (value === null || value === undefined) return '';
+                const str = String(value);
+                if (str.includes(',') || str.includes('"') || str.includes('\n')) {
+                    return `"${str.replace(/"/g, '""')}"`;
+                }
+                return str;
+            };
+
+            // 基础表头
+            const baseHeaders = [
+                '技能池ID', '技能池名称', '图标', '描述', '技能数量'
+            ];
+
+            // 技能配置表头（最多20个技能）
+            const skillHeaders = [];
+            for (let i = 1; i <= 20; i++) {
+                skillHeaders.push(
+                    `技能${i}_名称`,
+                    `技能${i}_稀有度`,
+                    `技能${i}_权重%`,
+                    `技能${i}_解锁等级`
+                );
+            }
+
+            const headers = [...baseHeaders, ...skillHeaders, '创建时间', '更新时间', '备注'];
+
+            let csvContent = headers.join(',') + '\n';
+
+            skillPools.forEach(pool => {
+                const baseRow = [
+                    escapeCSV(pool.key),
+                    escapeCSV(pool.name),
+                    escapeCSV(pool.icon),
+                    escapeCSV(pool.description || ''),
+                    escapeCSV(pool.skills.length)
+                ];
+
+                const skillRow = [];
+                const skills = pool.skills || [];
+                for (let i = 0; i < 20; i++) {
+                    if (i < skills.length) {
+                        const skillConfig = skills[i];
+                        const skill = skillLibrary.find(s => s.key === skillConfig.skillKey);
+                        skillRow.push(
+                            escapeCSV(skill ? skill.name : skillConfig.skillKey),
+                            escapeCSV(getRarityName(skillConfig.rarity)),
+                            escapeCSV(skillConfig.weight || 0),
+                            escapeCSV(skillConfig.unlockLevel || 1)
+                        );
+                    } else {
+                        skillRow.push('', '', '', '');
+                    }
+                }
+
+                const row = [...baseRow, ...skillRow,
+                    escapeCSV(pool.createdAt ? new Date(pool.createdAt).toLocaleString('zh-CN') : ''),
+                    escapeCSV(pool.updatedAt ? new Date(pool.updatedAt).toLocaleString('zh-CN') : ''),
+                    ''
+                ];
+
+                csvContent += row.join(',') + '\n';
+            });
+
+            const BOM = '\uFEFF';
+            const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `技能池配置表_${Date.now()}.csv`;
+            a.click();
+            URL.revokeObjectURL(url);
+
+            alert(`✅ 已导出 ${skillPools.length} 个技能池到策划配置表（CSV格式）！\n\n表格特点：\n• 包含技能稀有度和权重配置\n• 最多支持20个技能\n• 便于Excel批量编辑`);
+        }
+
+        // 导入技能池
+        function importSkillPools(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                try {
+                    const importedPools = JSON.parse(event.target.result);
+                    
+                    if (!Array.isArray(importedPools)) {
+                        alert('❌ 无效的JSON格式！');
+                        return;
+                    }
+
+                    const existingKeys = new Set(skillPools.map(p => p.key));
+                    const newPools = importedPools.filter(p => !existingKeys.has(p.key));
+                    
+                    skillPools = [...skillPools, ...newPools];
+                    saveSkillPools();
+                    
+                    renderPoolsList();
+                    updatePoolCount();
+                    alert(`✅ 成功导入 ${newPools.length} 个新技能池！`);
+                } catch (error) {
+                    alert('❌ 导入失败：' + error.message);
+                }
+            };
+            reader.readAsText(file);
+            
+            e.target.value = '';
+        }
+
+        // 辅助函数
+        function getTypeName(type) {
+            const names = {
+                'attack': '攻击',
+                'defense': '防御',
+                'agility': '敏捷',
+                'buff': '增益',
+                'debuff': '减益',
+                'heal': '治疗'
+            };
+            return names[type] || type;
+        }
+
+        function getCategoryName(category) {
+            const names = {
+                'element-normal': '普通', 'element-water': '水系', 'element-fire': '火系',
+                'element-grass': '草系', 'element-wind': '风系', 'element-metal': '金系',
+                'element-earth': '土系', 'mutation-dark': '黑化', 'mutation-light': '白化',
+                'mutation-crystal': '晶化', 'mutation-shadow': '影化', 'mutation-chaos': '暗蚀',
+                'mutation-holy': '圣辉', 'mutation-psychic': '异能', 'mutation-thunder': '极电',
+                'mutation-eternal-dark': '永夜', 'mutation-eternal-light': '永耀',
+                'mutation-source-crystal': '源晶', 'mutation-thunder-lord': '雷煌'
+            };
+            return names[category] || '未知';
+        }
+
+        function getRarityName(rarity) {
+            const names = {
+                'common': '普通',
+                'rare': '稀有',
+                'epic': '史诗',
+                'legendary': '传说'
+            };
+            return names[rarity] || '未知';
+        }
+
+        // 初始化应用
+        init();
+    </script>
+</body>
+</html>

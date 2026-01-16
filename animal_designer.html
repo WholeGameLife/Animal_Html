@@ -383,21 +383,23 @@
                         <p class="text-xs text-gray-400 mt-1">可配置的技能数量</p>
                     </div>
 
-                    <!-- 技能配置 -->
+                    <!-- 技能池选择 -->
                     <div>
-                        <label class="block text-sm font-medium text-gray-300 mb-2">🎯 技能配置</label>
+                        <label class="block text-sm font-medium text-gray-300 mb-2">🎯 技能池选择</label>
+                        <p class="text-xs text-gray-400 mb-3">💡 选择一个技能池，动物将从中随机获得技能（数量由技能槽位数决定）</p>
                         <div class="bg-gray-800/50 rounded-lg p-4 border border-gray-600">
-                            <div class="flex justify-between items-center mb-3">
-                                <span class="text-sm text-gray-300">已配置技能 (<span id="skill-count-display">0</span>/<span id="skill-slots-display">4</span>)</span>
-                                <button type="button" id="add-skill-btn"
-                                    class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold py-1 px-3 rounded transition-colors">
-                                    + 添加技能
-                                </button>
+                            <div class="flex gap-2 mb-3">
+                                <select id="skillpool-select"
+                                    class="flex-1 bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-purple-500">
+                                    <option value="">-- 选择技能池 --</option>
+                                </select>
+                                <a href="skillpool_designer.html" target="_blank"
+                                    class="bg-purple-600 hover:bg-purple-700 text-white text-sm font-bold py-2 px-4 rounded-lg transition-colors whitespace-nowrap">
+                                    ⚙️ 管理技能池
+                                </a>
                             </div>
-                            <div id="skills-config-list" class="space-y-2">
-                                <div class="text-center text-gray-500 text-sm py-4">
-                                    点击"添加技能"从技能池中选择
-                                </div>
+                            <div id="selected-skillpool-info" class="hidden bg-purple-900/30 border border-purple-600 rounded-lg p-3">
+                                <!-- 选中的技能池信息将显示在这里 -->
                             </div>
                         </div>
                     </div>
@@ -1003,87 +1005,98 @@
             document.getElementById('skill-slots-display').textContent = slots;
         }
 
-        // 设置技能选择模态框
+        // 设置技能池选择器
         function setupSkillModal() {
-            const modal = document.getElementById('skill-select-modal');
-            const addSkillBtn = document.getElementById('add-skill-btn');
-            const closeBtn = document.getElementById('close-skill-modal');
-
-            addSkillBtn.onclick = () => {
-                const maxSlots = parseInt(document.getElementById('animal-skill-slots').value) || 4;
-                if (configuredSkills.length >= maxSlots) {
-                    alert(`最多只能配置${maxSlots}个技能！\n可以在"技能槽位数"中调整上限。`);
-                    return;
+            const skillpoolSelect = document.getElementById('skillpool-select');
+            
+            // 加载技能池列表
+            loadSkillPoolOptions();
+            
+            // 监听技能池选择变化
+            skillpoolSelect.addEventListener('change', function() {
+                const poolKey = this.value;
+                if (poolKey) {
+                    showSkillPoolInfo(poolKey);
+                } else {
+                    document.getElementById('selected-skillpool-info').classList.add('hidden');
                 }
-                renderSkillPool();
-                modal.classList.remove('hidden');
-            };
-
-            closeBtn.onclick = () => modal.classList.add('hidden');
-            modal.onclick = (e) => {
-                if (e.target === modal) modal.classList.add('hidden');
-            };
+                updatePreview();
+            });
         }
 
-        // 渲染技能池列表
-        function renderSkillPool() {
-            const skillPoolList = document.getElementById('skill-pool-list');
+        // 加载技能池选项
+        function loadSkillPoolOptions() {
+            const skillPools = JSON.parse(localStorage.getItem('SKILL_POOLS') || '[]');
+            const skillpoolSelect = document.getElementById('skillpool-select');
             
-            if (skillPool.length === 0) {
-                skillPoolList.innerHTML = `
-                    <div class="text-center text-gray-500 py-8">
-                        <p class="mb-2">技能池为空</p>
-                        <p class="text-sm">请先在技能设计器中创建技能</p>
-                    </div>
-                `;
+            // 保存当前选中值
+            const currentValue = skillpoolSelect.value;
+            
+            // 清空并重新填充选项
+            skillpoolSelect.innerHTML = '<option value="">-- 选择技能池 --</option>';
+            
+            skillPools.forEach(pool => {
+                const option = document.createElement('option');
+                option.value = pool.key;
+                option.textContent = `${pool.icon} ${pool.name} (${pool.skills.length}个技能)`;
+                skillpoolSelect.appendChild(option);
+            });
+            
+            // 恢复选中值
+            if (currentValue) {
+                skillpoolSelect.value = currentValue;
+                if (skillpoolSelect.value === currentValue) {
+                    showSkillPoolInfo(currentValue);
+                }
+            }
+        }
+
+        // 显示选中的技能池信息
+        function showSkillPoolInfo(poolKey) {
+            const skillPools = JSON.parse(localStorage.getItem('SKILL_POOLS') || '[]');
+            const pool = skillPools.find(p => p.key === poolKey);
+            
+            if (!pool) {
+                document.getElementById('selected-skillpool-info').classList.add('hidden');
                 return;
             }
 
-            // 过滤已配置的技能
-            const configuredKeys = new Set(configuredSkills.map(s => s.skillKey));
-            const availableSkills = skillPool.filter(s => !configuredKeys.has(s.key));
+            const totalWeight = pool.skills.reduce((sum, s) => sum + (s.weight || 0), 0);
+            const rarityStats = {};
+            pool.skills.forEach(s => {
+                rarityStats[s.rarity] = (rarityStats[s.rarity] || 0) + 1;
+            });
 
-            if (availableSkills.length === 0) {
-                skillPoolList.innerHTML = `
-                    <div class="text-center text-gray-500 py-8">
-                        所有技能都已配置
-                    </div>
-                `;
-                return;
-            }
-
-            const typeIcons = {
-                'attack': '⚔️',
-                'defense': '🛡️',
-                'agility': '⚡',
-                'buff': '💪',
-                'debuff': '🔻',
-                'heal': '💚',
-                'passive': '🌟'
+            const rarityLabels = {
+                'common': '⚪普通',
+                'rare': '✨稀有',
+                'epic': '🌈史诗',
+                'legendary': '⭐传说'
             };
 
-            skillPoolList.innerHTML = availableSkills.map(skill => {
-                const typeIcon = typeIcons[skill.type] || '';
-                const typeName = getTypeName(skill.type);
-                
-                return `
-                    <div class="bg-gray-800 rounded-lg p-3 border border-gray-600 hover:border-blue-500 cursor-pointer transition-colors"
-                         onclick="selectSkill('${skill.key}')">
-                        <div class="flex items-start gap-3">
-                            <div class="text-2xl">${skill.icon}</div>
-                            <div class="flex-1">
-                                <div class="flex items-center gap-2 mb-1 flex-wrap">
-                                    <h5 class="text-sm font-bold text-white">${skill.name}</h5>
-                                    <span class="category-badge ${skill.category} text-xs">${getCategoryName(skill.category)}</span>
-                                    <span class="bg-blue-600/30 text-blue-300 px-2 py-0.5 rounded text-xs">${typeIcon} ${typeName}</span>
-                                </div>
-                                <p class="text-xs text-gray-400">${skill.desc}</p>
-                            </div>
+            const infoDiv = document.getElementById('selected-skillpool-info');
+            infoDiv.innerHTML = `
+                <div class="flex items-start gap-2">
+                    <div class="text-2xl">${pool.icon}</div>
+                    <div class="flex-1">
+                        <div class="text-sm font-bold text-purple-300 mb-1">${pool.name}</div>
+                        ${pool.description ? `<div class="text-xs text-gray-400 mb-2">${pool.description}</div>` : ''}
+                        <div class="flex gap-2 text-xs mb-2">
+                            <span class="text-purple-200">📊 ${pool.skills.length}个技能</span>
+                            <span class="${totalWeight === 100 ? 'text-green-400' : 'text-yellow-400'}">⚖️ ${totalWeight.toFixed(1)}%</span>
+                        </div>
+                        <div class="flex gap-1 text-xs flex-wrap">
+                            ${Object.entries(rarityStats).map(([r, c]) =>
+                                `<span class="bg-purple-600/20 text-purple-200 px-2 py-0.5 rounded">${rarityLabels[r]}×${c}</span>`
+                            ).join('')}
                         </div>
                     </div>
-                `;
-            }).join('');
+                </div>
+            `;
+            infoDiv.classList.remove('hidden');
         }
+
+        // 不再需要这些函数，已被技能池选择器替代
 
         // 获取技能类型名称
         function getTypeName(type) {
@@ -1099,14 +1112,35 @@
             return names[type] || type;
         }
 
-        // 选择技能
+        // 选择技能（添加到技能池）
         function selectSkill(skillKey) {
             const skill = skillPool.find(s => s.key === skillKey);
             if (!skill) return;
 
-            // 添加到配置列表，默认等级1解锁
+            // 添加到技能池，带稀有度和权重配置
+            // 根据技能类别设置默认稀有度和权重
+            let defaultRarity = 'common';
+            let defaultWeight = 50;
+            
+            // 根据技能类别判断默认稀有度
+            if (skill.category && skill.category.includes('mutation')) {
+                if (skill.category.includes('eternal') || skill.category.includes('source') || skill.category.includes('lord')) {
+                    defaultRarity = 'stellar'; // 传说级变异
+                    defaultWeight = 5;
+                } else if (skill.category.includes('chaos') || skill.category.includes('holy') ||
+                           skill.category.includes('psychic') || skill.category.includes('thunder')) {
+                    defaultRarity = 'prismatic'; // 精英级变异
+                    defaultWeight = 15;
+                } else {
+                    defaultRarity = 'shiny'; // 基础级变异
+                    defaultWeight = 30;
+                }
+            }
+
             configuredSkills.push({
                 skillKey: skill.key,
+                rarity: defaultRarity,
+                weight: defaultWeight,
                 unlockLevel: 1
             });
 
@@ -1114,7 +1148,7 @@
             document.getElementById('skill-select-modal').classList.add('hidden');
         }
 
-        // 渲染已配置的技能
+        // 渲染已配置的技能池
         function renderConfiguredSkills() {
             const list = document.getElementById('skills-config-list');
             document.getElementById('skill-count-display').textContent = configuredSkills.length;
@@ -1122,7 +1156,7 @@
             if (configuredSkills.length === 0) {
                 list.innerHTML = `
                     <div class="text-center text-gray-500 text-sm py-4">
-                        点击"添加技能"从技能池中选择
+                        点击"添加技能到池"选择技能并配置权重
                     </div>
                 `;
                 return;
@@ -1138,107 +1172,128 @@
                 'passive': '🌟'
             };
 
-            list.innerHTML = configuredSkills.map((config, index) => {
-                const skill = skillPool.find(s => s.key === config.skillKey);
-                if (!skill) return '';
+            // 计算权重总和和稀有度分布
+            const totalWeight = configuredSkills.reduce((sum, s) => sum + (s.weight || 0), 0);
+            const rarityStats = {};
+            configuredSkills.forEach(s => {
+                rarityStats[s.rarity] = (rarityStats[s.rarity] || 0) + 1;
+            });
 
-                const typeIcon = typeIcons[skill.type] || '';
-                const typeName = getTypeName(skill.type);
-                const effectName = getEffectName(skill.effect);
-                
-                // 生成技能描述
-                const skillDesc = skill.description || skill.desc || getEffectDescription(skill);
-
-                // 获取技能参数
-                const params = skill.params || {};
-                const paramTags = [];
-                
-                // CD和持续时间
-                if (params.cooldown > 0) {
-                    paramTags.push(`<span class="bg-red-600/30 text-red-300 px-2 py-0.5 rounded">CD: ${params.cooldown}回合</span>`);
-                }
-                if (params.duration > 0) {
-                    paramTags.push(`<span class="bg-yellow-600/30 text-yellow-300 px-2 py-0.5 rounded">持续: ${params.duration}回合</span>`);
-                }
-                if (params.count > 1) {
-                    paramTags.push(`<span class="bg-orange-600/30 text-orange-300 px-2 py-0.5 rounded">${params.count}次</span>`);
-                }
-                
-                // 伤害/效果加成
-                if (params.attackBonus !== undefined) {
-                    paramTags.push(`<span class="bg-green-600/30 text-green-300 px-2 py-0.5 rounded">攻击: ${params.attackBonus}×</span>`);
-                }
-                if (params.defenseBonus !== undefined) {
-                    paramTags.push(`<span class="bg-blue-600/30 text-blue-300 px-2 py-0.5 rounded">防御: ${params.defenseBonus}×</span>`);
-                }
-                if (params.speedBonus !== undefined) {
-                    paramTags.push(`<span class="bg-cyan-600/30 text-cyan-300 px-2 py-0.5 rounded">速度: +${(params.speedBonus * 100).toFixed(0)}%</span>`);
-                }
-                if (params.buffBonus !== undefined) {
-                    paramTags.push(`<span class="bg-purple-600/30 text-purple-300 px-2 py-0.5 rounded">加成: ${(params.buffBonus * 100).toFixed(0)}%</span>`);
-                }
-                if (params.healBonus !== undefined) {
-                    paramTags.push(`<span class="bg-green-600/30 text-green-300 px-2 py-0.5 rounded">治疗: ${params.healBonus}×</span>`);
-                }
-                if (params.damagePercent !== undefined) {
-                    paramTags.push(`<span class="bg-red-600/30 text-red-300 px-2 py-0.5 rounded">伤害: ${(params.damagePercent * 100).toFixed(0)}%</span>`);
-                }
-                if (params.healPercent !== undefined) {
-                    paramTags.push(`<span class="bg-green-600/30 text-green-300 px-2 py-0.5 rounded">恢复: ${(params.healPercent * 100).toFixed(0)}%</span>`);
-                }
-                if (params.counterBonus !== undefined) {
-                    paramTags.push(`<span class="bg-orange-600/30 text-orange-300 px-2 py-0.5 rounded">反击: ${params.counterBonus}×</span>`);
-                }
-                if (params.lifestealBonus !== undefined) {
-                    paramTags.push(`<span class="bg-pink-600/30 text-pink-300 px-2 py-0.5 rounded">吸血: ${(params.lifestealBonus * 100).toFixed(0)}%</span>`);
-                }
-                
-                // 异常状态
-                if (params.statusType) {
-                    const statusName = getStatusName(params.statusType);
-                    const chance = params.statusChance || 100;
-                    paramTags.push(`<span class="bg-purple-600/30 text-purple-300 px-2 py-0.5 rounded">${statusName}: ${chance}%</span>`);
-                }
-                
-                // 多段攻击
-                if (params.multiBonus && Array.isArray(params.multiBonus)) {
-                    paramTags.push(`<span class="bg-orange-600/30 text-orange-300 px-2 py-0.5 rounded">多段: ${params.multiBonus.join('×, ')}×</span>`);
-                }
-
-                return `
-                    <div class="bg-gray-700/50 rounded-lg p-3 border border-gray-600">
-                        <div class="flex items-start gap-2">
-                            <div class="text-2xl flex-shrink-0">${skill.icon}</div>
-                            <div class="flex-1 min-w-0">
-                                <div class="flex items-center gap-2 mb-1 flex-wrap">
-                                    <span class="text-sm font-bold text-white">${skill.name}</span>
-                                    <span class="category-badge ${skill.category} text-xs">${getCategoryName(skill.category)}</span>
-                                    <span class="bg-blue-600/30 text-blue-300 px-2 py-0.5 rounded text-xs">${typeIcon} ${typeName}</span>
-                                </div>
-                                <p class="text-xs text-gray-400 mb-2">${skillDesc}</p>
-                                ${paramTags.length > 0 ? `<div class="flex flex-wrap gap-1 text-xs mb-2">
-                                    ${paramTags.join('')}
-                                </div>` : ''}
-                                <div class="text-xs text-gray-500">
-                                    <span class="bg-gray-600/30 text-gray-400 px-2 py-0.5 rounded">${effectName}</span>
-                                </div>
-                            </div>
-                            <div class="flex flex-col items-end gap-2 flex-shrink-0">
-                                <button onclick="removeSkill(${index})"
-                                    class="text-red-400 hover:text-red-300 text-xl">
-                                    ×
-                                </button>
-                                <div class="flex items-center gap-1">
-                                    <label class="text-xs text-gray-400">Lv</label>
-                                    <input type="number" min="1" max="100" value="${config.unlockLevel}"
-                                        onchange="updateSkillLevel(${index}, this.value)"
-                                        class="w-16 bg-gray-800 border border-gray-600 rounded px-2 py-1 text-white text-sm focus:outline-none focus:border-blue-500">
-                                </div>
-                            </div>
+            list.innerHTML = `
+                <!-- 技能池统计 -->
+                <div class="bg-blue-900/30 border border-blue-600 rounded-lg p-3 mb-3">
+                    <div class="flex justify-between items-center text-xs">
+                        <div class="text-blue-300">
+                            <span class="font-bold">技能池统计：</span>
+                            <span>共${configuredSkills.length}个技能</span>
+                        </div>
+                        <div class="flex gap-2">
+                            ${Object.entries(rarityStats).map(([rarity, count]) => {
+                                const rarityLabels = {
+                                    'common': '⚪',
+                                    'shiny': '✨',
+                                    'prismatic': '🌈',
+                                    'stellar': '⭐'
+                                };
+                                return `<span class="text-blue-200">${rarityLabels[rarity]}${count}</span>`;
+                            }).join(' ')}
                         </div>
                     </div>
-                `;
-            }).join('');
+                    <div class="text-xs text-gray-400 mt-1">
+                        权重总和: <span class="${totalWeight === 100 ? 'text-green-400' : 'text-yellow-400'}">${totalWeight.toFixed(1)}%</span>
+                        ${totalWeight !== 100 ? ' ⚠️ 建议设为100%' : ' ✓'}
+                    </div>
+                </div>
+
+                <!-- 技能列表 -->
+                ${configuredSkills.map((config, index) => {
+                    const skill = skillPool.find(s => s.key === config.skillKey);
+                    if (!skill) return '';
+
+                    const typeIcon = typeIcons[skill.type] || '';
+                    const typeName = getTypeName(skill.type);
+                    
+                    // 生成技能描述
+                    const skillDesc = skill.description || skill.desc || '无描述';
+
+                    // 获取技能参数
+                    const params = skill.params || {};
+                    const paramTags = [];
+                    
+                    // CD和持续时间
+                    if (params.cooldown > 0) {
+                        paramTags.push(`<span class="bg-red-600/30 text-red-300 px-1.5 py-0.5 rounded">CD${params.cooldown}</span>`);
+                    }
+                    if (params.duration > 0) {
+                        paramTags.push(`<span class="bg-yellow-600/30 text-yellow-300 px-1.5 py-0.5 rounded">持续${params.duration}</span>`);
+                    }
+                    
+                    // 稀有度颜色
+                    const rarityClasses = {
+                        'common': 'gray',
+                        'shiny': 'yellow',
+                        'prismatic': 'pink',
+                        'stellar': 'orange'
+                    };
+                    const rarityClass = rarityClasses[config.rarity] || 'gray';
+                    
+                    const rarityLabels = {
+                        'common': '⚪ 普通',
+                        'shiny': '✨ 闪光',
+                        'prismatic': '🌈 幻彩',
+                        'stellar': '⭐ 星芒'
+                    };
+
+                    return `
+                        <div class="bg-gray-700/50 rounded-lg p-2 border border-${rarityClass}-600/50">
+                            <div class="flex items-start gap-2">
+                                <div class="text-xl flex-shrink-0">${skill.icon}</div>
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex items-center gap-1 mb-1 flex-wrap">
+                                        <span class="text-sm font-bold text-white truncate">${skill.name}</span>
+                                        <span class="category-badge ${skill.category} text-xs">${getCategoryName(skill.category)}</span>
+                                        <span class="bg-blue-600/30 text-blue-300 px-1.5 py-0.5 rounded text-xs">${typeIcon} ${typeName}</span>
+                                    </div>
+                                    <p class="text-xs text-gray-400 mb-2 line-clamp-1">${skillDesc}</p>
+                                    ${paramTags.length > 0 ? `<div class="flex flex-wrap gap-1 text-xs mb-2">
+                                        ${paramTags.join('')}
+                                    </div>` : ''}
+                                    
+                                    <!-- 稀有度和权重配置 -->
+                                    <div class="grid grid-cols-3 gap-2 mt-2">
+                                        <div>
+                                            <label class="text-xs text-gray-500">稀有度</label>
+                                            <select onchange="updateSkillRarity(${index}, this.value)"
+                                                class="w-full bg-gray-800 border border-gray-600 rounded px-2 py-1 text-white text-xs focus:outline-none focus:border-${rarityClass}-500">
+                                                <option value="common" ${config.rarity === 'common' ? 'selected' : ''}>⚪ 普通</option>
+                                                <option value="shiny" ${config.rarity === 'shiny' ? 'selected' : ''}>✨ 闪光</option>
+                                                <option value="prismatic" ${config.rarity === 'prismatic' ? 'selected' : ''}>🌈 幻彩</option>
+                                                <option value="stellar" ${config.rarity === 'stellar' ? 'selected' : ''}>⭐ 星芒</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label class="text-xs text-gray-500">权重%</label>
+                                            <input type="number" min="0" max="100" step="0.1" value="${config.weight || 0}"
+                                                onchange="updateSkillWeight(${index}, this.value)"
+                                                class="w-full bg-gray-800 border border-gray-600 rounded px-2 py-1 text-white text-xs focus:outline-none focus:border-${rarityClass}-500">
+                                        </div>
+                                        <div>
+                                            <label class="text-xs text-gray-500">解锁Lv</label>
+                                            <input type="number" min="1" max="100" value="${config.unlockLevel || 1}"
+                                                onchange="updateSkillLevel(${index}, this.value)"
+                                                class="w-full bg-gray-800 border border-gray-600 rounded px-2 py-1 text-white text-xs focus:outline-none focus:border-${rarityClass}-500">
+                                        </div>
+                                    </div>
+                                </div>
+                                <button onclick="removeSkill(${index})"
+                                    class="text-red-400 hover:text-red-300 text-xl flex-shrink-0">
+                                    ×
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                }).join('')}
+            `;
         }
 
         // 获取效果名称
@@ -1353,6 +1408,18 @@
             return names[status] || status;
         }
 
+        // 更新技能稀有度
+        function updateSkillRarity(index, rarity) {
+            configuredSkills[index].rarity = rarity;
+            renderConfiguredSkills();
+        }
+
+        // 更新技能权重
+        function updateSkillWeight(index, weight) {
+            configuredSkills[index].weight = parseFloat(weight) || 0;
+            renderConfiguredSkills();
+        }
+
         // 更新技能解锁等级
         function updateSkillLevel(index, level) {
             configuredSkills[index].unlockLevel = parseInt(level) || 1;
@@ -1437,30 +1504,30 @@
             // 清空按钮
             clearBtn.onclick = () => {
                 form.reset();
-                configuredSkills = [];
                 currentAvatarData = null;
-                avatarModified = false;  // 重置修改标志
+                avatarModified = false;
                 document.getElementById('animal-avatar-input').value = '';
                 document.getElementById('avatar-preview').classList.add('hidden');
                 document.getElementById('avatar-filename').textContent = '点击选择图片';
                 document.getElementById('clear-avatar-btn').classList.add('hidden');
+                document.getElementById('skillpool-select').value = '';
+                document.getElementById('selected-skillpool-info').classList.add('hidden');
                 cancelEdit();
-                renderConfiguredSkills();
                 updatePreview();
             };
 
             // 取消编辑按钮
             cancelEditBtn.onclick = () => {
                 form.reset();
-                configuredSkills = [];
                 currentAvatarData = null;
-                avatarModified = false;  // 重置修改标志
+                avatarModified = false;
                 document.getElementById('animal-avatar-input').value = '';
                 document.getElementById('avatar-preview').classList.add('hidden');
                 document.getElementById('avatar-filename').textContent = '点击选择图片';
                 document.getElementById('clear-avatar-btn').classList.add('hidden');
+                document.getElementById('skillpool-select').value = '';
+                document.getElementById('selected-skillpool-info').classList.add('hidden');
                 cancelEdit();
-                renderConfiguredSkills();
                 updatePreview();
             };
 
@@ -1567,6 +1634,7 @@
                     }
                 },
                 skillSlots: parseInt(document.getElementById('animal-skill-slots').value) || 4,
+                skillPoolKey: document.getElementById('skillpool-select').value || null,
                 desc: document.getElementById('animal-desc').value
             };
         }
@@ -1595,10 +1663,9 @@
             const animal = {
                 key: animalKey,
                 ...data,
-                skills: configuredSkills.map(s => ({...s})), // 复制技能配置
-                modelData: modelData, // 保存自定义模型数据（如果不太大）
-                modelShape: currentShape, // 保存模型形状
-                avatarData: currentAvatarData, // 保存头像数据
+                modelData: modelData,
+                modelShape: currentShape,
+                avatarData: currentAvatarData,
                 createdAt: new Date().toISOString()
             };
 
@@ -1609,12 +1676,13 @@
                 renderAnimalsList();
                 updateAnimalCount();
                 form.reset();
-                configuredSkills = []; // 清空技能配置
-                renderConfiguredSkills();
+                document.getElementById('skillpool-select').value = '';
+                document.getElementById('selected-skillpool-info').classList.add('hidden');
                 updatePreview();
                 
+                const skillPoolMsg = animal.skillPoolKey ? '\n✅ 已关联技能池' : '\n⚠️ 未选择技能池';
                 const modelMsg = animal.modelData ? '\n✅ 包含自定义3D模型' : (currentShape === 'custom' ? '\n⚠️ 模型未保存（过大）' : '');
-                alert(`✅ 动物模板 "${data.name}" 已添加到模板池！\n配置了 ${animal.skills.length} 个技能${modelMsg}`);
+                alert(`✅ 动物模板 "${data.name}" 已添加到模板池！${skillPoolMsg}${modelMsg}`);
             } catch (error) {
                 // 回滚
                 animals.pop();
@@ -1653,10 +1721,8 @@
             const animal = {
                 key: animals[editingIndex].key,
                 ...data,
-                skills: configuredSkills.map(s => ({...s})),
                 modelData: modelData,
                 modelShape: currentShape,
-                // 如果头像被修改过，使用新值；否则保留原有值
                 avatarData: avatarModified ? currentAvatarData : animals[editingIndex].avatarData,
                 createdAt: animals[editingIndex].createdAt,
                 updatedAt: new Date().toISOString()
@@ -1669,9 +1735,9 @@
                 renderAnimalsList();
                 updateAnimalCount();
                 form.reset();
-                configuredSkills = [];
+                document.getElementById('skillpool-select').value = '';
+                document.getElementById('selected-skillpool-info').classList.add('hidden');
                 cancelEdit();
-                renderConfiguredSkills();
                 updatePreview();
                 
                 const modelMsg = animal.modelData ? '\n✅ 包含自定义3D模型' : (currentShape === 'custom' ? '\n⚠️ 模型未保存（过大）' : '');
@@ -1769,9 +1835,11 @@
             document.getElementById('animal-skill-slots').value = animal.skillSlots;
             document.getElementById('animal-desc').value = animal.desc || '';
             
-            // 恢复技能配置
-            configuredSkills = animal.skills ? animal.skills.map(s => ({...s})) : [];
-            renderConfiguredSkills();
+            // 恢复技能池选择
+            document.getElementById('skillpool-select').value = animal.skillPoolKey || '';
+            if (animal.skillPoolKey) {
+                showSkillPoolInfo(animal.skillPoolKey);
+            }
             updateSkillSlotsDisplay();
             
             // 恢复头像
@@ -1980,19 +2048,8 @@
                 '璀璨_生命', '璀璨_体力', '璀璨_攻击', '璀璨_防御', '璀璨_敏捷', '璀璨_好感'
             ];
 
-            // 技能配置表头
-            const skillHeaders = [
-                '技能1_名称', '技能1_解锁等级',
-                '技能2_名称', '技能2_解锁等级',
-                '技能3_名称', '技能3_解锁等级',
-                '技能4_名称', '技能4_解锁等级',
-                '技能5_名称', '技能5_解锁等级',
-                '技能6_名称', '技能6_解锁等级',
-                '技能7_名称', '技能7_解锁等级',
-                '技能8_名称', '技能8_解锁等级',
-                '技能9_名称', '技能9_解锁等级',
-                '技能10_名称', '技能10_解锁等级'
-            ];
+            // 技能池表头（改为单列）
+            const skillHeaders = ['关联技能池'];
 
             const headers = [...baseHeaders, ...growthHeaders, ...skillHeaders,
                 '是否有3D模型', '是否有头像', '创建时间', '更新时间', '备注'];
@@ -2057,23 +2114,16 @@
                     for (let i = 0; i < 18; i++) growthRow.push('');
                 }
 
-                // 技能配置
-                const skillRow = [];
-                const skills = animal.skills || [];
-                for (let i = 0; i < 10; i++) {
-                    if (i < skills.length) {
-                        const skillConfig = skills[i];
-                        const skill = skillPool.find(s => s.key === skillConfig.skillKey);
-                        skillRow.push(
-                            escapeCSV(skill ? skill.name : skillConfig.skillKey),
-                            escapeCSV(skillConfig.unlockLevel || 1)
-                        );
-                    } else {
-                        skillRow.push('', '');
-                    }
+                // 技能池信息（改为显示技能池名称）
+                const skillPoolKey = animal.skillPoolKey;
+                let skillPoolName = '';
+                if (skillPoolKey) {
+                    const skillPools = JSON.parse(localStorage.getItem('SKILL_POOLS') || '[]');
+                    const pool = skillPools.find(p => p.key === skillPoolKey);
+                    skillPoolName = pool ? pool.name : skillPoolKey;
                 }
 
-                const row = [...baseRow, ...growthRow, ...skillRow,
+                const row = [...baseRow, ...growthRow, escapeCSV(skillPoolName),
                     escapeCSV(animal.modelData ? '是' : '否'),
                     escapeCSV(animal.avatarData ? '是' : '否'),
                     escapeCSV(animal.createdAt ? new Date(animal.createdAt).toLocaleString('zh-CN') : ''),
@@ -2181,10 +2231,14 @@
         function getRarityName(rarity) {
             const names = {
                 'common': '普通',
-                'uncommon': '罕见',
                 'rare': '稀有',
                 'epic': '史诗',
                 'legendary': '传说',
+                // 兼容旧数据
+                'shiny': '闪光',
+                'prismatic': '幻彩',
+                'stellar': '星芒',
+                'uncommon': '罕见',
                 'mythic': '神话'
             };
             return names[rarity] || '未知';
