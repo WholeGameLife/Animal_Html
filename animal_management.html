@@ -583,7 +583,7 @@
                                             </div>
                                             
                                             <!-- 战斗技能区域 -->
-                                            <div id="available-skills-list" class="space-y-1 max-h-[150px]" style="overflow-y: auto; overflow-x: visible; position: relative;">
+                                            <div id="available-skills-list" class="space-y-1 max-h-[400px]" style="overflow-y: auto; overflow-x: visible; position: relative;">
                                                 <p class="text-xs text-gray-500 text-center py-2">暂无可用技能</p>
                                             </div>
                                         </div>
@@ -609,6 +609,8 @@
     <script src="breeding_logic.js"></script>
     <!-- 引入变异逻辑 -->
     <script src="mutation_logic.js"></script>
+    <!-- 引入技能获取系统 -->
+    <script src="skill_acquisition.js"></script>
     
     <script>
         // 调试对象将由 debug.js 提供
@@ -814,6 +816,39 @@
             
             // 读取技能池以获取自定义技能信息
             const skillPool = JSON.parse(localStorage.getItem('SKILL_POOL') || '[]');
+            const skillPools = JSON.parse(localStorage.getItem('SKILL_POOLS') || '[]');
+            
+            // 稀有度样式配置
+            const raritySlotStyles = {
+                'common': {
+                    bg: 'bg-gray-700',
+                    bgHover: 'hover:bg-gray-600',
+                    border: 'border-gray-500',
+                    badge: 'bg-gray-600 text-gray-300',
+                    label: '普通'
+                },
+                'rare': {
+                    bg: 'bg-blue-700',
+                    bgHover: 'hover:bg-blue-600',
+                    border: 'border-blue-400',
+                    badge: 'bg-blue-500 text-blue-100',
+                    label: '稀有'
+                },
+                'epic': {
+                    bg: 'bg-purple-700',
+                    bgHover: 'hover:bg-purple-600',
+                    border: 'border-purple-400',
+                    badge: 'bg-purple-500 text-purple-100',
+                    label: '史诗'
+                },
+                'legendary': {
+                    bg: 'bg-gradient-to-br from-orange-600 to-yellow-600',
+                    bgHover: 'hover:from-orange-500 hover:to-yellow-500',
+                    border: 'border-yellow-400',
+                    badge: 'bg-gradient-to-r from-orange-500 to-yellow-500 text-white',
+                    label: '传说'
+                }
+            };
             
             // 渲染已装备的技能槽（支持战斗技能和变异技能）
             const slots = [ui.skillSlot1, ui.skillSlot2, ui.skillSlot3, ui.skillSlot4];
@@ -823,6 +858,7 @@
                 // 检查是战斗技能、变异技能还是自定义技能
                 let skill = COMBAT_SKILLS[skillKey] || MUTATION_SKILLS[skillKey];
                 let customSkill = null;
+                let skillRarity = 'common'; // 默认稀有度
                 
                 // 如果不是预定义技能，从技能池中查找
                 if (!skill && skillKey) {
@@ -834,6 +870,29 @@
                             desc: customSkill.description || customSkill.desc || '无描述',
                             cooldown: customSkill.params?.cooldown || 0
                         };
+                        
+                        // 优先从 acquiredSkills 中获取稀有度（记录了获得时的稀有度）
+                        if (animal.acquiredSkills) {
+                            const acquiredSkill = animal.acquiredSkills.find(s => s.skillKey === skillKey);
+                            if (acquiredSkill && acquiredSkill.rarity) {
+                                skillRarity = acquiredSkill.rarity;
+                            }
+                        }
+                        
+                        // 如果 acquiredSkills 中没有记录，从技能池配置中获取稀有度
+                        if (skillRarity === 'common' && animal.templateKey) {
+                            const animalPool = JSON.parse(localStorage.getItem('ANIMAL_POOL') || '[]');
+                            const template = animalPool.find(t => t.key === animal.templateKey);
+                            if (template && template.skillPoolKey) {
+                                const relatedPool = skillPools.find(p => p.key === template.skillPoolKey);
+                                if (relatedPool && relatedPool.skills) {
+                                    const skillConfig = relatedPool.skills.find(s => s.skillKey === skillKey);
+                                    if (skillConfig && skillConfig.rarity) {
+                                        skillRarity = skillConfig.rarity;
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
                 
@@ -841,16 +900,25 @@
                     const isMutationSkill = !!MUTATION_SKILLS[skillKey];
                     const tooltipHtml = generateSkillTooltip(skill, customSkill);
                     
+                    // 生成稀有度标签
+                    let rarityBadge;
+                    if (isMutationSkill) {
+                        rarityBadge = '<span class="text-xs px-1 py-0.5 rounded bg-pink-500 text-white font-semibold mt-1">变异</span>';
+                    } else {
+                        const style = raritySlotStyles[skillRarity] || raritySlotStyles['common'];
+                        rarityBadge = `<span class="text-xs px-1 py-0.5 rounded ${style.badge} font-semibold mt-1">${style.label}</span>`;
+                    }
+                    
                     slot.innerHTML = `
                         ${tooltipHtml}
                         <div class="text-2xl mb-1">${skill.icon}</div>
                         <div class="text-xs font-bold text-white">${skill.name}</div>
+                        ${rarityBadge}
                         ${skill.cooldown ? `<div class="text-xs text-gray-400">CD: ${skill.cooldown}</div>` : ''}
                     `;
-                    // 变异技能使用粉色边框，普通技能使用紫色边框
-                    const borderColor = isMutationSkill ? 'border-pink-400' : 'border-purple-400';
-                    const bgColor = isMutationSkill ? 'bg-pink-700 hover:bg-pink-600' : 'bg-purple-700 hover:bg-purple-600';
-                    slot.className = `skill-slot-wrapper ${bgColor} rounded p-2 text-center cursor-pointer transition-colors min-h-[60px] flex flex-col items-center justify-center border-2 ${borderColor}`;
+                    
+                    // 战斗技能槽统一使用紫色样式
+                    slot.className = `skill-slot-wrapper bg-purple-700 hover:bg-purple-600 rounded p-2 text-center cursor-pointer transition-colors min-h-[60px] flex flex-col items-center justify-center border-2 border-purple-400`;
                     slot.onclick = () => unequipSkill(animal, index);
                 } else {
                     slot.innerHTML = '<span class="text-gray-500 text-xs">空槽位</span>';
@@ -866,17 +934,50 @@
             if (availableSkills.length === 0) {
                 ui.availableSkillsList.innerHTML = '<p class="text-xs text-gray-500 text-center py-2">暂无可用技能<br>每5级解锁新技能</p>';
             } else {
-                // 读取技能池以获取自定义技能信息
+                // 读取技能池以获取自定义技能信息和稀有度
                 const skillPool = JSON.parse(localStorage.getItem('SKILL_POOL') || '[]');
+                const skillPools = JSON.parse(localStorage.getItem('SKILL_POOLS') || '[]');
+                
+                // 稀有度配置
+                const rarityStyles = {
+                    'common': {
+                        bg: 'bg-gray-700',
+                        bgHover: 'hover:bg-gray-600',
+                        border: 'border-l-4 border-gray-500',
+                        badge: 'bg-gray-600 text-gray-300',
+                        label: '普通'
+                    },
+                    'rare': {
+                        bg: 'bg-blue-900/40',
+                        bgHover: 'hover:bg-blue-800/50',
+                        border: 'border-l-4 border-blue-400',
+                        badge: 'bg-blue-600 text-blue-100',
+                        label: '稀有'
+                    },
+                    'epic': {
+                        bg: 'bg-purple-900/40',
+                        bgHover: 'hover:bg-purple-800/50',
+                        border: 'border-l-4 border-purple-400',
+                        badge: 'bg-purple-600 text-purple-100',
+                        label: '史诗'
+                    },
+                    'legendary': {
+                        bg: 'bg-orange-900/40',
+                        bgHover: 'hover:bg-orange-800/50',
+                        border: 'border-l-4 border-orange-400',
+                        badge: 'bg-gradient-to-r from-orange-500 to-yellow-500 text-white',
+                        label: '传说'
+                    }
+                };
                 
                 availableSkills.forEach(skillKey => {
                     // 跳过所有已知的变异技能，因为它们在专属区域渲染
                     if (MUTATION_SKILLS[skillKey]) return;
 
                     // 先从预定义技能中查找
-                    // 检查是战斗技能、变异技能还是自定义技能
                     let skill = COMBAT_SKILLS[skillKey] || MUTATION_SKILLS[skillKey];
                     let customSkill = null;
+                    let skillRarity = 'common'; // 默认稀有度
                     
                     // 如果不是预定义技能，从技能池中查找
                     if (!skill && skillKey) {
@@ -889,6 +990,29 @@
                                 type: customSkill.type,
                                 cooldown: customSkill.params?.cooldown || 0
                             };
+                            
+                            // 优先从 acquiredSkills 中获取稀有度（记录了获得时的稀有度）
+                            if (animal.acquiredSkills) {
+                                const acquiredSkill = animal.acquiredSkills.find(s => s.skillKey === skillKey);
+                                if (acquiredSkill && acquiredSkill.rarity) {
+                                    skillRarity = acquiredSkill.rarity;
+                                }
+                            }
+                            
+                            // 如果 acquiredSkills 中没有记录，从技能池配置中获取稀有度
+                            if (skillRarity === 'common' && animal.templateKey) {
+                                const animalPool = JSON.parse(localStorage.getItem('ANIMAL_POOL') || '[]');
+                                const template = animalPool.find(t => t.key === animal.templateKey);
+                                if (template && template.skillPoolKey) {
+                                    const relatedPool = skillPools.find(p => p.key === template.skillPoolKey);
+                                    if (relatedPool && relatedPool.skills) {
+                                        const skillConfig = relatedPool.skills.find(s => s.skillKey === skillKey);
+                                        if (skillConfig && skillConfig.rarity) {
+                                            skillRarity = skillConfig.rarity;
+                                        }
+                                    }
+                                }
+                            }
                         }
                     }
                     
@@ -898,9 +1022,11 @@
                     }
                     
                     const isEquipped = animal.combatSkills.equipped.includes(skillKey);
+                    const rarityStyle = rarityStyles[skillRarity] || rarityStyles['common'];
+                    
                     const div = document.createElement('div');
-                    div.className = `skill-item-wrapper p-2 rounded cursor-pointer transition-colors ${
-                        isEquipped ? 'bg-purple-800 opacity-50' : 'bg-gray-700 hover:bg-gray-600'
+                    div.className = `skill-item-wrapper p-2 rounded cursor-pointer transition-colors ${rarityStyle.border} ${
+                        isEquipped ? 'bg-purple-800 opacity-50' : `${rarityStyle.bg} ${rarityStyle.bgHover}`
                     }`;
                     
                     const tooltipHtml = generateSkillTooltip(skill, customSkill);
@@ -910,7 +1036,10 @@
                         <div class="flex items-center space-x-2 mb-1">
                             <span class="text-lg flex-shrink-0">${skill.icon}</span>
                             <div class="flex-1 min-w-0">
-                                <div class="text-xs font-bold">${skill.name}</div>
+                                <div class="flex items-center gap-1">
+                                    <span class="text-xs font-bold">${skill.name}</span>
+                                    ${!isEquipped ? `<span class="text-xs px-1.5 py-0.5 rounded ${rarityStyle.badge} font-semibold">${rarityStyle.label}</span>` : ''}
+                                </div>
                                 <div class="text-xs text-gray-400 line-clamp-2">${skill.desc}</div>
                             </div>
                             <span class="text-xs text-gray-400 flex-shrink-0 ml-2">CD:${skill.cooldown || 0}</span>
@@ -1393,7 +1522,7 @@
                 animal.combatSkills.equipped.push(skillKey);
                 showStatus(`✅ 已装备技能：${skillName}`, 2000);
             } else {
-                showStatus('❌ 技能槽已满，请先卸下一个技能', 2000);
+                showStatus('❌ 技能槽已满（最多4个），请先卸下一个技能', 2000);
                 return;
             }
             
@@ -2418,114 +2547,210 @@
             renderAnimalList(); // 刷新列表显示等级
         }
 
-        // 新增：检查模板技能解锁
+        // 更新：使用新的技能池系统检查技能解锁
         function checkTemplateSkillUnlock(animal) {
-            // 读取动物模板池和技能池
+            // 读取动物模板池
             const animalPool = JSON.parse(localStorage.getItem('ANIMAL_POOL') || '[]');
-            const skillPool = JSON.parse(localStorage.getItem('SKILL_POOL') || '[]');
+            const skillPools = JSON.parse(localStorage.getItem('SKILL_POOLS') || '[]');
+            const skillLibrary = JSON.parse(localStorage.getItem('SKILL_POOL') || '[]');
             
-            console.log('[技能解锁] 模板池:', animalPool.length, '技能池:', skillPool.length);
+            console.log('[技能解锁-新系统] 模板池:', animalPool.length, '技能池配置:', skillPools.length, '技能库:', skillLibrary.length);
             
             // 查找动物的模板
             const template = animalPool.find(t => t.key === animal.templateKey);
             if (!template) {
-                console.warn('[技能解锁] 未找到模板:', animal.templateKey);
+                console.warn('[技能解锁-新系统] 未找到模板:', animal.templateKey);
                 return;
             }
             
-            console.log('[技能解锁] 找到模板:', template.name, '配置技能数:', template.skills?.length || 0);
+            console.log('[技能解锁-新系统] 找到模板:', template.name, '技能池Key:', template.skillPoolKey);
             
-            if (!template.skills || template.skills.length === 0) {
-                console.log('[技能解锁] 模板没有配置技能');
-                return; // 没有模板或模板没有配置技能
+            // 检查模板是否关联技能池
+            if (!template.skillPoolKey) {
+                console.log('[技能解锁-新系统] 模板未关联技能池');
+                return;
             }
             
-            // 初始化模板技能解锁记录
-            if (!animal.templateSkillsUnlocked) {
-                animal.templateSkillsUnlocked = [];
+            // 查找技能池
+            const skillPool = skillPools.find(p => p.key === template.skillPoolKey);
+            if (!skillPool || !skillPool.skills || skillPool.skills.length === 0) {
+                console.log('[技能解锁-新系统] 技能池为空或不存在');
+                return;
             }
             
-            console.log('[技能解锁] 当前等级:', animal.level, '已解锁:', animal.templateSkillsUnlocked);
+            console.log('[技能解锁-新系统] 找到技能池:', skillPool.name, '包含', skillPool.skills.length, '个技能');
             
-            // 检查是否有技能在当前等级解锁
-            template.skills.forEach(skillConfig => {
-                console.log('[技能解锁] 检查技能:', skillConfig.skillKey, '解锁等级:', skillConfig.unlockLevel);
+            // 检查当前等级是否为技能解锁等级（1, 10, 20, 30, 40, 50）
+            const UNLOCK_LEVELS = [1, 10, 20, 30, 40, 50];
+            if (!UNLOCK_LEVELS.includes(animal.level)) {
+                console.log('[技能解锁-新系统] 当前等级', animal.level, '不是技能解锁等级');
+                return;
+            }
+            
+            // 初始化动物的技能记录
+            if (!animal.acquiredSkills) {
+                animal.acquiredSkills = [];
+            }
+            
+            // 检查是否已经在这个等级获得过技能（防止重复）
+            if (animal.acquiredSkills.some(s => s.acquiredAtLevel === animal.level)) {
+                console.log('[技能解锁-新系统] 该等级已经获得过技能');
+                return;
+            }
+            
+            // 检查是否已拥有6个技能
+            if (animal.acquiredSkills.length >= 6) {
+                console.log('[技能解锁-新系统] 已拥有6个技能，不再获得');
+                return;
+            }
+            
+            console.log('[技能解锁-新系统] 当前拥有', animal.acquiredSkills.length, '个技能，准备随机获取新技能');
+            
+            // 使用权重随机系统获取新技能
+            const newSkill = selectRandomSkillFromPool(skillPool, skillLibrary, animal.level, animal.acquiredSkills);
+            
+            if (newSkill) {
+                // 记录获得的技能
+                animal.acquiredSkills.push({
+                    skillKey: newSkill.skillKey,
+                    acquiredAtLevel: animal.level,
+                    rarity: newSkill.rarity
+                });
                 
-                if (skillConfig.unlockLevel === animal.level) {
-                    console.log('[技能解锁] 等级匹配！');
-                    
-                    // 检查是否已经解锁过
-                    if (animal.templateSkillsUnlocked.includes(skillConfig.skillKey)) {
-                        console.log('[技能解锁] 已解锁，跳过');
-                        return; // 已解锁，跳过
-                    }
-                    
-                    // 查找技能信息
-                    const skill = skillPool.find(s => s.key === skillConfig.skillKey);
-                    if (!skill) {
-                        console.warn('[技能解锁] 技能不存在:', skillConfig.skillKey);
-                        return;
-                    }
-                    
-                    console.log('[技能解锁] 找到技能:', skill.name, '类别:', skill.category);
-                    
-                    // 解锁技能
-                    animal.templateSkillsUnlocked.push(skillConfig.skillKey);
-                    
-                    // 根据技能类别添加到对应的技能列表
-                    if (skill.category && skill.category.startsWith('mutation-')) {
-                        // 变异技能
-                        if (!animal.mutations) {
-                            animal.mutations = { tier1: null, tier2: null, skills: [], inheritedSkills: [], currentSkills: [] };
-                        }
-                        if (!animal.mutations.skills.includes(skillConfig.skillKey)) {
-                            animal.mutations.skills.push(skillConfig.skillKey);
-                        }
-                        
-                        // 将自定义技能添加到 MUTATION_SKILLS 以便渲染
-                        if (!MUTATION_SKILLS[skillConfig.skillKey]) {
-                            MUTATION_SKILLS[skillConfig.skillKey] = {
-                                name: skill.name,
-                                icon: skill.icon,
-                                desc: skill.description || skill.desc || '无描述'
-                            };
-                        }
-                        
-                        console.log('[技能解锁] 解锁变异技能:', skill.name);
-                        
-                        // 记录到技能图鉴
-                        unlockSkillInEncyclopedia(skillConfig.skillKey, skill);
-                        
-                        showStatus(`🧬 模板技能解锁！${animal.name} 学会了 ${skill.icon} ${skill.name}！`, 5000);
-                    } else {
-                        // 战斗技能
-                        if (!animal.combatSkills.available.includes(skillConfig.skillKey)) {
-                            animal.combatSkills.available.push(skillConfig.skillKey);
-                        }
-                        
-                        // 将自定义技能添加到 COMBAT_SKILLS 以便渲染
-                        if (!COMBAT_SKILLS[skillConfig.skillKey]) {
-                            COMBAT_SKILLS[skillConfig.skillKey] = {
-                                name: skill.name,
-                                icon: skill.icon,
-                                desc: skill.description || skill.desc || '无描述',
-                                type: skill.type,
-                                cooldown: skill.params?.cooldown || 0
-                            };
-                        }
-                        
-                        console.log('[技能解锁] 解锁战斗技能:', skill.name);
-                        
-                        // 记录到技能图鉴
-                        unlockSkillInEncyclopedia(skillConfig.skillKey, skill);
-                        
-                        showStatus(`🔓 模板技能解锁！${animal.name} 学会了 ${skill.icon} ${skill.name}！`, 5000);
-                    }
+                // 添加到可用技能列表
+                if (!animal.combatSkills.available.includes(newSkill.skillKey)) {
+                    animal.combatSkills.available.push(newSkill.skillKey);
                 }
+                
+                // 将技能添加到全局字典以便渲染
+                if (!COMBAT_SKILLS[newSkill.skillKey]) {
+                    COMBAT_SKILLS[newSkill.skillKey] = {
+                        name: newSkill.skillData.name,
+                        icon: newSkill.skillData.icon,
+                        desc: newSkill.skillData.description || newSkill.skillData.desc || '无描述',
+                        type: newSkill.skillData.type,
+                        cooldown: newSkill.skillData.params?.cooldown || 0
+                    };
+                }
+                
+                console.log('[技能解锁-新系统] 成功获得技能:', newSkill.skillData.name, '稀有度:', newSkill.rarity);
+                
+                // 记录到技能图鉴
+                unlockSkillInEncyclopedia(newSkill.skillKey, newSkill.skillData);
+                
+                showStatus(`🎉 Lv.${animal.level} 解锁新技能！${animal.name} 学会了 ${newSkill.skillData.icon} ${newSkill.skillData.name}！`, 5000);
+            } else {
+                console.log('[技能解锁-新系统] 没有符合条件的技能可获得');
+            }
+        }
+        
+        // 从技能池中按权重随机选择技能
+        function selectRandomSkillFromPool(skillPool, skillLibrary, currentLevel, acquiredSkills) {
+            // 过滤出符合条件的技能
+            const acquiredKeys = new Set(acquiredSkills.map(s => s.skillKey));
+            
+            const availableSkills = skillPool.skills.filter(skillConfig => {
+                // 排除已拥有的技能
+                if (acquiredKeys.has(skillConfig.skillKey)) return false;
+                
+                // 检查等级要求
+                const unlockLevel = skillConfig.unlockLevel || 1;
+                if (currentLevel < unlockLevel) return false;
+                
+                return true;
             });
             
-            console.log('[技能解锁] 解锁完成，当前可用技能:', animal.combatSkills.available);
-            saveGameState(); // 保存状态
+            if (availableSkills.length === 0) {
+                console.log('[随机技能] 没有可用的技能');
+                return null;
+            }
+            
+            console.log('[随机技能] 可用技能数:', availableSkills.length);
+            
+            // 先按稀有度权重抽取稀有度
+            const rarityWeights = skillPool.rarityWeights || { common: 70, rare: 20, epic: 8, legendary: 2 };
+            
+            // 统计各稀有度可用技能
+            const rarityAvailable = {
+                common: availableSkills.filter(s => s.rarity === 'common'),
+                rare: availableSkills.filter(s => s.rarity === 'rare'),
+                epic: availableSkills.filter(s => s.rarity === 'epic'),
+                legendary: availableSkills.filter(s => s.rarity === 'legendary')
+            };
+            
+            console.log('[随机技能] 各稀有度可用数:', {
+                common: rarityAvailable.common.length,
+                rare: rarityAvailable.rare.length,
+                epic: rarityAvailable.epic.length,
+                legendary: rarityAvailable.legendary.length
+            });
+            
+            // 只考虑有可用技能的稀有度
+            const validRarities = Object.keys(rarityAvailable).filter(r => rarityAvailable[r].length > 0);
+            if (validRarities.length === 0) {
+                console.log('[随机技能] 没有任何稀有度有可用技能');
+                return null;
+            }
+            
+            // 构建稀有度权重数组
+            const rarityWeightList = validRarities.map(rarity => ({
+                rarity: rarity,
+                weight: rarityWeights[rarity] || 0
+            }));
+            
+            // 按权重随机选择稀有度
+            const selectedRarity = weightedRandom(rarityWeightList).rarity;
+            console.log('[随机技能] 抽取稀有度:', selectedRarity);
+            
+            // 从该稀有度的技能中按权重随机选择
+            const raritySkills = rarityAvailable[selectedRarity];
+            const selectedSkillConfig = weightedRandom(raritySkills.map(s => ({
+                ...s,
+                weight: s.weight || 0
+            })));
+            
+            if (!selectedSkillConfig) {
+                console.log('[随机技能] 权重随机失败');
+                return null;
+            }
+            
+            // 从技能库中获取完整技能信息
+            const fullSkill = skillLibrary.find(s => s.key === selectedSkillConfig.skillKey);
+            if (!fullSkill) {
+                console.log('[随机技能] 技能库中找不到技能:', selectedSkillConfig.skillKey);
+                return null;
+            }
+            
+            return {
+                skillKey: selectedSkillConfig.skillKey,
+                skillData: fullSkill,
+                rarity: selectedSkillConfig.rarity,
+                unlockLevel: selectedSkillConfig.unlockLevel || 1
+            };
+        }
+        
+        // 权重随机函数
+        function weightedRandom(items) {
+            if (items.length === 0) return null;
+            if (items.length === 1) return items[0];
+            
+            const totalWeight = items.reduce((sum, item) => sum + (item.weight || 0), 0);
+            if (totalWeight === 0) {
+                // 如果所有权重都是0，随机选择
+                return items[Math.floor(Math.random() * items.length)];
+            }
+            
+            let random = Math.random() * totalWeight;
+            
+            for (let item of items) {
+                random -= (item.weight || 0);
+                if (random <= 0) {
+                    return item;
+                }
+            }
+            
+            // 容错：返回最后一个
+            return items[items.length - 1];
         }
 
         function renameAnimal() {
@@ -2716,7 +2941,9 @@
                 injuryTimer: 0,
                 combatSkills: { equipped: [], available: [] },
                 mutations: { tier1: null, tier2: null, skills: [], currentSkills: [] },
-                mutationCount: 0
+                mutationCount: 0,
+                templateSkillsUnlocked: [],
+                acquiredSkills: []  // 新系统：记录从技能池获得的技能
             };
             gameState.animals.push(animalData);
             gameState.animalCount++;
@@ -3024,7 +3251,8 @@
                     combatSkills: { equipped: [], available: [] },
                     mutations: { tier1: offspringMutation, tier2: null, skills: [], inheritedSkills: [], currentSkills: [] },
                     mutationCount: 0,
-                    templateSkillsUnlocked: []
+                    templateSkillsUnlocked: [],
+                    acquiredSkills: []  // 新系统：记录从技能池获得的技能
                 };
             } else {
                 // 如果没有找到模板，使用旧的计算方式（向后兼容）
@@ -3060,7 +3288,8 @@
                     combatSkills: { equipped: [], available: [] },
                     mutations: { tier1: offspringMutation, tier2: null, skills: [], inheritedSkills: [], currentSkills: [] },
                     mutationCount: 0,
-                    templateSkillsUnlocked: []
+                    templateSkillsUnlocked: [],
+                    acquiredSkills: []  // 新系统：记录从技能池获得的技能
                 };
             }
             
@@ -3096,63 +3325,35 @@
             return offspring;
         }
         
-        // 新增：初始化子代出生时应该拥有的技能
+        // 更新：使用新的技能池系统初始化子代技能
         function initializeOffspringSkills(animal) {
             const animalPool = JSON.parse(localStorage.getItem('ANIMAL_POOL') || '[]');
-            const skillPool = JSON.parse(localStorage.getItem('SKILL_POOL') || '[]');
+            const skillPools = JSON.parse(localStorage.getItem('SKILL_POOLS') || '[]');
+            const skillLibrary = JSON.parse(localStorage.getItem('SKILL_POOL') || '[]');
             
             const template = animalPool.find(t => t.key === animal.templateKey);
-            if (!template || !template.skills || template.skills.length === 0) {
-                console.log('[初始化技能] 模板未配置技能');
+            if (!template) {
+                console.log('[初始化技能-新系统] 模板未找到');
                 return;
             }
             
-            console.log('[初始化技能] 模板:', template.name, '配置技能数:', template.skills.length);
+            // 检查模板是否关联技能池
+            if (!template.skillPoolKey) {
+                console.log('[初始化技能-新系统] 模板未关联技能池');
+                return;
+            }
             
-            // 解锁所有等级 <= 当前等级的技能（子代出生时等级为1）
-            template.skills.forEach(skillConfig => {
-                console.log('[初始化技能] 检查技能:', skillConfig.skillKey, '解锁等级:', skillConfig.unlockLevel, '子代等级:', animal.level);
-                
-                if (skillConfig.unlockLevel <= animal.level) {
-                    const skill = skillPool.find(s => s.key === skillConfig.skillKey);
-                    if (!skill) {
-                        console.warn('[初始化技能] 技能不存在:', skillConfig.skillKey);
-                        return;
-                    }
-                    
-                    console.log('[初始化技能] 解锁技能:', skill.name);
-                    
-                    // 标记为已解锁
-                    if (!animal.templateSkillsUnlocked.includes(skillConfig.skillKey)) {
-                        animal.templateSkillsUnlocked.push(skillConfig.skillKey);
-                    }
-                    
-                    // 根据技能类别添加到对应列表
-                    if (skill.category && skill.category.startsWith('mutation-')) {
-                        // 变异技能（不在此处添加，变异技能只能通过变异或继承获得）
-                        console.log('[初始化技能] 跳过变异技能:', skill.name);
-                    } else {
-                        // 战斗技能
-                        if (!animal.combatSkills.available.includes(skillConfig.skillKey)) {
-                            animal.combatSkills.available.push(skillConfig.skillKey);
-                            console.log('[初始化技能] 添加战斗技能到可用列表:', skill.name);
-                        }
-                        
-                        // 添加到全局战斗技能字典
-                        if (!COMBAT_SKILLS[skillConfig.skillKey]) {
-                            COMBAT_SKILLS[skillConfig.skillKey] = {
-                                name: skill.name,
-                                icon: skill.icon,
-                                desc: skill.description || skill.desc || '无描述',
-                                type: skill.type,
-                                cooldown: skill.params?.cooldown || 0
-                            };
-                        }
-                    }
-                }
-            });
+            const skillPool = skillPools.find(p => p.key === template.skillPoolKey);
+            if (!skillPool || !skillPool.skills || skillPool.skills.length === 0) {
+                console.log('[初始化技能-新系统] 技能池为空');
+                return;
+            }
             
-            console.log('[初始化技能] 完成，可用技能数:', animal.combatSkills.available.length);
+            console.log('[初始化技能-新系统] 模板:', template.name, '技能池:', skillPool.name);
+            
+            // 子代出生时等级为1，调用技能解锁检查
+            // 这会触发第一个技能的获得
+            checkTemplateSkillUnlock(animal);
         }
 
         // 新增：根据父母稀有度计算子代稀有度
@@ -3326,7 +3527,7 @@
 
         // 新增：强制重置游戏数据（仅重置游戏内数据，保留技能设计器等游戏外数据）
         function resetGameData() {
-            const isConfirmed = confirm("警告：此操作将删除所有游戏进度和动物数据，但会保留技能、动物、地图和状态设计器等游戏外数据。您确定要重新开始游戏吗？");
+            const isConfirmed = confirm("警告：此操作将删除所有游戏进度和动物数据，但会保留技能、动物、地图、状态和技能池配置器等游戏外数据。您确定要重新开始游戏吗？");
             if (isConfirmed) {
                 showStatus("正在清除游戏数据...", 2000);
                 
@@ -3335,6 +3536,7 @@
                 const animalPool = localStorage.getItem('ANIMAL_POOL');
                 const mapConfigs = localStorage.getItem('MAP_CONFIGS');
                 const statusPool = localStorage.getItem('STATUS_POOL');
+                const skillPools = localStorage.getItem('SKILL_POOLS'); // 新增：技能池配置器数据
                 
                 // 清除所有数据
                 localStorage.clear();
@@ -3351,6 +3553,9 @@
                 }
                 if (statusPool) {
                     localStorage.setItem('STATUS_POOL', statusPool);
+                }
+                if (skillPools) {
+                    localStorage.setItem('SKILL_POOLS', skillPools);
                 }
                 
                 setTimeout(() => {

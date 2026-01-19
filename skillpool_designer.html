@@ -6,6 +6,40 @@
     <title>技能池配置器 - 电子盆栽</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
+        .category-badge {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: bold;
+        }
+        
+        /* 系别颜色 */
+        .element-normal { background: linear-gradient(135deg, #9ca3af, #6b7280); color: white; }
+        .element-water { background: linear-gradient(135deg, #3b82f6, #1d4ed8); color: white; }
+        .element-fire { background: linear-gradient(135deg, #ef4444, #dc2626); color: white; }
+        .element-grass { background: linear-gradient(135deg, #22c55e, #16a34a); color: white; }
+        .element-wind { background: linear-gradient(135deg, #06b6d4, #0891b2); color: white; }
+        .element-metal { background: linear-gradient(135deg, #d4af37, #b8860b); color: white; }
+        .element-earth { background: linear-gradient(135deg, #a16207, #854d0e); color: white; }
+        
+        /* 变异颜色 */
+        .mutation-dark { background: linear-gradient(135deg, #1f2937, #111827); color: white; }
+        .mutation-light { background: linear-gradient(135deg, #f3f4f6, #e5e7eb); color: #111827; }
+        .mutation-crystal { background: linear-gradient(135deg, #a78bfa, #8b5cf6); color: white; }
+        .mutation-shadow { background: linear-gradient(135deg, #4b5563, #374151); color: white; }
+        .mutation-thunder { background: linear-gradient(135deg, #fbbf24, #f59e0b); color: white; }
+        .mutation-holy { background: linear-gradient(135deg, #fef3c7, #fde68a); color: #92400e; }
+        .mutation-psychic { background: linear-gradient(135deg, #ec4899, #db2777); color: white; }
+        .mutation-chaos { background: linear-gradient(135deg, #581c87, #6b21a8); color: white; }
+        
+        .line-clamp-2 {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        
         body {
             background: linear-gradient(135deg, #581c87 0%, #7c2d12 100%);
             min-height: 100vh;
@@ -218,12 +252,41 @@
 
     <!-- 技能选择模态框 -->
     <div id="skill-select-modal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-        <div class="bg-gray-900 rounded-xl p-6 max-w-2xl w-full mx-4 border border-gray-700 max-h-[80vh] overflow-y-auto">
+        <div class="bg-gray-900 rounded-xl p-6 max-w-4xl w-full mx-4 border border-gray-700 max-h-[80vh] flex flex-col">
             <div class="flex justify-between items-center mb-4">
                 <h3 class="text-xl font-bold text-white">从技能库选择技能</h3>
                 <button id="close-skill-modal" class="text-gray-400 hover:text-white text-2xl">×</button>
             </div>
-            <div id="skill-pool-list" class="space-y-2">
+            
+            <!-- 筛选和搜索 -->
+            <div class="mb-4 flex gap-3">
+                <input type="text" id="skill-search" placeholder="🔍 搜索技能名称..."
+                    class="flex-1 bg-gray-800 border border-gray-600 rounded-lg px-4 py-2 text-white text-sm focus:outline-none focus:border-blue-500">
+                <select id="skill-type-filter"
+                    class="bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-blue-500">
+                    <option value="">全部类型</option>
+                    <option value="attack">⚔️ 攻击型</option>
+                    <option value="defense">🛡️ 防御型</option>
+                    <option value="agility">⚡ 敏捷型</option>
+                    <option value="buff">💪 增益型</option>
+                    <option value="debuff">🔻 减益型</option>
+                    <option value="heal">💚 治疗型</option>
+                </select>
+                <select id="skill-category-filter"
+                    class="bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-blue-500">
+                    <option value="">全部系别</option>
+                    <option value="element-normal">⭕ 普通</option>
+                    <option value="element-water">💧 水系</option>
+                    <option value="element-fire">🔥 火系</option>
+                    <option value="element-grass">🌿 草系</option>
+                    <option value="element-wind">💨 风系</option>
+                    <option value="element-metal">🪙 金系</option>
+                    <option value="element-earth">🪨 土系</option>
+                    <option value="mutation">✨ 变异系</option>
+                </select>
+            </div>
+            
+            <div id="skill-pool-list" class="space-y-2 overflow-y-auto flex-1">
                 <!-- 技能列表 -->
             </div>
         </div>
@@ -353,6 +416,11 @@
             modal.onclick = (e) => {
                 if (e.target === modal) modal.classList.add('hidden');
             };
+            
+            // 搜索框事件
+            document.getElementById('skill-search').addEventListener('input', renderSkillLibrary);
+            document.getElementById('skill-type-filter').addEventListener('change', renderSkillLibrary);
+            document.getElementById('skill-category-filter').addEventListener('change', renderSkillLibrary);
         }
 
         // 渲染技能库列表
@@ -369,21 +437,67 @@
                 return;
             }
 
+            // 获取筛选条件
+            const searchText = document.getElementById('skill-search').value.toLowerCase();
+            const typeFilter = document.getElementById('skill-type-filter').value;
+            const categoryFilter = document.getElementById('skill-category-filter').value;
+
             // 过滤已配置到任何稀有度列的技能（同一技能不能重复添加）
             const configuredKeys = new Set();
             Object.values(configuredSkills).forEach(skills => {
                 skills.forEach(s => configuredKeys.add(s.skillKey));
             });
-            const availableSkills = skillLibrary.filter(s => !configuredKeys.has(s.key));
+            
+            let availableSkills = skillLibrary.filter(s => !configuredKeys.has(s.key));
+
+            // 应用搜索过滤
+            if (searchText) {
+                availableSkills = availableSkills.filter(s =>
+                    s.name.toLowerCase().includes(searchText)
+                );
+            }
+
+            // 应用类型过滤
+            if (typeFilter) {
+                availableSkills = availableSkills.filter(s => s.type === typeFilter);
+            }
+
+            // 应用系别过滤
+            if (categoryFilter) {
+                if (categoryFilter === 'mutation') {
+                    availableSkills = availableSkills.filter(s =>
+                        s.category && s.category.includes('mutation')
+                    );
+                } else {
+                    availableSkills = availableSkills.filter(s => s.category === categoryFilter);
+                }
+            }
 
             if (availableSkills.length === 0) {
                 skillPoolList.innerHTML = `
                     <div class="text-center text-gray-500 py-8">
-                        所有技能都已添加到池中
+                        ${configuredKeys.size > 0 ? '没有符合条件的技能或所有技能都已添加' : '所有技能都已添加到池中'}
                     </div>
                 `;
                 return;
             }
+
+            // 按类型分组
+            const groupedSkills = {
+                'attack': [],
+                'defense': [],
+                'agility': [],
+                'buff': [],
+                'debuff': [],
+                'heal': []
+            };
+
+            availableSkills.forEach(skill => {
+                const type = skill.type || 'attack';
+                if (groupedSkills[type]) {
+                    groupedSkills[type].push(skill);
+                }
+            });
 
             const typeIcons = {
                 'attack': '⚔️',
@@ -394,27 +508,53 @@
                 'heal': '💚'
             };
 
-            skillPoolList.innerHTML = availableSkills.map(skill => {
-                const typeIcon = typeIcons[skill.type] || '';
-                const typeName = getTypeName(skill.type);
-                const effectList = (skill.effects || []).map(e => e).join(', ');
-                
-                return `
-                    <div class="bg-gray-800 rounded-lg p-3 border border-gray-600 hover:border-blue-500 cursor-pointer transition-colors"
-                         onclick="selectSkill('${skill.key}')">
-                        <div class="flex items-start gap-3">
-                            <div class="text-2xl">${skill.icon}</div>
-                            <div class="flex-1">
-                                <div class="flex items-center gap-2 mb-1 flex-wrap">
-                                    <h5 class="text-sm font-bold text-white">${skill.name}</h5>
-                                    <span class="bg-blue-600/30 text-blue-300 px-2 py-0.5 rounded text-xs">${typeIcon} ${typeName}</span>
-                                </div>
-                                ${skill.description ? `<p class="text-xs text-gray-400">${skill.description}</p>` : ''}
-                            </div>
+            const typeNames = {
+                'attack': '攻击型',
+                'defense': '防御型',
+                'agility': '敏捷型',
+                'buff': '增益型',
+                'debuff': '减益型',
+                'heal': '治疗型'
+            };
+
+            // 按分组渲染
+            let html = '';
+            Object.entries(groupedSkills).forEach(([type, skills]) => {
+                if (skills.length === 0) return;
+
+                const typeIcon = typeIcons[type] || '';
+                const typeName = typeNames[type] || type;
+
+                html += `
+                    <div class="mb-4">
+                        <div class="text-sm font-bold text-blue-300 mb-2 px-2">${typeIcon} ${typeName} (${skills.length})</div>
+                        <div class="space-y-2">
+                            ${skills.map(skill => {
+                                const categoryBadge = skill.category ?
+                                    `<span class="category-badge ${skill.category} text-xs">${getCategoryName(skill.category)}</span>` : '';
+                                
+                                return `
+                                    <div class="bg-gray-800 rounded-lg p-3 border border-gray-600 hover:border-blue-500 cursor-pointer transition-colors"
+                                         onclick="selectSkill('${skill.key}')">
+                                        <div class="flex items-start gap-3">
+                                            <div class="text-2xl">${skill.icon}</div>
+                                            <div class="flex-1">
+                                                <div class="flex items-center gap-2 mb-1 flex-wrap">
+                                                    <h5 class="text-sm font-bold text-white">${skill.name}</h5>
+                                                    ${categoryBadge}
+                                                </div>
+                                                ${skill.description ? `<p class="text-xs text-gray-400 line-clamp-2">${skill.description}</p>` : ''}
+                                            </div>
+                                        </div>
+                                    </div>
+                                `;
+                            }).join('')}
                         </div>
                     </div>
                 `;
-            }).join('');
+            });
+
+            skillPoolList.innerHTML = html || '<div class="text-center text-gray-500 py-8">没有可用的技能</div>';
         }
 
         // 选择技能（添加到当前稀有度列）
@@ -975,6 +1115,7 @@
         }
 
         function getCategoryName(category) {
+            if (!category) return '';
             const names = {
                 'element-normal': '普通', 'element-water': '水系', 'element-fire': '火系',
                 'element-grass': '草系', 'element-wind': '风系', 'element-metal': '金系',

@@ -369,10 +369,10 @@ const MUTATION_RARITY_LEVELS = {
     'legendary': 3
 };
 
-// 技能继承解锁等级配置
-const SKILL_UNLOCK_LEVELS = {
-    'basic': 5, 
-    'elite': 10, 
+// 技能继承解锁等级配置（用于繁育系统）
+const SKILL_INHERITANCE_UNLOCK_LEVELS = {
+    'basic': 5,
+    'elite': 10,
     'legendary': 15
 };
 
@@ -729,7 +729,7 @@ const SKILL_LIMITS = {
         elite: 2,
         legendary: 2
     },
-    equipped_slots: 4  // 装备槽数量
+    equipped_slots: 4  // 装备槽数量（固定4个）
 };
 
 // 变异类型到技能池类别的映射
@@ -763,6 +763,10 @@ const MUTATION_CHAINS = {
     '源晶': 'crystal',
     '雷煌': 'thunder'
 };
+
+// 技能获取系统配置
+const SKILL_UNLOCK_LEVELS = [1, 10, 20, 30, 40, 50]; // 动物在这些等级解锁技能
+const MAX_SKILLS = 6; // 最大可用技能数量
 
 // 导出所有配置（用于其他脚本引用）
 if (typeof module !== 'undefined' && module.exports) {

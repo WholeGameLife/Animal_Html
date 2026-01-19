@@ -375,14 +375,6 @@
                         </div>
                     </div>
 
-                    <!-- 特殊属性 -->
-                    <div>
-                        <label class="block text-sm font-medium text-gray-300 mb-2">技能槽位数</label>
-                        <input type="number" id="animal-skill-slots" min="1" max="10" value="4" required
-                            class="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-green-500">
-                        <p class="text-xs text-gray-400 mt-1">可配置的技能数量</p>
-                    </div>
-
                     <!-- 技能池选择 -->
                     <div>
                         <label class="block text-sm font-medium text-gray-300 mb-2">🎯 技能池选择</label>
@@ -555,7 +547,6 @@
             updateAnimalCount();
             syncColorInputs();
             setupSkillModal();
-            updateSkillSlotsDisplay();
             setupAvatarUpload();
             init3DPreview(); // 初始化3D预览
         }
@@ -999,17 +990,13 @@
             }
         }
 
-        // 更新技能槽位显示
-        function updateSkillSlotsDisplay() {
-            const slots = parseInt(document.getElementById('animal-skill-slots').value) || 4;
-            document.getElementById('skill-slots-display').textContent = slots;
-        }
+        // 不再需要updateSkillSlotsDisplay函数
 
         // 设置技能池选择器
         function setupSkillModal() {
             const skillpoolSelect = document.getElementById('skillpool-select');
             
-            // 加载技能池列表
+            // 初始加载技能池列表
             loadSkillPoolOptions();
             
             // 监听技能池选择变化
@@ -1022,15 +1009,18 @@
                 }
                 updatePreview();
             });
+            
+            // 监听页面获得焦点时刷新技能池列表（从技能池管理页返回时）
+            window.addEventListener('focus', function() {
+                const currentValue = skillpoolSelect.value;
+                loadSkillPoolOptions(currentValue);
+            });
         }
 
         // 加载技能池选项
-        function loadSkillPoolOptions() {
+        function loadSkillPoolOptions(selectedKey = '') {
             const skillPools = JSON.parse(localStorage.getItem('SKILL_POOLS') || '[]');
             const skillpoolSelect = document.getElementById('skillpool-select');
-            
-            // 保存当前选中值
-            const currentValue = skillpoolSelect.value;
             
             // 清空并重新填充选项
             skillpoolSelect.innerHTML = '<option value="">-- 选择技能池 --</option>';
@@ -1042,12 +1032,15 @@
                 skillpoolSelect.appendChild(option);
             });
             
-            // 恢复选中值
-            if (currentValue) {
-                skillpoolSelect.value = currentValue;
-                if (skillpoolSelect.value === currentValue) {
-                    showSkillPoolInfo(currentValue);
+            // 设置选中值
+            if (selectedKey) {
+                skillpoolSelect.value = selectedKey;
+                if (skillpoolSelect.value === selectedKey) {
+                    showSkillPoolInfo(selectedKey);
                 }
+            } else {
+                // 确保隐藏技能池信息
+                document.getElementById('selected-skillpool-info').classList.add('hidden');
             }
         }
 
@@ -1483,9 +1476,6 @@
 
         // 设置表单监听器
         function setupFormListeners() {
-            // 技能槽位数变化时更新显示
-            document.getElementById('animal-skill-slots').addEventListener('input', updateSkillSlotsDisplay);
-            
             // 实时预览
             form.querySelectorAll('input, select, textarea').forEach(input => {
                 input.addEventListener('input', updatePreview);
@@ -1510,8 +1500,7 @@
                 document.getElementById('avatar-preview').classList.add('hidden');
                 document.getElementById('avatar-filename').textContent = '点击选择图片';
                 document.getElementById('clear-avatar-btn').classList.add('hidden');
-                document.getElementById('skillpool-select').value = '';
-                document.getElementById('selected-skillpool-info').classList.add('hidden');
+                loadSkillPoolOptions(''); // 重新加载技能池选项并清空选择
                 cancelEdit();
                 updatePreview();
             };
@@ -1525,8 +1514,7 @@
                 document.getElementById('avatar-preview').classList.add('hidden');
                 document.getElementById('avatar-filename').textContent = '点击选择图片';
                 document.getElementById('clear-avatar-btn').classList.add('hidden');
-                document.getElementById('skillpool-select').value = '';
-                document.getElementById('selected-skillpool-info').classList.add('hidden');
+                loadSkillPoolOptions(''); // 重新加载技能池选项并清空选择
                 cancelEdit();
                 updatePreview();
             };
@@ -1633,7 +1621,6 @@
                         favorability: parseInt(document.getElementById('growth-brilliant-favorability').value) || 7
                     }
                 },
-                skillSlots: parseInt(document.getElementById('animal-skill-slots').value) || 4,
                 skillPoolKey: document.getElementById('skillpool-select').value || null,
                 desc: document.getElementById('animal-desc').value
             };
@@ -1676,8 +1663,7 @@
                 renderAnimalsList();
                 updateAnimalCount();
                 form.reset();
-                document.getElementById('skillpool-select').value = '';
-                document.getElementById('selected-skillpool-info').classList.add('hidden');
+                loadSkillPoolOptions(''); // 重新加载并清空技能池选择
                 updatePreview();
                 
                 const skillPoolMsg = animal.skillPoolKey ? '\n✅ 已关联技能池' : '\n⚠️ 未选择技能池';
@@ -1735,8 +1721,7 @@
                 renderAnimalsList();
                 updateAnimalCount();
                 form.reset();
-                document.getElementById('skillpool-select').value = '';
-                document.getElementById('selected-skillpool-info').classList.add('hidden');
+                loadSkillPoolOptions(''); // 重新加载并清空技能池选择
                 cancelEdit();
                 updatePreview();
                 
@@ -1832,15 +1817,10 @@
                 document.getElementById('growth-brilliant-favorability').value = Math.round(baseGrowth.favorability / mult * 2.0);
             }
             
-            document.getElementById('animal-skill-slots').value = animal.skillSlots;
             document.getElementById('animal-desc').value = animal.desc || '';
             
-            // 恢复技能池选择
-            document.getElementById('skillpool-select').value = animal.skillPoolKey || '';
-            if (animal.skillPoolKey) {
-                showSkillPoolInfo(animal.skillPoolKey);
-            }
-            updateSkillSlotsDisplay();
+            // 重新加载技能池选项并恢复技能池选择
+            loadSkillPoolOptions(animal.skillPoolKey || '');
             
             // 恢复头像
             if (animal.avatarData) {
@@ -2037,8 +2017,7 @@
             const baseHeaders = [
                 '动物ID', '动物名称', '描述', '颜色', '系别', '稀有度',
                 '初始等级', '基础经验值', '经验增长系数',
-                '生命值', '体力', '攻击', '防御', '敏捷', '好感度',
-                '技能槽位数'
+                '生命值', '体力', '攻击', '防御', '敏捷', '好感度'
             ];
 
             // 成长配置表头
@@ -2074,8 +2053,7 @@
                     escapeCSV(animal.attack),
                     escapeCSV(animal.defense),
                     escapeCSV(animal.agility),
-                    escapeCSV(animal.favorability),
-                    escapeCSV(animal.skillSlots)
+                    escapeCSV(animal.favorability)
                 ];
 
                 // 成长配置

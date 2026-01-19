@@ -739,11 +739,23 @@ class BattleSystem {
             if (!skill && skillKey) {
                 const customSkill = skillPool.find(s => s.key === skillKey);
                 if (customSkill) {
+                    // 兼容旧格式（单个type/effect）和新格式（types/effects数组）
+                    const types = customSkill.types || (customSkill.type ? [customSkill.type] : []);
+                    const effects = customSkill.effects || (customSkill.effect ? [customSkill.effect] : []);
+                    
                     skill = {
                         name: customSkill.name,
                         icon: customSkill.icon,
-                        desc: customSkill.desc,
-                        cooldown: customSkill.cooldown || 0
+                        desc: customSkill.description || customSkill.desc,
+                        types: types,  // 多类型数组
+                        effects: effects,  // 多效果数组
+                        // 为了向后兼容，保留单个type和effect（取第一个）
+                        type: types[0] || customSkill.type,
+                        effect: effects[0] || customSkill.effect,
+                        value: customSkill.value,
+                        cooldown: customSkill.params?.cooldown || customSkill.cooldown || 0,
+                        duration: customSkill.params?.duration || customSkill.duration || 0,
+                        params: customSkill.params || {}
                     };
                 }
             }
@@ -813,19 +825,50 @@ class BattleSystem {
                     const types = customSkill.types || (customSkill.type ? [customSkill.type] : []);
                     const effects = customSkill.effects || (customSkill.effect ? [customSkill.effect] : []);
                     
+                    // 提取关键战斗参数
+                    const params = customSkill.params || {};
+                    
+                    // 根据效果类型提取对应的伤害参数
+                    let attackBonus = 0;
+                    let multiBonus = [];
+                    let count = 1;
+                    
+                    effects.forEach(effect => {
+                        // 直接攻击效果
+                        if (effect === 'direct_attack') {
+                            attackBonus = params[`${effect}_bonus`] || customSkill.value || 0;
+                        }
+                        // 多段攻击效果
+                        else if (effect === 'multi_attack') {
+                            multiBonus = params[`${effect}_multi-bonus`] || [];
+                            count = params[`${effect}_count`] || params.count || 1;
+                            if (multiBonus.length === 0 && customSkill.value) {
+                                attackBonus = customSkill.value;
+                            }
+                        }
+                        // DOT伤害效果
+                        else if (effect === 'dot_damage') {
+                            attackBonus = params[`${effect}_bonus`] || customSkill.value || 0;
+                        }
+                    });
+                    
                     skill = {
                         name: customSkill.name,
                         icon: customSkill.icon,
                         desc: customSkill.description || customSkill.desc,
-                        types: types,  // 多类型数组
-                        effects: effects,  // 多效果数组
-                        // 为了向后兼容，保留单个type和effect（取第一个）
+                        types: types,
+                        effects: effects,
                         type: types[0] || customSkill.type,
                         effect: effects[0] || customSkill.effect,
-                        value: customSkill.value,
-                        cooldown: customSkill.params?.cooldown || customSkill.cooldown || 0,
-                        duration: customSkill.params?.duration || customSkill.duration || 0,
-                        params: customSkill.params || {}
+                        value: customSkill.value || attackBonus,
+                        cooldown: params.cooldown || customSkill.cooldown || 0,
+                        duration: params.duration || customSkill.duration || 0,
+                        params: {
+                            ...params,
+                            attackBonus: attackBonus || params.attackBonus,
+                            multiBonus: multiBonus.length > 0 ? multiBonus : params.multiBonus,
+                            count: count || params.count
+                        }
                     };
                 }
             } else if (skill) {
@@ -1069,13 +1112,38 @@ class BattleSystem {
                     continue;
                 }
                 
-                const attackBonus = params.attackBonus || skill.value || 0;
-                const multiBonus = params.multiBonus || [];
-                const count = params.count || 1;
+                // 从params中获取效果专属参数（格式：effect_参数名）
+                const effectSource = params[`${effect}_effect-source`];
+                const effectBonus = params[`${effect}_bonus`] || 0;
+                const multiBonus = params[`${effect}_multi-bonus`] || params.multiBonus || [];
+                const count = params[`${effect}_count`] || params.count || 1;
                 
-                if (effect === 'direct_attack' && attackBonus) {
-                    // 直接攻击：attackBonus是固定伤害值
-                    effectDamage = Math.floor(attackBonus);
+                // 根据effect-source计算来源值
+                let sourceValue = 0;
+                if (effectSource) {
+                    const sourceMapping = {
+                        'self-current-attack': baseAttack,
+                        'self-base-attack': attackerStats.baseAttack,
+                        'self-current-defense': attackerStats.defense,
+                        'self-base-defense': attackerStats.baseDefense,
+                        'enemy-max-hp': defenderStats.maxHp,
+                        'enemy-current-hp': defenderStats.hp,
+                        'enemy-lost-hp': defenderStats.maxHp - defenderStats.hp
+                    };
+                    sourceValue = sourceMapping[effectSource] || baseAttack;
+                }
+                
+                if (effect === 'direct_attack' && effectBonus) {
+                    // 直接攻击：根据effect-source和bonus计算
+                    const rawDamage = Math.floor(sourceValue * effectBonus);
+                    
+                    // 判断是否基于攻击力（需要减去防御）
+                    const isAttackBased = effectSource && effectSource.includes('attack');
+                    if (isAttackBased) {
+                        effectDamage = Math.max(1, rawDamage - defense);
+                    } else {
+                        effectDamage = rawDamage;
+                    }
                     damageType = 'direct';
                 } else if (effect === 'multi_attack' && (multiBonus.length > 0 || count > 1)) {
                     // 多段攻击：计算所有段的总伤害
@@ -1132,8 +1200,16 @@ class BattleSystem {
                     const ignoredDefense = Math.floor(defense * skill.value);
                     effectDamage = Math.floor(ignoredDefense * 0.5);
                     damageType = 'pierce';
-                } else if (effect === 'dot_damage' && attackBonus) {
-                    effectDamage = Math.floor(baseAttack * attackBonus);
+                } else if (effect === 'dot_damage' && effectBonus) {
+                    const rawDamage = Math.floor(sourceValue * effectBonus);
+                    
+                    // 判断是否基于攻击力（需要减去防御）
+                    const isAttackBased = effectSource && effectSource.includes('attack');
+                    if (isAttackBased) {
+                        effectDamage = Math.max(1, rawDamage - defense);
+                    } else {
+                        effectDamage = rawDamage;
+                    }
                     damageType = 'dot';
                 } else if (effect === 'heal_lifesteal' && skill.value) {
                     effectDamage = baseDamage;
