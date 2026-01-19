@@ -3,6 +3,33 @@
 // 实现完整的繁育机制
 // ============================================
 
+// 配对系统 - 检查配对关系
+function checkMateRelationship(animal1, animal2) {
+    // 检查是否已有配偶
+    const a1HasMate = animal1.mateId && animal1.mateId !== null;
+    const a2HasMate = animal2.mateId && animal2.mateId !== null;
+    
+    // 如果双方都没有配偶，返回可以配对
+    if (!a1HasMate && !a2HasMate) {
+        return { canMate: true, isPaired: false };
+    }
+    
+    // 如果双方互为配偶，返回已配对
+    if (animal1.mateId === animal2.id && animal2.mateId === animal1.id) {
+        return { canMate: true, isPaired: true };
+    }
+    
+    // 其他情况都不能配对
+    return { canMate: false, isPaired: false };
+}
+
+// 配对两只动物
+function pairAnimals(animal1, animal2) {
+    animal1.mateId = animal2.id;
+    animal2.mateId = animal1.id;
+    console.log(`[配对] ${animal1.name} 和 ${animal2.name} 成为配偶`);
+}
+
 // 检查繁育条件
 function checkBreedingRequirements(parent1, parent2) {
     const errors = [];
@@ -22,6 +49,13 @@ function checkBreedingRequirements(parent1, parent2) {
         // 有一方有ID但格式不对
         errors.push(`动物ID格式错误`);
     }
+    
+    // 检查配偶关系（只检查是否有其他配偶，未配对不算错误）
+    const mateCheck = checkMateRelationship(parent1, parent2);
+    if (!mateCheck.canMate) {
+        errors.push(`${parent1.name} 或 ${parent2.name} 已有其他配偶`);
+    }
+    // 注意：未配对不报错，因为首次繁殖会自动配对
     
     // 检查发育阶段
     if (parent1.developmentStage !== BREEDING_CONFIG.requirements.development_stage) {
@@ -385,6 +419,12 @@ function getOffspringTemplate(parent1, parent2, offspringRarity) {
  * @returns {number} 平均珍惜度 E (0-100)
  */
 function calculateAveragePreciousness(parent1, parent2) {
+    // 安全检查
+    if (!parent1 || !parent2) {
+        console.warn('[血统因子] 父母数据不完整，返回默认珍惜度20');
+        return 20;
+    }
+    
     const rarityLevels = {
         '普通': 1,
         '闪光': 2,
@@ -420,8 +460,6 @@ function calculateAveragePreciousness(parent1, parent2) {
     
     // 平均珍惜度
     const avgPreciousness = (preciousness1 + preciousness2) / 2;
-    
-    console.log(`[血统因子] 父方珍惜度: ${preciousness1}, 母方珍惜度: ${preciousness2}, 平均: ${avgPreciousness}`);
     
     return avgPreciousness;
 }
@@ -462,8 +500,6 @@ function getSkillRarityMultipliers(avgPreciousness) {
         return { common: 1.0, rare: 1.0, epic: 1.0, legendary: 1.0 };
     }
     
-    console.log(`[血统因子] 珍惜度: ${avgPreciousness.toFixed(2)}, 区间: [${range.min}-${range.max}], ${range.desc}`);
-    console.log(`[血统因子] 权重倍率 - 普通:×${range.common}, 稀有:×${range.rare}, 史诗:×${range.epic}, 传说:×${range.legendary}`);
     
     return {
         common: range.common,
@@ -509,65 +545,343 @@ function adjustRarityWeightsByBloodline(parent1, parent2, baseRarityWeights) {
         legendary: adjustedSum > 0 ? (rawAdjusted.legendary / adjustedSum) * originalSum : 0
     };
     
-    console.log(`[血统因子] 基础权重 - 普通:${baseRarityWeights.common}, 稀有:${baseRarityWeights.rare}, 史诗:${baseRarityWeights.epic}, 传说:${baseRarityWeights.legendary} (总和:${originalSum})`);
-    console.log(`[血统因子] 应用倍率 - 普通:×${multipliers.common}, 稀有:×${multipliers.rare}, 史诗:×${multipliers.epic}, 传说:×${multipliers.legendary}`);
-    console.log(`[血统因子] 调整后权重 - 普通:${adjustedWeights.common.toFixed(2)}, 稀有:${adjustedWeights.rare.toFixed(2)}, 史诗:${adjustedWeights.epic.toFixed(2)}, 传说:${adjustedWeights.legendary.toFixed(2)} (总和:${(adjustedWeights.common + adjustedWeights.rare + adjustedWeights.epic + adjustedWeights.legendary).toFixed(2)})`);
-    
-    // 计算实际概率（百分比）
-    const totalWeight = adjustedWeights.common + adjustedWeights.rare + adjustedWeights.epic + adjustedWeights.legendary;
-    console.log(`[血统因子] 实际概率 - 普通:${((adjustedWeights.common/totalWeight)*100).toFixed(2)}%, 稀有:${((adjustedWeights.rare/totalWeight)*100).toFixed(2)}%, 史诗:${((adjustedWeights.epic/totalWeight)*100).toFixed(2)}%, 传说:${((adjustedWeights.legendary/totalWeight)*100).toFixed(2)}%`);
     
     return adjustedWeights;
 }
 
 /**
- * 为子代生成初始技能（使用血统因子调整）
- * 子代在1级时获得1个技能
+ * 计算子代的繁育代数
  * @param {Object} parent1 - 父方
  * @param {Object} parent2 - 母方
- * @param {string} skillPoolKey - 技能池key
- * @returns {Array} 初始技能列表
+ * @returns {number} 子代代数
  */
-function generateOffspringInitialSkills(parent1, parent2, skillPoolKey) {
-    if (!skillPoolKey) {
-        console.log('[血统因子] 没有技能池key');
+function calculateOffspringGeneration(parent1, parent2) {
+    // 检查是否同一物种（animalId的后4位相同）
+    const p1Id = String(parent1.animalId || '');
+    const p2Id = String(parent2.animalId || '');
+    
+    if (p1Id.length !== 5 || p2Id.length !== 5) {
+        return 1; // 如果ID格式不对，默认为第1代
+    }
+    
+    const p1Species = p1Id.slice(1);
+    const p2Species = p2Id.slice(1);
+    
+    if (p1Species !== p2Species) {
+        return 1; // 不同物种，重新开始计代
+    }
+    
+    // 计算基础代数：max(父代数, 母代数) + 1
+    const p1Gen = parent1.speciesGeneration || 1;
+    const p2Gen = parent2.speciesGeneration || 1;
+    let baseGeneration = Math.max(p1Gen, p2Gen) + 1;
+    
+    // 如果同一对父母已经繁育过，根据繁育历史调整代数
+    // 初始化繁育历史
+    if (!parent1.breedingHistory) parent1.breedingHistory = [];
+    if (!parent2.breedingHistory) parent2.breedingHistory = [];
+    
+    // 查找与当前配偶的繁育记录
+    const p1RecordsWithP2 = parent1.breedingHistory.filter(r => r.mateId === parent2.id);
+    const p2RecordsWithP1 = parent2.breedingHistory.filter(r => r.mateId === parent1.id);
+    
+    // 获取这对父母已经繁育的次数（取较大值以防不同步）
+    const breedingCount = Math.max(p1RecordsWithP2.length, p2RecordsWithP1.length);
+    
+    // 代数 = 基础代数 + 繁育次数
+    // 第1次繁育：baseGeneration + 0
+    // 第2次繁育：baseGeneration + 1
+    // 第3次繁育：baseGeneration + 2
+    const offspringGen = baseGeneration + breedingCount;
+    
+    console.log(`[代数追踪] 父方代数: ${p1Gen}, 母方代数: ${p2Gen}, 繁育次数: ${breedingCount}, 子代代数: ${offspringGen}`);
+    
+    return offspringGen;
+}
+
+/**
+ * 根据代数计算保底传说技能数量
+ * @param {number} generation - 繁育代数
+ * @returns {number} 保底传说技能数量
+ *
+ * 新保底机制：只在第5、15、30代触发
+ */
+function getGuaranteedLegendarySkillCount(generation) {
+    // 精确匹配特定代数
+    if (generation === 30) return 3;
+    if (generation === 15) return 2;
+    if (generation === 5) return 1;
+    return 0; // 其他代数没有保底
+}
+
+/**
+ * 从父母技能池中随机遗传技能
+ * @param {Object} parent1 - 父方
+ * @param {Object} parent2 - 母方
+ * @param {number} count - 需要遗传的技能数量
+ * @param {Set} excludeKeys - 已获得的技能key集合（如保底技能）
+ * @returns {Array} 遗传的技能列表
+ */
+function inheritSkillsFromParents(parent1, parent2, count, excludeKeys) {
+    const skillLibrary = JSON.parse(localStorage.getItem('SKILL_POOL') || '[]');
+    const skillPools = JSON.parse(localStorage.getItem('SKILL_POOLS') || '[]');
+    
+    // 收集父母的所有技能（变异技能 + 战斗技能）
+    const parentSkills = [];
+    
+    // 父方的技能
+    if (parent1.mutations?.skills) {
+        parent1.mutations.skills.forEach(key => parentSkills.push({ key, source: 'father' }));
+    }
+    if (parent1.combatSkills?.available) {
+        parent1.combatSkills.available.forEach(key => parentSkills.push({ key, source: 'father' }));
+    }
+    
+    // 母方的技能
+    if (parent2.mutations?.skills) {
+        parent2.mutations.skills.forEach(key => parentSkills.push({ key, source: 'mother' }));
+    }
+    if (parent2.combatSkills?.available) {
+        parent2.combatSkills.available.forEach(key => parentSkills.push({ key, source: 'mother' }));
+    }
+    
+    // 去重并排除已有技能
+    const uniqueSkills = [];
+    const seenKeys = new Set();
+    parentSkills.forEach(skill => {
+        if (!seenKeys.has(skill.key) && !excludeKeys.has(skill.key)) {
+            seenKeys.add(skill.key);
+            uniqueSkills.push(skill);
+        }
+    });
+    
+    if (uniqueSkills.length === 0) {
+        console.log('[技能遗传] 父母没有可遗传的技能');
         return [];
     }
     
-    // 加载技能池
+    // 随机选择指定数量的技能
+    const shuffled = [...uniqueSkills].sort(() => Math.random() - 0.5);
+    const selectedCount = Math.min(count, shuffled.length);
+    const inheritedSkills = [];
+    
+    for (let i = 0; i < selectedCount; i++) {
+        const skillKey = shuffled[i].key;
+        const source = shuffled[i].source;
+        const parent = source === 'father' ? parent1 : parent2;
+        
+        const fullSkill = skillLibrary.find(s => s.key === skillKey);
+        
+        if (!fullSkill) {
+            // 如果不在技能库中，尝试从预定义技能查找
+            const predefinedSkill = COMBAT_SKILLS[skillKey] || MUTATION_SKILLS[skillKey];
+            if (predefinedSkill) {
+                console.log(`[技能遗传] 遗传预定义技能: ${predefinedSkill.name}`);
+                inheritedSkills.push({
+                    skillKey: skillKey,
+                    skillName: predefinedSkill.name,
+                    skillIcon: predefinedSkill.icon,
+                    rarity: 'common',
+                    unlockLevel: 1,
+                    skillData: predefinedSkill,
+                    source: source
+                });
+            }
+            continue;
+        }
+        
+        // 获取技能稀有度和解锁等级
+        let rarity = 'common';
+        let unlockLevel = 1;
+        
+        // 从父母的acquiredSkills中查找稀有度
+        if (parent.acquiredSkills) {
+            const acquired = parent.acquiredSkills.find(s => s.skillKey === skillKey);
+            if (acquired) {
+                rarity = acquired.rarity || 'common';
+                unlockLevel = acquired.unlockLevel || 1;
+            }
+        }
+        
+        // 如果没找到，从技能池配置中获取
+        if (rarity === 'common' && parent.templateKey) {
+            const animalPool = JSON.parse(localStorage.getItem('ANIMAL_POOL') || '[]');
+            const template = animalPool.find(t => t.key === parent.templateKey);
+            if (template && template.skillPoolKey) {
+                const relatedPool = skillPools.find(p => p.key === template.skillPoolKey);
+                if (relatedPool && relatedPool.skills) {
+                    const skillConfig = relatedPool.skills.find(s => s.skillKey === skillKey);
+                    if (skillConfig) {
+                        rarity = skillConfig.rarity || 'common';
+                        unlockLevel = skillConfig.unlockLevel || 1;
+                    }
+                }
+            }
+        }
+        
+        inheritedSkills.push({
+            skillKey: skillKey,
+            skillName: fullSkill.name,
+            skillIcon: fullSkill.icon,
+            rarity: rarity,
+            unlockLevel: unlockLevel,
+            skillData: fullSkill,
+            source: source  // 'father' 或 'mother'
+        });
+        
+        console.log(`[技能遗传] 遗传技能: ${fullSkill.name} (${rarity}, Lv.${unlockLevel}) 来自${source === 'father' ? '父方' : '母方'}`);
+    }
+    
+    return inheritedSkills;
+}
+
+/**
+ * 为子代生成初始技能（新机制：3个遗传 + 3个技能池 + 保底）
+ * @param {Object} parent1 - 父方
+ * @param {Object} parent2 - 母方
+ * @param {string} skillPoolKey - 技能池key
+ * @param {number} generation - 子代代数（默认1）
+ * @returns {Array} 初始技能列表
+ */
+function generateOffspringInitialSkills(parent1, parent2, skillPoolKey, generation = 1) {
+    if (!skillPoolKey) {
+        console.log('[子代技能] 没有技能池key');
+        return [];
+    }
+    
     const skillPools = JSON.parse(localStorage.getItem('SKILL_POOLS') || '[]');
     const skillPool = skillPools.find(p => p.key === skillPoolKey);
     
     if (!skillPool || !skillPool.skills || skillPool.skills.length === 0) {
-        console.log('[血统因子] 技能池为空或不存在');
+        console.log('[子代技能] 技能池为空或不存在');
         return [];
     }
     
-    // 加载技能库
     const skillLibrary = JSON.parse(localStorage.getItem('SKILL_POOL') || '[]');
-    
-    // 获取基础稀有度权重
     const baseRarityWeights = skillPool.rarityWeights || { common: 70, rare: 20, epic: 8, legendary: 2 };
     
-    // 根据血统因子调整权重
-    const adjustedWeights = adjustRarityWeightsByBloodline(parent1, parent2, baseRarityWeights);
+    const allSkills = [];
+    const currentSkillKeys = new Set();
     
-    // 创建临时技能池配置（使用调整后的权重）
+    // 1. 检查代数保底（第5、15、30代）
+    const guaranteedLegendaryCount = getGuaranteedLegendarySkillCount(generation);
+    
+    if (guaranteedLegendaryCount > 0) {
+        console.log(`[代数保底] 第${generation}代，保底${guaranteedLegendaryCount}个传说技能`);
+        
+        const legendarySkills = skillPool.skills.filter(s => s && s.rarity === 'legendary');
+        
+        if (legendarySkills.length > 0) {
+            const shuffled = [...legendarySkills].sort(() => Math.random() - 0.5);
+            const selectedCount = Math.min(guaranteedLegendaryCount, shuffled.length);
+            
+            for (let i = 0; i < selectedCount; i++) {
+                const legendarySkillConfig = shuffled[i];
+                const fullSkill = skillLibrary.find(s => s.key === legendarySkillConfig.skillKey);
+                
+                if (fullSkill && !currentSkillKeys.has(legendarySkillConfig.skillKey)) {
+                    allSkills.push({
+                        skillKey: legendarySkillConfig.skillKey,
+                        skillName: fullSkill.name,
+                        skillIcon: fullSkill.icon,
+                        rarity: 'legendary',
+                        unlockLevel: 1,
+                        skillData: fullSkill,
+                        guaranteed: true
+                    });
+                    currentSkillKeys.add(legendarySkillConfig.skillKey);
+                    console.log(`[代数保底] 保底获得传说技能: ${fullSkill.name}`);
+                }
+            }
+        }
+    }
+    
+    // 2. 从父母技能中随机遗传（最多3个，排除保底技能）
+    const inheritCount = Math.min(3, 6 - currentSkillKeys.size);
+    if (inheritCount > 0) {
+        const inheritedSkills = inheritSkillsFromParents(parent1, parent2, inheritCount, currentSkillKeys);
+        inheritedSkills.forEach(skill => {
+            allSkills.push(skill);
+            currentSkillKeys.add(skill.skillKey);
+        });
+        console.log(`[技能遗传] 从父母遗传了${inheritedSkills.length}个技能`);
+    }
+    
+    // 3. 通过技能池获得剩余技能（使用血统因子调整权重）
+    const poolSkillCount = 6 - currentSkillKeys.size;
+    if (poolSkillCount > 0) {
+        console.log(`[技能池] 需要从技能池获得${poolSkillCount}个技能`);
+        
+        const adjustedWeights = adjustRarityWeightsByBloodline(parent1, parent2, baseRarityWeights);
+        const tempSkillPool = {
+            ...skillPool,
+            rarityWeights: adjustedWeights
+        };
+        
+        for (let i = 0; i < poolSkillCount; i++) {
+            const skill = selectRandomSkillWithAdjustedWeights(tempSkillPool, skillLibrary, 1, currentSkillKeys);
+            if (skill) {
+                allSkills.push(skill);
+                currentSkillKeys.add(skill.skillKey);
+                console.log(`[技能池] 获得技能: ${skill.skillName} (${skill.rarity})`);
+            }
+        }
+    }
+    
+    console.log(`[子代技能] 总共获得${allSkills.length}个技能`);
+    return allSkills;
+}
+
+/**
+ * 为子代生成初始技能（纯技能池版本 - 完全通过加权随机获得6个技能）
+ * @param {Object} parent1 - 父方
+ * @param {Object} parent2 - 母方
+ * @param {string} skillPoolKey - 技能池key
+ * @param {number} generation - 子代代数（默认1）
+ * @returns {Array} 初始技能列表
+ */
+function generateOffspringSkillsPurePool(parent1, parent2, skillPoolKey, generation = 1) {
+    if (!skillPoolKey) {
+        console.log('[纯技能池] 没有技能池key');
+        return [];
+    }
+    
+    const skillPools = JSON.parse(localStorage.getItem('SKILL_POOLS') || '[]');
+    const skillPool = skillPools.find(p => p.key === skillPoolKey);
+    
+    if (!skillPool || !skillPool.skills || skillPool.skills.length === 0) {
+        console.log('[纯技能池] 技能池为空或不存在');
+        return [];
+    }
+    
+    const skillLibrary = JSON.parse(localStorage.getItem('SKILL_POOL') || '[]');
+    const baseRarityWeights = skillPool.rarityWeights || { common: 70, rare: 20, epic: 8, legendary: 2 };
+    
+    const allSkills = [];
+    const currentSkillKeys = new Set();
+    
+    // 通过血统因子调整权重后，随机获得6个技能
+    console.log(`[纯技能池] 为第${generation}代生成6个技能`);
+    
+    const adjustedWeights = adjustRarityWeightsByBloodline(parent1, parent2, baseRarityWeights);
     const tempSkillPool = {
         ...skillPool,
         rarityWeights: adjustedWeights
     };
     
-    // 使用调整后的权重选择1个初始技能
-    const currentSkillKeys = new Set();
-    const skill = selectRandomSkillWithAdjustedWeights(tempSkillPool, skillLibrary, 1, currentSkillKeys);
-    
-    if (skill) {
-        console.log(`[血统因子] 子代获得初始技能: ${skill.skillName} (${skill.rarity})`);
-        return [skill];
+    for (let i = 0; i < 6; i++) {
+        const skill = selectRandomSkillWithAdjustedWeights(tempSkillPool, skillLibrary, 1, currentSkillKeys);
+        if (skill) {
+            // 标记为纯技能池获得
+            skill.source = 'pure_pool';
+            allSkills.push(skill);
+            currentSkillKeys.add(skill.skillKey);
+            console.log(`[纯技能池] 获得技能${i+1}: ${skill.skillName} (${skill.rarity})`);
+        }
     }
     
-    return [];
+    console.log(`[纯技能池] 总共获得${allSkills.length}个技能`);
+    return allSkills;
 }
 
 /**
@@ -579,8 +893,9 @@ function generateOffspringInitialSkills(parent1, parent2, skillPoolKey) {
  * @returns {Object|null} 选中的技能对象
  */
 function selectRandomSkillWithAdjustedWeights(skillPool, skillLibrary, currentLevel, excludeKeys) {
-    // 过滤出符合条件的技能
+    // 过滤出符合条件的技能（添加安全检查）
     const availableSkills = skillPool.skills.filter(skillConfig => {
+        if (!skillConfig || !skillConfig.skillKey) return false;
         if (excludeKeys.has(skillConfig.skillKey)) return false;
         const unlockLevel = skillConfig.unlockLevel || 1;
         if (currentLevel < unlockLevel) return false;
@@ -595,12 +910,12 @@ function selectRandomSkillWithAdjustedWeights(skillPool, skillLibrary, currentLe
     // 使用调整后的稀有度权重
     const rarityWeights = skillPool.rarityWeights || { common: 70, rare: 20, epic: 8, legendary: 2 };
     
-    // 统计各稀有度可用技能
+    // 统计各稀有度可用技能（添加安全检查）
     const rarityAvailable = {
-        common: availableSkills.filter(s => s.rarity === 'common'),
-        rare: availableSkills.filter(s => s.rarity === 'rare'),
-        epic: availableSkills.filter(s => s.rarity === 'epic'),
-        legendary: availableSkills.filter(s => s.rarity === 'legendary')
+        common: availableSkills.filter(s => s && s.rarity === 'common'),
+        rare: availableSkills.filter(s => s && s.rarity === 'rare'),
+        epic: availableSkills.filter(s => s && s.rarity === 'epic'),
+        legendary: availableSkills.filter(s => s && s.rarity === 'legendary')
     };
     
     // 只考虑有可用技能的稀有度
@@ -669,7 +984,8 @@ function selectRandomSkillWithAdjustedWeights(skillPool, skillLibrary, currentLe
         skillIcon: fullSkill.icon,
         rarity: selectedRarity,
         unlockLevel: selectedSkillConfig.unlockLevel || 1,
-        skillData: fullSkill
+        skillData: fullSkill,
+        source: 'pool'  // 标记为技能池获得
     };
 }
 
