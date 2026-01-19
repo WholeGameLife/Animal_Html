@@ -8,19 +8,54 @@ const LEVEL_CONFIG = {
     baseExperience: 100,
     experienceMultiplier: 1.5,
     feedAmount: 20,
-    potentialMultipliers: { 
-        '平庸': { stamina: 1.0, combat: 1.0 }, 
-        '超常': { stamina: 1.2, combat: 1.3 }, 
-        '璀璨': { stamina: 1.5, combat: 1.8 } 
+    potentialMultipliers: {
+        '平庸': { stamina: 1.0, combat: 1.0 },
+        '超常': { stamina: 1.2, combat: 1.3 },
+        '璀璨': { stamina: 1.5, combat: 1.8 }
     },
-    baseGrowth: { 
-        stamina: 10, 
-        attack: 3, 
-        defense: 2, 
-        agility: 2, 
-        favorability: 5 
+    baseGrowth: {
+        stamina: 10,
+        attack: 3,
+        defense: 2,
+        agility: 2,
+        favorability: 5
+    },
+    // 发育阶段等级阈值
+    developmentStages: {
+        '幼年期': { min: 1, max: 19 },
+        '青年期': { min: 20, max: 49 },
+        '成年期': { min: 50, max: 999 }
     }
 };
+
+/**
+ * 根据等级更新动物的发育阶段
+ * @param {Object} animal - 动物对象
+ * @returns {boolean} 是否发生了阶段变化
+ */
+function updateDevelopmentStage(animal) {
+    if (!animal || typeof animal.level !== 'number') return false;
+    
+    const level = animal.level;
+    let newStage = '幼年期';
+    
+    if (level >= 50) {
+        newStage = '成年期';
+    } else if (level >= 20) {
+        newStage = '青年期';
+    } else {
+        newStage = '幼年期';
+    }
+    
+    const oldStage = animal.developmentStage;
+    if (oldStage !== newStage) {
+        animal.developmentStage = newStage;
+        console.log(`[发育] ${animal.name} 从 ${oldStage} 进入 ${newStage}`);
+        return true;
+    }
+    
+    return false;
+}
 
 // 操作持续时间配置
 const ACTION_DURATION = 15000; // 15秒（繁殖/融合）
@@ -768,6 +803,24 @@ const MUTATION_CHAINS = {
 const SKILL_UNLOCK_LEVELS = [1, 10, 20, 30, 40, 50]; // 动物在这些等级解锁技能
 const MAX_SKILLS = 6; // 最大可用技能数量
 
+// 珍惜度计算配置
+const RARITY_SCORE_CONFIG = {
+    // 技能稀有度对应的分值
+    skillRarityScores: {
+        'common': 0,     // 普通
+        'rare': 5,       // 稀有
+        'epic': 10,      // 史诗
+        'legendary': 15  // 传说
+    },
+    // 珍惜度百分比计算
+    // 总分 = 所有技能稀有度分值之和
+    // 最大分值 = 6 * 15 = 90
+    // 珍惜度 = (总分 / 90) * 100%
+    // 如果拥有6个传说技能，额外+10%
+    maxScore: 90,
+    legendaryBonus: 10  // 6个传说技能的额外奖励
+};
+
 // 导出所有配置（用于其他脚本引用）
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
@@ -797,6 +850,7 @@ if (typeof module !== 'undefined' && module.exports) {
         BASE_ANIMAL_STATS,
         SKILL_LIMITS,
         MUTATION_TO_CATEGORY_MAP,
-        MUTATION_CHAINS
+        MUTATION_CHAINS,
+        RARITY_SCORE_CONFIG
     };
 }

@@ -369,3 +369,332 @@ function getOffspringTemplate(parent1, parent2, offspringRarity) {
         templateKey: template.key
     };
 }
+
+// ============================================
+// 血统因子系统 - 技能池权重调整
+// ============================================
+
+/**
+ * 计算父母平均珍惜度 E
+ * 珍惜度计算规则：
+ * - 基础珍惜度 = 稀有度等级 × 20 (普通=1, 闪光=2, 幻彩=3, 星芒=4)
+ * - 潜力加成 = 潜力等级 × 10 (平庸=0, 超常=1, 璀璨=2)
+ * - 变异加成 = 变异稀有度 × 5 (无=0, 基础=1, 精英=2, 传说=3)
+ * @param {Object} parent1 - 父方
+ * @param {Object} parent2 - 母方
+ * @returns {number} 平均珍惜度 E (0-100)
+ */
+function calculateAveragePreciousness(parent1, parent2) {
+    const rarityLevels = {
+        '普通': 1,
+        '闪光': 2,
+        '幻彩': 3,
+        '星芒': 4
+    };
+    
+    const potentialLevels = {
+        '平庸': 0,
+        '超常': 1,
+        '璀璨': 2
+    };
+    
+    const mutationRarityLevels = {
+        'basic': 1,
+        'elite': 2,
+        'legendary': 3
+    };
+    
+    // 计算父方珍惜度
+    const p1Rarity = rarityLevels[parent1.rarity || '普通'] || 1;
+    const p1Potential = potentialLevels[parent1.potential || '平庸'] || 0;
+    const p1MutationConfig = parent1.mutations?.tier1 ? getMutationConfig(parent1.mutations.tier1) : null;
+    const p1Mutation = p1MutationConfig ? (mutationRarityLevels[p1MutationConfig.rarity] || 0) : 0;
+    const preciousness1 = (p1Rarity * 20) + (p1Potential * 10) + (p1Mutation * 5);
+    
+    // 计算母方珍惜度
+    const p2Rarity = rarityLevels[parent2.rarity || '普通'] || 1;
+    const p2Potential = potentialLevels[parent2.potential || '平庸'] || 0;
+    const p2MutationConfig = parent2.mutations?.tier1 ? getMutationConfig(parent2.mutations.tier1) : null;
+    const p2Mutation = p2MutationConfig ? (mutationRarityLevels[p2MutationConfig.rarity] || 0) : 0;
+    const preciousness2 = (p2Rarity * 20) + (p2Potential * 10) + (p2Mutation * 5);
+    
+    // 平均珍惜度
+    const avgPreciousness = (preciousness1 + preciousness2) / 2;
+    
+    console.log(`[血统因子] 父方珍惜度: ${preciousness1}, 母方珍惜度: ${preciousness2}, 平均: ${avgPreciousness}`);
+    
+    return avgPreciousness;
+}
+
+/**
+ * 根据平均珍惜度获取技能稀有度权重倍率
+ * @param {number} avgPreciousness - 平均珍惜度 E
+ * @returns {Object} 各稀有度的权重倍率 {common, rare, epic, legendary}
+ */
+function getSkillRarityMultipliers(avgPreciousness) {
+    // 默认配置
+    const defaultMultipliers = [
+        { min: 0,  max: 20,  common: 1.0,  rare: 1.0,  epic: 1.0,   legendary: 1.0,   desc: '标准池，极难出货' },
+        { min: 21, max: 40,  common: 0.8,  rare: 1.5,  epic: 2.0,   legendary: 1.5,   desc: '压缩低级，中级翻倍' },
+        { min: 41, max: 60,  common: 0.5,  rare: 2.5,  epic: 4.0,   legendary: 3.0,   desc: '高级技能开始井喷' },
+        { min: 61, max: 80,  common: 0.2,  rare: 3.0,  epic: 8.0,   legendary: 10.0,  desc: '史诗保底，传说露头' },
+        { min: 81, max: 95,  common: 0.05, rare: 2.0,  epic: 15.0,  legendary: 30.0,  desc: '传说概率显著提升' },
+        { min: 96, max: 100, common: 0.0,  rare: 1.0,  epic: 20.0,  legendary: 40.0,  desc: '剔除普通，传说狂欢' }
+    ];
+    
+    // 从localStorage读取配置，如果没有则使用默认
+    let multiplierRanges = defaultMultipliers;
+    try {
+        const saved = localStorage.getItem('BREEDING_MULTIPLIERS');
+        if (saved) {
+            multiplierRanges = JSON.parse(saved);
+            console.log('[血统因子] 使用自定义配置');
+        }
+    } catch (e) {
+        console.warn('[血统因子] 读取配置失败，使用默认配置', e);
+    }
+    
+    // 找到对应的区间
+    const range = multiplierRanges.find(r => avgPreciousness >= r.min && avgPreciousness <= r.max);
+    
+    if (!range) {
+        console.warn('[血统因子] 珍惜度超出范围，使用默认倍率');
+        return { common: 1.0, rare: 1.0, epic: 1.0, legendary: 1.0 };
+    }
+    
+    console.log(`[血统因子] 珍惜度: ${avgPreciousness.toFixed(2)}, 区间: [${range.min}-${range.max}], ${range.desc}`);
+    console.log(`[血统因子] 权重倍率 - 普通:×${range.common}, 稀有:×${range.rare}, 史诗:×${range.epic}, 传说:×${range.legendary}`);
+    
+    return {
+        common: range.common,
+        rare: range.rare,
+        epic: range.epic,
+        legendary: range.legendary
+    };
+}
+
+/**
+ * 根据父母血统因子调整技能池的稀有度权重
+ * @param {Object} parent1 - 父方
+ * @param {Object} parent2 - 母方
+ * @param {Object} baseRarityWeights - 基础稀有度权重 {common: 70, rare: 20, epic: 8, legendary: 2}
+ * @returns {Object} 调整后的稀有度权重（归一化后总和保持不变）
+ */
+function adjustRarityWeightsByBloodline(parent1, parent2, baseRarityWeights) {
+    // 计算平均珍惜度
+    const avgPreciousness = calculateAveragePreciousness(parent1, parent2);
+    
+    // 获取权重倍率
+    const multipliers = getSkillRarityMultipliers(avgPreciousness);
+    
+    // 计算原始总和
+    const originalSum = baseRarityWeights.common + baseRarityWeights.rare + baseRarityWeights.epic + baseRarityWeights.legendary;
+    
+    // 应用倍率（未归一化）
+    const rawAdjusted = {
+        common: baseRarityWeights.common * multipliers.common,
+        rare: baseRarityWeights.rare * multipliers.rare,
+        epic: baseRarityWeights.epic * multipliers.epic,
+        legendary: baseRarityWeights.legendary * multipliers.legendary
+    };
+    
+    // 计算调整后的总和
+    const adjustedSum = rawAdjusted.common + rawAdjusted.rare + rawAdjusted.epic + rawAdjusted.legendary;
+    
+    // 归一化：使总和回到原始值
+    const adjustedWeights = {
+        common: adjustedSum > 0 ? (rawAdjusted.common / adjustedSum) * originalSum : 0,
+        rare: adjustedSum > 0 ? (rawAdjusted.rare / adjustedSum) * originalSum : 0,
+        epic: adjustedSum > 0 ? (rawAdjusted.epic / adjustedSum) * originalSum : 0,
+        legendary: adjustedSum > 0 ? (rawAdjusted.legendary / adjustedSum) * originalSum : 0
+    };
+    
+    console.log(`[血统因子] 基础权重 - 普通:${baseRarityWeights.common}, 稀有:${baseRarityWeights.rare}, 史诗:${baseRarityWeights.epic}, 传说:${baseRarityWeights.legendary} (总和:${originalSum})`);
+    console.log(`[血统因子] 应用倍率 - 普通:×${multipliers.common}, 稀有:×${multipliers.rare}, 史诗:×${multipliers.epic}, 传说:×${multipliers.legendary}`);
+    console.log(`[血统因子] 调整后权重 - 普通:${adjustedWeights.common.toFixed(2)}, 稀有:${adjustedWeights.rare.toFixed(2)}, 史诗:${adjustedWeights.epic.toFixed(2)}, 传说:${adjustedWeights.legendary.toFixed(2)} (总和:${(adjustedWeights.common + adjustedWeights.rare + adjustedWeights.epic + adjustedWeights.legendary).toFixed(2)})`);
+    
+    // 计算实际概率（百分比）
+    const totalWeight = adjustedWeights.common + adjustedWeights.rare + adjustedWeights.epic + adjustedWeights.legendary;
+    console.log(`[血统因子] 实际概率 - 普通:${((adjustedWeights.common/totalWeight)*100).toFixed(2)}%, 稀有:${((adjustedWeights.rare/totalWeight)*100).toFixed(2)}%, 史诗:${((adjustedWeights.epic/totalWeight)*100).toFixed(2)}%, 传说:${((adjustedWeights.legendary/totalWeight)*100).toFixed(2)}%`);
+    
+    return adjustedWeights;
+}
+
+/**
+ * 为子代生成初始技能（使用血统因子调整）
+ * 子代在1级时获得1个技能
+ * @param {Object} parent1 - 父方
+ * @param {Object} parent2 - 母方
+ * @param {string} skillPoolKey - 技能池key
+ * @returns {Array} 初始技能列表
+ */
+function generateOffspringInitialSkills(parent1, parent2, skillPoolKey) {
+    if (!skillPoolKey) {
+        console.log('[血统因子] 没有技能池key');
+        return [];
+    }
+    
+    // 加载技能池
+    const skillPools = JSON.parse(localStorage.getItem('SKILL_POOLS') || '[]');
+    const skillPool = skillPools.find(p => p.key === skillPoolKey);
+    
+    if (!skillPool || !skillPool.skills || skillPool.skills.length === 0) {
+        console.log('[血统因子] 技能池为空或不存在');
+        return [];
+    }
+    
+    // 加载技能库
+    const skillLibrary = JSON.parse(localStorage.getItem('SKILL_POOL') || '[]');
+    
+    // 获取基础稀有度权重
+    const baseRarityWeights = skillPool.rarityWeights || { common: 70, rare: 20, epic: 8, legendary: 2 };
+    
+    // 根据血统因子调整权重
+    const adjustedWeights = adjustRarityWeightsByBloodline(parent1, parent2, baseRarityWeights);
+    
+    // 创建临时技能池配置（使用调整后的权重）
+    const tempSkillPool = {
+        ...skillPool,
+        rarityWeights: adjustedWeights
+    };
+    
+    // 使用调整后的权重选择1个初始技能
+    const currentSkillKeys = new Set();
+    const skill = selectRandomSkillWithAdjustedWeights(tempSkillPool, skillLibrary, 1, currentSkillKeys);
+    
+    if (skill) {
+        console.log(`[血统因子] 子代获得初始技能: ${skill.skillName} (${skill.rarity})`);
+        return [skill];
+    }
+    
+    return [];
+}
+
+/**
+ * 使用调整后的权重选择技能（与skill_acquisition.js中的selectRandomSkill类似，但使用自定义权重）
+ * @param {Object} skillPool - 技能池对象（包含调整后的rarityWeights）
+ * @param {Array} skillLibrary - 技能库
+ * @param {number} currentLevel - 当前等级
+ * @param {Set} excludeKeys - 已拥有的技能key集合
+ * @returns {Object|null} 选中的技能对象
+ */
+function selectRandomSkillWithAdjustedWeights(skillPool, skillLibrary, currentLevel, excludeKeys) {
+    // 过滤出符合条件的技能
+    const availableSkills = skillPool.skills.filter(skillConfig => {
+        if (excludeKeys.has(skillConfig.skillKey)) return false;
+        const unlockLevel = skillConfig.unlockLevel || 1;
+        if (currentLevel < unlockLevel) return false;
+        return true;
+    });
+    
+    if (availableSkills.length === 0) {
+        console.log('[血统因子] 没有可用的技能');
+        return null;
+    }
+    
+    // 使用调整后的稀有度权重
+    const rarityWeights = skillPool.rarityWeights || { common: 70, rare: 20, epic: 8, legendary: 2 };
+    
+    // 统计各稀有度可用技能
+    const rarityAvailable = {
+        common: availableSkills.filter(s => s.rarity === 'common'),
+        rare: availableSkills.filter(s => s.rarity === 'rare'),
+        epic: availableSkills.filter(s => s.rarity === 'epic'),
+        legendary: availableSkills.filter(s => s.rarity === 'legendary')
+    };
+    
+    // 只考虑有可用技能的稀有度
+    const validRarities = Object.keys(rarityAvailable).filter(r => rarityAvailable[r].length > 0);
+    if (validRarities.length === 0) {
+        console.log('[血统因子] 没有任何稀有度有可用技能');
+        return null;
+    }
+    
+    // 构建稀有度权重数组
+    const rarityWeightList = [];
+    validRarities.forEach(rarity => {
+        const weight = rarityWeights[rarity] || 0;
+        if (weight > 0) {  // 只添加权重大于0的稀有度
+            rarityWeightList.push({
+                rarity: rarity,
+                weight: weight
+            });
+        }
+    });
+    
+    if (rarityWeightList.length === 0) {
+        console.log('[血统因子] 所有稀有度权重为0');
+        return null;
+    }
+    
+    // 按权重随机选择稀有度
+    const selectedRarityObj = weightedRandomSelection(rarityWeightList);
+    const selectedRarity = selectedRarityObj ? selectedRarityObj.rarity : null;
+    
+    if (!selectedRarity) {
+        console.log('[血统因子] 稀有度选择失败');
+        return null;
+    }
+    
+    console.log(`[血统因子] 抽取稀有度: ${selectedRarity}`);
+    
+    // 从该稀有度的技能中按权重随机选择
+    const raritySkills = rarityAvailable[selectedRarity];
+    
+    if (!raritySkills || raritySkills.length === 0) {
+        console.log('[血统因子] 该稀有度没有可用技能');
+        return null;
+    }
+    
+    const selectedSkillConfig = weightedRandomSelection(raritySkills.map(s => ({
+        ...s,
+        weight: s.weight || 1
+    })));
+    
+    if (!selectedSkillConfig) {
+        console.log('[血统因子] 权重随机失败');
+        return null;
+    }
+    
+    // 从技能库中获取完整技能信息
+    const fullSkill = skillLibrary.find(s => s.key === selectedSkillConfig.skillKey);
+    if (!fullSkill) {
+        console.log('[血统因子] 技能库中找不到技能:', selectedSkillConfig.skillKey);
+        return null;
+    }
+    
+    return {
+        skillKey: selectedSkillConfig.skillKey,
+        skillName: fullSkill.name,
+        skillIcon: fullSkill.icon,
+        rarity: selectedRarity,
+        unlockLevel: selectedSkillConfig.unlockLevel || 1,
+        skillData: fullSkill
+    };
+}
+
+/**
+ * 权重随机选择（内部函数）
+ * @param {Array} items - 带权重的项目数组 [{...item, weight: number}]
+ * @returns {Object|null} 选中的项目
+ */
+function weightedRandomSelection(items) {
+    if (items.length === 0) return null;
+    if (items.length === 1) return items[0];
+    
+    const totalWeight = items.reduce((sum, item) => sum + (item.weight || 0), 0);
+    if (totalWeight === 0) {
+        return items[Math.floor(Math.random() * items.length)];
+    }
+    
+    let random = Math.random() * totalWeight;
+    
+    for (let item of items) {
+        random -= (item.weight || 0);
+        if (random <= 0) {
+            return item;
+        }
+    }
+    
+    return items[items.length - 1];
+}

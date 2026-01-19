@@ -568,16 +568,18 @@
             const newSkillCount = currentSkillCount + 1;
             const weightPerSkill = rarityWeight / newSkillCount;
 
-            // 添加新技能
+            // 添加新技能（包含稀有度信息）
             configuredSkills[currentRarity].push({
                 skillKey: skill.key,
                 weight: parseFloat(weightPerSkill.toFixed(2)),
-                unlockLevel: 1
+                unlockLevel: 1,
+                rarity: currentRarity  // 关键：记录稀有度
             });
 
-            // 重新分配该稀有度所有技能的权重（平均分配）
+            // 重新分配该稀有度所有技能的权重（平均分配并确保有稀有度）
             configuredSkills[currentRarity].forEach(s => {
                 s.weight = parseFloat(weightPerSkill.toFixed(2));
+                if (!s.rarity) s.rarity = currentRarity;  // 确保每个技能都有稀有度
             });
 
             renderConfiguredSkills();
@@ -769,12 +771,12 @@
                 skills: allSkills,
                 // 保存稀有度权重
                 rarityWeights: {...rarityWeights},
-                // 同时保存分类结构（便于编辑）
+                // 同时保存分类结构（便于编辑），确保包含稀有度
                 skillsByRarity: {
-                    common: configuredSkills.common.map(s => ({...s})),
-                    rare: configuredSkills.rare.map(s => ({...s})),
-                    epic: configuredSkills.epic.map(s => ({...s})),
-                    legendary: configuredSkills.legendary.map(s => ({...s}))
+                    common: configuredSkills.common.map(s => ({...s, rarity: 'common'})),
+                    rare: configuredSkills.rare.map(s => ({...s, rarity: 'rare'})),
+                    epic: configuredSkills.epic.map(s => ({...s, rarity: 'epic'})),
+                    legendary: configuredSkills.legendary.map(s => ({...s, rarity: 'legendary'}))
                 }
             };
         }
@@ -865,10 +867,10 @@
             // 恢复技能配置（优先使用分类结构）
             if (pool.skillsByRarity) {
                 configuredSkills = {
-                    common: pool.skillsByRarity.common.map(s => ({...s})),
-                    rare: pool.skillsByRarity.rare.map(s => ({...s})),
-                    epic: pool.skillsByRarity.epic.map(s => ({...s})),
-                    legendary: pool.skillsByRarity.legendary.map(s => ({...s}))
+                    common: pool.skillsByRarity.common.map(s => ({...s, rarity: 'common'})),
+                    rare: pool.skillsByRarity.rare.map(s => ({...s, rarity: 'rare'})),
+                    epic: pool.skillsByRarity.epic.map(s => ({...s, rarity: 'epic'})),
+                    legendary: pool.skillsByRarity.legendary.map(s => ({...s, rarity: 'legendary'}))
                 };
             } else if (pool.skills) {
                 // 兼容旧格式：按稀有度分类
@@ -876,7 +878,7 @@
                 pool.skills.forEach(skill => {
                     const rarity = skill.rarity || 'common';
                     if (configuredSkills[rarity]) {
-                        configuredSkills[rarity].push({...skill});
+                        configuredSkills[rarity].push({...skill, rarity: rarity});
                     }
                 });
             }

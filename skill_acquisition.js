@@ -155,7 +155,7 @@ function selectRandomSkill(skillPool, skillLibrary, currentLevel, excludeKeys) {
         skillKey: selectedSkillConfig.skillKey,
         skillName: fullSkill.name,
         skillIcon: fullSkill.icon,
-        rarity: selectedSkillConfig.rarity,
+        rarity: selectedRarity, // 使用明确选择的稀有度，而不是配置中的值
         unlockLevel: selectedSkillConfig.unlockLevel || 1,
         // 保存完整技能数据（游戏中使用）
         skillData: fullSkill
