@@ -446,7 +446,7 @@
 
             <!-- 变异结果模态框 (新增) -->
             <div id="mutation-result-modal" class="fixed inset-0 bg-black/90 hidden z-50 flex items-center justify-center p-4">
-                <div class="bg-gray-800 rounded-xl p-6 max-w-3xl w-full border border-pink-500 shadow-2xl transform transition-all scale-100 relative max-h-[90vh] overflow-y-auto">
+                <div class="bg-gray-800 rounded-xl p-6 max-w-7xl w-full border border-pink-500 shadow-2xl transform transition-all scale-100 relative max-h-[90vh] overflow-y-auto">
                     <div id="mutation-result-header" class="text-center mb-6">
                         <div id="mutation-result-icon" class="text-6xl mb-2">🧬</div>
                         <h3 id="mutation-result-title" class="text-2xl font-bold text-white">变异结果</h3>
@@ -3615,24 +3615,19 @@
                 clearInterval(interval);
                 const newColor = (p1.color & 0xfefefe) / 2 + (p2.color & 0xfefefe) / 2;
                 
-                // 创建子代
-                const offspring = createOffspringWithInheritance(p1, p2, newColor);
+                // 创建两个子代选项
+                const { option1, option2 } = createTwoOffspringOptions(p1, p2, newColor);
                 
                 // 应用繁育冷却期
                 applyBreedingCooldown(p1);
                 applyBreedingCooldown(p2);
                 
-                // 显示繁殖结果详情
-                showBreedingResult(offspring);
+                // 显示繁殖结果详情（两个选项）
+                showBreedingResultWithOptions(p1, p2, option1, option2);
 
-                // 重置状态
-                isActionInProgress = false;
-                gameState.selectedAnimalsForBreeding = [];
+                // 重置状态（在玩家选择后再完成）
                 ui.breedingProgressContainer.classList.add('hidden');
                 ui.breedingProgressBar.style.width = '0%';
-                saveGameState();
-                updateResourceUI();
-                renderBreedingPanel();
             }, breedingDuration);
         }
         
@@ -3647,7 +3642,245 @@
             return labels[rarity] || '普通';
         }
         
-        // 新增：显示繁殖结果详情
+        // 新增：显示繁殖结果详情（双选项版本 - 并排展示）
+        function showBreedingResultWithOptions(parent1, parent2, option1, option2) {
+            // 保存选项到临时变量
+            window.breedingOptions = {
+                parent1: parent1,
+                parent2: parent2,
+                option1: option1,
+                option2: option2
+            };
+            
+            const skillPool = JSON.parse(localStorage.getItem('SKILL_POOL') || '[]');
+            
+            // 设置标题
+            ui.mutationResultIcon.textContent = "🥚";
+            ui.mutationResultTitle.textContent = "繁殖成功！请选择一个方案";
+            ui.mutationResultTitle.className = "text-2xl font-bold text-green-400";
+            
+            // 生成单个选项UI的函数
+            const generateOptionUI = (offspring, optionLabel, optionDesc) => {
+                const guaranteedSkills = offspring.acquiredSkills ? offspring.acquiredSkills.filter(s => s.guaranteed) : [];
+                const fatherSkills = offspring.acquiredSkills ? offspring.acquiredSkills.filter(s => s.source === 'father') : [];
+                const motherSkills = offspring.acquiredSkills ? offspring.acquiredSkills.filter(s => s.source === 'mother') : [];
+                const poolSkills = offspring.acquiredSkills ? offspring.acquiredSkills.filter(s => s.source === 'pool' || s.source === 'pure_pool') : [];
+                
+                // 稀有度样式配置
+                const raritySlotStyles = {
+                    'common': { bg: 'bg-gray-700', border: 'border-gray-500', badge: 'bg-gray-600 text-gray-300', label: '普通' },
+                    'rare': { bg: 'bg-blue-700', border: 'border-blue-400', badge: 'bg-blue-500 text-blue-100', label: '稀有' },
+                    'epic': { bg: 'bg-purple-700', border: 'border-purple-400', badge: 'bg-purple-500 text-purple-100', label: '史诗' },
+                    'legendary': { bg: 'bg-gradient-to-br from-orange-600 to-yellow-600', border: 'border-yellow-400', badge: 'bg-gradient-to-r from-orange-500 to-yellow-500 text-white', label: '传说' }
+                };
+                
+                // 生成技能卡片
+                const generateSkillSlot = (s) => {
+                    const skill = COMBAT_SKILLS[s.skillKey] || skillPool.find(sk => sk.key === s.skillKey);
+                    const skillName = skill ? skill.name : s.skillKey;
+                    const skillIcon = skill ? skill.icon : '🔹';
+                    const style = raritySlotStyles[s.rarity] || raritySlotStyles['common'];
+                    const cd = skill && skill.cooldown ? skill.cooldown : (skill && skill.params?.cooldown) || 0;
+                    
+                    return `
+                        <div class="${style.bg} hover:brightness-110 rounded p-1 text-center border ${style.border} transition-all min-h-[65px] flex flex-col items-center justify-center">
+                            <div class="text-lg mb-0.5">${skillIcon}</div>
+                            <div class="text-xs font-bold text-white leading-tight mb-0.5 line-clamp-1">${skillName}</div>
+                            <span class="text-xs px-1 py-0.5 rounded ${style.badge} font-semibold">${style.label}</span>
+                            ${cd > 0 ? `<div class="text-xs text-gray-300 mt-0.5">CD${cd}</div>` : ''}
+                        </div>
+                    `;
+                };
+                
+                let html = `
+                <div class="bg-gradient-to-br from-gray-800/80 to-gray-900/80 rounded-lg p-3 border-2 border-gray-600 hover:border-green-400 transition-all flex flex-col h-full shadow-lg">
+                    <!-- 方案说明 -->
+                    <div class="bg-gradient-to-r from-cyan-600/30 to-blue-600/30 border border-cyan-500/60 rounded-lg p-2 text-center mb-2">
+                        <div class="text-sm font-bold text-cyan-200 mb-0.5">${optionLabel}</div>
+                        <div class="text-xs text-gray-200">${optionDesc}</div>
+                    </div>
+                    
+                    <!-- 新生动物信息 -->
+                    <div class="bg-gray-700/60 p-2 rounded-lg mb-2 border border-gray-600">
+                        <h4 class="font-bold text-xs text-center text-cyan-300 mb-1">${offspring.name}</h4>
+                        <div class="grid grid-cols-2 gap-0.5 text-xs">
+                            <div class="flex justify-between">
+                                <span class="text-gray-400">物种ID:</span>
+                                <span class="font-mono text-cyan-300">${offspring.animalId || '无'}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-400">代数:</span>
+                                <span class="font-bold text-purple-400">第${offspring.speciesGeneration || 1}代</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-400">稀有度:</span>
+                                <span class="font-bold text-yellow-400">${offspring.rarity}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-400">潜力:</span>
+                                <span class="font-bold text-purple-400">${offspring.potential}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-400">元素:</span>
+                                <span class="text-cyan-300">${offspring.element}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-400">性别:</span>
+                                <span class="${offspring.gender === '雄' ? 'text-blue-400' : 'text-pink-400'}">${offspring.gender}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                // 变异继承信息
+                if (offspring.mutations.tier1) {
+                    const mutConfig = getMutationConfig(offspring.mutations.tier1);
+                    html += `
+                    <div class="bg-gradient-to-r from-pink-900/30 to-purple-900/30 border border-pink-500/50 rounded p-1.5 mb-2">
+                        <div class="text-xs text-pink-300 font-bold">${mutConfig ? mutConfig.icon : '🧬'} ${offspring.mutations.tier1}</div>
+                    </div>`;
+                }
+                
+                // 技能区域
+                html += '<div class="flex-1 overflow-y-auto space-y-1.5 mb-2">';
+                
+                // 保底技能
+                if (guaranteedSkills.length > 0) {
+                    html += `
+                        <div class="bg-gradient-to-r from-yellow-900/30 to-orange-900/30 border border-yellow-500/50 rounded p-1.5">
+                            <h5 class="font-bold text-yellow-300 text-xs mb-1 flex items-center gap-1">
+                                <span>⭐</span>
+                                <span>保底(${guaranteedSkills.length})</span>
+                            </h5>
+                            <div class="grid grid-cols-2 gap-1">
+                    `;
+                    guaranteedSkills.forEach(s => {
+                        html += generateSkillSlot(s);
+                    });
+                    html += `</div></div>`;
+                }
+                
+                // 遗传技能
+                if (fatherSkills.length > 0 || motherSkills.length > 0) {
+                    html += '<div class="space-y-1.5">';
+                    
+                    if (fatherSkills.length > 0) {
+                        html += `
+                            <div class="bg-blue-900/20 border border-blue-500/40 rounded p-1.5">
+                                <h5 class="font-bold text-blue-300 text-xs mb-1 flex items-center gap-1">
+                                    <span>♂️</span>
+                                    <span>父方(${fatherSkills.length})</span>
+                                </h5>
+                                <div class="grid grid-cols-2 gap-1">
+                        `;
+                        fatherSkills.forEach(s => {
+                            html += generateSkillSlot(s);
+                        });
+                        html += `</div></div>`;
+                    }
+                    
+                    if (motherSkills.length > 0) {
+                        html += `
+                            <div class="bg-pink-900/20 border border-pink-500/40 rounded p-1.5">
+                                <h5 class="font-bold text-pink-300 text-xs mb-1 flex items-center gap-1">
+                                    <span>♀️</span>
+                                    <span>母方(${motherSkills.length})</span>
+                                </h5>
+                                <div class="grid grid-cols-2 gap-1">
+                        `;
+                        motherSkills.forEach(s => {
+                            html += generateSkillSlot(s);
+                        });
+                        html += `</div></div>`;
+                    }
+                    
+                    html += '</div>';
+                }
+                
+                // 技能池技能
+                if (poolSkills.length > 0) {
+                    html += `
+                        <div class="bg-purple-900/20 border border-purple-500/40 rounded p-1.5">
+                            <h5 class="font-bold text-purple-300 text-xs mb-1 flex items-center gap-1">
+                                <span>🎲</span>
+                                <span>技能池(${poolSkills.length})</span>
+                            </h5>
+                            <div class="grid grid-cols-2 gap-1">
+                    `;
+                    poolSkills.forEach(s => {
+                        html += generateSkillSlot(s);
+                    });
+                    html += `</div></div>`;
+                }
+                
+                html += '</div>';  // 关闭技能区域
+                
+                // 选择按钮
+                html += `
+                    <div class="mt-auto pt-2">
+                        <button onclick="selectOffspringOption('${offspring.id}')" class="w-full py-2 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 text-white rounded-lg font-bold text-sm shadow-lg transform transition hover:scale-105">
+                            ✅ 选择此方案
+                        </button>
+                    </div>
+                </div>
+                `;
+                
+                return html;
+            };
+            
+            // 并排展示两个方案
+            const contentHtml = `
+                <div class="grid grid-cols-2 gap-4">
+                    ${generateOptionUI(option1, '方案一', '3个遗传 + 3个技能池')}
+                    ${generateOptionUI(option2, '方案二', '6个全部技能池')}
+                </div>
+            `;
+            
+            ui.mutationResultContent.innerHTML = contentHtml;
+            
+            // 隐藏原确定按钮
+            ui.btnCloseMutationResult.style.display = 'none';
+            
+            ui.mutationResultModal.classList.remove('hidden');
+        }
+        
+        // 选择子代选项
+        function selectOffspringOption(offspringId) {
+            if (!window.breedingOptions) return;
+            
+            const { parent1, parent2, option1, option2 } = window.breedingOptions;
+            const selectedOffspring = option1.id === offspringId ? option1 : option2;
+            const optionLabel = option1.id === offspringId ? '方案一（3遗传+3池）' : '方案二（6技能池）';
+            
+            // 将选中的子代添加到游戏中
+            gameState.animals.push(selectedOffspring);
+            gameState.animalCount++;
+            
+            // 记录繁育历史
+            recordBreedingHistory(parent1, parent2, selectedOffspring);
+            
+            // 图鉴解锁检查
+            checkEncyclopediaUnlock(selectedOffspring);
+            
+            // 清理临时数据
+            delete window.breedingOptions;
+            
+            // 显示成功消息
+            showStatus(`✅ 已选择 ${optionLabel}：${selectedOffspring.name}`, 3000);
+            
+            // 关闭模态框
+            ui.mutationResultModal.classList.add('hidden');
+            ui.btnCloseMutationResult.style.display = 'block';
+            
+            // 重置状态
+            isActionInProgress = false;
+            gameState.selectedAnimalsForBreeding = [];
+            saveGameState();
+            updateResourceUI();
+            renderBreedingPanel();
+        }
+        
+        // 新增：显示繁殖结果详情（旧版单选项，保留用于兼容）
         function showBreedingResult(offspring) {
             const skillPool = JSON.parse(localStorage.getItem('SKILL_POOL') || '[]');
             

@@ -885,6 +885,189 @@ function generateOffspringSkillsPurePool(parent1, parent2, skillPoolKey, generat
 }
 
 /**
+ * 创建两个子代选项供玩家选择
+ * @param {Object} parent1 - 父方
+ * @param {Object} parent2 - 母方
+ * @param {number} color - 子代颜色
+ * @returns {Object} 包含两个子代选项的对象 {option1, option2}
+ */
+function createTwoOffspringOptions(parent1, parent2, color) {
+    // 计算共同的基础属性
+    const offspringGeneration = calculateOffspringGeneration(parent1, parent2);
+    const offspringRarity = calculateOffspringRarity(parent1.rarity || '普通', parent2.rarity || '普通');
+    const offspringPotential = calculateOffspringPotential(parent1, parent2);
+    const offspringMutation = calculateOffspringMutation(parent1, parent2);
+    const templateInfo = getOffspringTemplate(parent1, parent2, offspringRarity);
+    
+    // 创建两个基础子代对象（除了技能外，其他属性相同）
+    const createBaseOffspring = () => {
+        const animalId = crypto.randomUUID();
+        
+        if (templateInfo && templateInfo.template) {
+            const template = templateInfo.template;
+            return {
+                id: animalId,
+                animalId: templateInfo.animalId,
+                templateKey: templateInfo.templateKey,
+                type: template.modelShape || 'sphere',
+                name: template.name,
+                originalName: template.name,
+                color: parseInt(template.color.replace('#', ''), 16),
+                avatarData: template.avatarData || null,
+                isWild: false,
+                isPlaced: false,
+                level: 1,
+                gender: Math.random() > 0.5 ? '雄' : '雌',
+                experience: 0,
+                experienceToNextLevel: template.baseExp || LEVEL_CONFIG.baseExperience,
+                stamina: template.stamina || 70,
+                maxStamina: template.stamina || 70,
+                potential: offspringPotential,
+                favorability: template.favorability || 0,
+                element: template.element || (Math.random() > 0.5 ? parent1.element : parent2.element),
+                developmentStage: '幼年期',
+                rarity: offspringRarity,
+                speciesGeneration: offspringGeneration,
+                abilities: {
+                    combat: {
+                        attack: template.attack || 10,
+                        defense: template.defense || 5,
+                        agility: template.agility || 8
+                    }
+                },
+                isInjured: false,
+                injuryTimer: 0,
+                combatSkills: { equipped: [], available: [] },
+                mutations: { tier1: offspringMutation, tier2: null, skills: [], inheritedSkills: [], currentSkills: [] },
+                mutationCount: 0,
+                templateSkillsUnlocked: [],
+                acquiredSkills: [],
+                breedingHistory: [],
+                mateId: null
+            };
+        } else {
+            const nameIndex = Math.floor(Math.random() * ANIMAL_NAMES.length);
+            const offspringStats = calculateOffspringStats(parent1, parent2, offspringPotential);
+            
+            return {
+                id: animalId,
+                animalId: null,
+                templateKey: null,
+                type: 'sphere',
+                name: `${ANIMAL_NAMES[nameIndex]}${gameState.animals.length + 1}`,
+                originalName: `${ANIMAL_NAMES[nameIndex]}${gameState.animals.length + 1}`,
+                color: color,
+                isWild: false,
+                isPlaced: false,
+                level: 1,
+                gender: Math.random() > 0.5 ? '雄' : '雌',
+                experience: 0,
+                experienceToNextLevel: LEVEL_CONFIG.baseExperience,
+                stamina: offspringStats.stamina,
+                maxStamina: offspringStats.maxStamina,
+                potential: offspringPotential,
+                favorability: offspringStats.favorability,
+                element: Math.random() > 0.5 ? parent1.element : parent2.element,
+                developmentStage: '幼年期',
+                rarity: offspringRarity,
+                speciesGeneration: offspringGeneration,
+                abilities: {
+                    combat: { ...offspringStats.combat }
+                },
+                isInjured: false,
+                injuryTimer: 0,
+                combatSkills: { equipped: [], available: [] },
+                mutations: { tier1: offspringMutation, tier2: null, skills: [], inheritedSkills: [], currentSkills: [] },
+                mutationCount: 0,
+                templateSkillsUnlocked: [],
+                acquiredSkills: [],
+                breedingHistory: [],
+                mateId: null
+            };
+        }
+    };
+    
+    // 选项1：3个遗传 + 3个技能池
+    const option1 = createBaseOffspring();
+    if (option1.templateKey) {
+        const skills1 = generateOffspringInitialSkills(parent1, parent2, templateInfo.template.skillPoolKey, offspringGeneration);
+        option1.acquiredSkills = skills1.map(s => ({
+            skillKey: s.skillKey,
+            acquiredAtLevel: 1,
+            unlockLevel: s.unlockLevel || 1,
+            rarity: s.rarity,
+            guaranteed: s.guaranteed || false,
+            source: s.source || 'unknown'
+        }));
+        skills1.forEach(s => {
+            if ((s.unlockLevel || 1) <= 1 && !option1.combatSkills.available.includes(s.skillKey)) {
+                option1.combatSkills.available.push(s.skillKey);
+            }
+            if (!COMBAT_SKILLS[s.skillKey]) {
+                COMBAT_SKILLS[s.skillKey] = {
+                    name: s.skillData.name,
+                    icon: s.skillData.icon,
+                    desc: s.skillData.description || s.skillData.desc || '无描述',
+                    type: s.skillData.type,
+                    cooldown: s.skillData.params?.cooldown || 0
+                };
+            }
+        });
+    }
+    
+    // 选项2：纯技能池（6个全部从技能池获取）
+    const option2 = createBaseOffspring();
+    if (option2.templateKey) {
+        const skills2 = generateOffspringSkillsPurePool(parent1, parent2, templateInfo.template.skillPoolKey, offspringGeneration);
+        option2.acquiredSkills = skills2.map(s => ({
+            skillKey: s.skillKey,
+            acquiredAtLevel: 1,
+            unlockLevel: s.unlockLevel || 1,
+            rarity: s.rarity,
+            guaranteed: false,
+            source: 'pure_pool'
+        }));
+        skills2.forEach(s => {
+            if ((s.unlockLevel || 1) <= 1 && !option2.combatSkills.available.includes(s.skillKey)) {
+                option2.combatSkills.available.push(s.skillKey);
+            }
+            if (!COMBAT_SKILLS[s.skillKey]) {
+                COMBAT_SKILLS[s.skillKey] = {
+                    name: s.skillData.name,
+                    icon: s.skillData.icon,
+                    desc: s.skillData.description || s.skillData.desc || '无描述',
+                    type: s.skillData.type,
+                    cooldown: s.skillData.params?.cooldown || 0
+                };
+            }
+        });
+    }
+    
+    // 处理变异技能继承（两个选项相同）
+    if (offspringMutation) {
+        const mutationConfig = getMutationConfig(offspringMutation);
+        if (mutationConfig) {
+            let mutationSkills = getSkillsFromPool(offspringMutation);
+            if (mutationSkills.length === 0 && mutationConfig.skills) {
+                mutationSkills = mutationConfig.skills;
+            }
+            option1.mutations.skills = [...mutationSkills];
+            option1.mutations.currentSkills = [...mutationSkills];
+            option2.mutations.skills = [...mutationSkills];
+            option2.mutations.currentSkills = [...mutationSkills];
+        }
+    }
+    
+    const inheritedSkills = calculateSkillInheritance(parent1, parent2, option1);
+    if (inheritedSkills.length > 0) {
+        option1.mutations.inheritedSkills = [...inheritedSkills];
+        option2.mutations.inheritedSkills = [...inheritedSkills];
+    }
+    
+    return { option1, option2 };
+}
+
+/**
  * 使用调整后的权重选择技能（与skill_acquisition.js中的selectRandomSkill类似，但使用自定义权重）
  * @param {Object} skillPool - 技能池对象（包含调整后的rarityWeights）
  * @param {Array} skillLibrary - 技能库
