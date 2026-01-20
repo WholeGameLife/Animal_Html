@@ -75,7 +75,8 @@
           "extraordinary": 50,
           "brilliant": 20
         },
-        "groupId": "GROUP_1768554442245"
+        "groupId": "GROUP_1768554442245",
+        "selectedAnimalKey": "ANIMAL_1767603997508"
       },
       {
         "animalKey": "ANIMAL_1767775536506",
@@ -86,7 +87,8 @@
           "extraordinary": 40,
           "brilliant": 50
         },
-        "groupId": "GROUP_1768554442245"
+        "groupId": "GROUP_1768554442245",
+        "selectedAnimalKey": "ANIMAL_1767604037212"
       },
       {
         "animalKey": "ANIMAL_1767775536506",
@@ -191,6 +193,6 @@
       }
     ],
     "createdAt": "2026-01-05T06:44:56.803Z",
-    "updatedAt": "2026-01-16T09:10:29.669Z"
+    "updatedAt": "2026-01-20T10:24:32.762Z"
   }
 ]

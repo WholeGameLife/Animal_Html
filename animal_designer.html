@@ -76,19 +76,10 @@
                 
                 <form id="animal-form" class="space-y-4">
                     <!-- 基础信息 -->
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-300 mb-2">动物名称 *</label>
-                            <input type="text" id="animal-name" required
-                                class="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-green-500">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-300 mb-2">动物图标 *</label>
-                            <input type="text" id="animal-icon" required maxlength="2"
-                                class="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-2 text-white text-center text-2xl focus:outline-none focus:border-green-500"
-                                placeholder="🦁">
-                            <p class="text-xs text-gray-400 mt-1">输入一个emoji作为动物图标</p>
-                        </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-2">动物名称 *</label>
+                        <input type="text" id="animal-name" required
+                            class="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-green-500">
                     </div>
                     
                     <div>
@@ -701,12 +692,10 @@
             const elementClass = data.element ? `element-${data.element}` : 'bg-gray-700';
             const rarityClass = data.rarity ? `rarity-${data.rarity}` : 'bg-gray-700';
             
-            // 头像或颜色或图标预览
+            // 头像或颜色预览
             let avatarHtml;
             if (currentAvatarData) {
                 avatarHtml = `<img src="${currentAvatarData}" class="color-preview object-cover" alt="头像预览">`;
-            } else if (data.icon) {
-                avatarHtml = `<div class="color-preview flex items-center justify-center text-4xl" style="background-color: ${data.color}">${data.icon}</div>`;
             } else {
                 avatarHtml = `<div class="color-preview" style="background-color: ${data.color}"></div>`;
             }
@@ -740,7 +729,6 @@
             return {
                 animalId: document.getElementById('animal-id').value.toUpperCase(),
                 name: document.getElementById('animal-name').value,
-                icon: document.getElementById('animal-icon').value,
                 color: document.getElementById('animal-color-hex').value,
                 element: document.getElementById('animal-element').value,
                 rarity: document.getElementById('animal-rarity').value,
@@ -864,7 +852,6 @@
             // 填充表单
             document.getElementById('animal-id').value = animal.animalId || '';
             document.getElementById('animal-name').value = animal.name;
-            document.getElementById('animal-icon').value = animal.icon || '';
             document.getElementById('animal-color').value = animal.color;
             document.getElementById('animal-color-hex').value = animal.color;
             document.getElementById('animal-element').value = animal.element;
@@ -975,12 +962,10 @@
                 const elementClass = `element-${animal.element}`;
                 const rarityClass = `rarity-${animal.rarity}`;
                 
-                // 头像或图标或颜色球
+                // 头像或颜色球
                 let avatarHtml;
                 if (animal.avatarData) {
                     avatarHtml = `<img src="${animal.avatarData}" class="w-12 h-12 rounded-full border-2 border-white object-cover" alt="${animal.name}">`;
-                } else if (animal.icon) {
-                    avatarHtml = `<div class="w-12 h-12 rounded-full border-2 border-white flex items-center justify-center text-2xl" style="background-color: ${animal.color}">${animal.icon}</div>`;
                 } else {
                     avatarHtml = `<div class="w-12 h-12 rounded-full border-2 border-white" style="background-color: ${animal.color}"></div>`;
                 }
@@ -1065,7 +1050,7 @@
             };
 
             const headers = [
-                '动物ID', '动物名称', '图标', '描述', '颜色', '系别', '稀有度',
+                '动物ID', '动物名称', '描述', '颜色', '系别', '稀有度',
                 '初始等级', '基础经验值', '经验增长系数',
                 '生命值', '体力', '攻击', '防御', '敏捷', '好感度',
                 '平庸_生命', '平庸_体力', '平庸_攻击', '平庸_防御', '平庸_敏捷', '平庸_好感',
@@ -1080,7 +1065,6 @@
                 const row = [
                     escapeCSV(animal.animalId || ''),
                     escapeCSV(animal.name),
-                    escapeCSV(animal.icon || ''),
                     escapeCSV(animal.desc || ''),
                     escapeCSV(animal.color),
                     escapeCSV(getElementName(animal.element)),
