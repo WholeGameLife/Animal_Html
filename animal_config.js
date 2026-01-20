@@ -50,7 +50,6 @@ function updateDevelopmentStage(animal) {
     const oldStage = animal.developmentStage;
     if (oldStage !== newStage) {
         animal.developmentStage = newStage;
-        console.log(`[发育] ${animal.name} 从 ${oldStage} 进入 ${newStage}`);
         return true;
     }
     

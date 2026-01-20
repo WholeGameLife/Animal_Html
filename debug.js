@@ -202,13 +202,43 @@ window.debug = {
         }
         const animal = gameState.animals.find(a => a.id === selectedAnimalId);
         if (!animal) return;
+        
+        // 收集升级过程中获得的所有新技能
+        const skillLibrary = JSON.parse(localStorage.getItem('SKILL_POOL') || '[]');
+        const acquiredSkills = [];
+        
+        // 记录升级前的技能列表
+        const initialSkillKeys = new Set(
+            animal.acquiredSkills ? animal.acquiredSkills.map(s => s.skillKey) : []
+        );
+        
+        // 升级指定等级数
         for (let i = 0; i < levels; i++) {
             levelUpAnimal(animal);
         }
+        
+        // 升级完成后，找出所有新获得的技能
+        if (animal.acquiredSkills) {
+            animal.acquiredSkills.forEach(skill => {
+                if (!initialSkillKeys.has(skill.skillKey)) {
+                    const skillData = skillLibrary.find(s => s.key === skill.skillKey);
+                    if (skillData) {
+                        acquiredSkills.push({ ...skill, skillData: skillData });
+                    }
+                }
+            });
+        }
+        
         if (typeof saveGameState === 'function') saveGameState();
         showAnimalDetails(animal.id);
         debug.updateAnimalInfo();
-        showStatus(`✅ +${levels} 等级`, 1500);
+        
+        // 如果获得了新技能，显示弹窗
+        if (acquiredSkills.length > 0 && typeof showMultipleSkillsAcquiredModal === 'function') {
+            showMultipleSkillsAcquiredModal(animal, acquiredSkills);
+        } else {
+            showStatus(`✅ +${levels} 等级`, 1500);
+        }
     },
     
     maxLevel: () => {
@@ -218,13 +248,43 @@ window.debug = {
         }
         const animal = gameState.animals.find(a => a.id === selectedAnimalId);
         if (!animal) return;
+        
+        // 收集升级过程中获得的所有新技能
+        const skillLibrary = JSON.parse(localStorage.getItem('SKILL_POOL') || '[]');
+        const acquiredSkills = [];
+        
+        // 记录升级前的技能列表
+        const initialSkillKeys = new Set(
+            animal.acquiredSkills ? animal.acquiredSkills.map(s => s.skillKey) : []
+        );
+        
+        // 升级到50级
         while (animal.level < 50) {
             levelUpAnimal(animal);
         }
+        
+        // 升级完成后，找出所有新获得的技能
+        if (animal.acquiredSkills) {
+            animal.acquiredSkills.forEach(skill => {
+                if (!initialSkillKeys.has(skill.skillKey)) {
+                    const skillData = skillLibrary.find(s => s.key === skill.skillKey);
+                    if (skillData) {
+                        acquiredSkills.push({ ...skill, skillData: skillData });
+                    }
+                }
+            });
+        }
+        
         if (typeof saveGameState === 'function') saveGameState();
         showAnimalDetails(animal.id);
         debug.updateAnimalInfo();
-        showStatus(`✅ 已升至50级`, 2000);
+        
+        // 如果获得了新技能，显示弹窗
+        if (acquiredSkills.length > 0 && typeof showMultipleSkillsAcquiredModal === 'function') {
+            showMultipleSkillsAcquiredModal(animal, acquiredSkills);
+        } else {
+            showStatus(`✅ 已升至50级`, 2000);
+        }
     },
     
     addExperience: (amount) => {

@@ -190,68 +190,10 @@
         
         <!-- 技能图鉴筛选栏 -->
         <div id="skill-filters" class="hidden bg-gray-900/80 backdrop-blur-lg rounded-xl p-4 mb-6 border border-gray-700">
-            <div class="space-y-3">
-                <!-- 状态筛选 -->
-                <div class="flex flex-wrap gap-2">
-                    <button class="encyclopedia-filter-btn active" data-filter="all">📚 全部</button>
-                    <button class="encyclopedia-filter-btn" data-filter="unlocked">✅ 已解锁</button>
-                    <button class="encyclopedia-filter-btn" data-filter="locked">🔒 未解锁</button>
-                </div>
-                
-                <!-- 系别筛选 -->
-                <div class="border-t border-gray-700 pt-3">
-                    <div class="text-xs text-gray-400 mb-2">系别分类</div>
-                    <div class="flex flex-wrap gap-2">
-                        <button class="encyclopedia-filter-btn" data-skill-category="element-water">💧 水系</button>
-                        <button class="encyclopedia-filter-btn" data-skill-category="element-fire">🔥 火系</button>
-                        <button class="encyclopedia-filter-btn" data-skill-category="element-grass">🌿 草系</button>
-                        <button class="encyclopedia-filter-btn" data-skill-category="element-wind">💨 风系</button>
-                        <button class="encyclopedia-filter-btn" data-skill-category="element-metal">🪙 金系</button>
-                        <button class="encyclopedia-filter-btn" data-skill-category="element-earth">🪨 土系</button>
-                    </div>
-                </div>
-                
-                <!-- 变异筛选 -->
-                <div class="border-t border-gray-700 pt-3">
-                    <div class="text-xs text-gray-400 mb-2">变异分类</div>
-                    <div class="flex flex-wrap gap-2">
-                        <button class="encyclopedia-filter-btn" data-skill-category="mutation-dark">🖤 黑化</button>
-                        <button class="encyclopedia-filter-btn" data-skill-category="mutation-light">🤍 白化</button>
-                        <button class="encyclopedia-filter-btn" data-skill-category="mutation-crystal">💎 晶化</button>
-                        <button class="encyclopedia-filter-btn" data-skill-category="mutation-shadow">👤 影化</button>
-                        <button class="encyclopedia-filter-btn" data-skill-category="mutation-chaos">🌑 暗蚀</button>
-                        <button class="encyclopedia-filter-btn" data-skill-category="mutation-holy">✨ 圣辉</button>
-                        <button class="encyclopedia-filter-btn" data-skill-category="mutation-psychic">🔮 异能</button>
-                        <button class="encyclopedia-filter-btn" data-skill-category="mutation-thunder">⚡ 极电</button>
-                        <button class="encyclopedia-filter-btn" data-skill-category="mutation-eternal-dark">🌙 永夜</button>
-                        <button class="encyclopedia-filter-btn" data-skill-category="mutation-eternal-light">☀️ 永耀</button>
-                        <button class="encyclopedia-filter-btn" data-skill-category="mutation-source-crystal">💠 源晶</button>
-                        <button class="encyclopedia-filter-btn" data-skill-category="mutation-thunder-lord">⚡ 雷煌</button>
-                    </div>
-                </div>
-                
-                <!-- 技能类型筛选 -->
-                <div class="border-t border-gray-700 pt-3">
-                    <div class="text-xs text-gray-400 mb-2">技能类型</div>
-                    <div class="flex flex-wrap gap-2">
-                        <button class="encyclopedia-filter-btn" data-skill-type="attack">⚔️ 攻击型</button>
-                        <button class="encyclopedia-filter-btn" data-skill-type="defense">🛡️ 防御型</button>
-                        <button class="encyclopedia-filter-btn" data-skill-type="agility">⚡ 敏捷型</button>
-                        <button class="encyclopedia-filter-btn" data-skill-type="buff">💪 增益型</button>
-                        <button class="encyclopedia-filter-btn" data-skill-type="debuff">🔻 减益型</button>
-                        <button class="encyclopedia-filter-btn" data-skill-type="heal">💚 治疗型</button>
-                    </div>
-                </div>
-                
-                <!-- 变异等级筛选 -->
-                <div class="border-t border-gray-700 pt-3">
-                    <div class="text-xs text-gray-400 mb-2">变异等级</div>
-                    <div class="flex flex-wrap gap-2">
-                        <button class="encyclopedia-filter-btn" data-mutation-tier="basic">🔹 基础级</button>
-                        <button class="encyclopedia-filter-btn" data-mutation-tier="elite">💜 精英级</button>
-                        <button class="encyclopedia-filter-btn" data-mutation-tier="legendary">✨ 传说级</button>
-                    </div>
-                </div>
+            <div class="flex flex-wrap gap-2">
+                <button class="encyclopedia-filter-btn active" data-filter="all">📚 全部技能池</button>
+                <button class="encyclopedia-filter-btn" data-filter="unlocked">✅ 已完成</button>
+                <button class="encyclopedia-filter-btn" data-filter="locked">⏳ 进行中</button>
             </div>
         </div>
         
@@ -323,21 +265,94 @@
         // 页面加载
         window.onload = function() {
             loadGameState();
+            initializeSkillEncyclopediaFromAnimals(); // 初始化技能图鉴
             setupEventListeners();
             renderEncyclopedia();
         };
+        
+        // 新增：从动物数据初始化技能图鉴
+        function initializeSkillEncyclopediaFromAnimals() {
+            console.log('[图鉴初始化] 开始从动物扫描技能...');
+            
+            if (!gameState.animals || gameState.animals.length === 0) {
+                console.log('[图鉴初始化] 没有动物数据');
+                return;
+            }
+            
+            const skillLibrary = JSON.parse(localStorage.getItem('SKILL_POOL') || '[]');
+            let unlockedCount = 0;
+            
+            if (!gameState.unlockedSkills) {
+                gameState.unlockedSkills = {};
+            }
+            
+            gameState.animals.forEach(animal => {
+                console.log(`[图鉴初始化] 扫描动物: ${animal.name}`);
+                
+                // 扫描战斗技能
+                if (animal.combatSkills && animal.combatSkills.available) {
+                    console.log(`[图鉴初始化] ${animal.name} 可用战斗技能:`, animal.combatSkills.available);
+                    animal.combatSkills.available.forEach(skillKey => {
+                        if (!gameState.unlockedSkills[skillKey]) {
+                            const skill = skillLibrary.find(s => s.key === skillKey);
+                            if (skill) {
+                                gameState.unlockedSkills[skillKey] = {
+                                    unlockedAt: Date.now(),
+                                    name: skill.name,
+                                    icon: skill.icon
+                                };
+                                unlockedCount++;
+                                console.log(`[图鉴初始化] 解锁技能: ${skill.name}`);
+                            }
+                        }
+                    });
+                }
+                
+                // 扫描变异技能
+                if (animal.mutations && animal.mutations.skills) {
+                    console.log(`[图鉴初始化] ${animal.name} 变异技能:`, animal.mutations.skills);
+                    animal.mutations.skills.forEach(skillKey => {
+                        if (!gameState.unlockedSkills[skillKey]) {
+                            const skill = skillLibrary.find(s => s.key === skillKey);
+                            if (skill) {
+                                gameState.unlockedSkills[skillKey] = {
+                                    unlockedAt: Date.now(),
+                                    name: skill.name,
+                                    icon: skill.icon
+                                };
+                                unlockedCount++;
+                                console.log(`[图鉴初始化] 解锁变异技能: ${skill.name}`);
+                            }
+                        }
+                    });
+                }
+            });
+            
+            if (unlockedCount > 0) {
+                console.log(`[图鉴初始化] 批量解锁了 ${unlockedCount} 个技能，准备保存`);
+                saveGameState();
+            }
+            
+            console.log('[图鉴初始化] 完成！当前已解锁:', Object.keys(gameState.unlockedSkills).length);
+        }
         
         // 加载游戏状态
         function loadGameState() {
             const stateJSON = localStorage.getItem('gameState');
             if (stateJSON) {
                 gameState = JSON.parse(stateJSON);
+                console.log('[图鉴加载] 加载gameState成功');
+                console.log('[图鉴加载] gameState.unlockedSkills:', gameState.unlockedSkills);
+                
                 // 确保图鉴数据结构存在
                 if (!gameState.unlockedEncyclopedia) {
                     gameState.unlockedEncyclopedia = {};
                 }
                 if (!gameState.unlockedSkills) {
                     gameState.unlockedSkills = {};
+                    console.log('[图鉴加载] 初始化unlockedSkills为空对象');
+                } else {
+                    console.log('[图鉴加载] unlockedSkills已存在，key数量:', Object.keys(gameState.unlockedSkills).length);
                 }
             } else {
                 alert("游戏状态加载失败！将返回栖息地。");
@@ -405,51 +420,12 @@
                 });
             });
             
-            // 技能图鉴筛选按钮
+            // 技能图鉴筛选按钮（简化版）
             document.querySelectorAll('#skill-filters .encyclopedia-filter-btn').forEach(btn => {
                 btn.addEventListener('click', function() {
-                    if (this.dataset.filter) {
-                        // 状态筛选
-                        document.querySelectorAll('#skill-filters [data-filter]').forEach(b => b.classList.remove('active'));
-                        this.classList.add('active');
-                        currentFilter.type = this.dataset.filter;
-                        currentFilter.skillType = null;
-                        currentFilter.skillCategory = null;
-                        currentFilter.mutationTier = null;
-                        document.querySelectorAll('#skill-filters [data-skill-type]').forEach(b => b.classList.remove('active'));
-                        document.querySelectorAll('#skill-filters [data-skill-category]').forEach(b => b.classList.remove('active'));
-                        document.querySelectorAll('#skill-filters [data-mutation-tier]').forEach(b => b.classList.remove('active'));
-                    } else if (this.dataset.skillCategory) {
-                        // 系别/变异筛选
-                        if (this.classList.contains('active')) {
-                            this.classList.remove('active');
-                            currentFilter.skillCategory = null;
-                        } else {
-                            document.querySelectorAll('#skill-filters [data-skill-category]').forEach(b => b.classList.remove('active'));
-                            this.classList.add('active');
-                            currentFilter.skillCategory = this.dataset.skillCategory;
-                        }
-                    } else if (this.dataset.skillType) {
-                        // 技能类型筛选
-                        if (this.classList.contains('active')) {
-                            this.classList.remove('active');
-                            currentFilter.skillType = null;
-                        } else {
-                            document.querySelectorAll('#skill-filters [data-skill-type]').forEach(b => b.classList.remove('active'));
-                            this.classList.add('active');
-                            currentFilter.skillType = this.dataset.skillType;
-                        }
-                    } else if (this.dataset.mutationTier) {
-                        // 变异等级筛选
-                        if (this.classList.contains('active')) {
-                            this.classList.remove('active');
-                            currentFilter.mutationTier = null;
-                        } else {
-                            document.querySelectorAll('#skill-filters [data-mutation-tier]').forEach(b => b.classList.remove('active'));
-                            this.classList.add('active');
-                            currentFilter.mutationTier = this.dataset.mutationTier;
-                        }
-                    }
+                    document.querySelectorAll('#skill-filters [data-filter]').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    currentFilter.type = this.dataset.filter;
                     renderSkillEncyclopedia();
                 });
             });
@@ -607,8 +583,6 @@
             // 更新统计
             document.getElementById('species-progress').textContent = `${unlockedSpecies}/${totalSpecies}`;
             document.getElementById('rarity-progress').textContent = `${unlockedVariants}/${totalVariants}`;
-            const completionRate = totalVariants > 0 ? Math.floor((unlockedVariants / totalVariants) * 100) : 0;
-            document.getElementById('completion-rate').textContent = `${completionRate}%`;
             document.getElementById('latest-unlock').textContent = latestUnlock || '暂无';
             
             if (speciesList.length === 0) {
@@ -1121,152 +1095,329 @@
             modal.classList.remove('hidden');
         }
         
-        // 渲染技能图鉴
+        // 渲染技能图鉴（按动物技能池分组）
         function renderSkillEncyclopedia() {
             const grid = document.getElementById('encyclopedia-grid');
             grid.innerHTML = '';
             
-            const skillPool = JSON.parse(localStorage.getItem('SKILL_POOL') || '[]');
+            const skillLibrary = JSON.parse(localStorage.getItem('SKILL_POOL') || '[]');
+            const skillPools = JSON.parse(localStorage.getItem('SKILL_POOLS') || '[]');
+            const animalPool = JSON.parse(localStorage.getItem('ANIMAL_POOL') || '[]');
             const unlockedSkills = gameState.unlockedSkills || {};
             
+            console.log('[技能图鉴渲染] gameState.unlockedSkills:', unlockedSkills);
+            console.log('[技能图鉴渲染] 已解锁技能key:', Object.keys(unlockedSkills));
+            
             // 统计
-            let totalSkills = skillPool.length;
+            let totalSkills = skillLibrary.length;
             let unlockedCount = Object.keys(unlockedSkills).length;
+            
+            console.log('[技能图鉴渲染] 总技能数:', totalSkills, '已解锁:', unlockedCount);
             
             // 更新统计显示
             document.getElementById('skill-progress').textContent = `${unlockedCount}/${totalSkills}`;
             
-            if (skillPool.length === 0) {
+            if (skillLibrary.length === 0 || skillPools.length === 0) {
                 grid.innerHTML = '<div class="col-span-full text-center text-gray-500 py-12 text-lg">技能池为空<br><span class="text-sm mt-2 block">请先在技能设计器中创建技能</span></div>';
                 return;
             }
             
-            // 变异等级映射
-            const mutationTierMap = {
-                'mutation-dark': 'basic', 'mutation-light': 'basic', 'mutation-crystal': 'basic', 'mutation-shadow': 'basic',
-                'mutation-chaos': 'elite', 'mutation-holy': 'elite', 'mutation-psychic': 'elite', 'mutation-thunder': 'elite',
-                'mutation-eternal-dark': 'legendary', 'mutation-eternal-light': 'legendary',
-                'mutation-source-crystal': 'legendary', 'mutation-thunder-lord': 'legendary'
-            };
-            
-            // 筛选技能
-            const filteredSkills = skillPool.filter(skill => {
-                // 类型筛选
-                if (currentFilter.type === 'unlocked' && !unlockedSkills[skill.key]) return false;
-                if (currentFilter.type === 'locked' && unlockedSkills[skill.key]) return false;
-                
-                // 系别/变异筛选
-                if (currentFilter.skillCategory && skill.category !== currentFilter.skillCategory) return false;
-                
-                // 变异等级筛选（仅对变异技能生效）
-                if (currentFilter.mutationTier) {
-                    const skillTier = mutationTierMap[skill.category];
-                    if (skillTier !== currentFilter.mutationTier) return false;
-                }
-                
-                // 技能类型筛选
-                if (currentFilter.skillType && skill.type !== currentFilter.skillType) return false;
-                
-                return true;
-            });
-            
-            if (filteredSkills.length === 0) {
-                grid.innerHTML = '<div class="col-span-full text-center text-gray-500 py-12 text-lg">没有符合筛选条件的技能</div>';
-                return;
-            }
-            
-            // 渲染技能卡片
-            filteredSkills.forEach(skill => {
-                const isUnlocked = unlockedSkills[skill.key];
-                const card = document.createElement('div');
-                card.className = `species-card p-5 rounded-xl border transition-all ${
-                    isUnlocked
-                        ? 'bg-gradient-to-br from-gray-800 to-gray-900 border-purple-500 shadow-xl hover:shadow-purple-500/50 cursor-pointer'
-                        : 'bg-gray-900/50 border-gray-700 opacity-60'
-                }`;
-                
-                // 类别名称映射
-                const categoryNames = {
-                    'element-water': '💧 水系', 'element-fire': '🔥 火系', 'element-grass': '🌿 草系',
-                    'element-wind': '💨 风系', 'element-metal': '🪙 金系', 'element-earth': '🪨 土系',
-                    'mutation-dark': '🖤 黑化', 'mutation-light': '🤍 白化', 'mutation-crystal': '💎 晶化',
-                    'mutation-shadow': '👤 影化', 'mutation-chaos': '🌑 暗蚀', 'mutation-holy': '✨ 圣辉',
-                    'mutation-psychic': '🔮 异能', 'mutation-thunder': '⚡ 极电',
-                    'mutation-eternal-dark': '🌙 永夜', 'mutation-eternal-light': '☀️ 永耀',
-                    'mutation-source-crystal': '💠 源晶', 'mutation-thunder-lord': '⚡ 雷煌'
-                };
-                
-                const typeNames = {
-                    'attack': '⚔️ 攻击型',
-                    'defense': '🛡️ 防御型',
-                    'agility': '⚡ 敏捷型',
-                    'buff': '💪 增益型',
-                    'debuff': '🔻 减益型',
-                    'heal': '💚 治疗型'
-                };
-                
-                card.innerHTML = `
-                    <div class="text-center">
-                        <div class="text-6xl mb-3 ${isUnlocked ? '' : 'grayscale blur-sm'}">${isUnlocked ? skill.icon : '❓'}</div>
-                        <h3 class="text-xl font-bold mb-2 ${isUnlocked ? 'text-white' : 'text-gray-600'}">${isUnlocked ? skill.name : '???'}</h3>
-                        
-                        ${isUnlocked ? `
-                            <div class="flex flex-wrap gap-2 justify-center mb-3">
-                                <span class="text-xs bg-gradient-to-r from-purple-600 to-pink-600 px-3 py-1 rounded-full text-white font-bold">
-                                    ${categoryNames[skill.category] || skill.category}
-                                </span>
-                                <span class="text-xs bg-gray-700 px-3 py-1 rounded-full text-gray-300">
-                                    ${typeNames[skill.type] || skill.type}
-                                </span>
-                            </div>
-                            
-                            ${skill.description ? `<p class="text-xs text-gray-400 italic mb-3">${skill.description}</p>` : ''}
-                            
-                            <div class="bg-gray-800/50 rounded-lg p-3 text-left">
-                                <div class="text-xs text-gray-400 mb-2">技能效果:</div>
-                                <div class="flex flex-wrap gap-1">
-                                    ${(skill.effects || []).map(e => {
-                                        const effectNames = {
-                                            'direct_attack': '直接攻击', 'multi_attack': '多段攻击',
-                                            'dot_damage': '附加伤害', 'percent_damage': '百分比伤害',
-                                            'buff_attack': '增攻', 'buff_defense': '增防',
-                                            'heal_direct': '直接恢复', 'buff_purify': '净化'
-                                        };
-                                        return `<span class="text-xs bg-green-600/30 text-green-300 px-2 py-0.5 rounded">${effectNames[e] || e}</span>`;
-                                    }).join('')}
-                                </div>
-                            </div>
-                            
-                            ${skill.params && (skill.params.cooldown > 0 || skill.params.duration > 0) ? `
-                                <div class="flex gap-2 justify-center mt-3 text-xs">
-                                    ${skill.params.cooldown > 0 ? `<span class="bg-blue-600/30 text-blue-300 px-2 py-1 rounded">CD:${skill.params.cooldown}回合</span>` : ''}
-                                    ${skill.params.duration > 0 ? `<span class="bg-purple-600/30 text-purple-300 px-2 py-1 rounded">持续:${skill.params.duration}回合</span>` : ''}
-                                </div>
-                            ` : ''}
-                            
-                            ${unlockedSkills[skill.key] && unlockedSkills[skill.key].unlockedAt ? `
-                                <div class="text-xs text-gray-500 mt-3">
-                                    🕐 解锁于: ${new Date(unlockedSkills[skill.key].unlockedAt).toLocaleString('zh-CN')}
-                                </div>
-                            ` : ''}
-                            
-                            <div class="text-xs text-purple-400 mt-2">点击查看详情</div>
-                        ` : `
-                            <div class="text-sm text-gray-500 italic mt-3">尚未解锁</div>
-                        `}
-                    </div>
-                `;
-                
-                if (isUnlocked) {
-                    card.onclick = () => openSkillDetailModal(skill);
-                }
-                
-                grid.appendChild(card);
+            // 按技能池分组
+            skillPools.forEach(pool => {
+                renderSkillPoolCard(pool, skillLibrary, animalPool, unlockedSkills, grid);
             });
         }
         
-        // 打开技能详情模态框
+        // 渲染单个技能池卡片（按动物稀有度组织）
+        function renderSkillPoolCard(pool, skillLibrary, animalPool, unlockedSkills, container) {
+            // 查找关联的动物，并按稀有度分组
+            const animalsByRarity = { common: [], shiny: [], prismatic: [], stellar: [] };
+            
+            animalPool.forEach(animal => {
+                if (animal.skillPoolKey !== pool.key) return;
+                
+                // 从animalId提取稀有度
+                const animalId = animal.animalId;
+                if (!animalId) return;
+                
+                const rarityPrefix = animalId.charAt(0);
+                const rarityMap = { '1': 'common', '2': 'shiny', '3': 'prismatic', '4': 'stellar' };
+                const animalRarity = rarityMap[rarityPrefix] || 'common';
+                
+                animalsByRarity[animalRarity].push(animal);
+            });
+            
+            // 检查是否有关联的动物
+            const totalAnimals = Object.values(animalsByRarity).flat().length;
+            if (totalAnimals === 0) return;
+            
+            // 统计总体收集进度
+            const poolSkills = pool.skills || [];
+            const totalSkills = poolSkills.length;
+            const unlockedCount = poolSkills.filter(sc => unlockedSkills[sc.skillKey]).length;
+            const completionPercent = totalSkills > 0 ? Math.round((unlockedCount / totalSkills) * 100) : 0;
+            
+            // 应用筛选
+            if (currentFilter.type === 'unlocked' && unlockedCount < totalSkills) return;
+            if (currentFilter.type === 'locked' && unlockedCount === totalSkills) return;
+            
+            const card = document.createElement('div');
+            card.className = 'species-card p-5 rounded-xl border transition-all cursor-pointer bg-gradient-to-br from-gray-800 to-gray-900 border-purple-500 shadow-xl hover:shadow-purple-500/50';
+            
+            // 稀有度图标（表示有哪些稀有度的动物）
+            const animalRarityIcons = {
+                common: '⚪', shiny: '✨', prismatic: '🌈', stellar: '⭐'
+            };
+            const animalRarityBadges = ['stellar', 'prismatic', 'shiny', 'common'].map(rarity => {
+                const count = animalsByRarity[rarity].length;
+                if (count === 0) return '';
+                return `<span class="text-xl">${animalRarityIcons[rarity]}</span>`;
+            }).join(' ');
+            
+            card.innerHTML = `
+                <div class="text-center">
+                    <div class="text-6xl mb-3">${pool.icon || '📚'}</div>
+                    <h3 class="text-xl font-bold text-white mb-2">${pool.name}</h3>
+                    
+                    <div class="mb-3">
+                        <div class="text-3xl font-bold ${completionPercent === 100 ? 'text-green-400' : 'text-purple-400'} mb-1">${completionPercent}%</div>
+                        <div class="text-xs text-gray-400">${unlockedCount}/${totalSkills} 技能已解锁</div>
+                    </div>
+                    
+                    <div class="flex gap-1 justify-center mb-3">
+                        ${animalRarityBadges}
+                    </div>
+                    
+                    <div class="text-xs text-gray-400">${totalAnimals}个动物使用此技能池</div>
+                    <div class="text-xs text-purple-400 mt-2">点击查看详情</div>
+                </div>
+            `;
+            
+            card.onclick = () => openSkillPoolDetailModal(pool, skillLibrary, animalPool, animalsByRarity, unlockedSkills);
+            container.appendChild(card);
+        }
+        
+        // 打开技能池详情模态框（按动物稀有度分组）
+        function openSkillPoolDetailModal(pool, skillLibrary, animalPool, animalsByRarity, unlockedSkills) {
+            const modal = document.getElementById('detail-modal');
+            const content = document.getElementById('detail-content');
+            
+            document.getElementById('detail-title').innerHTML = `${pool.icon || '📚'} ${pool.name}`;
+            
+            const poolSkills = pool.skills || [];
+            
+            // 统计总体进度
+            const totalSkills = poolSkills.length;
+            const unlockedCount = poolSkills.filter(sc => unlockedSkills[sc.skillKey]).length;
+            const completionPercent = totalSkills > 0 ? Math.round((unlockedCount / totalSkills) * 100) : 0;
+            
+            // 动物稀有度配置
+            const animalRarityConfig = {
+                'stellar': { label: '星芒', icon: '⭐', color: 'text-purple-400' },
+                'prismatic': { label: '幻彩', icon: '🌈', color: 'text-pink-400' },
+                'shiny': { label: '闪光', icon: '✨', color: 'text-yellow-400' },
+                'common': { label: '普通', icon: '⚪', color: 'text-gray-400' }
+            };
+            
+            let html = `
+                <!-- 技能池概览 -->
+                <div class="mb-4 bg-gray-800/50 rounded-lg p-4 text-center">
+                    <div class="flex items-center gap-3 justify-center">
+                        <span class="text-4xl">${pool.icon || '📚'}</span>
+                        <div>
+                            <h4 class="text-2xl font-bold text-white">${pool.name}</h4>
+                            <div class="text-sm text-gray-400">总收集进度: <span class="text-purple-400 font-bold">${completionPercent}%</span></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 左右分栏布局 -->
+                <div class="grid grid-cols-12 gap-4">
+                    <!-- 左侧：动物稀有度选择器 -->
+                    <div class="col-span-3 space-y-2">
+                        <h5 class="text-sm font-bold text-gray-400 mb-3">动物稀有度</h5>
+            `;
+            
+            // 生成动物稀有度按钮
+            ['stellar', 'prismatic', 'shiny', 'common'].forEach((animalRarity, index) => {
+                const config = animalRarityConfig[animalRarity];
+                const animals = animalsByRarity[animalRarity] || [];
+                
+                if (animals.length === 0) return; // 该稀有度没有动物，跳过
+                
+                html += `
+                    <button
+                        onclick="switchAnimalRarity('${animalRarity}')"
+                        id="animal-rarity-btn-${animalRarity}"
+                        class="w-full text-left p-3 rounded-lg border-2 transition-all ${index === 3 ? 'border-purple-500 bg-gradient-to-r from-purple-600 to-pink-600' : 'border-gray-600 bg-gray-800/50 hover:border-gray-500'}"
+                    >
+                        <div class="flex items-center justify-between mb-1">
+                            <div class="flex items-center gap-2">
+                                <span class="text-xl">${config.icon}</span>
+                                <span class="text-sm font-bold text-white">${config.label}</span>
+                            </div>
+                        </div>
+                        <div class="text-xs text-gray-300">${animals.length}个动物</div>
+                    </button>
+                `;
+            });
+            
+            html += `
+                    </div>
+                    
+                    <!-- 右侧：技能网格 -->
+                    <div class="col-span-9" id="animal-skill-grid-container">
+                        <!-- 技能网格由switchAnimalRarity动态生成 -->
+                    </div>
+                </div>
+            `;
+            
+            content.innerHTML = html;
+            modal.classList.remove('hidden');
+            
+            // 保存数据到window
+            window.currentPoolData = {
+                pool: pool,
+                skillLibrary: skillLibrary,
+                animalsByRarity: animalsByRarity,
+                poolSkills: poolSkills,
+                unlockedSkills: unlockedSkills,
+                animalRarityConfig: animalRarityConfig,
+                skillRarityStyles: {
+                    'common': { bg: 'bg-gray-700', border: 'border-gray-500', badge: 'bg-gray-600 text-gray-300', label: '普通' },
+                    'rare': { bg: 'bg-blue-700', border: 'border-blue-400', badge: 'bg-blue-500 text-blue-100', label: '稀有' },
+                    'epic': { bg: 'bg-purple-700', border: 'border-purple-400', badge: 'bg-purple-500 text-purple-100', label: '史诗' },
+                    'legendary': { bg: 'bg-gradient-to-br from-orange-600 to-yellow-600', border: 'border-yellow-400', badge: 'bg-gradient-to-r from-orange-500 to-yellow-500 text-white', label: '传说' }
+                }
+            };
+            
+            // 默认显示普通动物稀有度
+            switchAnimalRarity('common');
+        }
+        
+        // 切换动物稀有度显示
+        function switchAnimalRarity(animalRarity) {
+            if (!window.currentPoolData) return;
+            
+            const { animalsByRarity, poolSkills, skillLibrary, unlockedSkills, animalRarityConfig, skillRarityStyles } = window.currentPoolData;
+            const gridContainer = document.getElementById('animal-skill-grid-container');
+            const animals = animalsByRarity[animalRarity] || [];
+            
+            // 更新按钮状态
+            ['stellar', 'prismatic', 'shiny', 'common'].forEach(r => {
+                const btn = document.getElementById(`animal-rarity-btn-${r}`);
+                if (btn) {
+                    if (r === animalRarity) {
+                        btn.className = 'w-full text-left p-3 rounded-lg border-2 transition-all border-purple-500 bg-gradient-to-r from-purple-600 to-pink-600';
+                    } else {
+                        btn.className = 'w-full text-left p-3 rounded-lg border-2 transition-all border-gray-600 bg-gray-800/50 hover:border-gray-500';
+                    }
+                }
+            });
+            
+            if (animals.length === 0) {
+                gridContainer.innerHTML = '<div class="text-center text-gray-500 py-12">该稀有度没有动物使用此技能池</div>';
+                return;
+            }
+            
+            const config = animalRarityConfig[animalRarity];
+            
+            let html = `
+                <div class="bg-gray-800/30 rounded-lg p-4 border border-gray-700">
+                    <div class="flex items-center justify-between mb-4">
+                        <h6 class="font-bold text-xl flex items-center gap-2">
+                            <span class="text-2xl">${config.icon}</span>
+                            <span class="${config.color}">${config.label}动物</span>
+                        </h6>
+                    </div>
+                    
+                    <!-- 动物列表 -->
+                    <div class="mb-4 pb-4 border-b border-gray-700 flex flex-wrap gap-2">
+                        ${animals.map(a => `
+                            <span class="text-sm bg-teal-600/30 text-teal-200 px-3 py-1 rounded">${a.name}</span>
+                        `).join('')}
+                    </div>
+                    
+                    <h6 class="text-sm font-bold text-purple-300 mb-3">技能池内容（按稀有度分组）</h6>
+            `;
+            
+            // 按技能稀有度分组并渲染
+            const skillsByRarity = { legendary: [], epic: [], rare: [], common: [] };
+            poolSkills.forEach(skillConfig => {
+                const skillRarity = skillConfig.rarity || 'common';
+                if (skillsByRarity[skillRarity]) {
+                    skillsByRarity[skillRarity].push(skillConfig);
+                }
+            });
+            
+            // 按顺序渲染四个稀有度（传说→史诗→稀有→普通）
+            ['legendary', 'epic', 'rare', 'common'].forEach(skillRarity => {
+                const skills = skillsByRarity[skillRarity];
+                if (!skills || skills.length === 0) return;
+                
+                const style = skillRarityStyles[skillRarity];
+                const unlockedInRarity = skills.filter(sc => unlockedSkills[sc.skillKey]).length;
+                
+                html += `
+                    <div class="mb-4 p-3 rounded-lg bg-gray-900/50 border border-gray-700">
+                        <div class="flex items-center gap-2 mb-3">
+                            <span class="px-2 py-1 rounded ${style.badge} text-xs font-semibold">${style.label}</span>
+                            <span class="text-xs text-gray-400">${unlockedInRarity}/${skills.length} 已解锁</span>
+                        </div>
+                        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+                `;
+                
+                skills.forEach(skillConfig => {
+                    const skill = skillLibrary.find(s => s.key === skillConfig.skillKey);
+                    if (!skill) return;
+                    
+                    const isUnlocked = unlockedSkills[skill.key];
+                    
+                    html += `
+                        <div class="relative ${style.bg} hover:brightness-110 rounded-lg p-2 text-center border-2 ${style.border} transition-all ${isUnlocked ? '' : 'opacity-40 grayscale'}">
+                            ${isUnlocked ? '<div class="absolute top-0.5 right-0.5 text-green-400 text-xs">✅</div>' : '<div class="absolute top-0.5 right-0.5 text-gray-600 text-xs">🔒</div>'}
+                            <div class="text-3xl mb-1 ${isUnlocked ? '' : 'blur-sm'}">${isUnlocked ? skill.icon : '❓'}</div>
+                            <div class="text-xs font-bold text-white leading-tight ${isUnlocked ? '' : 'blur-sm'}">${isUnlocked ? skill.name : '未解锁'}</div>
+                            ${skillConfig.unlockLevel > 1 ? `<div class="text-xs text-gray-300 mt-0.5">Lv.${skillConfig.unlockLevel}</div>` : ''}
+                        </div>
+                    `;
+                });
+                
+                html += `</div></div>`;
+            });
+            
+            html += `</div>`;
+            gridContainer.innerHTML = html;
+        }
+        
+        // 打开技能详情模态框（增强版 - 显示在哪些动物技能池中）
         function openSkillDetailModal(skill) {
+            const skillPools = JSON.parse(localStorage.getItem('SKILL_POOLS') || '[]');
+            const animalPool = JSON.parse(localStorage.getItem('ANIMAL_POOL') || '[]');
+            
+            // 查找包含该技能的所有技能池
+            const relatedPools = skillPools.filter(pool => {
+                return pool.skills && pool.skills.some(s => s.skillKey === skill.key);
+            });
+            
+            // 查找使用这些技能池的动物
+            const relatedAnimals = [];
+            relatedPools.forEach(pool => {
+                const animals = animalPool.filter(a => a.skillPoolKey === pool.key);
+                animals.forEach(animal => {
+                    const skillConfig = pool.skills.find(s => s.skillKey === skill.key);
+                    if (skillConfig && !relatedAnimals.some(r => r.animalId === animal.animalId)) {
+                        relatedAnimals.push({
+                            name: animal.name,
+                            animalId: animal.animalId,
+                            poolName: pool.name,
+                            unlockLevel: skillConfig.unlockLevel || 1,
+                            rarity: skillConfig.rarity || 'common'
+                        });
+                    }
+                });
+            });
+            
             const modal = document.getElementById('detail-modal');
             const content = document.getElementById('detail-content');
             const unlockedSkills = gameState.unlockedSkills || {};
@@ -1333,6 +1484,25 @@
                         </div>
                     ` : ''}
                 </div>
+                
+                <!-- 关联动物信息 -->
+                ${relatedAnimals.length > 0 ? `
+                    <div class="mb-6">
+                        <h5 class="text-lg font-bold text-cyan-300 mb-3 flex items-center gap-2">
+                            <span>🐾</span>
+                            <span>可在以下动物中获得</span>
+                        </h5>
+                        <div class="grid grid-cols-2 gap-2">
+                            ${relatedAnimals.map(a => `
+                                <div class="bg-teal-900/20 border border-teal-600/30 rounded-lg p-2 text-left">
+                                    <div class="text-sm text-white font-bold">${a.name}</div>
+                                    <div class="text-xs text-gray-400">Lv.${a.unlockLevel}解锁 · ${a.rarity === 'legendary' ? '传说' : a.rarity === 'epic' ? '史诗' : a.rarity === 'rare' ? '稀有' : '普通'}</div>
+                                    <div class="text-xs text-teal-400 mt-1">${a.poolName}</div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                ` : ''}
                 
                 <!-- 技能效果 -->
                 <div class="mb-6">

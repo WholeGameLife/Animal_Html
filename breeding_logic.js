@@ -486,7 +486,6 @@ function getSkillRarityMultipliers(avgPreciousness) {
         const saved = localStorage.getItem('BREEDING_MULTIPLIERS');
         if (saved) {
             multiplierRanges = JSON.parse(saved);
-            console.log('[血统因子] 使用自定义配置');
         }
     } catch (e) {
         console.warn('[血统因子] 读取配置失败，使用默认配置', e);
@@ -656,7 +655,6 @@ function inheritSkillsFromParents(parent1, parent2, count, excludeKeys) {
     });
     
     if (uniqueSkills.length === 0) {
-        console.log('[技能遗传] 父母没有可遗传的技能');
         return [];
     }
     
@@ -745,7 +743,6 @@ function inheritSkillsFromParents(parent1, parent2, count, excludeKeys) {
  */
 function generateOffspringInitialSkills(parent1, parent2, skillPoolKey, generation = 1) {
     if (!skillPoolKey) {
-        console.log('[子代技能] 没有技能池key');
         return [];
     }
     
@@ -753,7 +750,6 @@ function generateOffspringInitialSkills(parent1, parent2, skillPoolKey, generati
     const skillPool = skillPools.find(p => p.key === skillPoolKey);
     
     if (!skillPool || !skillPool.skills || skillPool.skills.length === 0) {
-        console.log('[子代技能] 技能池为空或不存在');
         return [];
     }
     
@@ -842,7 +838,6 @@ function generateOffspringInitialSkills(parent1, parent2, skillPoolKey, generati
  */
 function generateOffspringSkillsPurePool(parent1, parent2, skillPoolKey, generation = 1) {
     if (!skillPoolKey) {
-        console.log('[纯技能池] 没有技能池key');
         return [];
     }
     
@@ -850,7 +845,6 @@ function generateOffspringSkillsPurePool(parent1, parent2, skillPoolKey, generat
     const skillPool = skillPools.find(p => p.key === skillPoolKey);
     
     if (!skillPool || !skillPool.skills || skillPool.skills.length === 0) {
-        console.log('[纯技能池] 技能池为空或不存在');
         return [];
     }
     
@@ -1086,7 +1080,6 @@ function selectRandomSkillWithAdjustedWeights(skillPool, skillLibrary, currentLe
     });
     
     if (availableSkills.length === 0) {
-        console.log('[血统因子] 没有可用的技能');
         return null;
     }
     
@@ -1104,7 +1097,6 @@ function selectRandomSkillWithAdjustedWeights(skillPool, skillLibrary, currentLe
     // 只考虑有可用技能的稀有度
     const validRarities = Object.keys(rarityAvailable).filter(r => rarityAvailable[r].length > 0);
     if (validRarities.length === 0) {
-        console.log('[血统因子] 没有任何稀有度有可用技能');
         return null;
     }
     
@@ -1121,7 +1113,6 @@ function selectRandomSkillWithAdjustedWeights(skillPool, skillLibrary, currentLe
     });
     
     if (rarityWeightList.length === 0) {
-        console.log('[血统因子] 所有稀有度权重为0');
         return null;
     }
     
@@ -1130,7 +1121,6 @@ function selectRandomSkillWithAdjustedWeights(skillPool, skillLibrary, currentLe
     const selectedRarity = selectedRarityObj ? selectedRarityObj.rarity : null;
     
     if (!selectedRarity) {
-        console.log('[血统因子] 稀有度选择失败');
         return null;
     }
     
@@ -1140,7 +1130,6 @@ function selectRandomSkillWithAdjustedWeights(skillPool, skillLibrary, currentLe
     const raritySkills = rarityAvailable[selectedRarity];
     
     if (!raritySkills || raritySkills.length === 0) {
-        console.log('[血统因子] 该稀有度没有可用技能');
         return null;
     }
     
@@ -1150,14 +1139,12 @@ function selectRandomSkillWithAdjustedWeights(skillPool, skillLibrary, currentLe
     })));
     
     if (!selectedSkillConfig) {
-        console.log('[血统因子] 权重随机失败');
         return null;
     }
     
     // 从技能库中获取完整技能信息
     const fullSkill = skillLibrary.find(s => s.key === selectedSkillConfig.skillKey);
     if (!fullSkill) {
-        console.log('[血统因子] 技能库中找不到技能:', selectedSkillConfig.skillKey);
         return null;
     }
     

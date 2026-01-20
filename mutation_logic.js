@@ -119,10 +119,19 @@ function performTier1Mutation(animal, currentMutation, currentRarity) {
     // 添加新技能到拥有的技能列表
     // 确保即使 selectedSkills 为空，也从 config.skills 添加
     const skillsToAdd = selectedSkills.length > 0 ? selectedSkills : (config.skills || []);
+    
+    // 读取技能池以便解锁到图鉴
+    const skillPool = JSON.parse(localStorage.getItem('SKILL_POOL') || '[]');
 
     skillsToAdd.forEach(skillKey => {
         if (!animal.mutations.skills.includes(skillKey)) {
             animal.mutations.skills.push(skillKey);
+            
+            // 解锁技能到图鉴
+            const skill = MUTATION_SKILLS[skillKey] || skillPool.find(s => s.key === skillKey);
+            if (skill && typeof unlockSkillInEncyclopedia === 'function') {
+                unlockSkillInEncyclopedia(skillKey, skill);
+            }
         }
     });
     
@@ -148,23 +157,25 @@ function performTier1Mutation(animal, currentMutation, currentRarity) {
     
     const changeDesc = `
         <div class="space-y-2">
-            <div class="flex justify-between items-center bg-gray-700 p-3 rounded">
-                <span class="text-gray-400">变异类型</span>
+            <div class="flex justify-between items-center bg-gray-700 p-2 rounded">
+                <span class="text-gray-400 text-sm">变异类型</span>
                 <span class="text-yellow-400 font-bold">${config.icon} ${mutationName}</span>
             </div>
-            <div class="flex justify-between items-center bg-gray-700 p-3 rounded">
-                <span class="text-gray-400">稀有度</span>
+            <div class="flex justify-between items-center bg-gray-700 p-2 rounded">
+                <span class="text-gray-400 text-sm">稀有度</span>
                 <span class="text-purple-400 font-bold">${rarityText}级</span>
             </div>
             ${isUpgrade ? `
-            <div class="bg-green-900/20 border border-green-500/40 p-3 rounded">
-                <div class="text-green-400 mb-1">🎉 稀有度提升！</div>
-                <div class="text-xs text-gray-400">旧变异 "${oldMutation}" 已保留到历史记录</div>
+            <div class="bg-green-900/20 border border-green-500/40 p-2 rounded">
+                <div class="text-green-400 text-sm">🎉 稀有度提升！</div>
+                <div class="text-xs text-gray-400">旧变异"${oldMutation}"已保留到历史</div>
             </div>
             ` : ''}
-            <div class="bg-gray-700 p-3 rounded">
-                <div class="text-gray-400 mb-2">新增技能:</div>
-                ${getSkillDisplayHtml(mutationSkills.length > 0 ? mutationSkills : config.skills)}
+            <div class="bg-gray-700 p-2 rounded">
+                <div class="text-gray-400 mb-2 text-sm">获得技能:</div>
+                <div class="flex flex-wrap gap-1.5">
+                    ${getSkillDisplayHtml(mutationSkills.length > 0 ? mutationSkills : config.skills, targetRarity)}
+                </div>
             </div>
         </div>
     `;
@@ -217,13 +228,15 @@ function performTier2Mutation(animal) {
     
     const changeDesc = `
         <div class="space-y-2">
-            <div class="flex justify-between items-center bg-gray-700 p-3 rounded">
-                <span class="text-gray-400">二级变异</span>
+            <div class="flex justify-between items-center bg-gray-700 p-2 rounded">
+                <span class="text-gray-400 text-sm">二级变异</span>
                 <span class="text-yellow-400 font-bold">${config.icon} ${mutationName}</span>
             </div>
-            <div class="bg-gray-700 p-3 rounded">
-                <div class="text-gray-400 mb-2">属性加成:</div>
-                ${Object.entries(config.stats).map(([k, v]) => `<div class="text-sm">${k}: +${v}</div>`).join('')}
+            <div class="bg-gray-700 p-2 rounded">
+                <div class="text-gray-400 mb-1.5 text-sm">属性加成:</div>
+                <div class="text-sm space-y-0.5">
+                    ${Object.entries(config.stats).map(([k, v]) => `<div class="text-green-400">${k}: +${v}</div>`).join('')}
+                </div>
             </div>
         </div>
     `;
@@ -478,20 +491,50 @@ function getSkillNames(skillKeys) {
     });
 }
 
-// 获取技能显示HTML
-function getSkillDisplayHtml(skillKeys) {
+// 获取技能显示HTML（卡片样式 - 类似繁殖结果）
+function getSkillDisplayHtml(skillKeys, mutationRarity) {
     const skillPool = JSON.parse(localStorage.getItem('SKILL_POOL') || '[]');
-    return skillKeys.map(skillKey => {
+    
+    // 稀有度样式配置（与繁殖结果保持一致）
+    const rarityStyles = {
+        'basic': {
+            bg: 'bg-gray-700',
+            border: 'border-gray-500',
+            badge: 'bg-gray-600 text-gray-300',
+            label: '基础'
+        },
+        'elite': {
+            bg: 'bg-purple-700',
+            border: 'border-purple-400',
+            badge: 'bg-purple-500 text-purple-100',
+            label: '精英'
+        },
+        'legendary': {
+            bg: 'bg-gradient-to-br from-orange-600 to-yellow-600',
+            border: 'border-yellow-400',
+            badge: 'bg-gradient-to-r from-orange-500 to-yellow-500 text-white',
+            label: '传说'
+        }
+    };
+    
+    const style = rarityStyles[mutationRarity] || rarityStyles['basic'];
+    
+    const skillCards = skillKeys.map(skillKey => {
         const skill = MUTATION_SKILLS[skillKey];
-        if (skill) {
-            return `<div class="text-sm">${skill.icon} ${skill.name}</div>`;
-        }
-        
         const customSkill = skillPool.find(s => s.key === skillKey);
-        if (customSkill) {
-            return `<div class="text-sm">${customSkill.icon} ${customSkill.name}</div>`;
-        }
         
-        return `<div class="text-sm">❓ 未知技能</div>`;
+        const skillName = skill ? skill.name : (customSkill ? customSkill.name : '未知技能');
+        const skillIcon = skill ? skill.icon : (customSkill ? customSkill.icon : '❓');
+        
+        return `
+            <div class="${style.bg} hover:brightness-110 rounded p-2 text-center border ${style.border} transition-all flex flex-col items-center justify-center">
+                <div class="text-2xl mb-1">${skillIcon}</div>
+                <div class="text-xs font-bold text-white leading-tight mb-1">${skillName}</div>
+                <span class="text-xs px-1.5 py-0.5 rounded ${style.badge} font-semibold">${style.label}</span>
+            </div>
+        `;
     }).join('');
+    
+    // 使用grid布局，每行最多2个技能卡片
+    return `<div class="grid grid-cols-2 gap-2">${skillCards}</div>`;
 }
