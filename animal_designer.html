@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -5,8 +6,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>动物设计器 - 电子盆栽</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
     <style>
         body {
             background: linear-gradient(135deg, #065f46 0%, #064e3b 100%);
@@ -52,42 +51,6 @@
             border: 3px solid white;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
         }
-        
-        #model-preview-canvas {
-            width: 100%;
-            height: 300px;
-            border-radius: 0.5rem;
-            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
-        }
-        
-        .model-controls {
-            display: flex;
-            gap: 0.5rem;
-            justify-content: center;
-            margin-top: 0.5rem;
-        }
-        
-        .model-control-btn {
-            background: rgba(59, 130, 246, 0.2);
-            border: 1px solid rgba(59, 130, 246, 0.5);
-            color: #60a5fa;
-            padding: 0.25rem 0.75rem;
-            border-radius: 0.375rem;
-            font-size: 0.75rem;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        
-        .model-control-btn:hover {
-            background: rgba(59, 130, 246, 0.3);
-            border-color: #60a5fa;
-        }
-        
-        .model-control-btn.active {
-            background: rgba(59, 130, 246, 0.5);
-            border-color: #3b82f6;
-            color: white;
-        }
     </style>
 </head>
 <body class="p-6">
@@ -120,16 +83,24 @@
                                 class="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-green-500">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-300 mb-2">动物ID (物种+稀有度) *</label>
-                            <input type="text" id="animal-id" required pattern="^[1-4]\d{4}$"
-                                class="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-2 text-white font-mono text-center text-lg focus:outline-none focus:border-green-500"
-                                placeholder="例: 10001">
-                            <p class="text-xs text-gray-400 mt-1">
-                                格式：<span class="font-mono">1xxxx</span>=普通 <span class="font-mono">2xxxx</span>=闪光
-                                <span class="font-mono">3xxxx</span>=幻彩 <span class="font-mono">4xxxx</span>=星芒<br>
-                                例：10001(普通)、20001(闪光)、30001(幻彩)、40001(星芒)为同一物种
-                            </p>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">动物图标 *</label>
+                            <input type="text" id="animal-icon" required maxlength="2"
+                                class="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-2 text-white text-center text-2xl focus:outline-none focus:border-green-500"
+                                placeholder="🦁">
+                            <p class="text-xs text-gray-400 mt-1">输入一个emoji作为动物图标</p>
                         </div>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-2">动物ID (物种+稀有度) *</label>
+                        <input type="text" id="animal-id" required pattern="^[1-4]\d{4}$"
+                            class="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-2 text-white font-mono text-center text-lg focus:outline-none focus:border-green-500"
+                            placeholder="例: 10001">
+                        <p class="text-xs text-gray-400 mt-1">
+                            格式：<span class="font-mono">1xxxx</span>=普通 <span class="font-mono">2xxxx</span>=闪光
+                            <span class="font-mono">3xxxx</span>=幻彩 <span class="font-mono">4xxxx</span>=星芒<br>
+                            例：10001(普通)、20001(闪光)、30001(幻彩)、40001(星芒)为同一物种
+                        </p>
                     </div>
                     
                     <div class="grid grid-cols-2 gap-4">
@@ -169,12 +140,12 @@
                             <select id="animal-element" required
                                 class="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-green-500">
                                 <option value="">选择系别</option>
-                                <option value="水系">💧 水系</option>
-                                <option value="火系">🔥 火系</option>
-                                <option value="草系">🌿 草系</option>
-                                <option value="风系">💨 风系</option>
-                                <option value="电系">⚡ 电系</option>
-                                <option value="土系">🪨 土系</option>
+                                <option value="water">💧 水系</option>
+                                <option value="fire">🔥 火系</option>
+                                <option value="grass">🌿 草系</option>
+                                <option value="wind">💨 风系</option>
+                                <option value="electric">⚡ 电系</option>
+                                <option value="earth">🪨 土系</option>
                             </select>
                         </div>
                         <div>
@@ -423,32 +394,6 @@
 
             <!-- 右侧：动物预览和列表 -->
             <div class="space-y-6">
-                <!-- 3D模型预览 -->
-                <div class="bg-gray-900/80 backdrop-blur-lg rounded-xl p-6 border border-gray-700">
-                    <div class="flex justify-between items-center mb-4">
-                        <h3 class="text-xl font-bold text-white">🎨 3D模型预览</h3>
-                        <label for="model-file-input" class="bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold py-2 px-3 rounded-lg transition-colors cursor-pointer">
-                            📁 导入GLB
-                        </label>
-                        <input type="file" id="model-file-input" accept=".glb,.gltf" class="hidden">
-                    </div>
-                    <div id="model-preview-container" class="relative">
-                        <canvas id="model-preview-canvas"></canvas>
-                        <div class="model-controls">
-                            <button class="model-control-btn active" data-shape="sphere" title="球体">🔵 球体</button>
-                            <button class="model-control-btn" data-shape="cube" title="立方体">🟦 立方体</button>
-                            <button class="model-control-btn" data-shape="cone" title="锥体">🔺 锥体</button>
-                            <button class="model-control-btn" data-shape="torus" title="环体">🍩 环体</button>
-                            <button class="model-control-btn" data-shape="octahedron" title="八面体">💎 八面体</button>
-                            <button class="model-control-btn" data-shape="custom" title="自定义模型" id="custom-model-btn" style="display:none;">📦 自定义</button>
-                        </div>
-                        <div class="text-xs text-gray-400 text-center mt-2">
-                            拖动旋转 | 滚轮缩放 | 支持导入GLB/GLTF模型
-                        </div>
-                        <div id="model-info" class="text-xs text-green-400 text-center mt-1" style="display:none;"></div>
-                    </div>
-                </div>
-                
                 <!-- 动物属性预览 -->
                 <div class="bg-gray-900/80 backdrop-blur-lg rounded-xl p-6 border border-gray-700">
                     <h3 class="text-xl font-bold text-white mb-4">📋 属性预览</h3>
@@ -494,39 +439,17 @@
         </div>
     </div>
 
-    <!-- 技能选择模态框 -->
-    <div id="skill-select-modal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-        <div class="bg-gray-900 rounded-xl p-6 max-w-2xl w-full mx-4 border border-gray-700 max-h-[80vh] overflow-y-auto">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="text-xl font-bold text-white">从技能池选择技能</h3>
-                <button id="close-skill-modal" class="text-gray-400 hover:text-white text-2xl">×</button>
-            </div>
-            <div id="skill-pool-list" class="space-y-2">
-                <!-- 技能列表 -->
-            </div>
-        </div>
-    </div>
-
     <script>
         // 动物模板池存储
         let animals = JSON.parse(localStorage.getItem('ANIMAL_POOL') || '[]');
         // 技能池
         let skillPool = JSON.parse(localStorage.getItem('SKILL_POOL') || '[]');
-        // 当前配置的技能
-        let configuredSkills = [];
         // 当前编辑的动物索引
         let editingIndex = -1;
         // 当前选择的头像数据
         let currentAvatarData = null;
-        // 头像是否被修改过（用于区分"未修改"和"主动清除"）
+        // 头像是否被修改过
         let avatarModified = false;
-        
-        // 3D模型相关
-        let scene, camera, renderer, animalMesh, currentShape = 'sphere';
-        let isMouseDown = false;
-        let mouseX = 0, mouseY = 0;
-        let customModelData = null; // 存储自定义模型的Base64数据
-        let gltfLoader = null; // GLTF加载器
 
         // DOM元素
         const form = document.getElementById('animal-form');
@@ -548,7 +471,6 @@
             syncColorInputs();
             setupSkillModal();
             setupAvatarUpload();
-            init3DPreview(); // 初始化3D预览
         }
         
         // 设置头像上传
@@ -573,433 +495,34 @@
                 reader.onload = (event) => {
                     const base64Data = event.target.result;
                     currentAvatarData = base64Data;
-                    avatarModified = true;  // 标记头像已修改
+                    avatarModified = true;
                     
-                    // 显示预览
                     avatarPreviewImg.src = base64Data;
                     avatarPreview.classList.remove('hidden');
                     avatarFilename.textContent = file.name;
                     clearAvatarBtn.classList.remove('hidden');
-                    updatePreview();  // 更新预览
+                    updatePreview();
                 };
                 reader.readAsDataURL(file);
             });
             
             clearAvatarBtn.addEventListener('click', () => {
                 currentAvatarData = null;
-                avatarModified = true;  // 标记头像已修改（清除）
+                avatarModified = true;
                 avatarInput.value = '';
                 avatarPreview.classList.add('hidden');
                 avatarFilename.textContent = '点击选择图片';
                 clearAvatarBtn.classList.add('hidden');
-                updatePreview();  // 更新预览
+                updatePreview();
             });
         }
-        
-        // 初始化3D预览
-        function init3DPreview() {
-            const canvas = document.getElementById('model-preview-canvas');
-            const container = document.getElementById('model-preview-container');
-            
-            // 创建场景
-            scene = new THREE.Scene();
-            scene.background = new THREE.Color(0x0f172a);
-            
-            // 创建相机
-            camera = new THREE.PerspectiveCamera(75, canvas.clientWidth / 300, 0.1, 1000);
-            camera.position.z = 3;
-            
-            // 创建渲染器
-            renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
-            renderer.setSize(canvas.clientWidth, 300);
-            renderer.setPixelRatio(window.devicePixelRatio);
-            
-            // 添加光源
-            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
-            scene.add(ambientLight);
-            
-            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
-            directionalLight.position.set(5, 5, 5);
-            scene.add(directionalLight);
-            
-            const directionalLight2 = new THREE.DirectionalLight(0xffffff, 0.4);
-            directionalLight2.position.set(-5, -5, -5);
-            scene.add(directionalLight2);
-            
-            // 初始化GLTFLoader（使用轮询确保加载完成）
-            const initGLTFLoader = () => {
-                if (typeof THREE !== 'undefined' && THREE.GLTFLoader) {
-                    gltfLoader = new THREE.GLTFLoader();
-                    console.log('✅ GLTFLoader已初始化');
-                } else {
-                    console.log('⏳ 等待GLTFLoader加载...');
-                    setTimeout(initGLTFLoader, 100);
-                }
-            };
-            initGLTFLoader();
-            
-            // 创建初始动物模型
-            createAnimalModel('#3b82f6', 'sphere');
-            
-            // 设置形状切换按钮
-            document.querySelectorAll('.model-control-btn').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    document.querySelectorAll('.model-control-btn').forEach(b => b.classList.remove('active'));
-                    this.classList.add('active');
-                    currentShape = this.dataset.shape;
-                    const color = document.getElementById('animal-color-hex').value || '#3b82f6';
-                    if (currentShape === 'custom' && customModelData) {
-                        loadCustomModel(customModelData);
-                    } else {
-                        createAnimalModel(color, currentShape);
-                    }
-                });
-            });
-            
-            // 设置GLB文件导入
-            const modelFileInput = document.getElementById('model-file-input');
-            modelFileInput.addEventListener('change', handleModelFileUpload);
-            
-            // 鼠标交互
-            canvas.addEventListener('mousedown', (e) => {
-                isMouseDown = true;
-                mouseX = e.clientX;
-                mouseY = e.clientY;
-            });
-            
-            canvas.addEventListener('mousemove', (e) => {
-                if (!isMouseDown || !animalMesh) return;
-                
-                const deltaX = e.clientX - mouseX;
-                const deltaY = e.clientY - mouseY;
-                
-                animalMesh.rotation.y += deltaX * 0.01;
-                animalMesh.rotation.x += deltaY * 0.01;
-                
-                mouseX = e.clientX;
-                mouseY = e.clientY;
-            });
-            
-            canvas.addEventListener('mouseup', () => {
-                isMouseDown = false;
-            });
-            
-            canvas.addEventListener('mouseleave', () => {
-                isMouseDown = false;
-            });
-            
-            // 滚轮缩放
-            canvas.addEventListener('wheel', (e) => {
-                e.preventDefault();
-                camera.position.z += e.deltaY * 0.01;
-                camera.position.z = Math.max(1.5, Math.min(5, camera.position.z));
-            });
-            
-            // 窗口大小调整
-            window.addEventListener('resize', () => {
-                const width = canvas.clientWidth;
-                camera.aspect = width / 300;
-                camera.updateProjectionMatrix();
-                renderer.setSize(width, 300);
-            });
-            
-            // 动画循环
-            animate3D();
-        }
-        
-        // 处理GLB文件上传
-        function handleModelFileUpload(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-            
-            console.log('📁 开始加载文件:', file.name);
-            
-            // 检查GLTFLoader是否已初始化
-            const tryLoadModel = () => {
-                if (!gltfLoader) {
-                    console.log('⏳ GLTFLoader未就绪，等待初始化...');
-                    setTimeout(tryLoadModel, 100);
-                    return;
-                }
-                
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    try {
-                        const arrayBuffer = e.target.result;
-                        console.log('📦 文件读取完成，大小:', arrayBuffer.byteLength, 'bytes');
-                        
-                        // 转换为Base64以便存储
-                        const base64 = arrayBufferToBase64(arrayBuffer);
-                        customModelData = base64;
-                        console.log('✅ Base64转换完成');
-                        
-                        // 加载模型
-                        loadCustomModel(base64, file.name);
-                        
-                        // 显示自定义模型按钮
-                        const customBtn = document.getElementById('custom-model-btn');
-                        customBtn.style.display = 'inline-block';
-                        
-                        // 自动切换到自定义模型
-                        document.querySelectorAll('.model-control-btn').forEach(b => b.classList.remove('active'));
-                        customBtn.classList.add('active');
-                        currentShape = 'custom';
-                        
-                    } catch (error) {
-                        console.error('❌ 文件处理失败:', error);
-                        alert('❌ 文件处理失败: ' + error.message);
-                    }
-                };
-                
-                reader.onerror = function(error) {
-                    console.error('❌ 文件读取失败:', error);
-                    alert('❌ 文件读取失败！');
-                };
-                
-                reader.readAsArrayBuffer(file);
-            };
-            
-            tryLoadModel();
-            
-            // 清空input以允许重复选择同一文件
-            event.target.value = '';
-        }
-        
-        // 加载自定义GLB模型
-        function loadCustomModel(base64Data, fileName = '自定义模型') {
-            if (!gltfLoader) {
-                console.error('❌ GLTFLoader未初始化');
-                alert('❌ GLTFLoader未初始化，请刷新页面重试');
-                return;
-            }
-            
-            console.log('🔄 开始解析GLB模型...');
-            
-            // 移除旧模型
-            if (animalMesh) {
-                scene.remove(animalMesh);
-                if (animalMesh.geometry) animalMesh.geometry.dispose();
-                if (animalMesh.material) {
-                    if (Array.isArray(animalMesh.material)) {
-                        animalMesh.material.forEach(m => m.dispose());
-                    } else {
-                        animalMesh.material.dispose();
-                    }
-                }
-                animalMesh = null;
-            }
-            
-            try {
-                // 将Base64转回ArrayBuffer
-                const arrayBuffer = base64ToArrayBuffer(base64Data);
-                console.log('📦 ArrayBuffer大小:', arrayBuffer.byteLength, 'bytes');
-                
-                // 使用GLTFLoader加载
-                gltfLoader.parse(arrayBuffer, '',
-                    function(gltf) {
-                        console.log('✅ GLTF解析成功');
-                        const model = gltf.scene;
-                        
-                        // 计算模型边界并调整大小
-                        const box = new THREE.Box3().setFromObject(model);
-                        const size = box.getSize(new THREE.Vector3());
-                        const maxDim = Math.max(size.x, size.y, size.z);
-                        
-                        console.log('📏 模型尺寸:', size.x.toFixed(2), size.y.toFixed(2), size.z.toFixed(2));
-                        
-                        if (maxDim > 0) {
-                            const scale = 2 / maxDim; // 缩放到合适大小
-                            model.scale.setScalar(scale);
-                            console.log('🔍 缩放比例:', scale.toFixed(3));
-                        }
-                        
-                        // 居中模型
-                        const center = box.getCenter(new THREE.Vector3());
-                        model.position.sub(center.multiplyScalar(model.scale.x));
-                        
-                        // 应用颜色（如果可能）
-                        const color = document.getElementById('animal-color-hex').value || '#3b82f6';
-                        applyColorToModel(model, color);
-                        
-                        // 添加到场景
-                        animalMesh = model;
-                        scene.add(animalMesh);
-                        
-                        // 调整相机位置以确保模型可见
-                        camera.position.z = 3;
-                        camera.lookAt(0, 0, 0);
-                        
-                        console.log('✅ GLB模型加载成功');
-                        
-                        // 显示成功信息
-                        const modelInfo = document.getElementById('model-info');
-                        modelInfo.textContent = `✅ 已加载: ${fileName}`;
-                        modelInfo.style.display = 'block';
-                        modelInfo.className = 'text-xs text-green-400 text-center mt-1';
-                        
-                    },
-                    function(error) {
-                        console.error('❌ 加载GLB模型失败:', error);
-                        alert('❌ 加载模型失败: ' + error.message + '\n\n请确保文件是有效的GLB/GLTF格式！');
-                        
-                        // 显示错误信息
-                        const modelInfo = document.getElementById('model-info');
-                        modelInfo.textContent = `❌ 加载失败: ${error.message}`;
-                        modelInfo.style.display = 'block';
-                        modelInfo.className = 'text-xs text-red-400 text-center mt-1';
-                        
-                        // 回退到默认形状
-                        currentShape = 'sphere';
-                        const color = document.getElementById('animal-color-hex').value || '#3b82f6';
-                        createAnimalModel(color, 'sphere');
-                    }
-                );
-            } catch (error) {
-                console.error('❌ 模型加载异常:', error);
-                alert('❌ 模型加载异常: ' + error.message);
-                
-                // 回退到默认形状
-                currentShape = 'sphere';
-                const color = document.getElementById('animal-color-hex').value || '#3b82f6';
-                createAnimalModel(color, 'sphere');
-            }
-        }
-        
-        // 应用颜色到模型
-        function applyColorToModel(model, colorHex) {
-            const color = new THREE.Color(colorHex);
-            model.traverse((child) => {
-                if (child.isMesh && child.material) {
-                    if (Array.isArray(child.material)) {
-                        child.material.forEach(mat => {
-                            if (mat.color) mat.color.set(color);
-                        });
-                    } else {
-                        if (child.material.color) {
-                            child.material.color.set(color);
-                        }
-                    }
-                }
-            });
-        }
-        
-        // ArrayBuffer转Base64
-        function arrayBufferToBase64(buffer) {
-            let binary = '';
-            const bytes = new Uint8Array(buffer);
-            const len = bytes.byteLength;
-            for (let i = 0; i < len; i++) {
-                binary += String.fromCharCode(bytes[i]);
-            }
-            return btoa(binary);
-        }
-        
-        // Base64转ArrayBuffer
-        function base64ToArrayBuffer(base64) {
-            const binaryString = atob(base64);
-            const len = binaryString.length;
-            const bytes = new Uint8Array(len);
-            for (let i = 0; i < len; i++) {
-                bytes[i] = binaryString.charCodeAt(i);
-            }
-            return bytes.buffer;
-        }
-        
-        // 创建动物3D模型
-        function createAnimalModel(colorHex, shape = 'sphere') {
-            // 如果是自定义模型，使用加载的模型
-            if (shape === 'custom' && customModelData) {
-                loadCustomModel(customModelData);
-                return;
-            }
-            
-            // 移除旧模型
-            if (animalMesh) {
-                scene.remove(animalMesh);
-                if (animalMesh.geometry) animalMesh.geometry.dispose();
-                if (animalMesh.material) {
-                    if (Array.isArray(animalMesh.material)) {
-                        animalMesh.material.forEach(m => m.dispose());
-                    } else {
-                        animalMesh.material.dispose();
-                    }
-                }
-            }
-            
-            // 创建几何体
-            let geometry;
-            switch(shape) {
-                case 'cube':
-                    geometry = new THREE.BoxGeometry(1.5, 1.5, 1.5);
-                    break;
-                case 'cone':
-                    geometry = new THREE.ConeGeometry(0.8, 1.8, 32);
-                    break;
-                case 'torus':
-                    geometry = new THREE.TorusGeometry(0.8, 0.3, 16, 100);
-                    break;
-                case 'octahedron':
-                    geometry = new THREE.OctahedronGeometry(1.2, 0);
-                    break;
-                case 'sphere':
-                default:
-                    geometry = new THREE.SphereGeometry(1, 32, 32);
-                    break;
-            }
-            
-            // 创建材质
-            const color = new THREE.Color(colorHex);
-            const material = new THREE.MeshPhongMaterial({
-                color: color,
-                shininess: 100,
-                specular: 0x444444,
-                emissive: color.clone().multiplyScalar(0.1)
-            });
-            
-            // 创建网格
-            animalMesh = new THREE.Mesh(geometry, material);
-            scene.add(animalMesh);
-        }
-        
-        // 3D动画循环
-        function animate3D() {
-            requestAnimationFrame(animate3D);
-            
-            // 自动旋转（当不拖动时）
-            if (!isMouseDown && animalMesh) {
-                animalMesh.rotation.y += 0.005;
-            }
-            
-            renderer.render(scene, camera);
-        }
-        
-        // 更新3D模型颜色
-        function update3DModelColor(colorHex) {
-            if (!animalMesh) return;
-            
-            if (currentShape === 'custom') {
-                // 自定义模型：遍历所有材质
-                applyColorToModel(animalMesh, colorHex);
-            } else {
-                // 基础几何体：直接设置材质颜色
-                if (animalMesh.material) {
-                    const color = new THREE.Color(colorHex);
-                    animalMesh.material.color.set(color);
-                    animalMesh.material.emissive.set(color.clone().multiplyScalar(0.1));
-                }
-            }
-        }
-
-        // 不再需要updateSkillSlotsDisplay函数
 
         // 设置技能池选择器
         function setupSkillModal() {
             const skillpoolSelect = document.getElementById('skillpool-select');
             
-            // 初始加载技能池列表
             loadSkillPoolOptions();
             
-            // 监听技能池选择变化
             skillpoolSelect.addEventListener('change', function() {
                 const poolKey = this.value;
                 if (poolKey) {
@@ -1010,7 +533,6 @@
                 updatePreview();
             });
             
-            // 监听页面获得焦点时刷新技能池列表（从技能池管理页返回时）
             window.addEventListener('focus', function() {
                 const currentValue = skillpoolSelect.value;
                 loadSkillPoolOptions(currentValue);
@@ -1022,7 +544,6 @@
             const skillPools = JSON.parse(localStorage.getItem('SKILL_POOLS') || '[]');
             const skillpoolSelect = document.getElementById('skillpool-select');
             
-            // 清空并重新填充选项
             skillpoolSelect.innerHTML = '<option value="">-- 选择技能池 --</option>';
             
             skillPools.forEach(pool => {
@@ -1032,14 +553,12 @@
                 skillpoolSelect.appendChild(option);
             });
             
-            // 设置选中值
             if (selectedKey) {
                 skillpoolSelect.value = selectedKey;
                 if (skillpoolSelect.value === selectedKey) {
                     showSkillPoolInfo(selectedKey);
                 }
             } else {
-                // 确保隐藏技能池信息
                 document.getElementById('selected-skillpool-info').classList.add('hidden');
             }
         }
@@ -1089,373 +608,10 @@
             infoDiv.classList.remove('hidden');
         }
 
-        // 不再需要这些函数，已被技能池选择器替代
-
-        // 获取技能类型名称
-        function getTypeName(type) {
-            const names = {
-                'attack': '攻击',
-                'defense': '防御',
-                'agility': '敏捷',
-                'buff': '增益',
-                'debuff': '减益',
-                'heal': '治疗',
-                'passive': '被动'
-            };
-            return names[type] || type;
-        }
-
-        // 选择技能（添加到技能池）
-        function selectSkill(skillKey) {
-            const skill = skillPool.find(s => s.key === skillKey);
-            if (!skill) return;
-
-            // 添加到技能池，带稀有度和权重配置
-            // 根据技能类别设置默认稀有度和权重
-            let defaultRarity = 'common';
-            let defaultWeight = 50;
-            
-            // 根据技能类别判断默认稀有度
-            if (skill.category && skill.category.includes('mutation')) {
-                if (skill.category.includes('eternal') || skill.category.includes('source') || skill.category.includes('lord')) {
-                    defaultRarity = 'stellar'; // 传说级变异
-                    defaultWeight = 5;
-                } else if (skill.category.includes('chaos') || skill.category.includes('holy') ||
-                           skill.category.includes('psychic') || skill.category.includes('thunder')) {
-                    defaultRarity = 'prismatic'; // 精英级变异
-                    defaultWeight = 15;
-                } else {
-                    defaultRarity = 'shiny'; // 基础级变异
-                    defaultWeight = 30;
-                }
-            }
-
-            configuredSkills.push({
-                skillKey: skill.key,
-                rarity: defaultRarity,
-                weight: defaultWeight,
-                unlockLevel: 1
-            });
-
-            renderConfiguredSkills();
-            document.getElementById('skill-select-modal').classList.add('hidden');
-        }
-
-        // 渲染已配置的技能池
-        function renderConfiguredSkills() {
-            const list = document.getElementById('skills-config-list');
-            document.getElementById('skill-count-display').textContent = configuredSkills.length;
-
-            if (configuredSkills.length === 0) {
-                list.innerHTML = `
-                    <div class="text-center text-gray-500 text-sm py-4">
-                        点击"添加技能到池"选择技能并配置权重
-                    </div>
-                `;
-                return;
-            }
-
-            const typeIcons = {
-                'attack': '⚔️',
-                'defense': '🛡️',
-                'agility': '⚡',
-                'buff': '💪',
-                'debuff': '🔻',
-                'heal': '💚',
-                'passive': '🌟'
-            };
-
-            // 计算权重总和和稀有度分布
-            const totalWeight = configuredSkills.reduce((sum, s) => sum + (s.weight || 0), 0);
-            const rarityStats = {};
-            configuredSkills.forEach(s => {
-                rarityStats[s.rarity] = (rarityStats[s.rarity] || 0) + 1;
-            });
-
-            list.innerHTML = `
-                <!-- 技能池统计 -->
-                <div class="bg-blue-900/30 border border-blue-600 rounded-lg p-3 mb-3">
-                    <div class="flex justify-between items-center text-xs">
-                        <div class="text-blue-300">
-                            <span class="font-bold">技能池统计：</span>
-                            <span>共${configuredSkills.length}个技能</span>
-                        </div>
-                        <div class="flex gap-2">
-                            ${Object.entries(rarityStats).map(([rarity, count]) => {
-                                const rarityLabels = {
-                                    'common': '⚪',
-                                    'shiny': '✨',
-                                    'prismatic': '🌈',
-                                    'stellar': '⭐'
-                                };
-                                return `<span class="text-blue-200">${rarityLabels[rarity]}${count}</span>`;
-                            }).join(' ')}
-                        </div>
-                    </div>
-                    <div class="text-xs text-gray-400 mt-1">
-                        权重总和: <span class="${totalWeight === 100 ? 'text-green-400' : 'text-yellow-400'}">${totalWeight.toFixed(1)}%</span>
-                        ${totalWeight !== 100 ? ' ⚠️ 建议设为100%' : ' ✓'}
-                    </div>
-                </div>
-
-                <!-- 技能列表 -->
-                ${configuredSkills.map((config, index) => {
-                    const skill = skillPool.find(s => s.key === config.skillKey);
-                    if (!skill) return '';
-
-                    const typeIcon = typeIcons[skill.type] || '';
-                    const typeName = getTypeName(skill.type);
-                    
-                    // 生成技能描述
-                    const skillDesc = skill.description || skill.desc || '无描述';
-
-                    // 获取技能参数
-                    const params = skill.params || {};
-                    const paramTags = [];
-                    
-                    // CD和持续时间
-                    if (params.cooldown > 0) {
-                        paramTags.push(`<span class="bg-red-600/30 text-red-300 px-1.5 py-0.5 rounded">CD${params.cooldown}</span>`);
-                    }
-                    if (params.duration > 0) {
-                        paramTags.push(`<span class="bg-yellow-600/30 text-yellow-300 px-1.5 py-0.5 rounded">持续${params.duration}</span>`);
-                    }
-                    
-                    // 稀有度颜色
-                    const rarityClasses = {
-                        'common': 'gray',
-                        'shiny': 'yellow',
-                        'prismatic': 'pink',
-                        'stellar': 'orange'
-                    };
-                    const rarityClass = rarityClasses[config.rarity] || 'gray';
-                    
-                    const rarityLabels = {
-                        'common': '⚪ 普通',
-                        'shiny': '✨ 闪光',
-                        'prismatic': '🌈 幻彩',
-                        'stellar': '⭐ 星芒'
-                    };
-
-                    return `
-                        <div class="bg-gray-700/50 rounded-lg p-2 border border-${rarityClass}-600/50">
-                            <div class="flex items-start gap-2">
-                                <div class="text-xl flex-shrink-0">${skill.icon}</div>
-                                <div class="flex-1 min-w-0">
-                                    <div class="flex items-center gap-1 mb-1 flex-wrap">
-                                        <span class="text-sm font-bold text-white truncate">${skill.name}</span>
-                                        <span class="category-badge ${skill.category} text-xs">${getCategoryName(skill.category)}</span>
-                                        <span class="bg-blue-600/30 text-blue-300 px-1.5 py-0.5 rounded text-xs">${typeIcon} ${typeName}</span>
-                                    </div>
-                                    <p class="text-xs text-gray-400 mb-2 line-clamp-1">${skillDesc}</p>
-                                    ${paramTags.length > 0 ? `<div class="flex flex-wrap gap-1 text-xs mb-2">
-                                        ${paramTags.join('')}
-                                    </div>` : ''}
-                                    
-                                    <!-- 稀有度和权重配置 -->
-                                    <div class="grid grid-cols-3 gap-2 mt-2">
-                                        <div>
-                                            <label class="text-xs text-gray-500">稀有度</label>
-                                            <select onchange="updateSkillRarity(${index}, this.value)"
-                                                class="w-full bg-gray-800 border border-gray-600 rounded px-2 py-1 text-white text-xs focus:outline-none focus:border-${rarityClass}-500">
-                                                <option value="common" ${config.rarity === 'common' ? 'selected' : ''}>⚪ 普通</option>
-                                                <option value="shiny" ${config.rarity === 'shiny' ? 'selected' : ''}>✨ 闪光</option>
-                                                <option value="prismatic" ${config.rarity === 'prismatic' ? 'selected' : ''}>🌈 幻彩</option>
-                                                <option value="stellar" ${config.rarity === 'stellar' ? 'selected' : ''}>⭐ 星芒</option>
-                                            </select>
-                                        </div>
-                                        <div>
-                                            <label class="text-xs text-gray-500">权重%</label>
-                                            <input type="number" min="0" max="100" step="0.1" value="${config.weight || 0}"
-                                                onchange="updateSkillWeight(${index}, this.value)"
-                                                class="w-full bg-gray-800 border border-gray-600 rounded px-2 py-1 text-white text-xs focus:outline-none focus:border-${rarityClass}-500">
-                                        </div>
-                                        <div>
-                                            <label class="text-xs text-gray-500">解锁Lv</label>
-                                            <input type="number" min="1" max="100" value="${config.unlockLevel || 1}"
-                                                onchange="updateSkillLevel(${index}, this.value)"
-                                                class="w-full bg-gray-800 border border-gray-600 rounded px-2 py-1 text-white text-xs focus:outline-none focus:border-${rarityClass}-500">
-                                        </div>
-                                    </div>
-                                </div>
-                                <button onclick="removeSkill(${index})"
-                                    class="text-red-400 hover:text-red-300 text-xl flex-shrink-0">
-                                    ×
-                                </button>
-                            </div>
-                        </div>
-                    `;
-                }).join('')}
-            `;
-        }
-
-        // 获取效果名称
-        function getEffectName(effect) {
-            const names = {
-                'direct_attack': '直接攻击',
-                'multi_attack': '多段攻击',
-                'dot_damage': '持续伤害',
-                'percent_damage': '百分比伤害',
-                'direct_defense': '直接防御',
-                'continuous_defense': '持续防御',
-                'defense_counter': '防御反击',
-                'direct_speed': '直接增速',
-                'continuous_speed': '持续增速',
-                'buff_attack_damage': '攻击增伤',
-                'buff_attack_defense': '攻击增防',
-                'buff_attack_speed': '攻击增速',
-                'buff_attack_status': '攻击增益',
-                'buff_defense_damage': '防御增伤',
-                'buff_defense_speed': '防御增速',
-                'buff_defense_defense': '防御增防',
-                'buff_defense_status': '防御增益',
-                'buff_speed': '增速',
-                'buff_status_enemy': '施加异常',
-                'buff_purify': '净化',
-                'buff_heal_amp': '增加治疗',
-                'buff_element_damage': '属性增伤',
-                'debuff_attack_damage': '攻击减伤',
-                'debuff_attack_defense': '攻击减防',
-                'debuff_attack_speed': '攻击减速',
-                'debuff_attack_status': '攻击减益',
-                'debuff_defense_damage': '防御减伤',
-                'debuff_defense_defense': '防御减防',
-                'debuff_defense_speed': '防御减速',
-                'debuff_defense_status': '防御减益',
-                'debuff_speed': '减速',
-                'debuff_status_self': '自身异常',
-                'debuff_no_heal': '禁疗',
-                'debuff_heal_reduce': '减疗',
-                'debuff_element_damage': '属性减伤',
-                'heal_direct': '直接恢复',
-                'heal_continuous': '持续恢复',
-                'heal_percent': '百分比恢复',
-                'heal_rebirth': '重生',
-                'heal_lifesteal': '生命汲取',
-                // 旧版兼容
-                'damage': '伤害',
-                'critical': '暴击',
-                'lifesteal': '吸血',
-                'buff_attack': '攻击+',
-                'buff_defense': '防御+',
-                'buff_agility': '敏捷+',
-                'guaranteed_dodge': '闪避',
-                'counter': '反击',
-                'passive_attack': '被动攻击',
-                'passive_defense': '被动防御',
-                'passive_agility': '被动敏捷',
-                'regen': '回复',
-                'bonus_damage': '附加伤害',
-                'armor_pierce': '穿透',
-                'true_damage': '真伤',
-                'damage_amp': '伤害增幅',
-                'damage_reduction': '减伤',
-                'burn': '灼烧',
-                'freeze': '冰冻',
-                'poison': '中毒',
-                'stun': '眩晕',
-                'rebirth': '重生'
-            };
-            return names[effect] || effect;
-        }
-        
-        // 获取技能效果描述
-        function getEffectDescription(skill) {
-            const effect = skill.effect;
-            const params = skill.params || {};
-            
-            const descriptions = {
-                'direct_attack': `造成 ${params.attackBonus || 1}× 攻击力的伤害`,
-                'multi_attack': `进行 ${params.count || 1} 段攻击，每段伤害不同`,
-                'dot_damage': `每回合造成 ${params.attackBonus || 1}× 攻击力的持续伤害`,
-                'percent_damage': `造成目标 ${(params.damagePercent || 0.1) * 100}% 生命的伤害`,
-                'direct_defense': `抵挡 ${params.defenseBonus || 1}× 防御力的伤害`,
-                'continuous_defense': `持续抵挡 ${params.defenseBonus || 1}× 防御力的伤害`,
-                'defense_counter': `防御并反击 ${params.counterBonus || 0.5}× 伤害`,
-                'direct_speed': `增加 ${(params.speedBonus || 0.2) * 100}% 速度`,
-                'continuous_speed': `持续增加 ${(params.speedBonus || 0.2) * 100}% 速度`,
-                'buff_attack_damage': `增加 ${(params.buffBonus || 0.2) * 100}% 攻击伤害`,
-                'buff_attack_defense': `增加 ${(params.buffBonus || 0.2) * 100}% 防御力`,
-                'buff_attack_speed': `增加 ${(params.buffBonus || 0.2) * 100}% 速度`,
-                'debuff_attack_damage': `降低敌方 ${(params.buffBonus || 0.2) * 100}% 攻击伤害`,
-                'debuff_attack_defense': `降低敌方 ${(params.buffBonus || 0.2) * 100}% 防御力`,
-                'heal_direct': `恢复 ${params.healBonus || 0.5}× 生命`,
-                'heal_continuous': `每回合恢复 ${params.healBonus || 0.5}× 生命`,
-                'heal_percent': `恢复 ${(params.healPercent || 0.3) * 100}% 生命`,
-                'heal_lifesteal': `汲取 ${(params.lifestealBonus || 0.2) * 100}% 伤害转化为生命`
-            };
-            
-            return descriptions[effect] || getEffectName(effect);
-        }
-        
-        // 获取异常状态名称
-        function getStatusName(status) {
-            const names = {
-                'stun': '眩晕',
-                'poison': '中毒',
-                'bleed': '流血',
-                'frostbite': '冻伤',
-                'burn': '烧伤',
-                'paralyze': '麻痹'
-            };
-            return names[status] || status;
-        }
-
-        // 更新技能稀有度
-        function updateSkillRarity(index, rarity) {
-            configuredSkills[index].rarity = rarity;
-            renderConfiguredSkills();
-        }
-
-        // 更新技能权重
-        function updateSkillWeight(index, weight) {
-            configuredSkills[index].weight = parseFloat(weight) || 0;
-            renderConfiguredSkills();
-        }
-
-        // 更新技能解锁等级
-        function updateSkillLevel(index, level) {
-            configuredSkills[index].unlockLevel = parseInt(level) || 1;
-        }
-
-        // 移除技能
-        function removeSkill(index) {
-            configuredSkills.splice(index, 1);
-            renderConfiguredSkills();
-        }
-
-        // 获取类别名称
-        function getCategoryName(category) {
-            const names = {
-                'element-water': '水系',
-                'element-fire': '火系',
-                'element-grass': '草系',
-                'element-wind': '风系',
-                'element-electric': '电系',
-                'element-earth': '土系',
-                'mutation-dark': '黑化',
-                'mutation-light': '白化',
-                'mutation-crystal': '晶化',
-                'mutation-shadow': '影化',
-                'mutation-thunder': '极电',
-                'mutation-holy': '圣辉',
-                'mutation-psychic': '异能',
-                'mutation-void': '虚无',
-                'mutation-annihilate': '湮灭',
-                'mutation-chaos': '暗蚀',
-                'mutation-rebirth': '轮回',
-                'rarity-shiny': '闪光',
-                'rarity-prismatic': '幻彩',
-                'rarity-stellar': '星芒'
-            };
-            return names[category] || '未知';
-        }
-
         // 同步颜色输入
         function syncColorInputs() {
             colorInput.addEventListener('input', (e) => {
                 colorHexInput.value = e.target.value.toUpperCase();
-                update3DModelColor(e.target.value);
                 updatePreview();
             });
 
@@ -1463,7 +619,6 @@
                 const hex = e.target.value;
                 if (/^#[0-9A-Fa-f]{6}$/.test(hex)) {
                     colorInput.value = hex;
-                    update3DModelColor(hex);
                     updatePreview();
                 }
             });
@@ -1500,7 +655,7 @@
                 document.getElementById('avatar-preview').classList.add('hidden');
                 document.getElementById('avatar-filename').textContent = '点击选择图片';
                 document.getElementById('clear-avatar-btn').classList.add('hidden');
-                loadSkillPoolOptions(''); // 重新加载技能池选项并清空选择
+                loadSkillPoolOptions('');
                 cancelEdit();
                 updatePreview();
             };
@@ -1514,7 +669,7 @@
                 document.getElementById('avatar-preview').classList.add('hidden');
                 document.getElementById('avatar-filename').textContent = '点击选择图片';
                 document.getElementById('clear-avatar-btn').classList.add('hidden');
-                loadSkillPoolOptions(''); // 重新加载技能池选项并清空选择
+                loadSkillPoolOptions('');
                 cancelEdit();
                 updatePreview();
             };
@@ -1546,10 +701,12 @@
             const elementClass = data.element ? `element-${data.element}` : 'bg-gray-700';
             const rarityClass = data.rarity ? `rarity-${data.rarity}` : 'bg-gray-700';
             
-            // 头像或颜色预览
+            // 头像或颜色或图标预览
             let avatarHtml;
             if (currentAvatarData) {
                 avatarHtml = `<img src="${currentAvatarData}" class="color-preview object-cover" alt="头像预览">`;
+            } else if (data.icon) {
+                avatarHtml = `<div class="color-preview flex items-center justify-center text-4xl" style="background-color: ${data.color}">${data.icon}</div>`;
             } else {
                 avatarHtml = `<div class="color-preview" style="background-color: ${data.color}"></div>`;
             }
@@ -1583,6 +740,7 @@
             return {
                 animalId: document.getElementById('animal-id').value.toUpperCase(),
                 name: document.getElementById('animal-name').value,
+                icon: document.getElementById('animal-icon').value,
                 color: document.getElementById('animal-color-hex').value,
                 element: document.getElementById('animal-element').value,
                 rarity: document.getElementById('animal-rarity').value,
@@ -1631,27 +789,9 @@
             const data = getFormData();
             const animalKey = `ANIMAL_${Date.now()}`;
             
-            // 检查模型数据大小
-            let modelData = null;
-            if (currentShape === 'custom' && customModelData) {
-                const sizeInMB = (customModelData.length * 0.75) / (1024 * 1024); // Base64大约是原始大小的1.33倍
-                if (sizeInMB > 2) {
-                    if (!confirm(`⚠️ 警告：自定义模型较大（约${sizeInMB.toFixed(2)}MB）\n\n保存大模型可能导致localStorage配额超限。\n建议使用较小的模型文件（<2MB）。\n\n是否继续保存？（不保存模型数据）`)) {
-                        // 用户选择不保存模型数据
-                        console.log('⚠️ 用户取消保存大模型数据');
-                    } else {
-                        modelData = customModelData;
-                    }
-                } else {
-                    modelData = customModelData;
-                }
-            }
-            
             const animal = {
                 key: animalKey,
                 ...data,
-                modelData: modelData,
-                modelShape: currentShape,
                 avatarData: currentAvatarData,
                 createdAt: new Date().toISOString()
             };
@@ -1663,17 +803,15 @@
                 renderAnimalsList();
                 updateAnimalCount();
                 form.reset();
-                loadSkillPoolOptions(''); // 重新加载并清空技能池选择
+                loadSkillPoolOptions('');
                 updatePreview();
                 
                 const skillPoolMsg = animal.skillPoolKey ? '\n✅ 已关联技能池' : '\n⚠️ 未选择技能池';
-                const modelMsg = animal.modelData ? '\n✅ 包含自定义3D模型' : (currentShape === 'custom' ? '\n⚠️ 模型未保存（过大）' : '');
-                alert(`✅ 动物模板 "${data.name}" 已添加到模板池！${skillPoolMsg}${modelMsg}`);
+                alert(`✅ 动物模板 "${data.name}" 已添加到模板池！${skillPoolMsg}`);
             } catch (error) {
-                // 回滚
                 animals.pop();
                 if (error.name === 'QuotaExceededError') {
-                    alert('❌ 保存失败：存储空间不足！\n\n建议：\n1. 使用更小的GLB模型文件（<2MB）\n2. 删除一些旧的动物模板\n3. 导出并清空当前模板池');
+                    alert('❌ 保存失败：存储空间不足！\n\n建议：删除一些旧的动物模板或导出并清空当前模板池');
                 } else {
                     alert('❌ 保存失败：' + error.message);
                 }
@@ -1684,31 +822,11 @@
         // 更新动物模板
         function updateAnimal() {
             const data = getFormData();
-            
-            // 检查模型数据大小
-            let modelData = null;
-            if (currentShape === 'custom' && customModelData) {
-                const sizeInMB = (customModelData.length * 0.75) / (1024 * 1024);
-                if (sizeInMB > 2) {
-                    if (!confirm(`⚠️ 警告：自定义模型较大（约${sizeInMB.toFixed(2)}MB）\n\n保存大模型可能导致localStorage配额超限。\n建议使用较小的模型文件（<2MB）。\n\n是否继续保存？（不保存模型数据）`)) {
-                        console.log('⚠️ 用户取消保存大模型数据');
-                    } else {
-                        modelData = customModelData;
-                    }
-                } else {
-                    modelData = customModelData;
-                }
-            }
-            
-            // 保存原始数据以便回滚
             const originalAnimal = {...animals[editingIndex]};
             
-            // 保留原有的key和创建时间
             const animal = {
                 key: animals[editingIndex].key,
                 ...data,
-                modelData: modelData,
-                modelShape: currentShape,
                 avatarData: avatarModified ? currentAvatarData : animals[editingIndex].avatarData,
                 createdAt: animals[editingIndex].createdAt,
                 updatedAt: new Date().toISOString()
@@ -1721,17 +839,15 @@
                 renderAnimalsList();
                 updateAnimalCount();
                 form.reset();
-                loadSkillPoolOptions(''); // 重新加载并清空技能池选择
+                loadSkillPoolOptions('');
                 cancelEdit();
                 updatePreview();
                 
-                const modelMsg = animal.modelData ? '\n✅ 包含自定义3D模型' : (currentShape === 'custom' ? '\n⚠️ 模型未保存（过大）' : '');
-                alert(`✅ 动物模板 "${data.name}" 已更新！${modelMsg}`);
+                alert(`✅ 动物模板 "${data.name}" 已更新！`);
             } catch (error) {
-                // 回滚
                 animals[editingIndex] = originalAnimal;
                 if (error.name === 'QuotaExceededError') {
-                    alert('❌ 更新失败：存储空间不足！\n\n建议：\n1. 使用更小的GLB模型文件（<2MB）\n2. 删除一些旧的动物模板\n3. 导出并清空当前模板池');
+                    alert('❌ 更新失败：存储空间不足！');
                 } else {
                     alert('❌ 更新失败：' + error.message);
                 }
@@ -1742,12 +858,13 @@
         // 编辑动物模板
         function editAnimal(index) {
             editingIndex = index;
-            avatarModified = false;  // 重置头像修改标志
+            avatarModified = false;
             const animal = animals[index];
             
             // 填充表单
             document.getElementById('animal-id').value = animal.animalId || '';
             document.getElementById('animal-name').value = animal.name;
+            document.getElementById('animal-icon').value = animal.icon || '';
             document.getElementById('animal-color').value = animal.color;
             document.getElementById('animal-color-hex').value = animal.color;
             document.getElementById('animal-element').value = animal.element;
@@ -1762,9 +879,8 @@
             document.getElementById('animal-agility').value = animal.agility;
             document.getElementById('animal-favorability').value = animal.favorability;
             
-            // 填充三种成长配置（兼容旧数据）
+            // 填充三种成长配置
             if (animal.growthTypes) {
-                // 新格式：三种成长
                 document.getElementById('growth-mediocre-health').value = animal.growthTypes.mediocre.health;
                 document.getElementById('growth-mediocre-stamina').value = animal.growthTypes.mediocre.stamina;
                 document.getElementById('growth-mediocre-attack').value = animal.growthTypes.mediocre.attack;
@@ -1785,41 +901,10 @@
                 document.getElementById('growth-brilliant-defense').value = animal.growthTypes.brilliant.defense;
                 document.getElementById('growth-brilliant-agility').value = animal.growthTypes.brilliant.agility;
                 document.getElementById('growth-brilliant-favorability').value = animal.growthTypes.brilliant.favorability;
-            } else if (animal.growth) {
-                // 旧格式：单一成长，转换为三种成长
-                const baseGrowth = animal.growth;
-                const potential = animal.potential || '超常';
-                const multipliers = { '平庸': 1.0, '超常': 1.5, '璀璨': 2.0 };
-                const mult = multipliers[potential] || 1.5;
-                
-                // 平庸 = 基础成长 / 倍率
-                document.getElementById('growth-mediocre-health').value = Math.round(baseGrowth.health / mult);
-                document.getElementById('growth-mediocre-stamina').value = Math.round(baseGrowth.stamina / mult);
-                document.getElementById('growth-mediocre-attack').value = Math.round(baseGrowth.attack / mult);
-                document.getElementById('growth-mediocre-defense').value = Math.round(baseGrowth.defense / mult);
-                document.getElementById('growth-mediocre-agility').value = Math.round(baseGrowth.agility / mult);
-                document.getElementById('growth-mediocre-favorability').value = Math.round(baseGrowth.favorability / mult);
-                
-                // 超常 = 基础成长 / 倍率 * 1.5
-                document.getElementById('growth-extraordinary-health').value = Math.round(baseGrowth.health / mult * 1.5);
-                document.getElementById('growth-extraordinary-stamina').value = Math.round(baseGrowth.stamina / mult * 1.5);
-                document.getElementById('growth-extraordinary-attack').value = Math.round(baseGrowth.attack / mult * 1.5);
-                document.getElementById('growth-extraordinary-defense').value = Math.round(baseGrowth.defense / mult * 1.5);
-                document.getElementById('growth-extraordinary-agility').value = Math.round(baseGrowth.agility / mult * 1.5);
-                document.getElementById('growth-extraordinary-favorability').value = Math.round(baseGrowth.favorability / mult * 1.5);
-                
-                // 璀璨 = 基础成长 / 倍率 * 2.0
-                document.getElementById('growth-brilliant-health').value = Math.round(baseGrowth.health / mult * 2.0);
-                document.getElementById('growth-brilliant-stamina').value = Math.round(baseGrowth.stamina / mult * 2.0);
-                document.getElementById('growth-brilliant-attack').value = Math.round(baseGrowth.attack / mult * 2.0);
-                document.getElementById('growth-brilliant-defense').value = Math.round(baseGrowth.defense / mult * 2.0);
-                document.getElementById('growth-brilliant-agility').value = Math.round(baseGrowth.agility / mult * 2.0);
-                document.getElementById('growth-brilliant-favorability').value = Math.round(baseGrowth.favorability / mult * 2.0);
             }
             
             document.getElementById('animal-desc').value = animal.desc || '';
             
-            // 重新加载技能池选项并恢复技能池选择
             loadSkillPoolOptions(animal.skillPoolKey || '');
             
             // 恢复头像
@@ -1836,40 +921,6 @@
                 document.getElementById('clear-avatar-btn').classList.add('hidden');
             }
             
-            // 恢复3D模型
-            if (animal.modelData) {
-                customModelData = animal.modelData;
-                currentShape = animal.modelShape || 'custom';
-                
-                // 等待GLTFLoader初始化后再加载
-                const tryLoad = () => {
-                    if (gltfLoader) {
-                        loadCustomModel(customModelData);
-                        
-                        // 显示自定义模型按钮
-                        const customBtn = document.getElementById('custom-model-btn');
-                        customBtn.style.display = 'inline-block';
-                        
-                        // 激活对应按钮
-                        document.querySelectorAll('.model-control-btn').forEach(b => b.classList.remove('active'));
-                        const activeBtn = document.querySelector(`[data-shape="${currentShape}"]`);
-                        if (activeBtn) activeBtn.classList.add('active');
-                        
-                        document.getElementById('model-info').textContent = '✅ 已加载保存的自定义模型';
-                        document.getElementById('model-info').style.display = 'block';
-                    } else {
-                        setTimeout(tryLoad, 100);
-                    }
-                };
-                tryLoad();
-            } else {
-                currentShape = animal.modelShape || 'sphere';
-                createAnimalModel(animal.color, currentShape);
-                document.querySelectorAll('.model-control-btn').forEach(b => b.classList.remove('active'));
-                const activeBtn = document.querySelector(`[data-shape="${currentShape}"]`);
-                if (activeBtn) activeBtn.classList.add('active');
-            }
-            
             // 更新UI
             submitText.textContent = '💾 保存修改';
             submitBtn.classList.remove('bg-green-600', 'hover:bg-green-700');
@@ -1878,7 +929,6 @@
             
             updatePreview();
             
-            // 滚动到表单顶部
             form.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
 
@@ -1902,7 +952,7 @@
             } catch (error) {
                 if (error.name === 'QuotaExceededError') {
                     console.error('❌ localStorage配额超限');
-                    throw error; // 重新抛出以便上层处理
+                    throw error;
                 } else {
                     console.error('❌ 保存失败:', error);
                     throw error;
@@ -1925,10 +975,12 @@
                 const elementClass = `element-${animal.element}`;
                 const rarityClass = `rarity-${animal.rarity}`;
                 
-                // 头像或颜色球
+                // 头像或图标或颜色球
                 let avatarHtml;
                 if (animal.avatarData) {
                     avatarHtml = `<img src="${animal.avatarData}" class="w-12 h-12 rounded-full border-2 border-white object-cover" alt="${animal.name}">`;
+                } else if (animal.icon) {
+                    avatarHtml = `<div class="w-12 h-12 rounded-full border-2 border-white flex items-center justify-center text-2xl" style="background-color: ${animal.color}">${animal.icon}</div>`;
                 } else {
                     avatarHtml = `<div class="w-12 h-12 rounded-full border-2 border-white" style="background-color: ${animal.color}"></div>`;
                 }
@@ -1996,14 +1048,13 @@
             URL.revokeObjectURL(url);
         }
 
-        // 导出动物模板池（CSV格式 - 策划友好版）
+        // 导出动物模板池（CSV格式）
         function exportAnimalsToCSV() {
             if (animals.length === 0) {
                 alert('模板池为空！');
                 return;
             }
 
-            // 转义CSV字段
             const escapeCSV = (value) => {
                 if (value === null || value === undefined) return '';
                 const str = String(value);
@@ -2013,34 +1064,23 @@
                 return str;
             };
 
-            // 基础表头
-            const baseHeaders = [
-                '动物ID', '动物名称', '描述', '颜色', '系别', '稀有度',
+            const headers = [
+                '动物ID', '动物名称', '图标', '描述', '颜色', '系别', '稀有度',
                 '初始等级', '基础经验值', '经验增长系数',
-                '生命值', '体力', '攻击', '防御', '敏捷', '好感度'
-            ];
-
-            // 成长配置表头
-            const growthHeaders = [
+                '生命值', '体力', '攻击', '防御', '敏捷', '好感度',
                 '平庸_生命', '平庸_体力', '平庸_攻击', '平庸_防御', '平庸_敏捷', '平庸_好感',
                 '超常_生命', '超常_体力', '超常_攻击', '超常_防御', '超常_敏捷', '超常_好感',
-                '璀璨_生命', '璀璨_体力', '璀璨_攻击', '璀璨_防御', '璀璨_敏捷', '璀璨_好感'
+                '璀璨_生命', '璀璨_体力', '璀璨_攻击', '璀璨_防御', '璀璨_敏捷', '璀璨_好感',
+                '关联技能池', '是否有头像', '创建时间', '更新时间'
             ];
 
-            // 技能池表头（改为单列）
-            const skillHeaders = ['关联技能池'];
-
-            const headers = [...baseHeaders, ...growthHeaders, ...skillHeaders,
-                '是否有3D模型', '是否有头像', '创建时间', '更新时间', '备注'];
-
-            // 构建CSV内容
             let csvContent = headers.join(',') + '\n';
 
             animals.forEach(animal => {
-                // 基础信息
-                const baseRow = [
+                const row = [
                     escapeCSV(animal.animalId || ''),
                     escapeCSV(animal.name),
+                    escapeCSV(animal.icon || ''),
                     escapeCSV(animal.desc || ''),
                     escapeCSV(animal.color),
                     escapeCSV(getElementName(animal.element)),
@@ -2056,13 +1096,10 @@
                     escapeCSV(animal.favorability)
                 ];
 
-                // 成长配置
-                const growthRow = [];
                 if (animal.growthTypes) {
-                    // 新格式
                     ['mediocre', 'extraordinary', 'brilliant'].forEach(type => {
                         const growth = animal.growthTypes[type] || {};
-                        growthRow.push(
+                        row.push(
                             escapeCSV(growth.health || 0),
                             escapeCSV(growth.stamina || 0),
                             escapeCSV(growth.attack || 0),
@@ -2071,28 +1108,10 @@
                             escapeCSV(growth.favorability || 0)
                         );
                     });
-                } else if (animal.growth) {
-                    // 旧格式兼容
-                    const baseGrowth = animal.growth;
-                    const mult = { '平庸': 1.0, '超常': 1.5, '璀璨': 2.0 }[animal.potential || '超常'] || 1.5;
-                    
-                    [1.0, 1.5, 2.0].forEach(factor => {
-                        const actualFactor = factor / mult;
-                        growthRow.push(
-                            escapeCSV(Math.round(baseGrowth.health * actualFactor)),
-                            escapeCSV(Math.round(baseGrowth.stamina * actualFactor)),
-                            escapeCSV(Math.round(baseGrowth.attack * actualFactor)),
-                            escapeCSV(Math.round(baseGrowth.defense * actualFactor)),
-                            escapeCSV(Math.round(baseGrowth.agility * actualFactor)),
-                            escapeCSV(Math.round(baseGrowth.favorability * actualFactor))
-                        );
-                    });
                 } else {
-                    // 无成长数据
-                    for (let i = 0; i < 18; i++) growthRow.push('');
+                    for (let i = 0; i < 18; i++) row.push('');
                 }
 
-                // 技能池信息（改为显示技能池名称）
                 const skillPoolKey = animal.skillPoolKey;
                 let skillPoolName = '';
                 if (skillPoolKey) {
@@ -2101,18 +1120,16 @@
                     skillPoolName = pool ? pool.name : skillPoolKey;
                 }
 
-                const row = [...baseRow, ...growthRow, escapeCSV(skillPoolName),
-                    escapeCSV(animal.modelData ? '是' : '否'),
+                row.push(
+                    escapeCSV(skillPoolName),
                     escapeCSV(animal.avatarData ? '是' : '否'),
                     escapeCSV(animal.createdAt ? new Date(animal.createdAt).toLocaleString('zh-CN') : ''),
-                    escapeCSV(animal.updatedAt ? new Date(animal.updatedAt).toLocaleString('zh-CN') : ''),
-                    ''
-                ];
+                    escapeCSV(animal.updatedAt ? new Date(animal.updatedAt).toLocaleString('zh-CN') : '')
+                );
 
                 csvContent += row.join(',') + '\n';
             });
 
-            // 添加BOM
             const BOM = '\uFEFF';
             const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' });
             const url = URL.createObjectURL(blob);
@@ -2122,7 +1139,7 @@
             a.click();
             URL.revokeObjectURL(url);
 
-            alert(`✅ 已导出 ${animals.length} 个动物模板到策划配置表（CSV格式）！\n\n表格特点：\n• 扁平化结构，便于Excel编辑\n• 中文列名，易于理解\n• 包含三种成长类型配置\n• 最多支持10个技能配置`);
+            alert(`✅ 已导出 ${animals.length} 个动物模板到CSV！`);
         }
 
         // 导入动物模板
@@ -2140,7 +1157,6 @@
                         return;
                     }
 
-                    // 合并动物（避免重复）
                     const existingKeys = new Set(animals.map(a => a.key));
                     const newAnimals = importedAnimals.filter(a => !existingKeys.has(a.key));
                     
@@ -2166,7 +1182,6 @@
                 return;
             }
 
-            // 统计各系别和稀有度数量
             const stats = {
                 elements: {},
                 rarities: {}
@@ -2212,7 +1227,6 @@
                 'rare': '稀有',
                 'epic': '史诗',
                 'legendary': '传说',
-                // 兼容旧数据
                 'shiny': '闪光',
                 'prismatic': '幻彩',
                 'stellar': '星芒',
@@ -2220,16 +1234,6 @@
                 'mythic': '神话'
             };
             return names[rarity] || '未知';
-        }
-
-        function getPotentialName(potential) {
-            const names = {
-                'low': '低',
-                'medium': '中',
-                'high': '高',
-                'exceptional': '卓越'
-            };
-            return names[potential] || '中';
         }
 
         // 初始化应用
