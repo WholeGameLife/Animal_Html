@@ -88,9 +88,26 @@ function renderBattleTeamSlots() {
             const isFirst = (gameState.firstTeamMember === animalId);
             slotDiv.className += isFirst ? ' border-yellow-500/80 bg-yellow-900/20' : ' border-purple-500/50';
             
+            // **关键修复**：如果动物没有头像但有templateKey，从模板加载头像
+            let avatarData = animal.avatarData;
+            if (!avatarData && animal.templateKey) {
+                const animalPool = JSON.parse(localStorage.getItem('ANIMAL_POOL') || '[]');
+                const template = animalPool.find(t => t.key === animal.templateKey);
+                if (template && template.avatarData) {
+                    avatarData = template.avatarData;
+                    // 缓存到动物对象中
+                    animal.avatarData = template.avatarData;
+                }
+            }
+            
+            // 优先使用头像图片，如果没有则使用颜色球+首字母
+            const avatarHtml = avatarData
+                ? `<div class="w-10 h-10 rounded-full border-2 border-white/30" style="background-image: url(${avatarData}); background-size: cover; background-position: center;"></div>`
+                : `<div style="background-color: ${colorHex};" class="w-10 h-10 rounded-full border-2 border-white/30 flex items-center justify-center text-white font-bold">${animal.name.charAt(0).toUpperCase()}</div>`;
+            
             slotDiv.innerHTML = `
                 <div class="flex items-center space-x-2 mb-1">
-                    <div style="background-color: ${colorHex};" class="w-10 h-10 rounded-full border-2 border-white/30"></div>
+                    ${avatarHtml}
                     <div class="flex-1 min-w-0">
                         <div class="font-bold text-xs text-white truncate flex items-center gap-1">
                             ${isFirst ? '<span class="text-yellow-400">⭐</span>' : ''}${animal.name}
@@ -128,7 +145,38 @@ function showAnimalDetailInInventory(animalId) {
     if (ui.inventoryAnimalDetail) ui.inventoryAnimalDetail.classList.remove('hidden');
     
     const colorHex = '#' + animal.color.toString(16).padStart(6, '0');
-    if (ui.invDetailAvatar) ui.invDetailAvatar.style.backgroundColor = colorHex;
+    
+    // **关键修复**：如果动物没有头像但有templateKey，从模板加载头像
+    let avatarData = animal.avatarData;
+    if (!avatarData && animal.templateKey) {
+        const animalPool = JSON.parse(localStorage.getItem('ANIMAL_POOL') || '[]');
+        const template = animalPool.find(t => t.key === animal.templateKey);
+        if (template && template.avatarData) {
+            avatarData = template.avatarData;
+            // 缓存到动物对象中，避免重复读取
+            animal.avatarData = template.avatarData;
+        }
+    }
+    
+    // 优先使用头像图片，如果没有则使用颜色球+首字母
+    if (ui.invDetailAvatar) {
+        if (avatarData) {
+            // 清除所有可能干扰的样式
+            ui.invDetailAvatar.style.cssText = '';
+            ui.invDetailAvatar.style.backgroundImage = `url(${avatarData})`;
+            ui.invDetailAvatar.style.backgroundSize = 'cover';
+            ui.invDetailAvatar.style.backgroundPosition = 'center';
+            ui.invDetailAvatar.className = 'w-16 h-16 rounded-full border-2';
+            ui.invDetailAvatar.textContent = '';
+        } else {
+            // 清除背景图片，使用颜色+首字母
+            ui.invDetailAvatar.style.cssText = '';
+            ui.invDetailAvatar.style.backgroundColor = colorHex;
+            ui.invDetailAvatar.className = 'w-16 h-16 rounded-full border-2 flex items-center justify-center text-white font-bold text-2xl';
+            ui.invDetailAvatar.textContent = animal.name.charAt(0).toUpperCase();
+        }
+    }
+    
     if (ui.invDetailName) ui.invDetailName.textContent = animal.name;
     if (ui.invDetailLevel) ui.invDetailLevel.textContent = `Lv. ${animal.level}`;
     if (ui.invDetailGender) {
@@ -494,11 +542,29 @@ window.openTeamSlotSelector = function(slotIndex) {
     } else {
         availableAnimals.forEach(animal => {
             const colorHex = '#' + animal.color.toString(16).padStart(6, '0');
+            
+            // **关键修复**：如果动物没有头像但有templateKey，从模板加载头像
+            let avatarData = animal.avatarData;
+            if (!avatarData && animal.templateKey) {
+                const animalPool = JSON.parse(localStorage.getItem('ANIMAL_POOL') || '[]');
+                const template = animalPool.find(t => t.key === animal.templateKey);
+                if (template && template.avatarData) {
+                    avatarData = template.avatarData;
+                    // 缓存到动物对象中
+                    animal.avatarData = template.avatarData;
+                }
+            }
+            
+            // 优先使用头像图片，如果没有则使用颜色球+首字母
+            const avatarHtml = avatarData
+                ? `<div class="w-12 h-12 rounded-full border-2 border-white/30" style="background-image: url(${avatarData}); background-size: cover; background-position: center;"></div>`
+                : `<div style="background-color: ${colorHex};" class="w-12 h-12 rounded-full border-2 border-white/30 flex items-center justify-center text-white font-bold text-lg">${animal.name.charAt(0).toUpperCase()}</div>`;
+            
             const div = document.createElement('div');
             div.className = 'flex items-center justify-between p-3 bg-gray-700 rounded-lg hover:bg-gray-600 cursor-pointer transition-colors';
             div.innerHTML = `
                 <div class="flex items-center space-x-3">
-                    <div style="background-color: ${colorHex};" class="w-12 h-12 rounded-full border-2 border-white/30"></div>
+                    ${avatarHtml}
                     <div>
                         <div class="font-bold text-white">${animal.name}</div>
                         <div class="text-xs text-gray-400">Lv.${animal.level} | ${animal.potential} | ${animal.element}</div>

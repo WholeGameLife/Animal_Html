@@ -665,8 +665,19 @@ class BattleSystem {
         document.getElementById('player-name').textContent = this.playerData.name;
         document.getElementById('player-level').textContent = `Lv. ${this.playerData.level}`;
         const playerAvatar = document.getElementById('player-avatar');
-        playerAvatar.style.backgroundColor = '#' + this.playerData.color.toString(16).padStart(6, '0');
-        playerAvatar.textContent = this.playerData.name.charAt(0).toUpperCase();
+        
+        // 优先使用头像图片，如果没有则使用颜色球
+        if (this.playerData.avatarData) {
+            playerAvatar.style.backgroundImage = `url(${this.playerData.avatarData})`;
+            playerAvatar.style.backgroundSize = 'cover';
+            playerAvatar.style.backgroundPosition = 'center';
+            playerAvatar.textContent = '';
+        } else {
+            playerAvatar.style.backgroundImage = '';
+            playerAvatar.style.backgroundColor = '#' + this.playerData.color.toString(16).padStart(6, '0');
+            playerAvatar.textContent = this.playerData.name.charAt(0).toUpperCase();
+        }
+        
         document.getElementById('player-health-bar').style.width = '100%';
         document.getElementById('player-health-text').textContent = `${this.playerCurrentHealth} / ${this.playerData.stamina}`;
         document.getElementById('player-atk').textContent = this.playerStats.attack;
@@ -684,8 +695,19 @@ class BattleSystem {
         document.getElementById('opponent-name').textContent = this.opponentData.name;
         document.getElementById('opponent-level').textContent = `Lv. ${this.opponentData.level}`;
         const opponentAvatar = document.getElementById('opponent-avatar');
-        opponentAvatar.style.backgroundColor = '#' + this.opponentData.color.toString(16).padStart(6, '0');
-        opponentAvatar.textContent = this.opponentData.name.charAt(0).toUpperCase();
+        
+        // 优先使用头像图片，如果没有则使用颜色球
+        if (this.opponentData.avatarData) {
+            opponentAvatar.style.backgroundImage = `url(${this.opponentData.avatarData})`;
+            opponentAvatar.style.backgroundSize = 'cover';
+            opponentAvatar.style.backgroundPosition = 'center';
+            opponentAvatar.textContent = '';
+        } else {
+            opponentAvatar.style.backgroundImage = '';
+            opponentAvatar.style.backgroundColor = '#' + this.opponentData.color.toString(16).padStart(6, '0');
+            opponentAvatar.textContent = this.opponentData.name.charAt(0).toUpperCase();
+        }
+        
         document.getElementById('opponent-health-bar').style.width = '100%';
         document.getElementById('opponent-health-text').textContent = `${this.opponentCurrentHealth} / ${this.opponentData.stamina}`;
         document.getElementById('opponent-atk').textContent = this.opponentStats.attack;

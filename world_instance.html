@@ -593,6 +593,8 @@
                 const template = animalPool.find(t => t.key === animalData.templateKey);
                 if (template && template.avatarData) {
                     avatarData = template.avatarData;
+                    // 缓存到动物对象中，避免重复读取
+                    animalData.avatarData = template.avatarData;
                 }
             }
             
@@ -1141,6 +1143,11 @@
                     const animalPool = JSON.parse(localStorage.getItem('ANIMAL_POOL') || '[]');
                     const skillPool = JSON.parse(localStorage.getItem('SKILL_POOL') || '[]');
                     const template = animalPool.find(t => t.key === capturedAnimalData.templateKey);
+                    
+                    // **新增修复**：恢复头像数据
+                    if (template && template.avatarData && !capturedAnimalData.avatarData) {
+                        capturedAnimalData.avatarData = template.avatarData;
+                    }
                     
                     if (template && template.skills && template.skills.length > 0) {
                         template.skills.forEach(skillConfig => {

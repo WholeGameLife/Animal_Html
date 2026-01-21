@@ -3812,6 +3812,15 @@
                 gameState.animals = storedState.animals.map(animalData => {
                     // **关键修复**：确保从存储加载的体力是整数
                     animalData.stamina = Math.floor(animalData.stamina || 0);
+                    
+                    // **新增修复**：从模板恢复头像数据（如果有templateKey且无avatarData）
+                    if (animalData.templateKey && !animalData.avatarData) {
+                        const animalPool = JSON.parse(localStorage.getItem('ANIMAL_POOL') || '[]');
+                        const template = animalPool.find(t => t.key === animalData.templateKey);
+                        if (template && template.avatarData) {
+                            animalData.avatarData = template.avatarData;
+                        }
+                    }
 
                     const newMesh = createAnimalMesh(animalData);
                     // 恢复旧模型的位置和可见性
