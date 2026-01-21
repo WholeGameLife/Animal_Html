@@ -642,6 +642,8 @@
         </div>
     </div>
 
+    <!-- 引入图片库 -->
+    <script src="image_library.js"></script>
     <!-- 引入配置文件 -->
     <script src="animal_config.js"></script>
     <!-- 引入繁育逻辑 -->
@@ -1859,9 +1861,6 @@
                 return;
             }
             
-            // 一次性读取动物池（用于查找头像）
-            const animalPool = JSON.parse(localStorage.getItem('ANIMAL_POOL') || '[]');
-            
             // 创建网格容器
             const gridContainer = document.createElement('div');
             gridContainer.className = 'grid grid-cols-2 gap-3';
@@ -1886,21 +1885,22 @@
                 };
                 const rarityIcon = rarityIcons[animal.rarity] || '';
                 
-                // 头像或颜色球 - 按需从模板读取头像数据
+                // 使用图片库获取头像（优先本地文件 → localStorage → 颜色球）
                 let avatarHtml;
-                let avatarData = animal.avatarData;
+                const avatarUrl = window.imageLibrary ? window.imageLibrary.getAnimalAvatar(animal) : null;
                 
-                // 如果没有头像数据但有模板key，从已读取的池中查找
-                if (!avatarData && animal.templateKey && animalPool.length > 0) {
-                    const template = animalPool.find(t => t.key === animal.templateKey);
-                    if (template && template.avatarData) {
-                        avatarData = template.avatarData;
-                    }
-                }
-                
-                if (avatarData && avatarData.trim() !== '') {
-                    avatarHtml = `<img src="${avatarData}" class="w-16 h-16 rounded-full border-4 border-gray-600 mb-2 shadow-lg object-cover" alt="${animal.name}">`;
+                if (avatarUrl) {
+                    // 有图片URL，尝试加载，失败则显示颜色球
+                    avatarHtml = `
+                        <img src="${avatarUrl}"
+                             class="w-16 h-16 rounded-full border-4 border-gray-600 mb-2 shadow-lg object-cover"
+                             alt="${animal.name}"
+                             onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                        <div style="background-color: ${colorHex}; display: none;"
+                             class="w-16 h-16 rounded-full border-4 border-gray-600 mb-2 shadow-lg"></div>
+                    `;
                 } else {
+                    // 没有图片，直接显示颜色球
                     avatarHtml = `<div style="background-color: ${colorHex};" class="w-16 h-16 rounded-full border-4 border-gray-600 mb-2 shadow-lg"></div>`;
                 }
                 
@@ -2043,26 +2043,24 @@
                 return;
             }
             
-            // 一次性读取动物池（用于查找头像）
-            const animalPool = JSON.parse(localStorage.getItem('ANIMAL_POOL') || '[]');
-            
             gameState.animals.forEach(animal => {
                 const isSelected = selectionArray.includes(animal.id);
                 const colorHex = '#' + animal.color.toString(16).padStart(6, '0');
                 
-                // 获取头像数据
-                let avatarData = animal.avatarData;
-                if (!avatarData && animal.templateKey && animalPool.length > 0) {
-                    const template = animalPool.find(t => t.key === animal.templateKey);
-                    if (template && template.avatarData) {
-                        avatarData = template.avatarData;
-                    }
-                }
+                // 使用图片库获取头像
+                const avatarUrl = window.imageLibrary ? window.imageLibrary.getAnimalAvatar(animal) : null;
                 
                 // 头像或颜色球
                 let avatarHtml;
-                if (avatarData && avatarData.trim() !== '') {
-                    avatarHtml = `<img src="${avatarData}" class="w-8 h-8 rounded-full border-2 border-gray-400 object-cover" alt="${animal.name}">`;
+                if (avatarUrl) {
+                    avatarHtml = `
+                        <img src="${avatarUrl}"
+                             class="w-8 h-8 rounded-full border-2 border-gray-400 object-cover"
+                             alt="${animal.name}"
+                             onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                        <div style="background-color: ${colorHex}; display: none;"
+                             class="w-8 h-8 rounded-full border-2 border-gray-400"></div>
+                    `;
                 } else {
                     avatarHtml = `<div style="background-color: ${colorHex};" class="w-8 h-8 rounded-full border-2 border-gray-400"></div>`;
                 }
@@ -2139,19 +2137,11 @@
                 return;
             }
             
-            const animalPool = JSON.parse(localStorage.getItem('ANIMAL_POOL') || '[]');
-            
             availableAnimals.forEach(animal => {
                 const colorHex = '#' + animal.color.toString(16).padStart(6, '0');
                 
-                // 获取头像
-                let avatarData = animal.avatarData;
-                if (!avatarData && animal.templateKey) {
-                    const template = animalPool.find(t => t.key === animal.templateKey);
-                    if (template && template.avatarData) {
-                        avatarData = template.avatarData;
-                    }
-                }
+                // 使用图片库获取头像
+                const avatarUrl = window.imageLibrary ? window.imageLibrary.getAnimalAvatar(animal) : null;
                 
                 const card = document.createElement('div');
                 card.className = 'bg-gray-700 rounded-lg p-3 cursor-pointer hover:bg-gray-600 transition-all hover:scale-105 border-2 border-gray-600';
@@ -2163,8 +2153,15 @@
                 
                 // 头像
                 let avatarHtml;
-                if (avatarData && avatarData.trim() !== '') {
-                    avatarHtml = `<img src="${avatarData}" class="w-16 h-16 rounded-full border-2 border-gray-400 object-cover mx-auto mb-2" alt="${animal.name}">`;
+                if (avatarUrl) {
+                    avatarHtml = `
+                        <img src="${avatarUrl}"
+                             class="w-16 h-16 rounded-full border-2 border-gray-400 object-cover mx-auto mb-2"
+                             alt="${animal.name}"
+                             onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                        <div style="background-color: ${colorHex}; display: none;"
+                             class="w-16 h-16 rounded-full border-2 border-gray-400 mx-auto mb-2"></div>
+                    `;
                 } else {
                     avatarHtml = `<div style="background-color: ${colorHex};" class="w-16 h-16 rounded-full border-2 border-gray-400 mx-auto mb-2"></div>`;
                 }
@@ -2390,9 +2387,6 @@
         }
 
         function renderBreedingPanel() {
-            // 一次性读取动物池
-            const animalPool = JSON.parse(localStorage.getItem('ANIMAL_POOL') || '[]');
-            
             // 渲染两个父框
             const parentSlots = [ui.parentDisplay1, ui.parentDisplay2];
 
@@ -2404,19 +2398,20 @@
                 if (parentAnimal) {
                     const colorHex = '#' + parentAnimal.color.toString(16).padStart(6, '0');
                     
-                    // 获取头像数据
-                    let avatarData = parentAnimal.avatarData;
-                    if (!avatarData && parentAnimal.templateKey && animalPool.length > 0) {
-                        const template = animalPool.find(t => t.key === parentAnimal.templateKey);
-                        if (template && template.avatarData) {
-                            avatarData = template.avatarData;
-                        }
-                    }
+                    // 使用图片库获取头像
+                    const avatarUrl = window.imageLibrary ? window.imageLibrary.getAnimalAvatar(parentAnimal) : null;
                     
                     // 头像或颜色球
                     let avatarHtml;
-                    if (avatarData && avatarData.trim() !== '') {
-                        avatarHtml = `<img src="${avatarData}" class="w-12 h-12 rounded-full border-2 border-gray-400 object-cover" alt="${parentAnimal.name}">`;
+                    if (avatarUrl) {
+                        avatarHtml = `
+                            <img src="${avatarUrl}"
+                                 class="w-12 h-12 rounded-full border-2 border-gray-400 object-cover"
+                                 alt="${parentAnimal.name}"
+                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                            <div style="background-color: ${colorHex}; display: none;"
+                                 class="w-12 h-12 rounded-full border-2 border-gray-400"></div>
+                        `;
                     } else {
                         avatarHtml = `<div style="background-color: ${colorHex};" class="w-12 h-12 rounded-full border-2 border-gray-400"></div>`;
                     }
@@ -2476,9 +2471,6 @@
         }
 
         function renderFusionPanel() {
-            // 一次性读取动物池
-            const animalPool = JSON.parse(localStorage.getItem('ANIMAL_POOL') || '[]');
-            
             // 渲染两个材料框
             const materialSlots = [ui.fusionMaterialDisplay1, ui.fusionMaterialDisplay2];
             const placeholderTexts = ['点击下方列表<br>选择材料 1', '点击下方列表<br>选择材料 2'];
@@ -2491,19 +2483,20 @@
                 if (materialAnimal) {
                     const colorHex = '#' + materialAnimal.color.toString(16).padStart(6, '0');
                     
-                    // 获取头像数据
-                    let avatarData = materialAnimal.avatarData;
-                    if (!avatarData && materialAnimal.templateKey && animalPool.length > 0) {
-                        const template = animalPool.find(t => t.key === materialAnimal.templateKey);
-                        if (template && template.avatarData) {
-                            avatarData = template.avatarData;
-                        }
-                    }
+                    // 使用图片库获取头像
+                    const avatarUrl = window.imageLibrary ? window.imageLibrary.getAnimalAvatar(materialAnimal) : null;
                     
                     // 头像或颜色球
                     let avatarHtml;
-                    if (avatarData && avatarData.trim() !== '') {
-                        avatarHtml = `<img src="${avatarData}" class="w-12 h-12 rounded-full border-2 border-gray-400 object-cover" alt="${materialAnimal.name}">`;
+                    if (avatarUrl) {
+                        avatarHtml = `
+                            <img src="${avatarUrl}"
+                                 class="w-12 h-12 rounded-full border-2 border-gray-400 object-cover"
+                                 alt="${materialAnimal.name}"
+                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                            <div style="background-color: ${colorHex}; display: none;"
+                                 class="w-12 h-12 rounded-full border-2 border-gray-400"></div>
+                        `;
                     } else {
                         avatarHtml = `<div style="background-color: ${colorHex};" class="w-12 h-12 rounded-full border-2 border-gray-400"></div>`;
                     }

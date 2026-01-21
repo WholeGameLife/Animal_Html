@@ -430,6 +430,9 @@
         </div>
     </div>
 
+    <!-- 引入图片库 -->
+    <script src="image_library.js"></script>
+    
     <script>
         // 动物模板池存储
         let animals = JSON.parse(localStorage.getItem('ANIMAL_POOL') || '[]');
@@ -962,10 +965,20 @@
                 const elementClass = `element-${animal.element}`;
                 const rarityClass = `rarity-${animal.rarity}`;
                 
+                // 使用图片库获取头像（优先本地文件）
+                const avatarUrl = window.imageLibrary ? window.imageLibrary.getAnimalAvatar(animal) : null;
+                
                 // 头像或颜色球
                 let avatarHtml;
-                if (animal.avatarData) {
-                    avatarHtml = `<img src="${animal.avatarData}" class="w-12 h-12 rounded-full border-2 border-white object-cover" alt="${animal.name}">`;
+                if (avatarUrl) {
+                    avatarHtml = `
+                        <img src="${avatarUrl}"
+                             class="w-12 h-12 rounded-full border-2 border-white object-cover"
+                             alt="${animal.name}"
+                             onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                        <div class="w-12 h-12 rounded-full border-2 border-white"
+                             style="background-color: ${animal.color}; display: none;"></div>
+                    `;
                 } else {
                     avatarHtml = `<div class="w-12 h-12 rounded-full border-2 border-white" style="background-color: ${animal.color}"></div>`;
                 }

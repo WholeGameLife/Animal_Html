@@ -638,9 +638,19 @@ class BattleSystem {
         document.getElementById('player-level').textContent = `Lv. ${this.playerData.level}`;
         const playerAvatar = document.getElementById('player-avatar');
         
+        // 使用图像库获取头像（优先本地文件）
+        let avatarData = this.playerData.avatarData;
+        if (!avatarData && window.imageLibrary) {
+            // 尝试获取本地图片或localStorage中的图片
+            avatarData = window.imageLibrary.getImageUrl(this.playerData.templateKey || this.playerData.animalId || this.playerData.key);
+            if (!avatarData) {
+                avatarData = window.imageLibrary.getImageByAnimal(this.playerData);
+            }
+        }
+        
         // 优先使用头像图片，如果没有则使用颜色球
-        if (this.playerData.avatarData) {
-            playerAvatar.style.backgroundImage = `url(${this.playerData.avatarData})`;
+        if (avatarData) {
+            playerAvatar.style.backgroundImage = `url(${avatarData})`;
             playerAvatar.style.backgroundSize = 'cover';
             playerAvatar.style.backgroundPosition = 'center';
             playerAvatar.textContent = '';
@@ -668,9 +678,19 @@ class BattleSystem {
         document.getElementById('opponent-level').textContent = `Lv. ${this.opponentData.level}`;
         const opponentAvatar = document.getElementById('opponent-avatar');
         
+        // 使用图像库获取头像（优先本地文件）
+        let avatarData = this.opponentData.avatarData;
+        if (!avatarData && window.imageLibrary) {
+            // 尝试获取本地图片或localStorage中的图片
+            avatarData = window.imageLibrary.getImageUrl(this.opponentData.templateKey || this.opponentData.animalId || this.opponentData.key);
+            if (!avatarData) {
+                avatarData = window.imageLibrary.getImageByAnimal(this.opponentData);
+            }
+        }
+        
         // 优先使用头像图片，如果没有则使用颜色球
-        if (this.opponentData.avatarData) {
-            opponentAvatar.style.backgroundImage = `url(${this.opponentData.avatarData})`;
+        if (avatarData) {
+            opponentAvatar.style.backgroundImage = `url(${avatarData})`;
             opponentAvatar.style.backgroundSize = 'cover';
             opponentAvatar.style.backgroundPosition = 'center';
             opponentAvatar.textContent = '';

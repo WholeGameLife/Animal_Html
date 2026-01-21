@@ -15,10 +15,73 @@
         
         /* 2D地图容器 */
         .map-container {
-            position: relative;
+            position: absolute;
+            top: 0;
+            left: 0;
             width: 100vw;
             height: 100vh;
+            background: linear-gradient(135deg, #1a4d2e 0%, #0f2f1a 100%);
             overflow: hidden;
+            transition: transform 0.1s ease-out;
+        }
+        
+        /* 网格背景（与game3d.html保持一致） */
+        .grid-background {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 90%;
+            height: 85%;
+            background-image:
+                linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px);
+            background-size: 60px 60px;
+            border: 2px solid rgba(255,255,255,0.1);
+            border-radius: 10px;
+        }
+        
+        /* 传送门样式（与game3d.html保持一致） */
+        .portal-item {
+            position: absolute;
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #a855f7 0%, #6366f1 100%);
+            border: 3px solid #fbbf24;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
+            cursor: pointer;
+            animation: pulse 2s ease-in-out infinite;
+            transition: all 0.3s ease;
+        }
+        
+        .portal-item:hover {
+            transform: scale(1.2);
+            filter: drop-shadow(0 0 20px rgba(168, 85, 247, 0.8));
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 0.8; }
+            50% { transform: scale(1.1); opacity: 1; }
+        }
+        
+        .portal-label {
+            position: absolute;
+            bottom: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            white-space: nowrap;
+            pointer-events: none;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.6);
         }
         
         /* 动物图标样式 */
@@ -27,17 +90,16 @@
             width: 120px;
             height: 120px;
             cursor: pointer;
-            transition: all 0.3s ease;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-center: center;
             font-size: 64px;
             user-select: none;
+            will-change: left, top;
         }
         
         .animal-icon:hover {
-            transform: scale(1.2);
             filter: drop-shadow(0 0 15px rgba(255, 255, 255, 0.8));
         }
         
@@ -111,11 +173,25 @@
 
     <div class="game-ui p-4 flex flex-col justify-between items-start">
         <!-- Top Left: World Info & Return Button -->
-        <div class="control-panel p-4 rounded-lg text-white">
-            <h1 id="world-name" class="text-2xl font-bold text-yellow-300 mb-2">探索区域</h1>
-            <button id="btn-return-map" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg mb-2">返回世界地图</button>
-            <button id="btn-open-inventory" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg text-center">
-                🎒 我的背包<br><span class="text-xs"> (查看/使用)</span>
+        <div class="control-panel p-4 rounded-lg text-white w-full md:w-72">
+            <h1 id="world-name" class="text-xl font-bold text-green-400 border-b border-gray-700 pb-2 mb-3">🗺️ 探索地图</h1>
+            <div id="map-info" class="text-sm mb-3">
+                <div class="flex items-center gap-2 mb-1">
+                    <span id="map-icon" class="text-2xl">🗺️</span>
+                    <span class="font-bold text-white" id="map-name-display"></span>
+                </div>
+                <div class="text-xs text-gray-400">
+                    <span>Lv.<span id="map-level">1</span></span>
+                    <span class="ml-2">🦁 <span id="map-animals-count">0</span>种动物</span>
+                </div>
+                <div id="submaps-info" class="text-xs text-purple-300 mt-1 hidden">
+                    🌀 包含 <span id="submaps-count">0</span> 个子地图
+                </div>
+            </div>
+            <button id="btn-return-parent-map" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-lg mb-2 transition-colors hidden">⬅️ 返回上级地图</button>
+            <button id="btn-return-map" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg mb-2 transition-colors">🌍 返回世界地图</button>
+            <button id="btn-open-inventory" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition-colors">
+                🎒 我的背包
             </button>
             <div id="status-message" class="text-xs mt-3 h-4 text-gray-400"></div>
         </div>
@@ -349,6 +425,7 @@
     <script src="animal_config.js"></script>
     <script src="skill_acquisition.js"></script>
     <script src="inventory_system.js"></script>
+    <script src="image_library.js"></script>
     <script>
         // --- Config ---
         const mapConfigs = JSON.parse(localStorage.getItem('MAP_CONFIGS') || '[]');
@@ -405,6 +482,9 @@
         let refreshTimer = null;
         let animalsInBattle = new Set();
         let selectedAnimalId = null;
+        let mapHistory = []; // 地图历史栈
+        let currentMapKey = null; // 当前地图key
+        let portals = []; // 传送门列表
 
         // --- UI Refs ---
         const ui = {
@@ -471,6 +551,7 @@
             populateWorld();
             processCapturedAnimal();
             startRefreshTimer();
+            startAnimalMovement(); // 启动动物移动系统
         };
 
         function loadGameState() {
@@ -485,9 +566,19 @@
 
         function setupEventListeners() {
             document.getElementById('btn-return-map').addEventListener('click', () => {
-                localStorage.setItem('gameState', JSON.stringify(gameState));
+                // 优化：只保存关键数据，移除大型数据如avatarData
+                const optimizedState = {
+                    ...gameState,
+                    animals: gameState.animals.map(a => {
+                        const { avatarData, ...rest } = a;
+                        return rest;
+                    })
+                };
+                localStorage.setItem('gameState', JSON.stringify(optimizedState));
                 window.location.href = 'world_map.html';
             });
+            
+            document.getElementById('btn-return-parent-map').addEventListener('click', returnToParentMap);
             ui.btnCloseAnimalDetails.addEventListener('click', closeAnimalDetails);
             ui.btnChallengeAnimal.addEventListener('click', () => {
                 const animalId = ui.btnChallengeAnimal.dataset.animalId;
@@ -534,10 +625,9 @@
             const config = mapConfig || WORLD_CONFIG[worldType];
             
             const mapName = mapConfig ? mapConfig.name : config.name;
-            const groundColor = mapConfig ? '#556b2f' : config.groundColor;
             
-            document.getElementById('world-name').textContent = mapName;
-            ui.mapContainer.style.background = `linear-gradient(135deg, ${groundColor} 0%, #1e1e3f 100%)`;
+            // 保持背景为默认渐变色
+            // ui.mapContainer.style.background 已在CSS中设置
         }
 
         // --- Game Logic ---
@@ -547,9 +637,127 @@
             const maxAnimals = mapConfig ? mapConfig.maxAnimals : config.maxAnimals;
             const initialCount = Math.min(3, maxAnimals);
             
+            // 更新地图信息显示
+            updateMapInfo(mapConfig);
+            
+            // 生成子地图传送门
+            if (mapConfig && mapConfig.submaps && mapConfig.submaps.length > 0) {
+                spawnPortals(mapConfig);
+            }
+            
             for (let i = 0; i < initialCount; i++) {
                 spawnAnimal();
             }
+        }
+        
+        // 更新地图信息显示
+        function updateMapInfo(mapConfig) {
+            if (!mapConfig) return;
+            
+            document.getElementById('map-icon').textContent = mapConfig.icon || '🗺️';
+            document.getElementById('map-name-display').textContent = mapConfig.name;
+            document.getElementById('map-level').textContent = mapConfig.level || 1;
+            document.getElementById('map-animals-count').textContent = mapConfig.animals?.length || 0;
+            
+            // 子地图信息
+            const submapsInfo = document.getElementById('submaps-info');
+            const submapsCount = document.getElementById('submaps-count');
+            if (mapConfig.submaps && mapConfig.submaps.length > 0) {
+                submapsInfo.classList.remove('hidden');
+                submapsCount.textContent = mapConfig.submaps.length;
+            } else {
+                submapsInfo.classList.add('hidden');
+            }
+            
+            // 返回上级地图按钮
+            const urlParams = new URLSearchParams(window.location.search);
+            const parentMapKey = urlParams.get('parentMapKey');
+            if (parentMapKey) {
+                document.getElementById('btn-return-parent-map').classList.remove('hidden');
+            }
+        }
+        
+        // 生成传送门
+        function spawnPortals(mapConfig) {
+            if (!mapConfig.submaps || mapConfig.submaps.length === 0) return;
+            
+            mapConfig.submaps.forEach((submapConfig, index) => {
+                const submap = mapConfigs.find(m => m.key === submapConfig.mapKey);
+                if (!submap) return;
+                
+                // 在地图边缘位置生成传送门
+                const positions = [
+                    { x: 15 + index * 20, y: 15 }, // 上边
+                    { x: 15 + index * 20, y: 85 }, // 下边
+                    { x: 15, y: 20 + index * 20 }, // 左边
+                    { x: 85, y: 20 + index * 20 }, // 右边
+                ];
+                const pos = positions[index % positions.length];
+                
+                const portalElement = document.createElement('div');
+                portalElement.className = 'portal-item';
+                portalElement.style.left = `${pos.x}%`;
+                portalElement.style.top = `${pos.y}%`;
+                portalElement.textContent = '🌀';
+                
+                // 添加标签
+                const label = document.createElement('div');
+                label.className = 'portal-label';
+                label.textContent = `→ ${submap.name}`;
+                portalElement.appendChild(label);
+                
+                // 点击事件
+                portalElement.onclick = (e) => {
+                    e.stopPropagation();
+                    enterSubmap(submapConfig.mapKey);
+                };
+                
+                ui.mapContainer.appendChild(portalElement);
+                portals.push(portalElement);
+            });
+        }
+        
+        // 进入子地图
+        function enterSubmap(submapKey) {
+            const urlParams = new URLSearchParams(window.location.search);
+            const currentMapKey = urlParams.get('mapKey');
+            
+            // 保存游戏状态
+            const optimizedState = {
+                ...gameState,
+                animals: gameState.animals.map(a => {
+                    const { avatarData, ...rest } = a;
+                    return rest;
+                })
+            };
+            localStorage.setItem('gameState', JSON.stringify(optimizedState));
+            
+            // 跳转到子地图（携带父地图信息）
+            window.location.href = `world_instance.html?mapKey=${submapKey}&parentMapKey=${currentMapKey}`;
+        }
+        
+        // 返回上级地图
+        function returnToParentMap() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const parentMapKey = urlParams.get('parentMapKey');
+            
+            if (!parentMapKey) {
+                showStatus('⚠️ 无法返回，已在顶层地图', 2000);
+                return;
+            }
+            
+            // 保存游戏状态
+            const optimizedState = {
+                ...gameState,
+                animals: gameState.animals.map(a => {
+                    const { avatarData, ...rest } = a;
+                    return rest;
+                })
+            };
+            localStorage.setItem('gameState', JSON.stringify(optimizedState));
+            
+            // 跳转回父地图
+            window.location.href = `world_instance.html?mapKey=${parentMapKey}`;
         }
 
         // 生成随机稀有度
@@ -598,16 +806,13 @@
             animalElement.id = `animal-${animalData.id}`;
             animalElement.dataset.animalId = animalData.id;
             
-            // 获取头像数据（优先使用头像，否则使用图标）
-            let avatarData = animalData.avatarData;
-            
-            // 如果动物数据本身没有头像但有模板key，从模板中读取
-            if (!avatarData && animalData.templateKey) {
-                const template = animalPool.find(t => t.key === animalData.templateKey);
-                if (template && template.avatarData) {
-                    avatarData = template.avatarData;
-                    // 缓存到动物对象中，避免重复读取
-                    animalData.avatarData = template.avatarData;
+            // 使用图像库获取头像（优先本地文件）
+            let avatarData = null;
+            if (window.imageLibrary) {
+                // 尝试获取本地图片或localStorage中的图片
+                avatarData = window.imageLibrary.getImageUrl(animalData.templateKey || animalData.animalId || animalData.key);
+                if (!avatarData) {
+                    avatarData = window.imageLibrary.getImageByAnimal(animalData);
                 }
             }
             
@@ -664,6 +869,16 @@
             
             ui.mapContainer.appendChild(animalElement);
             animalData.domElement = animalElement;
+            
+            // **新增：初始化移动参数**
+            animalData.position = { x, y }; // 当前位置（百分比）
+            animalData.velocity = {
+                x: (Math.random() - 0.5) * 0.02, // 降低速度，减少卡顿
+                y: (Math.random() - 0.5) * 0.02
+            };
+            animalData.moveTimer = 0; // 移动计时器
+            animalData.moveInterval = 3000 + Math.random() * 4000; // 每3-7秒改变一次方向
+            
             wildAnimals.push(animalData);
         }
         
@@ -878,6 +1093,74 @@
         function startRefreshTimer() {
             refreshTimer = setInterval(refreshAnimals, REFRESH_INTERVAL);
         }
+        
+        // **动物移动系统**
+        let animalMovementFrame = null;
+        let lastMovementTime = Date.now();
+        
+        function startAnimalMovement() {
+            function updateAnimalPositions() {
+                const currentTime = Date.now();
+                const deltaTime = currentTime - lastMovementTime;
+                lastMovementTime = currentTime;
+                
+                wildAnimals.forEach(animal => {
+                    if (!animal.domElement || !animal.position || !animal.velocity) return;
+                    
+                    // 更新移动计时器
+                    animal.moveTimer += deltaTime;
+                    
+                    // 定期改变方向（每3-7秒）
+                    if (animal.moveTimer >= animal.moveInterval) {
+                        animal.velocity = {
+                            x: (Math.random() - 0.5) * 0.02,
+                            y: (Math.random() - 0.5) * 0.02
+                        };
+                        animal.moveTimer = 0;
+                        animal.moveInterval = 3000 + Math.random() * 4000;
+                    }
+                    
+                    // 更新位置
+                    animal.position.x += animal.velocity.x;
+                    animal.position.y += animal.velocity.y;
+                    
+                    // 边界检测与反弹（保持在10%-90%范围内）
+                    if (animal.position.x < 10) {
+                        animal.position.x = 10;
+                        animal.velocity.x = Math.abs(animal.velocity.x); // 向右反弹
+                    } else if (animal.position.x > 90) {
+                        animal.position.x = 90;
+                        animal.velocity.x = -Math.abs(animal.velocity.x); // 向左反弹
+                    }
+                    
+                    if (animal.position.y < 10) {
+                        animal.position.y = 10;
+                        animal.velocity.y = Math.abs(animal.velocity.y); // 向下反弹
+                    } else if (animal.position.y > 90) {
+                        animal.position.y = 90;
+                        animal.velocity.y = -Math.abs(animal.velocity.y); // 向上反弹
+                    }
+                    
+                    // 应用新位置到DOM元素
+                    animal.domElement.style.left = `${animal.position.x}%`;
+                    animal.domElement.style.top = `${animal.position.y}%`;
+                });
+                
+                // 继续下一帧
+                animalMovementFrame = requestAnimationFrame(updateAnimalPositions);
+            }
+            
+            // 启动动画循环
+            updateAnimalPositions();
+        }
+        
+        // 停止动物移动（清理函数，可在需要时调用）
+        function stopAnimalMovement() {
+            if (animalMovementFrame) {
+                cancelAnimationFrame(animalMovementFrame);
+                animalMovementFrame = null;
+            }
+        }
 
         function createWildAnimal(element) {
             const id = crypto.randomUUID();
@@ -1080,9 +1363,10 @@
 
         function startCombatDirectly(opponent, playerAnimal) {
             const getSerializableAnimal = (animal) => {
-                const serializableAnimal = { ...animal };
-                delete serializableAnimal.domElement; // 删除2D DOM元素引用
-                return serializableAnimal;
+                const { domElement, position, velocity, moveTimer, moveInterval, avatarData, ...rest } = animal;
+                // 移除DOM元素引用、移动相关数据和大型avatarData
+                // 保留templateKey，战斗页面可以从animalPool中恢复avatarData
+                return rest;
             };
 
             animalsInBattle.add(opponent.id);

@@ -27,6 +27,7 @@
             height: 100vh;
             background: linear-gradient(135deg, #1a4d2e 0%, #0f2f1a 100%);
             overflow: hidden;
+            transition: transform 0.1s ease-out;
         }
         
         /* 网格背景 */
@@ -962,6 +963,8 @@
         let previewElement = null; // 2D建筑预览元素
         let selectedBuilding = null;
         let cameraMovement = { forward: false, backward: false, left: false, right: false };
+        let mapOffset = { x: 0, y: 0 }; // 2D地图偏移量
+        const MAP_MOVE_SPEED = 5; // 地图移动速度（像素/帧）
         const GRID_SIZE = 30;
         const GRID_DIVISIONS = 30;
 
@@ -1255,7 +1258,7 @@
             },
             exchangeStock: [], // 新增：交易所库存
             collectibles: [], // 新增：存储可收集的资源对象
-            animalToPlace: null, 
+            animalToPlace: null,
             assigningWorkerForBuilding: null, // 新增：记录正在为哪个建筑分配工人
             upgradingBuildings: {}, // 新增：正在升级的建筑 {buildingId: {endTime, nextLevel}}
             wildAnimals: [], // 新增：野生动物
@@ -2014,20 +2017,29 @@
             if (typeof closeSkillSelector === 'function') closeSkillSelector();
         }
 
-        // 新增：键盘按下事件处理
+        // 新增：键盘按下事件处理（2D地图移动）
         function onKeyDown(event) {
+            // 如果在输入框中，不处理
+            if (event.target.tagName === 'INPUT' || event.target.tagName === 'TEXTAREA') {
+                return;
+            }
+            
             switch (event.code) {
                 case 'KeyW':
                     cameraMovement.forward = true;
+                    event.preventDefault();
                     break;
                 case 'KeyA':
                     cameraMovement.left = true;
+                    event.preventDefault();
                     break;
                 case 'KeyS':
                     cameraMovement.backward = true;
+                    event.preventDefault();
                     break;
                 case 'KeyD':
                     cameraMovement.right = true;
+                    event.preventDefault();
                     break;
             }
         }
@@ -2039,6 +2051,19 @@
                 case 'KeyA': cameraMovement.left = false; break;
                 case 'KeyS': cameraMovement.backward = false; break;
                 case 'KeyD': cameraMovement.right = false; break;
+            }
+        }
+        
+        // 新增：更新2D地图位置
+        function update2DMapPosition() {
+            if (cameraMovement.forward || cameraMovement.backward || cameraMovement.left || cameraMovement.right) {
+                if (cameraMovement.forward) mapOffset.y += MAP_MOVE_SPEED;
+                if (cameraMovement.backward) mapOffset.y -= MAP_MOVE_SPEED;
+                if (cameraMovement.left) mapOffset.x += MAP_MOVE_SPEED;
+                if (cameraMovement.right) mapOffset.x -= MAP_MOVE_SPEED;
+                
+                // 应用偏移
+                ui.mapContainer.style.transform = `translate(${mapOffset.x}px, ${mapOffset.y}px)`;
             }
         }
 
@@ -2207,7 +2232,10 @@
         function animate() {
             requestAnimationFrame(animate);
 
-            // 更新相机位置
+            // 更新2D地图位置（WASD控制）
+            update2DMapPosition();
+
+            // 更新相机位置（3D模式备用）
             const moveSpeed = 0.2;
             const cameraDirection = new THREE.Vector3();
             camera.getWorldDirection(cameraDirection);
@@ -2217,24 +2245,11 @@
             const rightDirection = new THREE.Vector3();
             rightDirection.crossVectors(camera.up, cameraDirection).normalize();
 
-            if (cameraMovement.forward) {
-                camera.position.addScaledVector(cameraDirection, moveSpeed);
-            }
-            if (cameraMovement.backward) {
-                camera.position.addScaledVector(cameraDirection, -moveSpeed);
-            }
-            if (cameraMovement.left) {
-                camera.position.addScaledVector(rightDirection, moveSpeed);
-            }
-            if (cameraMovement.right) {
-                camera.position.addScaledVector(rightDirection, -moveSpeed);
-            }
-
             // 动物和繁殖窝轻微摇摆 (增加盆栽活力)
             const time = Date.now() * 0.0005;
             denMesh.rotation.y += 0.005;
             gameState.animals.forEach(animalData => {
-                // 只让未放置（在“家”里）的动物摇摆
+                // 只让未放置（在"家"里）的动物摇摆
                 if (!animalData.isPlaced) {
                     const animal = animalData.mesh;
                     animal.position.y = 1 + Math.sin(time * 5 + animalData.id.charCodeAt(0)) * 0.1;
@@ -3219,20 +3234,33 @@
             completeUpgrade(building, nextLevel, nextConfig);
         }
 
-        // 新增：完成建筑升级
+        // 新增：完成建筑升级（2D版本）
         function completeUpgrade(building, nextLevel, nextConfig) {
             building.level = nextLevel;
 
-            const mesh = building.mesh;
-            
-            mesh.geometry.dispose();
-            mesh.geometry = nextConfig.shape;
-            
-            const newHeight = nextConfig.shape.parameters.height || (nextConfig.shape.parameters.radiusTop || nextConfig.shape.parameters.radius) * 2;
-            mesh.position.y = newHeight / 2;
-            
-            mesh.material.emissive.setHex(0x333333);
-            setTimeout(() => mesh.material.emissive.setHex(0x000000), 500);
+            // 更新2D建筑显示
+            if (building.element) {
+                const config = BUILDINGS[building.type];
+                const scale = nextConfig.scale || 1.0;
+                const newSize = 100 * scale; // 基础尺寸 * 缩放比例
+                const newFontSize = 56 * scale;
+                
+                building.element.style.width = `${newSize}px`;
+                building.element.style.height = `${newSize}px`;
+                building.element.style.fontSize = `${newFontSize}px`;
+                
+                // 更新标签
+                const label = building.element.querySelector('.entity-label');
+                if (label) {
+                    label.textContent = `${config.name_cn} Lv.${nextLevel}`;
+                }
+                
+                // 闪烁效果
+                building.element.style.filter = 'brightness(1.5)';
+                setTimeout(() => {
+                    building.element.style.filter = 'brightness(1)';
+                }, 500);
+            }
 
             const config = BUILDINGS[building.type];
             showStatus(`⬆️ ${config.name_cn} 升级至 Lv.${nextLevel}! 效果提升!`, 4000);
@@ -4286,11 +4314,45 @@
         // --- 新的页面跳转和数据处理逻辑 ---
 
         function openAnimalManagementPage() {
-            // 移除无法序列化的 'mesh' 和大型的 'avatarData' 属性
-            const serializableGameState = JSON.parse(JSON.stringify(gameState, (key, value) => {
-                if (key === 'mesh' || key === 'avatarData') return undefined;
-                return value;
-            }));
+            // 优化：直接构建对象，避免慢速深拷贝，移除avatarData以节省空间
+            const serializableGameState = {
+                food: gameState.food,
+                gold: gameState.gold,
+                wood: gameState.wood,
+                stone: gameState.stone,
+                gems: gameState.gems,
+                expGrass: gameState.expGrass,
+                moonFlower: gameState.moonFlower,
+                mutationCrystal: gameState.mutationCrystal,
+                voidEssence: gameState.voidEssence,
+                breedingDenLevel: gameState.breedingDenLevel,
+                maxAnimals: gameState.maxAnimals,
+                animalCount: gameState.animalCount,
+                upgradingBuildings: gameState.upgradingBuildings,
+                activeExplorations: gameState.activeExplorations,
+                mining: gameState.mining,
+                artifacts: gameState.artifacts,
+                inventory: gameState.inventory,
+                battleTeam: gameState.battleTeam,
+                firstTeamMember: gameState.firstTeamMember,
+                auctions: gameState.auctions,
+                lastStockRefreshDate: gameState.lastStockRefreshDate,
+                exchangeStock: gameState.exchangeStock.map(a => {
+                    const { avatarData, ...rest } = a;
+                    return rest;
+                }),
+                unlockedEncyclopedia: gameState.unlockedEncyclopedia,
+                currentMapKey: gameState.currentMapKey,
+                mapHistory: gameState.mapHistory,
+                animals: gameState.animals.map(a => {
+                    const { mesh, avatarData, ...rest } = a;
+                    return rest;
+                }),
+                buildings: gameState.buildings.map(b => {
+                    const { mesh, element, ...rest } = b;
+                    return rest;
+                })
+            };
 
             localStorage.setItem('gameState', JSON.stringify(serializableGameState));
             window.location.href = 'animal_management.html';
@@ -4401,17 +4463,42 @@
                     return animalData;
                 });
 
-                // 3. 重建建筑（为了同步 workerId）
-                gameState.buildings.forEach(b => worldGroup.remove(b.mesh)); // 移除旧模型
+                // 3. 重建建筑（2D版本）
                 gameState.buildings = storedState.buildings.map(buildingData => {
                     const config = BUILDINGS[buildingData.type];
-                    const levelConfig = config.levels[buildingData.level];
-                    const material = new THREE.MeshPhongMaterial({ color: config.color, shininess: 100 });
-                    const mesh = new THREE.Mesh(levelConfig.shape, material);
-                    mesh.position.set(buildingData.position.x, buildingData.position.y, buildingData.position.z);
-                    mesh.userData.buildingId = buildingData.id;
-                    worldGroup.add(mesh);
-                    buildingData.mesh = mesh;
+                    
+                    // 重建2D DOM元素
+                    if (buildingData.position2D) {
+                        const buildingElement = document.createElement('div');
+                        buildingElement.id = `building-${buildingData.id}`;
+                        buildingElement.className = 'entity-item building-item';
+                        buildingElement.dataset.buildingId = buildingData.id;
+                        buildingElement.style.left = `${buildingData.position2D.x}%`;
+                        buildingElement.style.top = `${buildingData.position2D.y}%`;
+                        buildingElement.style.transform = 'translate(-50%, -50%)';
+                        buildingElement.style.background = config.bgColor || '#666';
+                        buildingElement.style.fontSize = '56px';
+                        buildingElement.textContent = config.icon || '🏗️';
+                        
+                        // 添加标签
+                        const label = document.createElement('div');
+                        label.className = 'entity-label';
+                        label.textContent = `${config.name_cn} Lv.${buildingData.level}`;
+                        buildingElement.appendChild(label);
+                        
+                        ui.mapContainer.appendChild(buildingElement);
+                        buildingData.element = buildingElement;
+                    }
+                    
+                    // 保持3D兼容性
+                    if (!buildingData.mesh || !buildingData.mesh.userData) {
+                        buildingData.mesh = {
+                            position: buildingData.position || { x: 0, y: 0, z: 0 },
+                            geometry: { parameters: {} },
+                            userData: { buildingId: buildingData.id }
+                        };
+                    }
+                    
                     return buildingData;
                 });
 
@@ -4778,8 +4865,9 @@
             startAuctionUpdateLoop();
             startResourceLoops();
             startGameStateUpdateLoop();
+            animate(); // 启动动画循环（包含WASD移动更新）
             updateUI();
-            showStatus("欢迎来到电子盆栽！拖动可旋转视角，点击🐾动物系统进行繁殖和查看名册。", 5000);
+            showStatus("欢迎来到电子盆栽！使用 WASD 键移动视角，点击🐾动物系统进行繁殖和查看名册。", 5000);
         };
         
         // 从模板创建动物
