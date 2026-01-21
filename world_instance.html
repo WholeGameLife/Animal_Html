@@ -197,45 +197,58 @@
         </div>
     </div>
 
-    <!-- 背包面板 (从game3d.html复制) -->
-    <div id="inventory-panel" class="hidden fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-gray-900/95 backdrop-blur-lg border-2 border-purple-500 rounded-xl p-6 w-11/12 max-w-7xl max-h-[90vh] overflow-y-auto z-50 shadow-2xl">
-        <div class="flex justify-between items-center mb-6 border-b border-gray-700 pb-4">
-            <h2 class="text-3xl font-bold text-purple-400">🎒 动物背包</h2>
-            <button id="btn-close-inventory" class="text-gray-400 hover:text-white text-3xl font-bold">×</button>
+    <!-- 背包面板 (与game3d.html统一布局) -->
+    <div id="inventory-panel" class="control-panel centered-panel p-6 rounded-xl text-white hidden w-full max-w-6xl max-h-[90vh]">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-2xl font-bold text-blue-400">🎒 我的背包</h3>
+            <button id="btn-close-inventory" class="text-3xl text-gray-500 hover:text-white">&times;</button>
         </div>
         
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <!-- 左侧：出战队伍 -->
-            <div class="lg:col-span-2">
-                <h3 class="text-xl font-bold text-yellow-300 mb-4">⚔️ 出战队伍 (6个槽位)</h3>
-                <div id="battle-team-slots" class="grid grid-cols-2 md:grid-cols-3 gap-4">
-                    <!-- 队伍槽位由JS生成 -->
+        <div class="flex gap-4 h-[calc(90vh-100px)]">
+            <!-- 左侧：出战队伍 - 占据全部左侧高度 -->
+            <div class="w-2/5 p-4 bg-gradient-to-br from-purple-900/30 to-indigo-900/30 rounded-xl border border-purple-500/50 overflow-y-auto">
+                <h4 class="text-lg font-bold text-purple-300 mb-4 flex items-center sticky top-0 bg-purple-900/30 pb-2">
+                    <span class="mr-2">⚔️</span>出战队伍 (6个槽位)
+                </h4>
+                <div id="battle-team-slots" class="space-y-2">
+                    <!-- 出战槽位由 JS 生成 -->
                 </div>
             </div>
-            
-            <!-- 右侧：详情/空状态 -->
-            <div class="space-y-4">
-                <!-- 空状态提示 -->
-                <div id="inventory-detail-empty" class="bg-gray-800/50 rounded-lg p-8 text-center border-2 border-dashed border-gray-600">
-                    <div class="text-6xl mb-4">👈</div>
-                    <p class="text-gray-400 text-lg">点击左侧动物槽位</p>
-                    <p class="text-gray-500 text-sm mt-2">查看详情或添加动物</p>
-                </div>
                 
-                <!-- 动物详情 -->
-                <div id="inventory-animal-detail" class="hidden bg-gray-800/80 rounded-lg p-4 border border-purple-500/50">
-                    <div class="flex items-center space-x-4 mb-4">
-                        <div id="inv-detail-avatar" class="w-20 h-20 rounded-full border-4 border-white/30"></div>
-                        <div class="flex-1">
-                            <div class="flex items-center gap-2 mb-1">
-                                <h3 id="inv-detail-name" class="text-xl font-bold text-white">动物名称</h3>
-                                <span id="inv-detail-gender" class="text-sm px-2 py-0.5 rounded">雄</span>
+            <!-- 右侧：动物详情 -->
+            <div class="w-3/5 p-4 bg-gradient-to-br from-gray-800/50 to-gray-900/50 rounded-xl border border-gray-600/50 overflow-y-auto">
+                <div id="inventory-animal-detail" class="hidden">
+                    <h4 class="text-lg font-bold text-purple-300 mb-4 flex items-center">
+                        <span class="mr-2">📋</span>动物详情
+                    </h4>
+                    
+                    <!-- 动物信息 -->
+                    <div class="mb-4 pb-4 border-b border-gray-700">
+                        <div class="flex items-center justify-between mb-3">
+                            <div class="flex items-center space-x-3">
+                                <div id="inv-detail-avatar" class="w-16 h-16 rounded-full border-2"></div>
+                                <div>
+                                    <h5 id="inv-detail-name" class="text-lg font-bold text-white">动物名称</h5>
+                                    <div class="flex items-center space-x-2 text-sm mt-1">
+                                        <span id="inv-detail-level" class="bg-purple-600 px-2 py-0.5 rounded">Lv. 1</span>
+                                        <span id="inv-detail-gender" class="px-2 py-0.5 rounded"></span>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="flex items-center gap-2">
-                                <span id="inv-detail-level" class="text-sm bg-purple-600 px-2 py-1 rounded font-bold">Lv. 1</span>
-                                <span id="inv-detail-rarity" class="hidden px-3 py-1 rounded-full text-sm font-bold"></span>
-                                <span id="inv-detail-mutation" class="hidden px-3 py-1 rounded-full text-sm font-bold"></span>
-                            </div>
+                        </div>
+                        
+                        <!-- 系别、稀有度、变异 -->
+                        <div class="flex items-center gap-2 flex-wrap mb-2">
+                            <span class="bg-cyan-900/50 text-cyan-300 px-3 py-1 rounded-full text-sm font-bold flex items-center gap-1">
+                                <span>🌀</span>
+                                <span id="inv-detail-element">水</span>
+                            </span>
+                            <span id="inv-detail-rarity" class="px-3 py-1 rounded-full text-sm font-bold hidden">
+                                <!-- 稀有度标签 -->
+                            </span>
+                            <span id="inv-detail-mutation" class="px-3 py-1 rounded-full text-sm font-bold hidden">
+                                <!-- 变异标签 -->
+                            </span>
                         </div>
                     </div>
                     
@@ -250,46 +263,39 @@
                         </div>
                     </div>
                     
-                    <!-- 属性信息 -->
-                    <div class="grid grid-cols-2 gap-2 text-sm mb-4">
-                        <div class="bg-gray-900/50 p-2 rounded">
-                            <span class="text-gray-400">体力:</span>
-                            <span id="inv-detail-stamina" class="text-green-400 font-bold ml-1">100/100</span>
+                    <!-- 属性 -->
+                    <div class="grid grid-cols-2 gap-3 mb-4 text-sm">
+                        <div class="bg-gray-900/50 p-3 rounded">
+                            <span class="text-gray-400">⚡ 体力</span>
+                            <div id="inv-detail-stamina" class="text-green-400 font-mono text-lg mt-1">0/0</div>
                         </div>
-                        <div class="bg-gray-900/50 p-2 rounded">
-                            <span class="text-gray-400">潜力:</span>
-                            <span id="inv-detail-potential" class="text-yellow-400 font-bold ml-1">超常</span>
-                        </div>
-                        <div class="bg-gray-900/50 p-2 rounded">
-                            <span class="text-gray-400">系别:</span>
-                            <span id="inv-detail-element" class="text-cyan-400 font-bold ml-1">火</span>
+                        <div class="bg-gray-900/50 p-3 rounded">
+                            <span class="text-gray-400">✨ 潜力</span>
+                            <div id="inv-detail-potential" class="font-bold text-lg mt-1">平庸</div>
                         </div>
                     </div>
                     
                     <!-- 战斗属性 -->
-                    <div class="bg-gray-900/50 p-3 rounded mb-4">
-                        <p class="text-sm font-bold text-purple-300 mb-2">战斗属性</p>
-                        <div class="grid grid-cols-3 gap-2 text-xs">
-                            <div>
-                                <span class="text-gray-400">⚔️ 攻击:</span>
-                                <span id="inv-detail-attack" class="text-red-400 font-bold ml-1">15</span>
-                            </div>
-                            <div>
-                                <span class="text-gray-400">🛡️ 防御:</span>
-                                <span id="inv-detail-defense" class="text-blue-400 font-bold ml-1">10</span>
-                            </div>
-                            <div>
-                                <span class="text-gray-400">⚡ 敏捷:</span>
-                                <span id="inv-detail-agility" class="text-yellow-400 font-bold ml-1">12</span>
-                            </div>
+                    <div class="grid grid-cols-3 gap-3 mb-4 text-sm">
+                        <div class="bg-gray-900/50 p-3 rounded text-center">
+                            <span class="text-gray-400 text-xs">⚔️ 攻击</span>
+                            <div id="inv-detail-attack" class="text-red-400 font-mono text-xl mt-1">0</div>
+                        </div>
+                        <div class="bg-gray-900/50 p-3 rounded text-center">
+                            <span class="text-gray-400 text-xs">🛡️ 防御</span>
+                            <div id="inv-detail-defense" class="text-blue-400 font-mono text-xl mt-1">0</div>
+                        </div>
+                        <div class="bg-gray-900/50 p-3 rounded text-center">
+                            <span class="text-gray-400 text-xs">💨 敏捷</span>
+                            <div id="inv-detail-agility" class="text-yellow-400 font-mono text-xl mt-1">0</div>
                         </div>
                     </div>
                     
                     <!-- 战斗技能 -->
-                    <div class="mb-4">
-                        <p class="text-sm font-bold text-purple-300 mb-2">战斗技能</p>
-                        <div id="inv-detail-combat-skills" class="grid grid-cols-4 gap-1">
-                            <!-- 技能槽位由JS生成（4个槽位） -->
+                    <div class="mb-4 pb-4 border-b border-gray-700">
+                        <h5 class="text-sm font-bold text-indigo-300 mb-2">⚔️ 战斗技能</h5>
+                        <div id="inv-detail-combat-skills" class="grid grid-cols-4 gap-2">
+                            <!-- 技能槽位由 JS 生成（4个槽位） -->
                         </div>
                     </div>
                     
@@ -298,13 +304,19 @@
                         <button id="inv-detail-btn-set-first" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-lg transition-colors">
                             ⭐ 设置为首发
                         </button>
-                        <button id="inv-detail-btn-feed" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition-colors">
-                            🍎 喂养升级
+                        <button id="inv-detail-btn-feed" class="w-full bg-orange-600 hover:bg-orange-700 text-white font-bold py-3 px-4 rounded-lg transition-colors">
+                            🍎 喂养升级 (消耗 10 食物)
                         </button>
                         <button id="inv-detail-btn-remove" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg transition-colors">
-                            ❌ 移出队伍
+                            ❌ 从队伍移除
                         </button>
                     </div>
+                </div>
+                
+                <!-- 空状态提示 -->
+                <div id="inventory-detail-empty" class="flex flex-col items-center justify-center h-full text-gray-500">
+                    <div class="text-6xl mb-4">👈</div>
+                    <p class="text-lg">点击左侧动物查看详情</p>
                 </div>
             </div>
         </div>
@@ -413,6 +425,7 @@
             battleTeamSlots: document.getElementById('battle-team-slots'),
             inventoryDetailEmpty: document.getElementById('inventory-detail-empty'),
             inventoryAnimalDetail: document.getElementById('inventory-animal-detail'),
+            inventoryDetailEmpty: document.getElementById('inventory-detail-empty'),
             invDetailAvatar: document.getElementById('inv-detail-avatar'),
             invDetailName: document.getElementById('inv-detail-name'),
             invDetailLevel: document.getElementById('inv-detail-level'),

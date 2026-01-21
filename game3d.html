@@ -2152,30 +2152,6 @@
             return POTENTIAL_LEVELS[0]; // 70% 平庸
         }
 
-        // 在野生岛屿上生成动物
-        function populateWildAnimalsOnHabitat() { // Renamed for clarity
-            const habitatPosition = habitatMesh.position;
-            const habitatHalfSize = GRID_SIZE / 2; // Half the side length of the square habitat
-
-            const wildAnimalTypes = [
-                { color: 0xff6347, type: 'sphere' }, // 番茄色 (球形)
-                { color: 0x4682b4, type: 'sphere' }, // 钢蓝色 (球形)
-                { color: 0x32cd32, type: 'cube' },   // 酸橙绿 (立方体)
-                { color: 0xDAA520, type: 'torus' }   // 金麒麟色 (环形)
-            ];
-
-            // Generate 2 wild animals
-            for (let i = 0; i < 2; i++) { // Keep the count as 2
-                const animalType = wildAnimalTypes[i % wildAnimalTypes.length];
-                const animal = createNewAnimal(animalType.color, animalType.type, true); // 标记为野生
-
-                // Place within the habitat bounds, snapped to grid
-                const randomX = (Math.random() * GRID_SIZE - habitatHalfSize) * 0.8; // 80% of habitat for some margin
-                const randomZ = (Math.random() * GRID_SIZE - habitatHalfSize) * 0.8;
-                animal.mesh.position.copy(snapToGrid(new THREE.Vector3(randomX, 0, randomZ)));
-                animal.mesh.position.y = animal.mesh.geometry.parameters.radius || animal.mesh.geometry.parameters.height / 2; // Adjust height
-            }
-        }
 
         // 进入建造模式 (略)
         function enterBuildMode(buildingType) {
@@ -4196,39 +4172,122 @@
         // --- 应用启动 ---
         window.onload = function() {
             initThreeJS();
-            loadGameStateFromStorage(); // 检查是否有从 animal_management 返回的状态
-            processCapturedAnimal(); // **新增：检查并处理捕获的动物**
-
-            // 如果是首次游戏，创建初始动物
+            loadGameStateFromStorage();
+            processCapturedAnimal();
+            
+            // 如果是首次游戏，从动物池创建一只初始动物
             if (gameState.animals.length === 0) {
-                const animal1 = createNewAnimal(0x60a5fa); // 蓝
-                const animal2 = createNewAnimal(0xfb923c); // 橙
-                
-                // 为初始动物添加一些被动技能用于测试
-                animal1.combatSkills = {
-                    equipped: ['POWER_STRIKE', 'SHIELD_BASH', 'LIFE_STEAL', 'SPEED_BOOST'],
-                    available: ['POWER_STRIKE', 'SHIELD_BASH', 'QUICK_SLASH', 'BERSERKER', 'IRON_WALL', 'DODGE', 'CRITICAL_HIT', 'LIFE_STEAL', 'COUNTER', 'SPEED_BOOST']
-                };
-                animal1.level = 10; // 提升等级以便测试
-                animal1.abilities.combat.attack = 25;
-                animal1.abilities.combat.defense = 15;
-                animal1.abilities.combat.agility = 20;
-                
-                animal2.combatSkills = {
-                    equipped: ['CRITICAL_HIT', 'IRON_WALL'],
-                    available: ['POWER_STRIKE', 'SHIELD_BASH', 'QUICK_SLASH', 'BERSERKER', 'IRON_WALL', 'DODGE', 'CRITICAL_HIT', 'LIFE_STEAL', 'COUNTER', 'SPEED_BOOST']
-                };
+                const animalPool = JSON.parse(localStorage.getItem('ANIMAL_POOL') || '[]');
+                if (animalPool.length > 0) {
+                    const template = animalPool[Math.floor(Math.random() * animalPool.length)];
+                    createAnimalFromTemplate(template);
+                    showStatus(`🎉 你获得了一只 ${template.name}！`, 4000);
+                }
             }
-
-            populateWildAnimalsOnHabitat(); // 在栖息地上生成野生动物
             
-            
-            startAuctionUpdateLoop(); // 新增
+            startAuctionUpdateLoop();
             startResourceLoops();
-            startGameStateUpdateLoop(); // 新增：启动游戏状态更新循环
+            startGameStateUpdateLoop();
             updateUI();
             showStatus("欢迎来到电子盆栽！拖动可旋转视角，点击🐾动物系统进行繁殖和查看名册。", 5000);
         };
+        
+        // 从模板创建动物
+        function createAnimalFromTemplate(template) {
+            const animalId = crypto.randomUUID();
+            
+            // 创建3D模型
+            const size = 0.8;
+            const geometry = new THREE.SphereGeometry(size, 16, 16);
+            const color = parseInt(template.color.replace('#', ''), 16);
+            const material = new THREE.MeshPhongMaterial({ color: color, shininess: 150 });
+            const mesh = new THREE.Mesh(geometry, material);
+            
+            // 初始位置
+            const angle = Math.random() * Math.PI * 2;
+            const radius = 5 + Math.random() * 7;
+            const initialPosition = new THREE.Vector3(Math.cos(angle) * radius, 1, Math.sin(angle) * radius);
+            mesh.position.copy(initialPosition);
+            mesh.visible = false;
+            mesh.userData.animalId = animalId;
+            
+            // 创建动物数据
+            const animalData = {
+                id: animalId,
+                animalId: template.animalId,
+                templateKey: template.key,
+                type: 'sphere',
+                name: template.name,
+                originalName: template.name,
+                color: color,
+                avatarData: template.avatarData || null,
+                mesh: mesh,
+                isWild: false,
+                isPlaced: false,
+                initialPosition: initialPosition,
+                level: template.level || 1,
+                gender: Math.random() > 0.5 ? '雄' : '雌',
+                experience: 0,
+                experienceToNextLevel: template.baseExp || 100,
+                stamina: template.stamina || 100,
+                maxStamina: template.stamina || 100,
+                potential: '平庸',
+                favorability: template.favorability || 50,
+                element: template.element || '水',
+                developmentStage: '幼年期',
+                rarity: template.rarity || 'common',
+                abilities: {
+                    combat: {
+                        attack: template.attack || 10,
+                        defense: template.defense || 5,
+                        agility: template.agility || 8
+                    }
+                },
+                combatSkills: {
+                    equipped: [],
+                    available: []
+                },
+                mutations: {
+                    tier1: null,
+                    tier2: null,
+                    skills: [],
+                    history: []
+                },
+                mutationCount: 0,
+                isInjured: false,
+                injuryTimer: 0,
+                workingBuildingId: null
+            };
+            
+            // 处理技能
+            if (template.skillPoolKey) {
+                const skillPools = JSON.parse(localStorage.getItem('SKILL_POOLS') || '[]');
+                const skillPool = skillPools.find(p => p.key === template.skillPoolKey);
+                if (skillPool && skillPool.skills) {
+                    const availableSkills = skillPool.skills.map(s => s.skillKey);
+                    animalData.combatSkills.available = availableSkills;
+                    // 随机装备2个技能
+                    const equipped = [];
+                    for (let i = 0; i < Math.min(2, availableSkills.length); i++) {
+                        const randomIndex = Math.floor(Math.random() * availableSkills.length);
+                        const skill = availableSkills[randomIndex];
+                        if (!equipped.includes(skill)) {
+                            equipped.push(skill);
+                        }
+                    }
+                    animalData.combatSkills.equipped = equipped;
+                }
+            }
+            
+            gameState.animals.push(animalData);
+            gameState.animalCount = gameState.animals.length;
+            animalGroup.add(mesh);
+            
+            // 检查图鉴解锁
+            if (animalData.animalId) {
+                checkEncyclopediaUnlock(animalData);
+            }
+        }
 
     </script>
 </body>

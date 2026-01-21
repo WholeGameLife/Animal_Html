@@ -531,27 +531,6 @@ const COMBAT_SKILLS = {
     'SPEED_BOOST': { name: '加速', icon: '🚀', type: 'agility', desc: '敏捷提升40%，持续2回合', effect: 'buff_agility', value: 0.4, duration: 2, cooldown: 3 }
 };
 
-// 变异技能配置
-const MUTATION_SKILLS = {
-    'MUT_DARK_POWER': { name: '暗黑之力', icon: '🖤', desc: '攻击力+15%', effect: 'passive_attack', value: 0.15 },
-    'MUT_LIGHT_HEAL': { name: '光明治愈', icon: '🤍', desc: '每回合恢复5%生命', effect: 'regen', value: 0.05 },
-    'MUT_CRYSTAL_SHIELD': { name: '晶体护盾', icon: '💎', desc: '防御力+20%', effect: 'passive_defense', value: 0.2 },
-    'MUT_SHADOW_SPEED': { name: '影之疾行', icon: '👤', desc: '敏捷+25%', effect: 'passive_agility', value: 0.25 },
-    'MUT_THUNDER_STRIKE': { name: '雷霆一击', icon: '⚡', desc: '攻击附加30%雷电伤害', effect: 'bonus_damage', value: 0.3 },
-    'MUT_LIGHTNING_SPEED': { name: '闪电疾驰', icon: '⚡', desc: '敏捷+30%', effect: 'passive_agility', value: 0.3 },
-    'MUT_HOLY_HEAL': { name: '圣光治疗', icon: '✨', desc: '每回合恢复8%生命', effect: 'regen', value: 0.08 },
-    'MUT_HEAL_REDUCE': { name: '治疗削弱', icon: '✨', desc: '敌方治疗效果-50%', effect: 'heal_reduce', value: 0.5 },
-    'MUT_DAMAGE_AMP': { name: '伤害增幅', icon: '🔮', desc: '造成伤害+25%', effect: 'damage_amp', value: 0.25 },
-    'MUT_DEFENSE_AMP': { name: '防御增幅', icon: '🔮', desc: '受到伤害-20%', effect: 'damage_reduction', value: 0.2 },
-    'MUT_PERCENT_DAMAGE': { name: '百分比伤害', icon: '🌑', desc: '攻击造成敌方5%最大生命伤害', effect: 'percent_damage', value: 0.05 },
-    'MUT_LIFE_DRAIN': { name: '生命汲取', icon: '🌑', desc: '攻击回复50%伤害生命', effect: 'lifesteal', value: 0.5 },
-    'MUT_ANNIHILATE': { name: '湮灭打击', icon: '💀', desc: '攻击力+40%，无视30%防御', effect: 'armor_pierce', value: 0.3, attackBonus: 0.4 },
-    'MUT_VOID_PIERCE': { name: '虚空穿刺', icon: '💀', desc: '攻击附加20%真实伤害', effect: 'true_damage', value: 0.2 },
-    'MUT_VOID_STRIKE': { name: '虚空打击', icon: '🌀', desc: '攻击无视50%防御', effect: 'armor_pierce', value: 0.5 },
-    'MUT_TEAM_SHIELD': { name: '团队护盾', icon: '🌀', desc: '队伍全体防御+20%', effect: 'passive_defense', value: 0.2 },
-    'MUT_REBIRTH': { name: '轮回重生', icon: '♻️', desc: '濒死时恢复30%生命(一次)', effect: 'rebirth', value: 0.3 },
-    'MUT_PHOENIX_FLAME': { name: '凤凰之焰', icon: '♻️', desc: '攻击附加灼烧效果，持续3回合', effect: 'burn', value: 0.1, duration: 3 }
-};
 
 // 战斗系统类
 class BattleSystem {
@@ -837,7 +816,7 @@ class BattleSystem {
         }
         
         equippedSkills.forEach(skillKey => {
-            let skill = COMBAT_SKILLS[skillKey] || MUTATION_SKILLS[skillKey];
+            let skill = COMBAT_SKILLS[skillKey];
             
             // 如果不是预定义技能，从技能池中查找
             if (!skill && skillKey) {
@@ -2490,7 +2469,7 @@ class BattleSystem {
         
         // 查找具有该效果的技能
         equippedSkills.forEach((skillKey, index) => {
-            let skill = COMBAT_SKILLS[skillKey] || MUTATION_SKILLS[skillKey];
+            let skill = COMBAT_SKILLS[skillKey];
             
             // 如果不是预定义技能，从技能池中查找
             if (!skill && skillKey) {

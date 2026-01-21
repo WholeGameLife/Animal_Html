@@ -671,8 +671,8 @@ function inheritSkillsFromParents(parent1, parent2, count, excludeKeys) {
         const fullSkill = skillLibrary.find(s => s.key === skillKey);
         
         if (!fullSkill) {
-            // 如果不在技能库中，尝试从预定义技能查找
-            const predefinedSkill = COMBAT_SKILLS[skillKey] || MUTATION_SKILLS[skillKey];
+            // 如果不在技能库中，尝试从战斗技能查找
+            const predefinedSkill = COMBAT_SKILLS[skillKey];
             if (predefinedSkill) {
                 console.log(`[技能遗传] 遗传预定义技能: ${predefinedSkill.name}`);
                 inheritedSkills.push({

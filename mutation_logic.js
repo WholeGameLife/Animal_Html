@@ -92,10 +92,8 @@ function performTier1Mutation(animal, currentMutation, currentRarity) {
     // 从技能池中获取对应变异类型的技能
     let mutationSkills = getSkillsFromPool(mutationName);
     
-    // 如果技能池为空，使用预定义技能
-    if (mutationSkills.length === 0) {
-        mutationSkills = config.skills || [];
-    }
+    // 如果技能池为空，不添加任何技能
+    // 技能必须通过技能设计器配置
     
     // 计算应获得的技能数量（考虑跨级奖励）
     let skillCount = mutationSkills.length;
@@ -116,19 +114,15 @@ function performTier1Mutation(animal, currentMutation, currentRarity) {
     // 记录当前变异带来的技能，供下次变异时移除
     animal.mutations.currentSkills = [...selectedSkills];
 
-    // 添加新技能到拥有的技能列表
-    // 确保即使 selectedSkills 为空，也从 config.skills 添加
-    const skillsToAdd = selectedSkills.length > 0 ? selectedSkills : (config.skills || []);
-    
-    // 读取技能池以便解锁到图鉴
+    // 添加新技能到拥有的技能列表（只使用技能池中的技能）
     const skillPool = JSON.parse(localStorage.getItem('SKILL_POOL') || '[]');
 
-    skillsToAdd.forEach(skillKey => {
+    selectedSkills.forEach(skillKey => {
         if (!animal.mutations.skills.includes(skillKey)) {
             animal.mutations.skills.push(skillKey);
             
             // 解锁技能到图鉴
-            const skill = MUTATION_SKILLS[skillKey] || skillPool.find(s => s.key === skillKey);
+            const skill = skillPool.find(s => s.key === skillKey);
             if (skill && typeof unlockSkillInEncyclopedia === 'function') {
                 unlockSkillInEncyclopedia(skillKey, skill);
             }
@@ -151,9 +145,10 @@ function performTier1Mutation(animal, currentMutation, currentRarity) {
         log += `🎉 稀有度提升！旧变异已保留到历史记录\n`;
     }
     
-    // 获取技能名称（从技能池或预定义）
-    const skillNames = getSkillNames(mutationSkills.length > 0 ? mutationSkills : config.skills);
-    log += `获得技能: ${skillNames.join(', ')}`;
+    // 获取技能名称（只从技能池）
+    const skillNames = getSkillNames(mutationSkills);
+    const skillInfo = mutationSkills.length > 0 ? `获得技能: ${skillNames.join(', ')}` : '本次变异未获得技能（需要在技能设计器中为此变异类型配置技能）';
+    log += skillInfo;
     
     const changeDesc = `
         <div class="space-y-2">
@@ -171,12 +166,19 @@ function performTier1Mutation(animal, currentMutation, currentRarity) {
                 <div class="text-xs text-gray-400">旧变异"${oldMutation}"已保留到历史</div>
             </div>
             ` : ''}
+            ${mutationSkills.length > 0 ? `
             <div class="bg-gray-700 p-2 rounded">
                 <div class="text-gray-400 mb-2 text-sm">获得技能:</div>
                 <div class="flex flex-wrap gap-1.5">
-                    ${getSkillDisplayHtml(mutationSkills.length > 0 ? mutationSkills : config.skills, targetRarity)}
+                    ${getSkillDisplayHtml(mutationSkills, targetRarity)}
                 </div>
             </div>
+            ` : `
+            <div class="bg-yellow-900/20 border border-yellow-500/40 p-2 rounded">
+                <div class="text-yellow-400 text-sm">⚠️ 本次变异未获得技能</div>
+                <div class="text-xs text-gray-400">请在技能设计器中为"${mutationName}"配置技能</div>
+            </div>
+            `}
         </div>
     `;
     
@@ -479,13 +481,10 @@ function getMutationConfig(mutationName) {
     return null;
 }
 
-// 获取技能名称列表
+// 获取技能名称列表（只从技能池）
 function getSkillNames(skillKeys) {
     const skillPool = JSON.parse(localStorage.getItem('SKILL_POOL') || '[]');
     return skillKeys.map(skillKey => {
-        const skill = MUTATION_SKILLS[skillKey];
-        if (skill) return skill.name;
-        
         const customSkill = skillPool.find(s => s.key === skillKey);
         return customSkill ? customSkill.name : '未知技能';
     });
@@ -520,11 +519,10 @@ function getSkillDisplayHtml(skillKeys, mutationRarity) {
     const style = rarityStyles[mutationRarity] || rarityStyles['basic'];
     
     const skillCards = skillKeys.map(skillKey => {
-        const skill = MUTATION_SKILLS[skillKey];
         const customSkill = skillPool.find(s => s.key === skillKey);
         
-        const skillName = skill ? skill.name : (customSkill ? customSkill.name : '未知技能');
-        const skillIcon = skill ? skill.icon : (customSkill ? customSkill.icon : '❓');
+        const skillName = customSkill ? customSkill.name : '未知技能';
+        const skillIcon = customSkill ? customSkill.icon : '❓';
         
         return `
             <div class="${style.bg} hover:brightness-110 rounded p-2 text-center border ${style.border} transition-all flex flex-col items-center justify-center">
