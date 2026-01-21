@@ -91,108 +91,40 @@ const ANIMAL_NAMES = [
     'Gui', 'Hao', 'Jing', 'Kai', 'Ling'
 ];
 
+// 战斗技能配置（空对象，所有技能从 SKILL_POOL 获取）
+const COMBAT_SKILLS = {};
+
+// 变异技能配置（空对象，所有技能从 SKILL_POOL 获取）
+const MUTATION_SKILLS = {};
+
 // 道具配置
 const ITEMS = {
-    'exp_potion_s': { 
-        name: '小经验药水', 
-        icon: '🧪', 
-        type: 'exp', 
-        value: 50, 
-        desc: '增加50点经验' 
+    'exp_potion_s': {
+        name: '小经验药水',
+        icon: '🧪',
+        type: 'exp',
+        value: 50,
+        desc: '增加50点经验'
     },
-    'exp_potion_l': { 
-        name: '大经验药水', 
-        icon: '⚗️', 
-        type: 'exp', 
-        value: 200, 
-        desc: '增加200点经验' 
+    'exp_potion_l': {
+        name: '大经验药水',
+        icon: '⚗️',
+        type: 'exp',
+        value: 200,
+        desc: '增加200点经验'
     },
-    'stamina_potion': { 
-        name: '体力药剂', 
-        icon: '⚡', 
-        type: 'stamina', 
-        value: 50, 
-        desc: '恢复50点体力' 
+    'stamina_potion': {
+        name: '体力药剂',
+        icon: '⚡',
+        type: 'stamina',
+        value: 50,
+        desc: '恢复50点体力'
     },
-    'mutation_serum': { 
-        name: '变异血清', 
-        icon: '💉', 
-        type: 'material', 
-        desc: '诱发动物基因突变的关键道具' 
-    }
-};
-
-// 战斗技能配置
-const COMBAT_SKILLS = {
-    'POWER_STRIKE': { 
-        name: '力量打击', 
-        icon: '💥', 
-        type: 'attack', 
-        desc: '造成150%攻击力的伤害', 
-        cooldown: 3 
-    },
-    'SHIELD_BASH': { 
-        name: '盾击', 
-        icon: '🛡️', 
-        type: 'defense', 
-        desc: '提升50%防御并反击', 
-        cooldown: 4 
-    },
-    'QUICK_SLASH': { 
-        name: '疾风斩', 
-        icon: '⚡', 
-        type: 'agility', 
-        desc: '连续攻击2次，每次70%伤害', 
-        cooldown: 2 
-    },
-    'BERSERKER': { 
-        name: '狂暴', 
-        icon: '😡', 
-        type: 'buff', 
-        desc: '攻击力提升30%，持续3回合', 
-        cooldown: 5 
-    },
-    'IRON_WALL': { 
-        name: '铁壁', 
-        icon: '🏰', 
-        type: 'defense', 
-        desc: '防御力提升50%，持续2回合', 
-        cooldown: 4 
-    },
-    'DODGE': { 
-        name: '闪避', 
-        icon: '💨', 
-        type: 'agility', 
-        desc: '下次攻击必定闪避', 
-        cooldown: 3 
-    },
-    'CRITICAL_HIT': { 
-        name: '致命一击', 
-        icon: '🎯', 
-        type: 'attack', 
-        desc: '造成200%暴击伤害', 
-        cooldown: 5 
-    },
-    'LIFE_STEAL': { 
-        name: '生命汲取', 
-        icon: '🩸', 
-        type: 'attack', 
-        desc: '攻击回复50%伤害的生命', 
-        cooldown: 4 
-    },
-    'COUNTER': { 
-        name: '反击', 
-        icon: '↩️', 
-        type: 'defense', 
-        desc: '受到攻击时反击100%伤害', 
-        cooldown: 3 
-    },
-    'SPEED_BOOST': { 
-        name: '加速', 
-        icon: '🚀', 
-        type: 'agility', 
-        desc: '敏捷提升40%，持续2回合', 
-        cooldown: 3 
+    'mutation_serum': {
+        name: '变异血清',
+        icon: '💉',
+        type: 'material',
+        desc: '诱发动物基因突变的关键道具'
     }
 };
 
@@ -338,10 +270,6 @@ const AFFINITY_CHAINS = {
     }
 };
 
-// 变异技能配置（已移除 - 完全由技能设计器管理）
-// 所有变异技能通过技能设计器的 SKILL_POOL 来管理
-// 该对象仅作为运行时容器，在游戏中动态填充
-const MUTATION_SKILLS = {};
 
 // 稀有度配置
 const RARITY_CONFIG = {
@@ -830,6 +758,7 @@ if (typeof module !== 'undefined' && module.exports) {
         ANIMAL_NAMES,
         ITEMS,
         COMBAT_SKILLS,
+        MUTATION_SKILLS,
         MUTATION_CONFIG,
         AFFINITY_CHAINS,
         MUTATION_SKILLS,

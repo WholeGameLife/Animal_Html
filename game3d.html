@@ -883,15 +883,9 @@
             'mutation_serum': { name: '变异血清', icon: '💉', type: 'material', desc: '诱发动物基因突变的关键道具' }
         };
 
-        // 战斗技能配置
-        const COMBAT_SKILLS = {
-            'strike': { name: '猛击', desc: '造成120%攻击力的伤害', type: 'attack', power: 1.2, icon: '👊' },
-            'heal': { name: '治疗', desc: '恢复20%最大生命值', type: 'heal', power: 0.2, icon: '💚' },
-            'fireball': { name: '火球术', desc: '造成150%攻击力的火属性伤害', type: 'attack', power: 1.5, icon: '🔥' },
-            'shield': { name: '护盾', desc: '增加50%防御力，持续3回合', type: 'buff', power: 1.5, icon: '🛡️' },
-            'speed_up': { name: '疾风', desc: '提升30%敏捷', type: 'buff', power: 1.3, icon: '💨' },
-            'thunder': { name: '落雷', desc: '造成180%雷属性伤害', type: 'attack', power: 1.8, icon: '⚡' }
-        };
+
+        // 战斗技能配置（空对象，所有技能从 SKILL_POOL 获取）
+        const COMBAT_SKILLS = {};
 
         // 建筑配置
         const BUILDINGS = {
@@ -2809,16 +2803,20 @@
             // 渲染战斗技能槽位
             ui.standaloneCombatSkills.innerHTML = '';
             const skills = animal.combatSkills || [null, null, null, null];
+            const skillPool = JSON.parse(localStorage.getItem('SKILL_POOL') || '[]');
+            
             skills.forEach(skillId => {
                 const slot = document.createElement('div');
                 slot.className = 'h-12 w-12 bg-gray-800 border border-gray-600 rounded flex flex-col items-center justify-center text-xs cursor-pointer hover:bg-gray-700 transition-colors relative group';
-                if (skillId && COMBAT_SKILLS[skillId]) {
-                    const skill = COMBAT_SKILLS[skillId];
+                
+                const skill = skillId ? skillPool.find(s => s.key === skillId) : null;
+                
+                if (skill) {
                     slot.innerHTML = `
                         <div class="text-lg">${skill.icon}</div>
                         <div class="absolute bottom-full mb-2 hidden group-hover:block w-32 bg-black text-white text-xs rounded p-2 z-10 text-center shadow-lg">
                             <div class="font-bold">${skill.name}</div>
-                            <div class="text-gray-300 mt-1">${skill.desc}</div>
+                            <div class="text-gray-300 mt-1">${skill.description || skill.desc || ''}</div>
                         </div>
                     `;
                 } else {

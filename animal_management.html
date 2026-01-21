@@ -653,6 +653,32 @@
     <script src="skill_acquisition.js"></script>
     
     <script>
+        // ========== 技能查找辅助函数 ==========
+        // 统一从技能池查找技能，避免直接引用COMBAT_SKILLS和MUTATION_SKILLS
+        
+        // 缓存技能池数据，避免重复读取
+        let cachedSkillPool = null;
+        let lastSkillPoolUpdate = 0;
+        
+        function getSkillPool() {
+            const now = Date.now();
+            // 5秒内使用缓存
+            if (cachedSkillPool && (now - lastSkillPoolUpdate < 5000)) {
+                return cachedSkillPool;
+            }
+            cachedSkillPool = JSON.parse(localStorage.getItem('SKILL_POOL') || '[]');
+            lastSkillPoolUpdate = now;
+            return cachedSkillPool;
+        }
+        
+        function findSkill(skillKey) {
+            if (!skillKey) return null;
+            const skillPool = getSkillPool();
+            return skillPool.find(s => s.key === skillKey);
+        }
+        
+        // 注意：COMBAT_SKILLS 和 MUTATION_SKILLS 已在 animal_config.js 中定义为空对象
+        
         // 调试对象将由 debug.js 提供
 
         // --- 全局变量 ---

@@ -517,20 +517,13 @@ const EFFECT_PARAMS_CONFIG = {
     'heal_lifesteal': { name: '生命汲取', params: ['effect-source', 'bonus'] }
 };
 
-// 战斗技能配置
-const COMBAT_SKILLS = {
-    'POWER_STRIKE': { name: '力量打击', icon: '💥', type: 'attack', desc: '造成150%攻击力的伤害', effect: 'damage', value: 1.5, cooldown: 3 },
-    'SHIELD_BASH': { name: '盾击', icon: '🛡️', type: 'defense', desc: '提升50%防御并反击', effect: 'defense_counter', value: 0.5, cooldown: 4 },
-    'QUICK_SLASH': { name: '疾风斩', icon: '⚡', type: 'agility', desc: '连续攻击2次，每次70%伤害', effect: 'multi_attack', value: 0.7, count: 2, cooldown: 2 },
-    'BERSERKER': { name: '狂暴', icon: '😡', type: 'buff', desc: '攻击力提升30%，持续3回合', effect: 'buff_attack', value: 0.3, duration: 3, cooldown: 5 },
-    'IRON_WALL': { name: '铁壁', icon: '🏰', type: 'defense', desc: '防御力提升50%，持续2回合', effect: 'buff_defense', value: 0.5, duration: 2, cooldown: 4 },
-    'DODGE': { name: '闪避', icon: '💨', type: 'agility', desc: '下次攻击必定闪避', effect: 'guaranteed_dodge', value: 1, cooldown: 3 },
-    'CRITICAL_HIT': { name: '致命一击', icon: '🎯', type: 'attack', desc: '造成200%暴击伤害', effect: 'critical', value: 2.0, cooldown: 5 },
-    'LIFE_STEAL': { name: '生命汲取', icon: '🩸', type: 'attack', desc: '攻击回复50%伤害的生命', effect: 'lifesteal', value: 0.5, cooldown: 4 },
-    'COUNTER': { name: '反击', icon: '↩️', type: 'defense', desc: '受到攻击时反击100%伤害', effect: 'counter', value: 1.0, cooldown: 3 },
-    'SPEED_BOOST': { name: '加速', icon: '🚀', type: 'agility', desc: '敏捷提升40%，持续2回合', effect: 'buff_agility', value: 0.4, duration: 2, cooldown: 3 }
-};
 
+
+// 战斗技能配置（空对象，所有技能从 SKILL_POOL 获取）
+const COMBAT_SKILLS = {};
+
+// 变异技能配置（空对象，所有技能从 SKILL_POOL 获取）
+const MUTATION_SKILLS = {};
 
 // 战斗系统类
 class BattleSystem {
@@ -764,7 +757,7 @@ class BattleSystem {
             const slotDiv = document.createElement('div');
             
             if (skill) {
-                const isMutationSkill = !!MUTATION_SKILLS[skillKey];
+                const isMutationSkill = skill.category && skill.category.startsWith('mutation-');
                 const cooldownRemaining = stats.skillCooldowns[skillKey] || 0;
                 const isOnCooldown = cooldownRemaining > 0;
                 
@@ -816,10 +809,9 @@ class BattleSystem {
         }
         
         equippedSkills.forEach(skillKey => {
-            let skill = COMBAT_SKILLS[skillKey];
-            
-            // 如果不是预定义技能，从技能池中查找
-            if (!skill && skillKey) {
+            // 从技能池中查找技能
+            let skill = null;
+            if (skillKey) {
                 const customSkill = skillPool.find(s => s.key === skillKey);
                 if (customSkill) {
                     // 兼容旧格式（单个type/effect）和新格式（types/effects数组）
@@ -2469,10 +2461,9 @@ class BattleSystem {
         
         // 查找具有该效果的技能
         equippedSkills.forEach((skillKey, index) => {
-            let skill = COMBAT_SKILLS[skillKey];
-            
-            // 如果不是预定义技能，从技能池中查找
-            if (!skill && skillKey) {
+            // 从技能池中查找技能
+            let skill = null;
+            if (skillKey) {
                 const customSkill = skillPool.find(s => s.key === skillKey);
                 if (customSkill) {
                     // 兼容新旧格式

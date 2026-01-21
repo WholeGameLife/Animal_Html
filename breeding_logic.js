@@ -671,20 +671,8 @@ function inheritSkillsFromParents(parent1, parent2, count, excludeKeys) {
         const fullSkill = skillLibrary.find(s => s.key === skillKey);
         
         if (!fullSkill) {
-            // 如果不在技能库中，尝试从战斗技能查找
-            const predefinedSkill = COMBAT_SKILLS[skillKey];
-            if (predefinedSkill) {
-                console.log(`[技能遗传] 遗传预定义技能: ${predefinedSkill.name}`);
-                inheritedSkills.push({
-                    skillKey: skillKey,
-                    skillName: predefinedSkill.name,
-                    skillIcon: predefinedSkill.icon,
-                    rarity: 'common',
-                    unlockLevel: 1,
-                    skillData: predefinedSkill,
-                    source: source
-                });
-            }
+            // 技能不在技能库中，跳过
+            console.warn(`[技能遗传] 技能 ${skillKey} 不在技能池中，跳过`);
             continue;
         }
         
@@ -997,15 +985,6 @@ function createTwoOffspringOptions(parent1, parent2, color) {
             if ((s.unlockLevel || 1) <= 1 && !option1.combatSkills.available.includes(s.skillKey)) {
                 option1.combatSkills.available.push(s.skillKey);
             }
-            if (!COMBAT_SKILLS[s.skillKey]) {
-                COMBAT_SKILLS[s.skillKey] = {
-                    name: s.skillData.name,
-                    icon: s.skillData.icon,
-                    desc: s.skillData.description || s.skillData.desc || '无描述',
-                    type: s.skillData.type,
-                    cooldown: s.skillData.params?.cooldown || 0
-                };
-            }
         });
     }
     
@@ -1025,15 +1004,6 @@ function createTwoOffspringOptions(parent1, parent2, color) {
             if ((s.unlockLevel || 1) <= 1 && !option2.combatSkills.available.includes(s.skillKey)) {
                 option2.combatSkills.available.push(s.skillKey);
             }
-            if (!COMBAT_SKILLS[s.skillKey]) {
-                COMBAT_SKILLS[s.skillKey] = {
-                    name: s.skillData.name,
-                    icon: s.skillData.icon,
-                    desc: s.skillData.description || s.skillData.desc || '无描述',
-                    type: s.skillData.type,
-                    cooldown: s.skillData.params?.cooldown || 0
-                };
-            }
         });
     }
     
@@ -1042,9 +1012,7 @@ function createTwoOffspringOptions(parent1, parent2, color) {
         const mutationConfig = getMutationConfig(offspringMutation);
         if (mutationConfig) {
             let mutationSkills = getSkillsFromPool(offspringMutation);
-            if (mutationSkills.length === 0 && mutationConfig.skills) {
-                mutationSkills = mutationConfig.skills;
-            }
+            // 只使用技能池中的技能，不再回退到config.skills
             option1.mutations.skills = [...mutationSkills];
             option1.mutations.currentSkills = [...mutationSkills];
             option2.mutations.skills = [...mutationSkills];

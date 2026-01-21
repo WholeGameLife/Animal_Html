@@ -6,7 +6,7 @@ let currentViewingTeamAnimal = null;
 let currentEditingSkillSlot = null;
 let currentEditingSkillAnimal = null;
 
-// 全局函数：获取完整的战斗技能库
+// 全局函数：获取完整的战斗技能库（只从SKILL_POOL）
 function getBattleSkills() {
     // 从localStorage加载技能池（SKILL_POOL）
     const skillPoolJSON = localStorage.getItem('SKILL_POOL');
@@ -18,7 +18,7 @@ function getBattleSkills() {
         customSkills[skill.key] = {
             name: skill.name,
             icon: skill.icon,
-            desc: skill.description || '自定义技能',
+            desc: skill.description || skill.desc || '自定义技能',
             type: skill.type,
             category: skill.category,
             effects: skill.effects,
@@ -26,20 +26,8 @@ function getBattleSkills() {
         };
     });
     
-    // 返回合并后的技能库
-    return {
-        'POWER_STRIKE': { name: '力量打击', icon: '💥', desc: '造成150%伤害', type: 'attack' },
-        'SHIELD_BASH': { name: '盾击', icon: '🛡️', desc: '造成伤害并降低敌人防御', type: 'attack' },
-        'QUICK_SLASH': { name: '快速斩击', icon: '⚡', desc: '快速攻击2次', type: 'attack' },
-        'BERSERKER': { name: '狂战士', icon: '😡', desc: '提升攻击力25%，持续3回合', type: 'buff' },
-        'IRON_WALL': { name: '铁壁', icon: '🏰', desc: '提升防御力50%，持续2回合', type: 'buff' },
-        'DODGE': { name: '闪避', icon: '💨', desc: '本回合闪避攻击', type: 'buff' },
-        'CRITICAL_HIT': { name: '致命一击', icon: '💢', desc: '有30%几率造成200%伤害', type: 'passive' },
-        'LIFE_STEAL': { name: '生命汲取', icon: '🩸', desc: '攻击时恢复造成伤害的30%', type: 'passive' },
-        'COUNTER': { name: '反击', icon: '↩️', desc: '受到攻击时反弹30%伤害', type: 'passive' },
-        'SPEED_BOOST': { name: '速度提升', icon: '🏃', desc: '永久提升10%敏捷', type: 'passive' },
-        ...customSkills
-    };
+    // 只返回技能池中的技能
+    return customSkills;
 }
 
 // 打开背包面板
