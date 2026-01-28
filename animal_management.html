@@ -1441,12 +1441,23 @@
             }
         }
 
-        // 新增：渲染稀有度信息
+        // 新增:渲染稀有度信息
         function renderRarityInfo(animal) {
             const rarityText = document.getElementById('rarity-text');
             if (!rarityText) return;
             
-            const rarity = animal.rarity || '普通';
+            // 稀有度映射表（支持英文键名和中文名称）
+            const rarityNameMap = {
+                'common': '普通',
+                'shiny': '闪光',
+                'prismatic': '幻彩',
+                'stellar': '星芒',
+                '普通': '普通',
+                '闪光': '闪光',
+                '幻彩': '幻彩',
+                '星芒': '星芒'
+            };
+            const rarity = rarityNameMap[animal.rarity] || animal.rarity || '普通';
             rarityText.textContent = `${RARITY_CONFIG.icons[rarity] || ''} ${rarity}`;
             rarityText.className = `text-sm font-bold ${RARITY_CONFIG.colors[rarity] || 'text-gray-400'}`;
         }

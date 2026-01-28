@@ -1255,7 +1255,18 @@
             
             // 填充属性面板
             const rarityElement = document.getElementById('detail-animal-rarity');
-            const rarityName = animal.rarity || '普通';
+            // 稀有度映射表（支持英文键名和中文名称）
+            const rarityNameMap = {
+                'common': '普通',
+                'shiny': '闪光',
+                'prismatic': '幻彩',
+                'stellar': '星芒',
+                '普通': '普通',
+                '闪光': '闪光',
+                '幻彩': '幻彩',
+                '星芒': '星芒'
+            };
+            const rarityName = rarityNameMap[animal.rarity] || animal.rarity || '普通';
             const rarityColors = {
                 '普通': 'text-gray-400',
                 '闪光': 'text-yellow-400',

@@ -631,6 +631,12 @@ class BattleSystem {
         this.renderPlayerSkillSlots();
         this.renderOpponentSkillSlots();
         this.setupEventListeners();
+        
+        // 检查是否是联赛战斗，初始化比分显示
+        const queueData = JSON.parse(localStorage.getItem('leagueBattleQueue') || 'null');
+        if (queueData) {
+            this.initLeagueScoreDisplay(queueData);
+        }
     }
 
     renderPlayerInfo() {
@@ -1814,6 +1820,13 @@ class BattleSystem {
     async handleVictory() {
         this.addLog(`\n🎉 胜利！你击败了 ${this.opponentData.name}！`, 'text-green-400 font-bold text-lg');
         
+        // 检查是否是联赛战斗
+        const queueData = JSON.parse(localStorage.getItem('leagueBattleQueue') || 'null');
+        if (queueData) {
+            await this.handleLeagueVictory(queueData);
+            return;
+        }
+        
         // 检查是否是通缉任务
         const activeBountyId = localStorage.getItem('activeBountyId');
         if (activeBountyId) {
@@ -1832,8 +1845,142 @@ class BattleSystem {
 
     async handleDefeat() {
         this.addLog(`\n💀 战败...你被 ${this.opponentData.name} 击败了...`, 'text-red-400 font-bold text-lg');
+        
+        // 检查是否是联赛战斗
+        const queueData = JSON.parse(localStorage.getItem('leagueBattleQueue') || 'null');
+        if (queueData) {
+            await this.handleLeagueDefeat(queueData);
+            return;
+        }
+        
         await this.sleep(2000);
         this.showReturnButton("战斗失败，返回主场景");
+    }
+    
+    async handleLeagueVictory(queueData) {
+        await this.sleep(1500);
+        
+        // 记录当前比赛的结果（使用当前的currentBattle作为索引）
+        if (!queueData.matchHistory) {
+            queueData.matchHistory = [];
+        }
+        queueData.matchHistory[queueData.currentBattle] = 'win';
+        
+        // 更新队列数据
+        queueData.playerWins++;
+        queueData.currentBattle++;
+        
+        // 更新显示
+        this.renderScoreCircles(queueData);
+        
+        // 保存到localStorage
+        localStorage.setItem('leagueBattleQueue', JSON.stringify(queueData));
+        
+        // 显示当前比分
+        this.addLog(`\n📊 当前比分: 我方 ${queueData.playerWins} : ${queueData.opponentWins} 对方`, 'text-yellow-300 font-bold');
+        await this.sleep(1500);
+        
+        // 检查是否提前结束（一方赢得3场）
+        if (queueData.playerWins >= 3) {
+            this.addLog(`\n🏆 恭喜！你以 ${queueData.playerWins}:${queueData.opponentWins} 赢得了这场比赛！`, 'text-green-400 font-bold text-lg');
+            await this.sleep(2000);
+            this.finishLeagueMatch(queueData);
+            return;
+        }
+        
+        // 检查是否完成所有5场
+        if (queueData.currentBattle >= 5) {
+            this.finishLeagueMatch(queueData);
+            return;
+        }
+        
+        // 自动继续下一场（不需要玩家点击）
+        this.addLog(`\n⏱️ 3秒后自动开始第${queueData.currentBattle + 1}场战斗...`, 'text-cyan-300');
+        await this.sleep(3000);
+        location.reload();
+    }
+    
+    async handleLeagueDefeat(queueData) {
+        await this.sleep(1500);
+        
+        // 记录当前比赛的结果（使用当前的currentBattle作为索引）
+        if (!queueData.matchHistory) {
+            queueData.matchHistory = [];
+        }
+        queueData.matchHistory[queueData.currentBattle] = 'loss';
+        
+        // 更新队列数据
+        queueData.opponentWins++;
+        queueData.currentBattle++;
+        
+        // 更新显示
+        this.renderScoreCircles(queueData);
+        
+        // 保存到localStorage
+        localStorage.setItem('leagueBattleQueue', JSON.stringify(queueData));
+        
+        // 显示当前比分
+        this.addLog(`\n📊 当前比分: 我方 ${queueData.playerWins} : ${queueData.opponentWins} 对方`, 'text-yellow-300 font-bold');
+        await this.sleep(1500);
+        
+        // 检查是否提前结束（对方赢得3场）
+        if (queueData.opponentWins >= 3) {
+            this.addLog(`\n💔 遗憾！你以 ${queueData.playerWins}:${queueData.opponentWins} 输掉了这场比赛...`, 'text-red-400 font-bold text-lg');
+            await this.sleep(2000);
+            this.finishLeagueMatch(queueData);
+            return;
+        }
+        
+        // 检查是否完成所有5场
+        if (queueData.currentBattle >= 5) {
+            this.finishLeagueMatch(queueData);
+            return;
+        }
+        
+        // 自动继续下一场（不需要玩家点击）
+        this.addLog(`\n⏱️ 3秒后自动开始第${queueData.currentBattle + 1}场战斗...`, 'text-cyan-300');
+        await this.sleep(3000);
+        location.reload();
+    }
+    
+    
+    finishLeagueMatch(queueData) {
+        const playerWins = queueData.playerWins;
+        const opponentWins = queueData.opponentWins;
+        const playerWon = playerWins > opponentWins;
+        
+        // 最后一次更新比分显示，确保所有圈都正确显示
+        this.renderScoreCircles(queueData);
+        
+        // 保存最终结果
+        localStorage.setItem('leagueMatchResult', JSON.stringify({
+            playerWins: playerWins,
+            opponentWins: opponentWins,
+            result: playerWon ? 'win' : 'loss'
+        }));
+        
+        // 清除队列
+        localStorage.removeItem('leagueBattleQueue');
+        
+        this.addLog(`\n━━━━━━━━━━━━━━━━━━━━━━`, 'text-gray-400');
+        this.addLog(`🏁 比赛结束！最终比分: ${playerWins} : ${opponentWins}`, 'text-yellow-400 font-bold text-lg');
+        this.addLog(`${playerWon ? '🎉 恭喜获胜！' : '💔 遗憾落败...'}`, playerWon ? 'text-green-400 font-bold' : 'text-red-400 font-bold');
+        this.addLog(`━━━━━━━━━━━━━━━━━━━━━━`, 'text-gray-400');
+        
+        const actionPanel = document.querySelector('.action-panel');
+        actionPanel.innerHTML = '';
+        
+        const returnButton = document.createElement('button');
+        returnButton.textContent = '返回联赛页面';
+        returnButton.className = 'return-button';
+        returnButton.onclick = () => {
+            const returnUrl = localStorage.getItem('battleReturnUrl') || 'league.html';
+            localStorage.removeItem('battleOpponent');
+            localStorage.removeItem('battlePlayerAnimal');
+            window.location.href = returnUrl;
+        };
+        
+        actionPanel.appendChild(returnButton);
     }
 
     showCaptureOptions() {
@@ -2617,4 +2764,94 @@ class BattleSystem {
     getStatusDisplay(statusKey) {
         return window.getStatusDisplay(statusKey);
     }
+    
+    // ========== 联赛比分显示系统 ==========
+    
+    // 初始化联赛比分显示
+    initLeagueScoreDisplay(queueData) {
+        const scoreDisplay = document.getElementById('league-score-display');
+        if (!scoreDisplay) return;
+        
+        scoreDisplay.style.display = 'block';
+        
+        // 生成5个比分圈
+        this.renderScoreCircles(queueData);
+    }
+    
+    // 渲染比分圈
+    renderScoreCircles(queueData) {
+        const playerCircles = document.getElementById('player-score-circles');
+        const opponentCircles = document.getElementById('opponent-score-circles');
+        
+        if (!playerCircles || !opponentCircles) return;
+        
+        playerCircles.innerHTML = '';
+        opponentCircles.innerHTML = '';
+        
+        // 判断比赛是否已经结束（提前结束或打满5场）
+        const isMatchFinished = queueData.playerWins >= 3 || queueData.opponentWins >= 3 || queueData.currentBattle >= 5;
+        
+        // 创建5个圈
+        for (let i = 0; i < 5; i++) {
+            // 我方圈
+            const playerCircle = document.createElement('div');
+            playerCircle.className = 'w-6 h-6 rounded-full border-2 flex items-center justify-center text-xs font-bold';
+            
+            if (i < queueData.currentBattle) {
+                // 已完成的比赛
+                const matchResult = this.getMatchResult(queueData, i);
+                if (matchResult === 'win') {
+                    playerCircle.className += ' bg-green-500 border-green-400 text-white';
+                    playerCircle.textContent = '✓';
+                } else {
+                    playerCircle.className += ' bg-red-500/30 border-red-500 text-red-300';
+                    playerCircle.textContent = '×';
+                }
+            } else if (i === queueData.currentBattle && !isMatchFinished) {
+                // 当前进行的比赛（仅在比赛未结束时显示脉动）
+                playerCircle.className += ' bg-blue-500/50 border-blue-400 animate-pulse';
+            } else {
+                // 未进行的比赛
+                playerCircle.className += ' bg-gray-700 border-gray-600';
+            }
+            
+            playerCircles.appendChild(playerCircle);
+            
+            // 对方圈
+            const opponentCircle = document.createElement('div');
+            opponentCircle.className = 'w-6 h-6 rounded-full border-2 flex items-center justify-center text-xs font-bold';
+            
+            if (i < queueData.currentBattle) {
+                // 已完成的比赛
+                const matchResult = this.getMatchResult(queueData, i);
+                if (matchResult === 'loss') {
+                    opponentCircle.className += ' bg-green-500 border-green-400 text-white';
+                    opponentCircle.textContent = '✓';
+                } else {
+                    opponentCircle.className += ' bg-red-500/30 border-red-500 text-red-300';
+                    opponentCircle.textContent = '×';
+                }
+            } else if (i === queueData.currentBattle && !isMatchFinished) {
+                // 当前进行的比赛（仅在比赛未结束时显示脉动）
+                opponentCircle.className += ' bg-red-500/50 border-red-400 animate-pulse';
+            } else {
+                // 未进行的比赛
+                opponentCircle.className += ' bg-gray-700 border-gray-600';
+            }
+            
+            opponentCircles.appendChild(opponentCircle);
+        }
+    }
+    
+    // 获取某场比赛的结果
+    getMatchResult(queueData, matchIndex) {
+        // 根据当前战斗索引和胜负次数推断每场比赛的结果
+        // 这里需要从queueData中重建比赛历史
+        if (!queueData.matchHistory) {
+            queueData.matchHistory = [];
+        }
+        
+        return queueData.matchHistory[matchIndex] || null;
+    }
+    
 }

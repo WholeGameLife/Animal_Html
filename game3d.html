@@ -928,7 +928,12 @@
                     🌍 世界地图<br><span class="text-xs"> (区域探索)</span>
                 </button>
                 
-                <!-- 2.7 道具商店 -->
+                <!-- 2.71 联赛系统 -->
+                <button id="btn-open-league" class="action-button bg-amber-600 hover:bg-amber-700 text-white font-bold py-3 px-4 rounded-lg text-center">
+                    🏆 联赛系统<br><span class="text-xs"> (竞技征程)</span>
+                </button>
+                
+                <!-- 2.8 道具商店 -->
                 <button id="btn-open-shop" class="action-button bg-pink-600 hover:bg-pink-700 text-white font-bold py-3 px-4 rounded-lg text-center">
                     🛒 道具商店<br><span class="text-xs"> (购买补给)</span>
                 </button>
@@ -1337,6 +1342,7 @@
             btnOpenExploration: document.getElementById('btn-open-exploration'),
             btnOpenMining: document.getElementById('btn-open-mining'),
             btnOpenWorldMap: document.getElementById('btn-open-world-map'),
+            btnOpenLeague: document.getElementById('btn-open-league'), // 新增
             btnOpenShop: document.getElementById('btn-open-shop'),
             btnOpenInventory: document.getElementById('btn-open-inventory'), // 新增
             btnPlaceAnimal: document.getElementById('btn-place-animal'),
@@ -1547,6 +1553,7 @@
             ui.btnOpenExploration.addEventListener('click', openExplorationPage, false);
             ui.btnOpenMining.addEventListener('click', openMiningPage, false);
             ui.btnOpenWorldMap.addEventListener('click', openWorldMapPage, false);
+            ui.btnOpenLeague.addEventListener('click', openLeaguePage, false); // 新增
             ui.btnOpenShop.addEventListener('click', openShopPanel, false);
             ui.btnOpenInventory.addEventListener('click', openInventoryPanel, false); // 新增
 
@@ -1618,6 +1625,7 @@
             ui.btnOpenExploration.addEventListener('click', openExplorationPage);
             ui.btnOpenMining.addEventListener('click', openMiningPage);
             ui.btnOpenWorldMap.addEventListener('click', openWorldMapPage);
+            ui.btnOpenLeague.addEventListener('click', openLeaguePage);
             ui.btnOpenShop.addEventListener('click', openShopPanel);
             ui.btnOpenInventory.addEventListener('click', openInventoryPanel);
             ui.btnCloseStandaloneDetails.addEventListener('click', closeStandaloneAnimalDetails);
@@ -4386,6 +4394,16 @@
             }));
             localStorage.setItem('gameState', JSON.stringify(serializableGameState));
             window.location.href = 'world_map.html';
+        }
+
+        function openLeaguePage() {
+            // 保存游戏状态并跳转到联赛系统
+            const serializableGameState = JSON.parse(JSON.stringify(gameState, (key, value) => {
+                if (key === 'mesh' || key === 'avatarData') return undefined;
+                return value;
+            }));
+            localStorage.setItem('gameState', JSON.stringify(serializableGameState));
+            window.location.href = 'league.html';
         }
 
         function loadGameStateFromStorage() {

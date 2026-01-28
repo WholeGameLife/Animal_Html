@@ -258,7 +258,30 @@
             </div>
 
             <!-- VS 和克制关系显示 -->
-            <div class="flex flex-col items-center gap-2">
+            <div class="flex flex-col items-center gap-3">
+                <!-- 联赛比分显示（仅联赛战斗时显示） -->
+                <div id="league-score-display" style="display: none;">
+                    <div class="text-xs text-gray-400 text-center mb-2">比分详情</div>
+                    <div class="flex gap-6 items-center justify-center">
+                        <!-- 我方比分圈 -->
+                        <div class="flex flex-col items-center gap-1">
+                            <div class="text-xs text-blue-400 font-bold mb-1">我方</div>
+                            <div id="player-score-circles" class="flex gap-1">
+                                <!-- 动态生成5个圈 -->
+                            </div>
+                        </div>
+                        <!-- VS -->
+                        <div class="text-2xl font-bold text-gray-400">VS</div>
+                        <!-- 对方比分圈 -->
+                        <div class="flex flex-col items-center gap-1">
+                            <div class="text-xs text-red-400 font-bold mb-1">对方</div>
+                            <div id="opponent-score-circles" class="flex gap-1">
+                                <!-- 动态生成5个圈 -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
                 <div class="vs-text">VS</div>
                 <div id="advantage-indicator" class="text-sm font-bold px-4 py-2 rounded-lg bg-gray-800 border border-gray-600 text-gray-400">
                     无克制
@@ -327,6 +350,15 @@
             // 初始化战斗系统
             const battleSystem = new BattleSystem(playerData, opponentData);
             battleSystem.init();
+            
+            // 检查是否是联赛战斗，如果是则自动开始
+            const leagueBattleQueue = localStorage.getItem('leagueBattleQueue');
+            if (leagueBattleQueue) {
+                // 联赛战斗自动开始（延迟1秒让玩家看到界面）
+                setTimeout(() => {
+                    battleSystem.startBattle();
+                }, 1000);
+            }
         };
     </script>
 

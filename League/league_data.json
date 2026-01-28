@@ -1,0 +1,23 @@
+{
+  "version": "1.0",
+  "currentSeason": 1,
+  "playerTeam": {
+    "region": null,
+    "league": null,
+    "teamName": null,
+    "registeredAnimals": [],
+    "availableSwaps": 0,
+    "lastSwapRound": 0,
+    "isPlayer": false,
+    "careerHistory": [],
+    "nextLeague": null,
+    "battleStats": {
+      "totalMatches": 0,
+      "wins": 0,
+      "losses": 0,
+      "opponentsDefeated": 0,
+      "timesDefeated": 0
+    }
+  },
+  "leagues": {}
+}
