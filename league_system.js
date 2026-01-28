@@ -743,55 +743,69 @@ class LeagueSystem {
     }
     
     /**
-     * 生成淘汰赛阶段（16队开始）
+     * 生成淘汰赛阶段（生成完整树状框架，只有第一轮填入队伍）
      */
     generateKnockoutStage(league, qualifiedTeams) {
         const knockoutFixtures = [];
-        let currentTeams = [...qualifiedTeams];
         let round = league.currentRound + 1;
+        let teamCount = qualifiedTeams.length;
+        let isFirstRound = true;
         
         // 根据队伍数量确定初始阶段
         let stage;
-        if (currentTeams.length === 16) {
+        if (teamCount === 16) {
             stage = '16进8';
-        } else if (currentTeams.length === 32) {
+        } else if (teamCount === 32) {
             stage = '32进16';
-        } else if (currentTeams.length === 64) {
+        } else if (teamCount === 64) {
             stage = '64进32';
         } else {
-            stage = `${currentTeams.length}强`;
+            stage = `${teamCount}强`;
         }
         
-        console.log(`生成淘汰赛：起始队伍数 = ${currentTeams.length}，初始阶段 = ${stage}`);
+        console.log(`生成淘汰赛框架：起始队伍数 = ${teamCount}，初始阶段 = ${stage}`);
         
-        while (currentTeams.length > 1) {
-            const roundFixtures = [];
+        // 生成完整的树状结构
+        while (teamCount > 1) {
+            const matchCount = teamCount / 2;
             
-            for (let i = 0; i < currentTeams.length; i += 2) {
-                roundFixtures.push({
-                    round: round,
-                    stage: stage,
-                    team1: currentTeams[i],
-                    team2: currentTeams[i + 1],
-                    matches: [],
-                    winner: null
-                });
+            for (let i = 0; i < matchCount; i++) {
+                if (isFirstRound) {
+                    // 第一轮：填入真实队伍
+                    knockoutFixtures.push({
+                        round: round,
+                        stage: stage,
+                        team1: qualifiedTeams[i * 2],
+                        team2: qualifiedTeams[i * 2 + 1],
+                        matches: [],
+                        winner: null
+                    });
+                } else {
+                    // 后续轮次：待定（TBD）
+                    knockoutFixtures.push({
+                        round: round,
+                        stage: stage,
+                        team1: null,  // 待定
+                        team2: null,  // 待定
+                        matches: [],
+                        winner: null
+                    });
+                }
             }
             
-            knockoutFixtures.push(...roundFixtures);
-            console.log(`  ${stage}: 生成${roundFixtures.length}场比赛`);
+            console.log(`  ${stage}: 生成${matchCount}场比赛${isFirstRound ? '' : '（待定）'}`);
+            
+            isFirstRound = false;
             round++;
+            teamCount = matchCount;
             
             // 更新下一阶段
-            const remaining = currentTeams.length / 2;
-            if (remaining === 32) stage = '32进16';
-            else if (remaining === 16) stage = '16进8';
-            else if (remaining === 8) stage = '8进4';
-            else if (remaining === 4) stage = '半决赛';
-            else if (remaining === 2) stage = '决赛';
-            else stage = `${remaining}强`;
-            
-            currentTeams = currentTeams.slice(0, remaining);
+            if (teamCount === 32) stage = '32进16';
+            else if (teamCount === 16) stage = '16进8';
+            else if (teamCount === 8) stage = '8进4';
+            else if (teamCount === 4) stage = '半决赛';
+            else if (teamCount === 2) stage = '决赛';
+            else stage = `${teamCount}强`;
         }
         
         league.knockoutFixtures = knockoutFixtures;
@@ -800,62 +814,142 @@ class LeagueSystem {
             completed: false
         };
         
-        console.log(`淘汰赛生成完成：共${knockoutFixtures.length}场比赛`);
+        console.log(`淘汰赛框架生成完成：共${knockoutFixtures.length}场比赛（包括待定）`);
+    }
+    
+    /**
+     * 更新下一轮淘汰赛对阵（将本轮胜者填入下一轮）
+     */
+    updateNextKnockoutRound(league, completedRound) {
+        // 获取本轮的所有比赛
+        const completedMatches = league.knockoutFixtures.filter(f => f.round === completedRound && f.winner);
+        
+        if (completedMatches.length === 0) {
+            return;
+        }
+        
+        // 收集胜者
+        const winners = completedMatches.map(f => f.winner);
+        
+        console.log(`更新下一轮对阵：${winners.length}位胜者`);
+        
+        // 找到下一轮的比赛（team1和team2都是null的）
+        const nextRound = completedRound + 1;
+        const nextRoundMatches = league.knockoutFixtures.filter(f => f.round === nextRound);
+        
+        if (nextRoundMatches.length > 0) {
+            // 将胜者填入下一轮
+            nextRoundMatches.forEach((match, index) => {
+                match.team1 = winners[index * 2] || null;
+                match.team2 = winners[index * 2 + 1] || null;
+            });
+            console.log(`下一轮对阵已更新：${nextRoundMatches.length}场比赛`);
+        }
     }
     
     /**
      * 进行淘汰赛轮次
+     * 注意：此函数仅用于AI模拟，玩家的淘汰赛结果由前端手动记录
      */
     playKnockoutStageRound(league, currentRound) {
+        // 找到玩家参与的当前对决
         const roundFixtures = league.knockoutFixtures.filter(f => f.round === currentRound);
-        const results = [];
+        const playerFixture = roundFixtures.find(f => f.team1?.isPlayer || f.team2?.isPlayer);
         
-        roundFixtures.forEach(fixture => {
-            // 每组打2场，可能打第3场
-            fixture.matches = [];
-            let team1Wins = 0;
-            let team2Wins = 0;
-            
-            // 第一场
-            const match1 = this.simulateMatch(fixture.team1, fixture.team2);
-            fixture.matches.push(match1);
-            if (match1.winner === fixture.team1) team1Wins++;
-            else if (match1.winner === fixture.team2) team2Wins++;
-            
-            // 第二场
-            const match2 = this.simulateMatch(fixture.team2, fixture.team1);
-            fixture.matches.push(match2);
-            if (match2.winner === fixture.team1) team1Wins++;
-            else if (match2.winner === fixture.team2) team2Wins++;
-            
-            // 如果1:1，打第三场
-            if (team1Wins === team2Wins) {
-                const match3 = this.simulateMatch(fixture.team1, fixture.team2);
-                fixture.matches.push(match3);
-                if (match3.winner === fixture.team1) team1Wins++;
-                else if (match3.winner === fixture.team2) team2Wins++;
+        if (!playerFixture) {
+            // 没有玩家参与，直接模拟所有AI对局
+            roundFixtures.forEach(fixture => {
+                this.simulateKnockoutFixture(fixture);
+            });
+        } else {
+            // 玩家参与的对决，不自动模拟，等待前端传入真实战斗结果
+            // 只负责检查战绩和更新状态
+            if (!playerFixture.matches) {
+                playerFixture.matches = [];
             }
             
-            // 确定胜者
-            fixture.winner = team1Wins > team2Wins ? fixture.team1 : fixture.team2;
-            results.push(fixture);
-        });
+            // 计算当前战绩
+            let team1Wins = playerFixture.matches.filter(m => m.winner === playerFixture.team1).length;
+            let team2Wins = playerFixture.matches.filter(m => m.winner === playerFixture.team2).length;
+            
+            // 判断是否已决出胜负
+            if (team1Wins >= 2 || team2Wins >= 2) {
+                // 已决出胜负
+                playerFixture.winner = team1Wins > team2Wins ? playerFixture.team1 : playerFixture.team2;
+            }
+            // 注意：不再自动模拟玩家的比赛，由前端processLeagueMatchResult手动添加
+            
+            // 模拟其他AI对局（仅当玩家对决已决出胜负时）
+            if (playerFixture.winner) {
+                roundFixtures.forEach(fixture => {
+                    if (fixture !== playerFixture && !fixture.winner) {
+                        this.simulateKnockoutFixture(fixture);
+                    }
+                });
+            }
+        }
         
-        // 检查是否完成所有淘汰赛
-        const allKnockoutFixtures = league.knockoutFixtures;
-        const completedKnockoutMatches = allKnockoutFixtures.filter(f => f.winner !== null);
+        // 检查本轮是否全部完成
+        const currentRoundComplete = roundFixtures.every(f => f.winner !== null);
         
-        if (completedKnockoutMatches.length === allKnockoutFixtures.length) {
-            league.completed = true;
-            this.processYouthLeagueEnd(league);
+        if (currentRoundComplete) {
+            console.log(`第${currentRound}轮淘汰赛完成`);
+            
+            // 更新下一轮的对阵（填入胜者）
+            this.updateNextKnockoutRound(league, currentRound);
+            
+            // 检查是否是决赛
+            if (roundFixtures[0].stage === '决赛') {
+                league.completed = true;
+                this.processYouthLeagueEnd(league);
+            }
         }
         
         return {
             round: currentRound,
             stage: roundFixtures[0]?.stage || '',
-            results: results,
-            completed: league.completed
+            results: roundFixtures,
+            completed: league.completed,
+            playerFixture: playerFixture
         };
+    }
+    
+    /**
+     * 模拟完整的淘汰赛对决（AI用，打2-3场）
+     * 注意：需要在已有matches的基础上继续模拟，而不是从头开始
+     */
+    simulateKnockoutFixture(fixture) {
+        // 检查队伍是否都已确定（不是null）
+        if (!fixture.team1 || !fixture.team2) {
+            console.log('跳过待定对局的模拟');
+            return;
+        }
+        
+        if (!fixture.matches) {
+            fixture.matches = [];
+        }
+        
+        // 计算已有战绩
+        let team1Wins = fixture.matches.filter(m => m.winner === fixture.team1).length;
+        let team2Wins = fixture.matches.filter(m => m.winner === fixture.team2).length;
+        const matchesPlayed = fixture.matches.length;
+        
+        console.log(`模拟AI对局 - 当前: ${team1Wins}:${team2Wins}, 已打${matchesPlayed}场`);
+        
+        // 继续模拟直到决出胜负（最多3场）
+        while (fixture.matches.length < 3 && team1Wins < 2 && team2Wins < 2) {
+            const match = this.simulateMatch(fixture.team1, fixture.team2);
+            fixture.matches.push(match);
+            
+            if (match.winner === fixture.team1) team1Wins++;
+            else if (match.winner === fixture.team2) team2Wins++;
+            
+            console.log(`  第${fixture.matches.length}场: 战绩 ${team1Wins}:${team2Wins}`);
+        }
+        
+        // 确定胜者
+        fixture.winner = team1Wins > team2Wins ? fixture.team1 : fixture.team2;
+        console.log(`模拟完成 - 最终: ${team1Wins}:${team2Wins}, 胜者: ${fixture.winner.teamName}`);
     }
     
     /**
