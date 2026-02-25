@@ -696,6 +696,7 @@
 
         <div class="tabs">
             <button class="tab active" onclick="switchTab('main')">主界面</button>
+            <button class="tab" onclick="switchTab('schedule')">详细赛程</button>
             <button class="tab" onclick="switchTab('career')">生涯历史</button>
         </div>
 
@@ -894,17 +895,8 @@
 
                         </div>
                         
-                        <!-- 下部：三个按钮 -->
-                        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px;">
-                            
-                            <!-- 详细赛程按钮 -->
-                            <div class="info-box" onclick="switchTab('schedule')" style="cursor: pointer; display: flex; align-items: center; justify-content: center; min-height: 160px; transition: all 0.3s; border: 2px solid rgba(124, 58, 237, 0.4); padding: 20px;" onmouseover="this.style.borderColor='#7c3aed'; this.style.boxShadow='0 6px 20px rgba(124, 58, 237, 0.4)'; this.style.transform='translateY(-3px)'" onmouseout="this.style.borderColor='rgba(124, 58, 237, 0.4)'; this.style.boxShadow='none'; this.style.transform='translateY(0)'">
-                                <div style="text-align: center;">
-                                    <div style="font-size: 2.5em; margin-bottom: 10px;">📊</div>
-                                    <h3 style="color: #a78bfa; font-size: 1.3em; margin-bottom: 8px;">详细赛程</h3>
-                                    <p style="color: #cbd5e1; font-size: 0.95em;">查看完整排名</p>
-                                </div>
-                            </div>
+                        <!-- 下部：两个按钮 -->
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
                             
                             <!-- 动物登记按钮 -->
                             <div class="info-box" onclick="switchTab('animal-roster')" style="cursor: pointer; display: flex; align-items: center; justify-content: center; min-height: 160px; transition: all 0.3s; border: 2px solid rgba(251, 191, 36, 0.4); padding: 20px;" onmouseover="this.style.borderColor='#fbbf24'; this.style.boxShadow='0 6px 20px rgba(251, 191, 36, 0.4)'; this.style.transform='translateY(-3px)'" onmouseout="this.style.borderColor='rgba(251, 191, 36, 0.4)'; this.style.boxShadow='none'; this.style.transform='translateY(0)'">
@@ -1369,13 +1361,14 @@
             document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
             document.getElementById(tabName + '-tab').classList.add('active');
             
-            // 激活对应的标签按钮（schedule标签已移除，通过主界面按钮访问）
+            // 激活对应的标签按钮
             if (tabName === 'main') {
                 document.querySelector('.tab[onclick*="main"]').classList.add('active');
+            } else if (tabName === 'schedule') {
+                document.querySelector('.tab[onclick*="schedule"]').classList.add('active');
             } else if (tabName === 'career') {
                 document.querySelector('.tab[onclick*="career"]').classList.add('active');
             }
-            // schedule没有标签按钮，不需要激活
             
             updateTabContent(tabName);
         }
@@ -3279,11 +3272,16 @@
         
         // 显示大陆赛事详细信息
         function displayTournamentDetails(content, tournament) {
+            // 初始化当前显示的阶段
+            if (!window.currentTournamentStage) {
+                window.currentTournamentStage = tournament.groupStageCompleted ? 'knockout' : 'group';
+            }
+            
             let html = `
                 <div class="info-box success" style="max-width: 1400px; margin: 0 auto 30px;">
                     <h3>🏆 ${tournament.name}</h3>
                     <p style="font-size: 1.1em;">
-                        ${tournament.groupStageCompleted ? '✅ 小组赛已完成' : '⏳ 小组赛进行中'} 
+                        ${tournament.groupStageCompleted ? '✅ 小组赛已完成' : '⏳ 小组赛进行中'}
                         ${tournament.knockoutStageCompleted ? ' | ✅ 淘汰赛已完成' : ''}
                     </p>
                     <p style="color: #cbd5e1; margin-top: 10px;">
@@ -3292,16 +3290,36 @@
                         参赛者：${tournament.groups ? tournament.groups.reduce((sum, group) => sum + group.length, 0) : 0}/24人
                     </p>
                 </div>
+                
+                <!-- 阶段切换标签 -->
+                <div style="display: flex; justify-content: center; gap: 10px; margin-bottom: 30px;">
+                    <button onclick="switchTournamentStage('group')" style="padding: 12px 24px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; transition: all 0.3s; ${window.currentTournamentStage === 'group' ? 'background: linear-gradient(135deg, #7c3aed, #db2777); color: white; box-shadow: 0 4px 15px rgba(124, 58, 237, 0.5);' : 'background: rgba(51, 65, 85, 0.6); color: #cbd5e1;'}">
+                        📊 小组赛
+                    </button>
+                    <button onclick="switchTournamentStage('knockout')" style="padding: 12px 24px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; transition: all 0.3s; ${window.currentTournamentStage === 'knockout' ? 'background: linear-gradient(135deg, #7c3aed, #db2777); color: white; box-shadow: 0 4px 15px rgba(124, 58, 237, 0.5);' : 'background: rgba(51, 65, 85, 0.6); color: #cbd5e1;'}">
+                        🏆 淘汰赛
+                    </button>
+                </div>
             `;
             
-            // 显示小组赛或淘汰赛
-            if (!tournament.groupStageCompleted) {
+            // 根据选择显示小组赛或淘汰赛
+            if (window.currentTournamentStage === 'group') {
                 // 显示小组赛
                 displayTournamentGroupStage(tournament, html, content);
             } else {
                 // 显示淘汰赛树状图
                 displayTournamentKnockoutTree(tournament, html, content);
             }
+        }
+        
+        // 新增：切换世界赛阶段显示
+        function switchTournamentStage(stage) {
+            window.currentTournamentStage = stage;
+            // 重新渲染当前显示的大陆赛事
+            const playerTeam = leagueSystem.getPlayerTeam();
+            if (!playerTeam || !playerTeam.region) return;
+            const league = leagueSystem.getLeagueInfo(playerTeam.region, playerTeam.league);
+            displaySchedule(league);
         }
         
         // 显示大陆赛事小组赛阶段
@@ -4256,6 +4274,7 @@
             } else {
                 // 玩家没有下一场比赛，可能是本轮休息或已打完所有比赛
                 if (!tournament.groupStageCompleted) {
+                    // 小组赛阶段
                     html += `
                         <div style="text-align: center; padding: 20px;">
                             <div style="font-size: 2em; margin-bottom: 10px;">📅</div>
@@ -4270,12 +4289,61 @@
                         </div>
                     `;
                 } else {
-                    html += `
-                        <div style="text-align: center; padding: 20px;">
-                            <div style="font-size: 2em; margin-bottom: 10px;">🏆</div>
-                            <p style="color: #cbd5e1; font-size: 1.1em;">暂无比赛安排</p>
-                        </div>
-                    `;
+                    // 淘汰赛阶段 - 玩家已经晋级或淘汰
+                    // 检查玩家是否已经决出胜负(晋级或淘汰)
+                    let playerStatus = null;
+                    let waitingForOthers = false;
+                    
+                    // 查找包含玩家的对决
+                    const playerMatch = tournament.knockoutFixtures.find(f =>
+                        f.team1?.isPlayer || f.team2?.isPlayer
+                    );
+                    
+                    if (playerMatch) {
+                        if (playerMatch.winner) {
+                            // 玩家已决出胜负
+                            playerStatus = playerMatch.winner.isPlayer ? '已晋级' : '已淘汰';
+                            
+                            // 检查同阶段是否还有其他组未完成
+                            const sameStageFixtures = tournament.knockoutFixtures.filter(f =>
+                                f.stage === playerMatch.stage &&
+                                f.team1 && f.team2
+                            );
+                            const allComplete = sameStageFixtures.every(f => f.winner);
+                            waitingForOthers = !allComplete;
+                        }
+                    }
+                    
+                    if (playerStatus === '已淘汰') {
+                        html += `
+                            <div style="text-align: center; padding: 20px;">
+                                <div style="font-size: 2em; margin-bottom: 10px;">💀</div>
+                                <p style="color: #fca5a5; font-size: 1.2em; font-weight: bold;">你已被淘汰</p>
+                                <p style="color: #cbd5e1; margin-top: 10px; font-size: 0.95em;">赛事已结束</p>
+                            </div>
+                        `;
+                    } else if (playerStatus === '已晋级' && waitingForOthers) {
+                        html += `
+                            <div style="text-align: center; padding: 20px;">
+                                <div style="font-size: 2em; margin-bottom: 10px;">🎉</div>
+                                <p style="color: #86efac; font-size: 1.2em; font-weight: bold;">你已晋级到下一轮！</p>
+                                <p style="color: #cbd5e1; margin-top: 10px; font-size: 0.95em;">等待其他组完成比赛...</p>
+                                <p style="color: #94a3b8; margin-top: 8px; font-size: 0.85em;">提示：其他组正在进行决胜局</p>
+                                <div style="margin-top: 20px;">
+                                    <button class="btn btn-primary" onclick="skipTournamentToNextRound()" style="font-size: 1em; padding: 12px 30px; background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);">
+                                        ⏭️ 推进到下一周
+                                    </button>
+                                </div>
+                            </div>
+                        `;
+                    } else {
+                        html += `
+                            <div style="text-align: center; padding: 20px;">
+                                <div style="font-size: 2em; margin-bottom: 10px;">🏆</div>
+                                <p style="color: #cbd5e1; font-size: 1.1em;">暂无比赛安排</p>
+                            </div>
+                        `;
+                    }
                 }
             }
             
@@ -4499,6 +4567,88 @@
             }
         }
         
+        // 新增：推进到下一周（处理淘汰赛等待情况）
+        async function skipTournamentToNextRound() {
+            if (!timeSystem) {
+                alert('时间系统未初始化！');
+                return;
+            }
+            
+            try {
+                const playerTeam = leagueSystem.getPlayerTeam();
+                
+                if (!playerTeam || !playerTeam.tournamentQualification) {
+                    alert('⚠️ 未找到大陆赛事参赛资格！');
+                    return;
+                }
+                
+                const season = playerTeam.league === '夏季联赛' ? 'summer' : 'winter';
+                const tournamentName = playerTeam.tournamentQualification;
+                const tournament = leagueSystem.getTournamentInfo(season, tournamentName);
+                
+                if (!tournament) {
+                    alert('⚠️ 大陆赛事尚未生成！');
+                    return;
+                }
+                
+                // 查找玩家所在的对决
+                const playerFixture = tournament.knockoutFixtures.find(f =>
+                    (f.team1?.isPlayer || f.team2?.isPlayer) && f.winner
+                );
+                
+                if (!playerFixture) {
+                    alert('⚠️ 未找到玩家的比赛数据！');
+                    return;
+                }
+                
+                const currentStage = playerFixture.stage;
+                
+                // 模拟所有同阶段其他组的剩余比赛(包括决胜局)
+                const stageFixtures = tournament.knockoutFixtures.filter(f =>
+                    f.stage === currentStage &&
+                    f.team1 && f.team2 &&
+                    !f.winner
+                );
+                
+                let autoSimulatedCount = 0;
+                stageFixtures.forEach(fixture => {
+                    // 继续进行比赛直到决出胜负
+                    while (!fixture.winner) {
+                        leagueSystem.simulateTournamentKnockoutMatch(fixture);
+                        autoSimulatedCount++;
+                    }
+                });
+                
+                // 更新下一轮对阵
+                leagueSystem.updateTournamentNextRound(tournament, currentStage);
+                
+                // 检查是否完成整个赛事
+                if (currentStage === '决赛') {
+                    const finalMatch = tournament.knockoutFixtures.find(f => f.stage === '决赛');
+                    if (finalMatch && finalMatch.winner) {
+                        tournament.knockoutStageCompleted = true;
+                        tournament.champion = finalMatch.winner;
+                    }
+                }
+                
+                await saveData();
+                
+                // 推进时间到下一个比赛节点
+                if (!tournament.knockoutStageCompleted) {
+                    await advanceToNextMatchNode(playerTeam);
+                }
+                
+                updateAllTabs();
+                
+                const statusText = playerFixture.winner.isPlayer ? '🎉 你已晋级' : '💀 你已淘汰';
+                alert(`✅ 已模拟完成所有组的${currentStage}\n\n${statusText}\n自动模拟了${autoSimulatedCount}场比赛\n\n时间已推进到下一个比赛日`);
+                
+            } catch (error) {
+                console.error('推进失败:', error);
+                alert(`❌ 推进失败：${error.message}`);
+            }
+        }
+        
         // 处理大陆赛事的自动胜利
         async function handleTournamentAutoWin(playerTeam) {
             const season = playerTeam.league === '夏季联赛' ? 'summer' : 'winter';
@@ -4597,6 +4747,26 @@
                     const playerWon = playerFixture.winner;
                     const team1Wins = playerFixture.matches.filter(m => m.winner === playerFixture.team1).length;
                     const team2Wins = playerFixture.matches.filter(m => m.winner === playerFixture.team2).length;
+                    
+                    // 新增：同步逻辑 - 如果玩家已经决出胜负，自动模拟其他组的决胜局
+                    if (playerFixture.winner) {
+                        const tiedFixtures = tournament.knockoutFixtures.filter(f => {
+                            if (f.stage !== currentStage) return false;
+                            if (!f.team1 || !f.team2) return false;
+                            if (f.winner) return false;
+                            
+                            const t1Wins = f.matches?.filter(m => m.winner === f.team1).length || 0;
+                            const t2Wins = f.matches?.filter(m => m.winner === f.team2).length || 0;
+                            return t1Wins === 1 && t2Wins === 1; // 1:1平局需要决胜局
+                        });
+                        
+                        if (tiedFixtures.length > 0) {
+                            // 自动模拟这些组的决胜局
+                            tiedFixtures.forEach(fixture => {
+                                leagueSystem.simulateTournamentKnockoutMatch(fixture);
+                            });
+                        }
+                    }
                     
                     // 如果玩家已决出胜负且本阶段所有对决都已完成,填充下一轮对阵
                     const allStageComplete = tournament.knockoutFixtures.filter(f =>

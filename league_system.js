@@ -1453,6 +1453,10 @@ class LeagueSystem {
      * - 第1周:打第1场
      * - 第2周:打第2场
      * - 如果1:1平,第3周打第3场决胜负
+     *
+     * 同步逻辑:
+     * - 当检测到有些组已经决出胜负(2:0或2:1),但有些组还是1:1平局时
+     * - 自动模拟那些1:1组的第三场比赛,确保所有组同步推进
      */
     playTournamentKnockoutRound(season, tournamentName, stage) {
         const tournament = this.tournaments[season][tournamentName];
@@ -1473,6 +1477,26 @@ class LeagueSystem {
             results.push(fixture);
         });
         
+        // 新增：同步逻辑 - 自动模拟决胜局
+        // 检查是否有已经决出胜负的组（2:0或2:1）
+        const stageFixtures = tournament.knockoutFixtures.filter(f => f.stage === stage && f.team1 && f.team2);
+        const completedFixtures = stageFixtures.filter(f => f.winner);
+        const tiedFixtures = stageFixtures.filter(f => {
+            if (f.winner) return false;
+            const team1Wins = f.matches?.filter(m => m.winner === f.team1).length || 0;
+            const team2Wins = f.matches?.filter(m => m.winner === f.team2).length || 0;
+            return team1Wins === 1 && team2Wins === 1;
+        });
+        
+        // 如果有完成的组 且 有1:1平局的组，自动模拟决胜局
+        if (completedFixtures.length > 0 && tiedFixtures.length > 0) {
+            tiedFixtures.forEach(fixture => {
+                // 强制进行第三场比赛
+                this.simulateTournamentKnockoutMatch(fixture);
+                results.push(fixture);
+            });
+        }
+        
         // 填充下一轮的对阵
         this.updateTournamentNextRound(tournament, stage);
         
@@ -1485,7 +1509,8 @@ class LeagueSystem {
         return {
             stage: stage,
             results: results,
-            completed: tournament.knockoutStageCompleted
+            completed: tournament.knockoutStageCompleted,
+            autoSimulated: tiedFixtures.length // 返回自动模拟的数量
         };
     }
     
