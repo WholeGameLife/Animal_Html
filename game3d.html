@@ -10,6 +10,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <!-- 引入背包系统 -->
     <script src="inventory_system.js"></script>
+    <!-- 引入时间系统 -->
+    <script src="game_time_system.js"></script>
     <style>
         /* 2D地图样式 */
         body { margin: 0; overflow: hidden; font-family: 'Inter', sans-serif; background-color: #0a1120; }
@@ -245,6 +247,12 @@
             <!-- 资源/状态面板 (左上角) -->
             <div id="stats-panel" class="control-panel p-4 rounded-lg text-white">
                 <h2 class="text-xl font-bold mb-3 text-green-400 border-b border-gray-700 pb-2">栖息地状态</h2>
+                <!-- 游戏时间显示 -->
+                <div id="game-time-display" class="text-sm mb-3 pb-3 border-b border-gray-700" style="background: rgba(251, 191, 36, 0.1); padding: 8px; border-radius: 6px; border: 1px solid rgba(251, 191, 36, 0.3);">
+                    <div style="color: #fcd34d; font-weight: bold; margin-bottom: 4px;">🕐 游戏时间</div>
+                    <div id="time-display-text" class="font-mono text-cyan-300" style="font-size: 0.9em;">第1年 春季 第1周</div>
+                    <div id="round-display-text" class="font-mono text-gray-300" style="font-size: 0.8em; margin-top: 2px;">本周未开始</div>
+                </div>
                 <div id="stat-food" class="text-sm mb-1">🍎 食物: <span class="font-mono text-yellow-300">0</span></div>
                 <div id="stat-gold" class="text-sm mb-1">💰 金币: <span class="font-mono text-amber-400">0</span></div>
                 <div id="stat-wood" class="text-sm mb-1">🪵 木材: <span class="font-mono text-orange-400">0</span></div>
@@ -635,6 +643,80 @@
             </div>
         </div>
 
+        <!-- 新增：调试器面板 -->
+        <div id="debug-panel" class="control-panel p-5 rounded-xl text-white hidden w-full max-w-2xl" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 70;">
+            <div class="flex justify-between items-center mb-4 pb-3 border-b border-yellow-500/50">
+                <h3 class="text-2xl font-bold text-yellow-400">🛠️ 调试器</h3>
+                <button id="btn-close-debug" class="text-3xl text-gray-400 hover:text-white">&times;</button>
+            </div>
+            
+            <!-- 资源调整 -->
+            <div class="mb-6">
+                <h4 class="text-lg font-bold text-green-400 mb-3">💰 资源调整</h4>
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="bg-gray-800/50 p-3 rounded-lg">
+                        <label class="text-sm text-gray-400 mb-1 block">🍎 食物</label>
+                        <input type="number" id="debug-food" class="w-full bg-gray-900 text-white rounded px-2 py-1 text-sm" value="0">
+                        <button onclick="setResource('food')" class="w-full mt-1 bg-green-600 hover:bg-green-700 text-white text-xs py-1 rounded">设置</button>
+                    </div>
+                    <div class="bg-gray-800/50 p-3 rounded-lg">
+                        <label class="text-sm text-gray-400 mb-1 block">💰 金币</label>
+                        <input type="number" id="debug-gold" class="w-full bg-gray-900 text-white rounded px-2 py-1 text-sm" value="0">
+                        <button onclick="setResource('gold')" class="w-full mt-1 bg-amber-600 hover:bg-amber-700 text-white text-xs py-1 rounded">设置</button>
+                    </div>
+                    <div class="bg-gray-800/50 p-3 rounded-lg">
+                        <label class="text-sm text-gray-400 mb-1 block">🪵 木材</label>
+                        <input type="number" id="debug-wood" class="w-full bg-gray-900 text-white rounded px-2 py-1 text-sm" value="0">
+                        <button onclick="setResource('wood')" class="w-full mt-1 bg-orange-600 hover:bg-orange-700 text-white text-xs py-1 rounded">设置</button>
+                    </div>
+                    <div class="bg-gray-800/50 p-3 rounded-lg">
+                        <label class="text-sm text-gray-400 mb-1 block">🪨 石材</label>
+                        <input type="number" id="debug-stone" class="w-full bg-gray-900 text-white rounded px-2 py-1 text-sm" value="0">
+                        <button onclick="setResource('stone')" class="w-full mt-1 bg-slate-600 hover:bg-slate-700 text-white text-xs py-1 rounded">设置</button>
+                    </div>
+                    <div class="bg-gray-800/50 p-3 rounded-lg">
+                        <label class="text-sm text-gray-400 mb-1 block">💎 宝石</label>
+                        <input type="number" id="debug-gems" class="w-full bg-gray-900 text-white rounded px-2 py-1 text-sm" value="0">
+                        <button onclick="setResource('gems')" class="w-full mt-1 bg-pink-600 hover:bg-pink-700 text-white text-xs py-1 rounded">设置</button>
+                    </div>
+                    <div class="bg-gray-800/50 p-3 rounded-lg">
+                        <label class="text-sm text-gray-400 mb-1 block">🌿 经验草</label>
+                        <input type="number" id="debug-expGrass" class="w-full bg-gray-900 text-white rounded px-2 py-1 text-sm" value="0">
+                        <button onclick="setResource('expGrass')" class="w-full mt-1 bg-green-500 hover:bg-green-600 text-white text-xs py-1 rounded">设置</button>
+                    </div>
+                </div>
+                <div class="mt-3 flex gap-2">
+                    <button onclick="addAllResources(1000)" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">➕ 所有+1000</button>
+                    <button onclick="addAllResources(10000)" class="flex-1 bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded">➕➕ 所有+10000</button>
+                </div>
+            </div>
+            
+            <!-- 时间调整 -->
+            <div class="mb-6">
+                <h4 class="text-lg font-bold text-cyan-400 mb-3">🕐 时间调整</h4>
+                <div class="grid grid-cols-3 gap-2 mb-3">
+                    <div class="bg-gray-800/50 p-3 rounded-lg text-center">
+                        <div class="text-sm text-gray-400 mb-1">当前年份</div>
+                        <div class="text-xl font-bold text-cyan-300" id="debug-year">1</div>
+                    </div>
+                    <div class="bg-gray-800/50 p-3 rounded-lg text-center">
+                        <div class="text-sm text-gray-400 mb-1">当前季节</div>
+                        <div class="text-xl font-bold text-cyan-300" id="debug-season">春季</div>
+                    </div>
+                    <div class="bg-gray-800/50 p-3 rounded-lg text-center">
+                        <div class="text-sm text-gray-400 mb-1">当前周</div>
+                        <div class="text-xl font-bold text-cyan-300" id="debug-week">1</div>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <button onclick="debugAdvanceWeek()" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded">⏩ 推进1周</button>
+                    <button onclick="debugAdvanceToSeason('夏季')" class="bg-orange-600 hover:bg-orange-700 text-white font-bold py-2 px-4 rounded">☀️ 跳到夏季</button>
+                    <button onclick="debugAdvanceToSeason('冬季')" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">❄️ 跳到冬季</button>
+                    <button onclick="debugResetTime()" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">🔄 重置时间</button>
+                </div>
+            </div>
+        </div>
+
         <!-- 新增：拍卖行竞价面板 -->
         <div id="auction-bid-panel" class="control-panel centered-panel p-6 rounded-xl text-white hidden w-full max-w-md z-[60]">
             <div class="flex justify-between items-center mb-4">
@@ -947,6 +1029,11 @@
                 <button id="btn-open-build" class="action-button bg-yellow-600 hover:bg-yellow-700 text-black font-bold py-3 px-4 rounded-lg text-center">
                     🔨 放置建筑
                 </button>
+                
+                <!-- 新增：调试器按钮 -->
+                <button id="btn-open-debug" class="action-button bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-4 rounded-lg text-center">
+                    🛠️ 调试器<br><span class="text-xs"> (资源/时间)</span>
+                </button>
             </div>
         </div>
 
@@ -1234,6 +1321,9 @@
             }
         };
 
+        // 游戏时间系统（全局）
+        let gameTimeSystem = null;
+        
         // 游戏状态
         const gameState = {
             food: 200000,
@@ -1556,6 +1646,7 @@
             ui.btnOpenLeague.addEventListener('click', openLeaguePage, false); // 新增
             ui.btnOpenShop.addEventListener('click', openShopPanel, false);
             ui.btnOpenInventory.addEventListener('click', openInventoryPanel, false); // 新增
+            document.getElementById('btn-open-debug').addEventListener('click', openDebugPanel, false); // 新增
 
             ui.btnCloseStandaloneDetails.addEventListener('click', closeStandaloneAnimalDetails, false);
             ui.btnCloseBattleSetupPanel.addEventListener('click', closeBattleSetupPanel, false);
@@ -1575,6 +1666,7 @@
                 ui.btnCloseSkillSelector.addEventListener('click', closeSkillSelector, false);
             }
             ui.btnCloseShop.addEventListener('click', closeShopPanel, false);
+            document.getElementById('btn-close-debug').addEventListener('click', closeDebugPanel, false);
             ui.buildButtons.forEach(button => {
                 button.addEventListener('click', (event) => {
                     const buildingType = event.currentTarget.dataset.building;
@@ -2021,6 +2113,7 @@
             closeAuctionBidPanel();
             closeInventoryPanel();
             closeTargetSelector();
+            closeDebugPanel();
             if (typeof closeTeamSelector === 'function') closeTeamSelector();
             if (typeof closeSkillSelector === 'function') closeSkillSelector();
         }
@@ -4403,8 +4496,154 @@
                 return value;
             }));
             localStorage.setItem('gameState', JSON.stringify(serializableGameState));
+            
+            // 保存时间系统数据
+            if (gameTimeSystem) {
+                gameTimeSystem.saveData();
+            }
+            
             window.location.href = 'league.html';
         }
+        
+        // 新增：调试器相关函数
+        function openDebugPanel() {
+            closeAllDetailPanels();
+            
+            // 填充当前值
+            document.getElementById('debug-food').value = Math.floor(gameState.food);
+            document.getElementById('debug-gold').value = gameState.gold;
+            document.getElementById('debug-wood').value = gameState.wood;
+            document.getElementById('debug-stone').value = gameState.stone;
+            document.getElementById('debug-gems').value = gameState.gems;
+            document.getElementById('debug-expGrass').value = gameState.expGrass;
+            
+            // 更新时间显示
+            if (gameTimeSystem) {
+                const timeInfo = gameTimeSystem.getCurrentTime();
+                document.getElementById('debug-year').textContent = timeInfo.year;
+                document.getElementById('debug-season').textContent = timeInfo.season;
+                document.getElementById('debug-week').textContent = timeInfo.week;
+            }
+            
+            ui.modalOverlay.classList.remove('hidden');
+            document.getElementById('debug-panel').classList.remove('hidden');
+        }
+        
+        function closeDebugPanel() {
+            document.getElementById('debug-panel').classList.add('hidden');
+            ui.modalOverlay.classList.add('hidden');
+        }
+        
+        window.setResource = function(resourceType) {
+            const inputId = `debug-${resourceType}`;
+            const value = parseInt(document.getElementById(inputId).value, 10);
+            if (isNaN(value) || value < 0) {
+                showStatus('❌ 请输入有效的数值', 2000);
+                return;
+            }
+            gameState[resourceType] = value;
+            updateUI();
+            showStatus(`✅ ${resourceType} 已设置为 ${value}`, 2000);
+        };
+        
+        window.addAllResources = function(amount) {
+            gameState.food += amount;
+            gameState.gold += amount;
+            gameState.wood += amount;
+            gameState.stone += amount;
+            gameState.gems += amount;
+            gameState.expGrass += amount;
+            gameState.moonFlower += amount;
+            gameState.mutationCrystal += amount;
+            gameState.voidEssence += amount;
+            updateUI();
+            showStatus(`✅ 所有资源 +${amount}`, 2000);
+        };
+        
+        window.debugAdvanceWeek = async function() {
+            if (!gameTimeSystem) {
+                showStatus('❌ 时间系统未初始化', 2000);
+                return;
+            }
+            const result = gameTimeSystem.advanceWeek();
+            if (result.success) {
+                await gameTimeSystem.saveData();
+                updateGameTimeDisplay();
+                // 更新调试面板显示
+                const timeInfo = gameTimeSystem.getCurrentTime();
+                document.getElementById('debug-year').textContent = timeInfo.year;
+                document.getElementById('debug-season').textContent = timeInfo.season;
+                document.getElementById('debug-week').textContent = timeInfo.week;
+                showStatus(`✅ 时间推进到第${timeInfo.year}年 ${timeInfo.season} 第${timeInfo.week}周`, 2500);
+            } else {
+                showStatus(`❌ ${result.reason}`, 2000);
+            }
+        };
+        
+        window.debugAdvanceToSeason = async function(targetSeason) {
+            if (!gameTimeSystem) {
+                showStatus('❌ 时间系统未初始化', 2000);
+                return;
+            }
+            
+            const seasonWeeks = {
+                '春季': 1,
+                '夏季': 14,
+                '秋季': 27,
+                '冬季': 40
+            };
+            
+            const targetWeek = seasonWeeks[targetSeason];
+            if (!targetWeek) return;
+            
+            const timeInfo = gameTimeSystem.getCurrentTime();
+            let weeksToAdvance = 0;
+            
+            if (timeInfo.week <= targetWeek) {
+                weeksToAdvance = targetWeek - timeInfo.week;
+            } else {
+                // 跨年
+                weeksToAdvance = (52 - timeInfo.week) + targetWeek;
+            }
+            
+            if (weeksToAdvance > 0) {
+                const result = gameTimeSystem.fastForward(weeksToAdvance);
+                if (result.success) {
+                    await gameTimeSystem.saveData();
+                    updateGameTimeDisplay();
+                    // 更新调试面板显示
+                    const newTimeInfo = gameTimeSystem.getCurrentTime();
+                    document.getElementById('debug-year').textContent = newTimeInfo.year;
+                    document.getElementById('debug-season').textContent = newTimeInfo.season;
+                    document.getElementById('debug-week').textContent = newTimeInfo.week;
+                    showStatus(`✅ 已跳转到${targetSeason}：第${newTimeInfo.year}年第${newTimeInfo.week}周`, 3000);
+                }
+            } else {
+                showStatus(`ℹ️ 当前已经是${targetSeason}`, 2000);
+            }
+        };
+        
+        window.debugResetTime = async function() {
+            if (!gameTimeSystem) {
+                showStatus('❌ 时间系统未初始化', 2000);
+                return;
+            }
+            
+            if (!confirm('确定要重置时间到第1年春季第1周吗？')) {
+                return;
+            }
+            
+            gameTimeSystem.reset();
+            await gameTimeSystem.saveData();
+            updateGameTimeDisplay();
+            
+            // 更新调试面板显示
+            document.getElementById('debug-year').textContent = '1';
+            document.getElementById('debug-season').textContent = '春季';
+            document.getElementById('debug-week').textContent = '1';
+            
+            showStatus('🔄 时间已重置', 2000);
+        };
 
         function loadGameStateFromStorage() {
             const storedStateJSON = localStorage.getItem('gameState');
@@ -4864,9 +5103,15 @@
         }
 
         // --- 应用启动 ---
-        window.onload = function() {
+        window.onload = async function() {
             initThreeJS(); // 初始化3D基础对象避免错误
             init2DMap(); // 初始化2D地图和事件
+            
+            // 初始化时间系统
+            gameTimeSystem = new GameTimeSystem();
+            await gameTimeSystem.loadData();
+            updateGameTimeDisplay();
+            
             loadGameStateFromStorage();
             processCapturedAnimal();
             
@@ -4887,6 +5132,22 @@
             updateUI();
             showStatus("欢迎来到电子盆栽！使用 WASD 键移动视角，点击🐾动物系统进行繁殖和查看名册。", 5000);
         };
+        
+        // 新增：更新游戏时间显示
+        function updateGameTimeDisplay() {
+            if (!gameTimeSystem) return;
+            
+            const timeInfo = gameTimeSystem.getCurrentTime();
+            const timeDisplayText = document.getElementById('time-display-text');
+            const roundDisplayText = document.getElementById('round-display-text');
+            
+            if (timeDisplayText) {
+                timeDisplayText.textContent = timeInfo.displayText;
+            }
+            if (roundDisplayText) {
+                roundDisplayText.textContent = timeInfo.roundDisplayText;
+            }
+        }
         
         // 从模板创建动物
         function createAnimalFromTemplate(template) {
