@@ -1186,8 +1186,10 @@ class LeagueSystem {
         
         
         if (roundFixtures.length === 0) {
-            // 当前轮次没有比赛，推进到下一轮或完成小组赛
-            if (currentRound >= 6) {
+            // 当前轮次没有比赛，检查是否已完成小组赛
+            const allCompleted = tournament.groupFixtures.every(f => f.result);
+            
+            if (allCompleted || currentRound >= 6) {
                 // 小组赛已全部完成（6轮）
                 tournament.groupFixtures.forEach(fixture => {
                     if (!fixture.result) {
@@ -1213,12 +1215,15 @@ class LeagueSystem {
                 
                 return {
                     allCompleted: true,
+                    currentRound: currentRound,
                     groupStandings: tournament.groupStandings,
                     qualifiedTeams: qualifiedTeams
                 };
             } else {
-                // 推进到下一轮
-                tournament.currentGroupRound++;
+                // 推进到下一轮(但不超过6轮)
+                if (tournament.currentGroupRound < 6) {
+                    tournament.currentGroupRound++;
+                }
                 return this.playTournamentGroupStage(season, tournamentName);
             }
         }
@@ -1249,13 +1254,14 @@ class LeagueSystem {
             // 计算小组积分榜
             this.calculateTournamentGroupStandings(tournament);
             
-            // 推进到下一轮
+            // 只推进一次轮次，然后直接返回（不要递归调用）
+            const oldRound = tournament.currentGroupRound;
             tournament.currentGroupRound++;
             
             return {
                 noPlayerMatch: true,
                 message: '本周没有你的比赛安排',
-                currentRound: currentRound,
+                currentRound: oldRound,
                 nextRound: tournament.currentGroupRound,
                 // 确保不返回任何fixture和result，让UI知道这轮玩家休息
                 fixture: null,
@@ -1308,8 +1314,10 @@ class LeagueSystem {
             };
         }
         
-        // 推进到下一轮
-        tournament.currentGroupRound++;
+        // 只有在未完成时才推进到下一轮，且不超过6轮
+        if (tournament.currentGroupRound < 6) {
+            tournament.currentGroupRound++;
+        }
         
         return {
             fixture: playerFixture,
@@ -1441,6 +1449,10 @@ class LeagueSystem {
     
     /**
      * 进行大陆赛事淘汰赛一轮
+     * BO3制度:每周六打1场,需要2-3周决出胜负
+     * - 第1周:打第1场
+     * - 第2周:打第2场
+     * - 如果1:1平,第3周打第3场决胜负
      */
     playTournamentKnockoutRound(season, tournamentName, stage) {
         const tournament = this.tournaments[season][tournamentName];
@@ -1456,7 +1468,8 @@ class LeagueSystem {
                 return;
             }
             
-            this.simulateTournamentKnockoutFixture(fixture);
+            // BO3: 每周打1场,需要2-3场决出胜负
+            this.simulateTournamentKnockoutMatch(fixture);
             results.push(fixture);
         });
         
@@ -1477,34 +1490,44 @@ class LeagueSystem {
     }
     
     /**
-     * 模拟大陆赛事淘汰赛对决
-     * 每对打2场，如果两次打平则打第3场
+     * 模拟大陆赛事淘汰赛单场比赛
+     * BO3制度:每周六打1场
+     * - 打完第1场后,team1Wins和team2Wins分别为0或1
+     * - 打完第2场后,可能是2:0,也可能是1:1
+     * - 如果1:1,打第3场决胜负,最终2:1
      */
-    simulateTournamentKnockoutFixture(fixture) {
-        let team1Wins = 0;
-        let team2Wins = 0;
-        
-        // 第一场
-        const match1 = this.simulateMatch(fixture.team1, fixture.team2);
-        fixture.matches.push(match1);
-        if (match1.winner === fixture.team1) team1Wins++;
-        else team2Wins++;
-        
-        // 第二场
-        const match2 = this.simulateMatch(fixture.team2, fixture.team1);
-        fixture.matches.push(match2);
-        if (match2.winner === fixture.team1) team1Wins++;
-        else team2Wins++;
-        
-        // 如果1:1平，打第三场
-        if (team1Wins === team2Wins) {
-            const match3 = this.simulateMatch(fixture.team1, fixture.team2);
-            fixture.matches.push(match3);
-            if (match3.winner === fixture.team1) team1Wins++;
-            else team2Wins++;
+    simulateTournamentKnockoutMatch(fixture) {
+        // 初始化matches数组
+        if (!fixture.matches) {
+            fixture.matches = [];
         }
         
-        fixture.winner = team1Wins > team2Wins ? fixture.team1 : fixture.team2;
+        let team1Wins = fixture.matches.filter(m => m.winner === fixture.team1).length;
+        let team2Wins = fixture.matches.filter(m => m.winner === fixture.team2).length;
+        
+        // 已经决出胜负(2:0或2:1),不再比赛
+        if (team1Wins >= 2 || team2Wins >= 2) {
+            return;
+        }
+        
+        // 进行本周的比赛
+        const match = this.simulateMatch(
+            fixture.matches.length % 2 === 0 ? fixture.team1 : fixture.team2,
+            fixture.matches.length % 2 === 0 ? fixture.team2 : fixture.team1
+        );
+        fixture.matches.push(match);
+        
+        // 更新胜场统计
+        if (match.winner === fixture.team1) team1Wins++;
+        else team2Wins++;
+        
+        // 判断是否已决出胜负
+        if (team1Wins >= 2) {
+            fixture.winner = fixture.team1;
+        } else if (team2Wins >= 2) {
+            fixture.winner = fixture.team2;
+        }
+        // 否则继续等待下周比赛
     }
     
     /**

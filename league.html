@@ -4566,36 +4566,136 @@
                     updateAllTabs();
                 }
             } else {
-                // 淘汰赛：进行一轮
-                const knockoutFixtures = tournament.knockoutFixtures.filter(f =>
+                // 淘汰赛：进行一场比赛
+                const playerFixtures = tournament.knockoutFixtures.filter(f =>
                     !f.winner &&
                     f.team1 && f.team2 &&
                     (f.team1.isPlayer || f.team2.isPlayer)
                 );
                 
-                if (knockoutFixtures.length > 0) {
-                    const currentStage = knockoutFixtures[0].stage;
-                    const result = leagueSystem.playTournamentKnockoutRound(season, tournamentName, currentStage);
-                    await saveData();
+                if (playerFixtures.length > 0) {
+                    const currentStage = playerFixtures[0].stage;
+                    const playerFixture = playerFixtures[0];
                     
-                    if (result.error) {
-                        alert(`⚠️ ${result.error}`);
-                    } else {
-                        const completedMsg = tournament.knockoutStageCompleted ?
-                            `🏆 恭喜获得${tournamentName}冠军！` :
-                            '';
-                        alert(`✅ 已完成${tournamentName} ${currentStage}！${completedMsg ? '\n\n' + completedMsg : ''}`);
+                    // 进行玩家的本场比赛
+                    leagueSystem.simulateTournamentKnockoutMatch(playerFixture);
+                    
+                    // 同步进行所有其他组的本周比赛
+                    const otherFixtures = tournament.knockoutFixtures.filter(f =>
+                        f.stage === currentStage &&
+                        !f.winner &&
+                        f.team1 && f.team2 &&
+                        !(f.team1.isPlayer || f.team2.isPlayer)
+                    );
+                    
+                    otherFixtures.forEach(fixture => {
+                        // 每周六只进行1场比赛
+                        leagueSystem.simulateTournamentKnockoutMatch(fixture);
+                    });
+                    
+                    // 检查玩家是否已决出胜负
+                    const playerWon = playerFixture.winner;
+                    const team1Wins = playerFixture.matches.filter(m => m.winner === playerFixture.team1).length;
+                    const team2Wins = playerFixture.matches.filter(m => m.winner === playerFixture.team2).length;
+                    
+                    // 如果玩家已决出胜负且本阶段所有对决都已完成,填充下一轮对阵
+                    const allStageComplete = tournament.knockoutFixtures.filter(f =>
+                        f.stage === currentStage &&
+                        f.team1 && f.team2
+                    ).every(f => f.winner);
+                    
+                    if (allStageComplete) {
+                        // 填充下一轮对阵
+                        leagueSystem.updateTournamentNextRound(tournament, currentStage);
+                        
+                        // 检查是否完成整个赛事
+                        if (currentStage === '决赛' && tournament.knockoutFixtures.filter(f => f.stage === '决赛' && f.winner).length > 0) {
+                            tournament.knockoutStageCompleted = true;
+                            tournament.champion = tournament.knockoutFixtures.find(f => f.stage === '决赛').winner;
+                        }
+                        
+                        await saveData();
+                        
+                        const opponent = playerFixture.team1.isPlayer ? playerFixture.team2 : playerFixture.team1;
+                        const resultText = `对阵：${opponent.teamName}\n比分：${team1Wins}:${team2Wins}\n结果：${playerFixture.winner.isPlayer ? '🎉 晋级！' : '💀 淘汰'}`;
+                        
+                        if (tournament.knockoutStageCompleted) {
+                            alert(`✅ ${tournamentName} ${currentStage}\n${resultText}\n\n🏆 恭喜获得${tournamentName}冠军！`);
+                        } else {
+                            alert(`✅ ${tournamentName} ${currentStage}\n${resultText}\n\n本阶段已全部完成`);
+                        }
                         
                         // 推进到下一个比赛节点
                         if (timeSystem) {
                             await advanceToNextMatchNode(playerTeam);
                         }
                         
-                        // 刷新界面以显示联赛信息
+                        updateAllTabs();
+                    } else {
+                        // 玩家还未决出胜负或本阶段还有其他对决未完成
+                        await saveData();
+                        
+                        const opponent = playerFixture.team1.isPlayer ? playerFixture.team2 : playerFixture.team1;
+                        const statusText = playerWon ?
+                            `结果：${playerFixture.winner.isPlayer ? '🎉 晋级！' : '💀 淘汰'}` :
+                            `当前比分：${team1Wins}:${team2Wins}\n需要继续下周比赛`;
+                        
+                        alert(`✅ ${tournamentName} ${currentStage}\n对阵：${opponent.teamName}\n${statusText}\n\n所有组本周比赛已完成`);
+                        
+                        // 推进到下一个比赛节点
+                        if (timeSystem) {
+                            await advanceToNextMatchNode(playerTeam);
+                        }
+                        
                         updateAllTabs();
                     }
                 } else {
-                    alert('⚠️ 没有可进行的淘汰赛比赛！');
+                    // 玩家没有未完成的比赛
+                    // 可能是玩家已经完成,但其他组还在进行
+                    // 继续推进其他组的比赛
+                    const unfinishedFixtures = tournament.knockoutFixtures.filter(f =>
+                        !f.winner &&
+                        f.team1 && f.team2
+                    );
+                    
+                    if (unfinishedFixtures.length > 0) {
+                        const currentStage = unfinishedFixtures[0].stage;
+                        
+                        // 每周六只进行1场比赛
+                        unfinishedFixtures.forEach(fixture => {
+                            leagueSystem.simulateTournamentKnockoutMatch(fixture);
+                        });
+                        
+                        // 检查本阶段是否全部完成
+                        const allStageComplete = tournament.knockoutFixtures.filter(f =>
+                            f.stage === currentStage &&
+                            f.team1 && f.team2
+                        ).every(f => f.winner);
+                        
+                        if (allStageComplete) {
+                            // 填充下一轮对阵
+                            leagueSystem.updateTournamentNextRound(tournament, currentStage);
+                            
+                            // 检查是否完成整个赛事
+                            if (currentStage === '决赛') {
+                                tournament.knockoutStageCompleted = true;
+                                tournament.champion = tournament.knockoutFixtures.find(f => f.stage === '决赛').winner;
+                            }
+                        }
+                        
+                        await saveData();
+                        
+                        alert(`✅ ${tournamentName} ${currentStage}\n所有组本周比赛已完成${allStageComplete ? '\n\n本阶段已全部完成' : ''}`);
+                        
+                        // 推进到下一个比赛节点
+                        if (timeSystem) {
+                            await advanceToNextMatchNode(playerTeam);
+                        }
+                        
+                        updateAllTabs();
+                    } else {
+                        alert('⚠️ 没有可进行的淘汰赛比赛！');
+                    }
                 }
             }
         }
