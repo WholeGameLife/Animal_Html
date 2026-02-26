@@ -678,6 +678,110 @@
             background: linear-gradient(135deg, #7c3aed, #db2777);
             border-radius: 5px;
         }
+
+        /* 居中消息UI样式 */
+        .message-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.85);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            animation: fadeIn 0.2s ease-in-out;
+        }
+
+        .message-box {
+            background: linear-gradient(135deg, rgba(30, 41, 59, 0.98) 0%, rgba(15, 23, 42, 1) 100%);
+            border: 3px solid rgba(139, 92, 246, 0.6);
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 600px;
+            min-width: 400px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+            animation: scaleIn 0.3s ease-out;
+            position: relative;
+        }
+
+        .message-icon {
+            font-size: 4em;
+            text-align: center;
+            margin-bottom: 20px;
+            animation: bounce 0.5s ease-in-out;
+        }
+
+        .message-title {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #c4b5fd;
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        .message-content {
+            font-size: 1.1em;
+            color: #e0e7ff;
+            text-align: center;
+            line-height: 1.6;
+            margin-bottom: 30px;
+            white-space: pre-line;
+        }
+
+        .message-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+
+        .message-btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .message-btn-primary {
+            background: linear-gradient(135deg, #7c3aed 0%, #db2777 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(124, 58, 237, 0.5);
+        }
+
+        .message-btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(124, 58, 237, 0.7);
+        }
+
+        .message-btn-secondary {
+            background: linear-gradient(135deg, #64748b 0%, #475569 100%);
+            color: white;
+        }
+
+        .message-btn-secondary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(100, 116, 139, 0.5);
+        }
+
+        @keyframes scaleIn {
+            from {
+                transform: scale(0.8);
+                opacity: 0;
+            }
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
     </style>
 </head>
 <body>
@@ -1063,6 +1167,9 @@
         </div>
     </div>
 
+    <!-- 居中消息容器 -->
+    <div id="message-overlay" style="display: none;"></div>
+
     <script src="../scripts/image_library.js"></script>
     <script src="../scripts/league_trainers_data.js"></script>
     <script src="../scripts/league_system.js"></script>
@@ -1074,6 +1181,128 @@
         let selectedLeagueType = null;
         let selectedAnimals = [];
         let playerAnimals = [];
+
+        // ============ 居中消息系统 ============
+        
+        /**
+         * 显示居中消息
+         * @param {string} message - 消息内容
+         * @param {string} icon - 图标emoji（可选）
+         * @param {string} type - 消息类型：'info', 'success', 'warning', 'error', 'confirm'
+         * @param {function} onConfirm - 确认回调（仅confirm类型）
+         * @param {function} onCancel - 取消回调（仅confirm类型）
+         */
+        function showMessage(message, icon = '📢', type = 'info', onConfirm = null, onCancel = null) {
+            return new Promise((resolve) => {
+                const overlay = document.getElementById('message-overlay');
+                if (!overlay) {
+                    console.error('消息容器不存在！');
+                    resolve(false);
+                    return;
+                }
+                
+                // 图标映射
+                const iconMap = {
+                    'info': '📢',
+                    'success': '✅',
+                    'warning': '⚠️',
+                    'error': '❌',
+                    'confirm': '❓'
+                };
+                
+                const displayIcon = icon || iconMap[type] || '📢';
+                
+                let buttonsHtml = '';
+                
+                if (type === 'confirm') {
+                    buttonsHtml = `
+                        <div class="message-buttons">
+                            <button class="message-btn message-btn-primary" onclick="handleMessageConfirm(true)">
+                                确认
+                            </button>
+                            <button class="message-btn message-btn-secondary" onclick="handleMessageConfirm(false)">
+                                取消
+                            </button>
+                        </div>
+                    `;
+                } else {
+                    buttonsHtml = `
+                        <div class="message-buttons">
+                            <button class="message-btn message-btn-primary" onclick="closeMessage()">
+                                确定
+                            </button>
+                        </div>
+                    `;
+                }
+                
+                overlay.innerHTML = `
+                    <div class="message-overlay">
+                        <div class="message-box">
+                            <div class="message-icon">${displayIcon}</div>
+                            <div class="message-content">${message}</div>
+                            ${buttonsHtml}
+                        </div>
+                    </div>
+                `;
+                
+                overlay.style.display = 'block';
+                
+                // 保存回调函数
+                window.currentMessageResolve = resolve;
+                window.currentMessageOnConfirm = onConfirm;
+                window.currentMessageOnCancel = onCancel;
+            });
+        }
+        
+        /**
+         * 关闭消息
+         */
+        function closeMessage() {
+            const overlay = document.getElementById('message-overlay');
+            if (overlay) {
+                overlay.style.display = 'none';
+                overlay.innerHTML = '';
+            }
+            
+            if (window.currentMessageResolve) {
+                window.currentMessageResolve(true);
+                window.currentMessageResolve = null;
+            }
+        }
+        
+        /**
+         * 处理确认/取消
+         */
+        function handleMessageConfirm(confirmed) {
+            const overlay = document.getElementById('message-overlay');
+            if (overlay) {
+                overlay.style.display = 'none';
+                overlay.innerHTML = '';
+            }
+            
+            if (confirmed && window.currentMessageOnConfirm) {
+                window.currentMessageOnConfirm();
+            } else if (!confirmed && window.currentMessageOnCancel) {
+                window.currentMessageOnCancel();
+            }
+            
+            if (window.currentMessageResolve) {
+                window.currentMessageResolve(confirmed);
+                window.currentMessageResolve = null;
+            }
+            
+            window.currentMessageOnConfirm = null;
+            window.currentMessageOnCancel = null;
+        }
+        
+        /**
+         * 显示确认对话框
+         */
+        async function showConfirm(message, icon = '❓') {
+            return await showMessage(message, icon, 'confirm');
+        }
+        
+        // ============ 居中消息系统结束 ============
 
         window.onload = async function() {
             leagueSystem = new LeagueSystem();
@@ -1129,7 +1358,7 @@
             
             const result = timeSystem.advanceRound();
             if (!result.success) {
-                alert(result.reason);
+                await showMessage(result.reason, '⚠️', 'warning');
                 return;
             }
             
@@ -1143,13 +1372,13 @@
                 try {
                     const leagueResult = leagueSystem.playRound(playerTeam.region, playerTeam.league);
                     if (leagueResult.error) {
-                        alert(`⚠️ 联赛进行失败：${leagueResult.error}`);
+                        await showMessage(`⚠️ 联赛进行失败：${leagueResult.error}`, '⚠️', 'error');
                     } else {
                         await saveData();
                         updateAllTabs();
                         
                         if (leagueResult.completed) {
-                            alert('🏁 赛季已结束！查看排名确定大陆赛事参赛资格。');
+                            await showMessage('🏁 赛季已结束！查看排名确定大陆赛事参赛资格。', '🏁', 'success');
                             document.getElementById('next-season-btn').style.display = 'inline-block';
                             
                             // 结束联赛时间追踪
@@ -1171,20 +1400,20 @@
                                 
                                 // 检查是否有大陆赛事
                                 if (checkPlayerTournamentOnSaturday()) {
-                                    alert('📅 已推进到周六（大陆赛事日）\n\n💡 你有资格参加的大陆赛事可以在今天进行！\n请前往"赛程排行榜"查看详情。');
+                                    await showMessage('📅 已推进到周六（大陆赛事日）\n\n💡 你有资格参加的大陆赛事可以在今天进行！\n请前往"赛程排行榜"查看详情。', '📅', 'info');
                                 }
                             }
                         }
                     }
                 } catch (error) {
-                    alert('联赛比赛进行失败：' + error.message);
+                    await showMessage('联赛比赛进行失败：' + error.message, '❌', 'error');
                 }
             }
             
             // 显示时间信息
             const activeLeaguesText = result.activeLeagues && result.activeLeagues.length > 0 ? 
                 ` | 活跃联赛: ${result.activeLeagues.join(', ')}` : '';
-            alert(`⚽ 已推进到第${result.week}周第${result.round}轮${activeLeaguesText}`);
+            await showMessage(`⚽ 已推进到第${result.week}周第${result.round}轮${activeLeaguesText}`, '⚽', 'info');
         }
         
         // 新增：推进一天
@@ -1193,7 +1422,7 @@
             
             const result = timeSystem.advanceDay();
             if (!result.success) {
-                alert(result.reason);
+                await showMessage(result.reason, '⚠️', 'warning');
                 return;
             }
             
@@ -1201,7 +1430,7 @@
             await timeSystem.saveData();
             
             const matchDayText = result.isMatchDay ? ' 🏟️ 比赛日' : '';
-            alert(`📅 时间推进到星期${result.dayName}${matchDayText}`);
+            await showMessage(`📅 时间推进到星期${result.dayName}${matchDayText}`, '📅', 'info');
         }
         
         // 新增：推进到下一个联赛比赛日
@@ -1210,20 +1439,20 @@
             
             const timeInfo = timeSystem.getCurrentTime();
             if (timeInfo.isLeagueMatchDay) {
-                alert('ℹ️ 今天已经是联赛比赛日（周一或周四）');
+                await showMessage('ℹ️ 今天已经是联赛比赛日（周一或周四）', 'ℹ️', 'info');
                 return;
             }
             
             const result = timeSystem.advanceToNextLeagueMatchDay();
             if (!result.success) {
-                alert(result.reason);
+                await showMessage(result.reason, '⚠️', 'warning');
                 return;
             }
             
             updateTimeDisplay();
             await timeSystem.saveData();
             
-            alert(`🏟️ 已推进到联赛比赛日：第${result.week}周 星期${result.dayName}`);
+            await showMessage(`🏟️ 已推进到联赛比赛日：第${result.week}周 星期${result.dayName}`, '🏟️', 'success');
         }
         
         // 新增：推进到大陆赛事比赛日
@@ -1232,20 +1461,20 @@
             
             const timeInfo = timeSystem.getCurrentTime();
             if (timeInfo.isTournamentMatchDay) {
-                alert('ℹ️ 今天已经是大陆赛事比赛日（周六）');
+                await showMessage('ℹ️ 今天已经是大陆赛事比赛日（周六）', 'ℹ️', 'info');
                 return;
             }
             
             const result = timeSystem.advanceToNextTournamentMatchDay();
             if (!result.success) {
-                alert(result.reason);
+                await showMessage(result.reason, '⚠️', 'warning');
                 return;
             }
             
             updateTimeDisplay();
             await timeSystem.saveData();
             
-            alert(`🏆 已推进到大陆赛事比赛日：第${result.week}周 星期${result.dayName}`);
+            await showMessage(`🏆 已推进到大陆赛事比赛日：第${result.week}周 星期${result.dayName}`, '🏆', 'success');
         }
         
         // 新增：推进一轮大陆赛事
@@ -1254,7 +1483,7 @@
             
             const result = timeSystem.advanceTournamentRound();
             if (!result.success) {
-                alert(result.reason);
+                await showMessage(result.reason, '⚠️', 'warning');
                 return;
             }
             
@@ -1264,7 +1493,7 @@
             // TODO: 这里应该调用联赛系统的大陆赛事比赛逻辑
             // 例如：leagueSystem.playTournamentRound(...)
             
-            alert('🏆 周六大陆赛事比赛日\n\n大陆赛事功能开发中...\n周一和周四继续进行联赛比赛');
+            await showMessage('🏆 周六大陆赛事比赛日\n\n大陆赛事功能开发中...\n周一和周四继续进行联赛比赛', '🏆', 'info');
         }
         
         // 新增：推进一周时间
@@ -1273,14 +1502,14 @@
             
             const result = timeSystem.advanceWeek();
             if (!result.success) {
-                alert(result.reason);
+                await showMessage(result.reason, '⚠️', 'warning');
                 return;
             }
             
             updateTimeDisplay();
             await timeSystem.saveData();
             
-            alert(`📅 时间推进到第${result.year}年 ${result.season} 第${result.week}周`);
+            await showMessage(`📅 时间推进到第${result.year}年 ${result.season} 第${result.week}周`, '📅', 'success');
         }
         
         // 新增：暂停/继续时间
@@ -1291,7 +1520,7 @@
             updateTimeDisplay();
             await timeSystem.saveData();
             
-            alert(isPaused ? '⏸️ 时间已暂停' : '▶️ 时间继续');
+            await showMessage(isPaused ? '⏸️ 时间已暂停' : '▶️ 时间继续', isPaused ? '⏸️' : '▶️', 'info');
         }
         
         // 检查是否从战斗系统返回
@@ -1389,18 +1618,18 @@
 
         async function joinLeague() {
             if (!selectedRegion) {
-                alert('请选择地区！');
+                await showMessage('请选择地区！', '⚠️', 'warning');
                 return;
             }
 
             if (!selectedLeagueType) {
-                alert('请选择联赛类型（夏季联赛或冬季联赛）！');
+                await showMessage('请选择联赛类型（夏季联赛或冬季联赛）！', '⚠️', 'warning');
                 return;
             }
 
             const teamName = document.getElementById('team-name').value.trim();
             if (!teamName) {
-                alert('请输入队伍名称！');
+                await showMessage('请输入队伍名称！', '⚠️', 'warning');
                 return;
             }
             
@@ -1410,7 +1639,7 @@
                 const requiredSeason = selectedLeagueType === '夏季联赛' ? '夏季' : '冬季';
                 
                 if (timeInfo.season !== requiredSeason) {
-                    alert(`❌ 无法加入${selectedLeagueType}\n\n${selectedLeagueType}只能在${requiredSeason}参加！\n当前是 ${timeInfo.season}\n\n请在时间控制中推进时间到${requiredSeason}。`);
+                    await showMessage(`❌ 无法加入${selectedLeagueType}\n\n${selectedLeagueType}只能在${requiredSeason}参加！\n当前是 ${timeInfo.season}\n\n请在时间控制中推进时间到${requiredSeason}。`, '❌', 'error');
                     return;
                 }
                 
@@ -1418,7 +1647,7 @@
                 const canStart = timeSystem.canLeagueStart(selectedLeagueType);
                 if (!canStart.canStart) {
                     const schedule = timeSystem.leagueSchedules[selectedLeagueType];
-                    alert(`❌ 无法加入${selectedLeagueType}\n\n${canStart.reason}\n\n${selectedLeagueType}在第${schedule.startWeek}周开赛，请推进时间。`);
+                    await showMessage(`❌ 无法加入${selectedLeagueType}\n\n${canStart.reason}\n\n${selectedLeagueType}在第${schedule.startWeek}周开赛，请推进时间。`, '❌', 'error');
                     return;
                 }
             }
@@ -1426,7 +1655,7 @@
             try {
                 // 确保训练师数据已加载
                 if (!leagueSystem.trainersData) {
-                    alert('⏳ 正在加载训练师数据，请稍候...');
+                    await showMessage('⏳ 正在加载训练师数据，请稍候...', '⏳', 'info');
                     await leagueSystem.loadTrainersData();
                 }
                 
@@ -1441,10 +1670,10 @@
                     }
                 }
                 
-                alert(`🎉 成功加入${selectedRegion}地区的${selectedLeagueType}！`);
+                await showMessage(`🎉 成功加入${selectedRegion}地区的${selectedLeagueType}！`, '🎉', 'success');
                 await saveData();
             } catch (error) {
-                alert('加入失败：' + error.message);
+                await showMessage('加入失败：' + error.message, '❌', 'error');
                 return;
             }
             
@@ -1475,7 +1704,7 @@
             });
         }
 
-        function toggleAnimalSelection(animal, card) {
+        async function toggleAnimalSelection(animal, card) {
             const index = selectedAnimals.findIndex(a => a.id === animal.id);
             
             if (index > -1) {
@@ -1486,7 +1715,7 @@
                     selectedAnimals.push(animal);
                     card.classList.add('selected');
                 } else {
-                    alert('最多只能选择25只动物！');
+                    await showMessage('最多只能选择25只动物！', '⚠️', 'warning');
                     return;
                 }
             }
@@ -1497,7 +1726,7 @@
         async function completeRegistration() {
             // 修改：最少5只动物
             if (selectedAnimals.length < 5) {
-                alert('请至少选择5只动物！');
+                await showMessage('请至少选择5只动物！', '⚠️', 'warning');
                 return;
             }
 
@@ -1506,27 +1735,27 @@
                 const message = selectedAnimals.length < 25 ? 
                     `✅ 登记成功！已登记${selectedAnimals.length}只动物\n建议登记25只以获得完整体验。` :
                     '✅ 登记成功！新赛季开始！';
-                alert(message);
+                await showMessage(message, '✅', 'success');
                 selectedAnimals = [];
                 document.getElementById('registration-view').style.display = 'none';
                 document.getElementById('joined-main-view').style.display = 'block';
                 await saveData();
                 updateUI();
             } catch (error) {
-                alert('登记失败：' + error.message);
+                await showMessage('登记失败：' + error.message, '❌', 'error');
             }
         }
 
         async function playNextRound() {
             const playerTeam = leagueSystem.getPlayerTeam();
             if (!playerTeam.region) {
-                alert('请先加入联赛！');
+                await showMessage('请先加入联赛！', '⚠️', 'warning');
                 return;
             }
             
             // 检查是否已选择参战动物
             if (!window.selectedBattleAnimals || window.selectedBattleAnimals.filter(a => a).length < 5) {
-                alert('⚠️ 请先在战斗准备界面选择5只参战动物！');
+                await showMessage('⚠️ 请先在战斗准备界面选择5只参战动物！', '⚠️', 'warning');
                 switchTab('battle-preparation');
                 return;
             }
@@ -1542,7 +1771,7 @@
                 // 获取下一场比赛信息
                 const nextMatchInfo = getNextMatchInfo();
                 if (!nextMatchInfo) {
-                    alert('⚠️ 没有可进行的比赛！');
+                    await showMessage('⚠️ 没有可进行的比赛！', '⚠️', 'warning');
                     return;
                 }
                 
@@ -1553,7 +1782,7 @@
                 startLeagueBattle(nextMatchInfo);
                 
             } catch (error) {
-                alert('比赛进行失败：' + error.message);
+                await showMessage('比赛进行失败：' + error.message, '❌', 'error');
             }
         }
         
@@ -1585,7 +1814,7 @@
         }
         
         // 启动联赛战斗
-        function startLeagueBattle(matchInfo) {
+        async function startLeagueBattle(matchInfo) {
             const playerTeam = leagueSystem.getPlayerTeam();
             
             // 保存联赛战斗信息到 localStorage
@@ -1604,12 +1833,12 @@
             const opponentAnimals = matchInfo.opponent.registeredAnimals?.slice(0, 5) || [];
             
             if (playerAnimals.length < 5) {
-                alert('⚠️ 参战动物不足5只！');
+                await showMessage('⚠️ 参战动物不足5只！', '⚠️', 'warning');
                 return;
             }
             
             if (opponentAnimals.length < 5) {
-                alert('⚠️ 对手数据异常！');
+                await showMessage('⚠️ 对手数据异常！', '⚠️', 'error');
                 return;
             }
             
@@ -1627,10 +1856,10 @@
         }
         
         // 开始队列中的下一场战斗
-        function startNextBattleInQueue() {
+        async function startNextBattleInQueue() {
             const queueData = JSON.parse(localStorage.getItem('leagueBattleQueue'));
             if (!queueData) {
-                alert('战斗队列数据丢失！');
+                await showMessage('战斗队列数据丢失！', '❌', 'error');
                 return;
             }
             
@@ -1682,7 +1911,7 @@
         }
         
         // 完成联赛比赛（5v5结束后）
-        function finishLeagueMatch(queueData) {
+        async function finishLeagueMatch(queueData) {
             const playerWins = queueData.playerWins;
             const opponentWins = queueData.opponentWins;
             
@@ -1700,10 +1929,10 @@
             }));
             
             // 显示结果并处理联赛逻辑
-            alert(`⚔️ 5v5比赛结束！\n\n我方: ${playerWins} 胜\n对方: ${opponentWins} 胜\n\n结果: ${playerWon ? '🎉 胜利！' : '💀 失败...'}`);
+            await showMessage(`⚔️ 5v5比赛结束！\n\n我方: ${playerWins} 胜\n对方: ${opponentWins} 胜\n\n结果: ${playerWon ? '🎉 胜利！' : '💀 失败...'}`, playerWon ? '🎉' : '💀', playerWon ? 'success' : 'warning');
             
             // 处理联赛结果
-            processLeagueMatchResult(playerWon);
+            await processLeagueMatchResult(playerWon);
         }
         
         // 处理联赛比赛结果
@@ -1728,7 +1957,7 @@
                 const result = leagueSystem.playRound(playerTeam.region, playerTeam.league);
                 
                 if (result.error) {
-                    alert(result.error);
+                    await showMessage(result.error, '❌', 'error');
                     return;
                 }
 
@@ -1739,22 +1968,22 @@
                 localStorage.removeItem('leagueMatchResult');
                 
                 if (result.completed) {
-                    alert('🏁 赛季已结束！查看排名确定大陆赛事参赛资格。');
+                    await showMessage('🏁 赛季已结束！查看排名确定大陆赛事参赛资格。', '🏁', 'success');
                     document.getElementById('next-season-btn').style.display = 'inline-block';
                 }
             } catch (error) {
-                alert('处理比赛结果失败：' + error.message);
+                await showMessage('处理比赛结果失败：' + error.message, '❌', 'error');
             }
         }
 
         async function simulateFullSeason() {
-            if (!confirm('确定要模拟完整赛季吗？')) return;
+            if (!await showConfirm('确定要模拟完整赛季吗？', '❓')) return;
 
             const playerTeam = leagueSystem.getPlayerTeam();
             const league = leagueSystem.getLeagueInfo(playerTeam.region, playerTeam.league);
             
             if (!league) {
-                alert('联赛数据不存在！');
+                await showMessage('联赛数据不存在！', '📢', 'info');
                 return;
             }
             
@@ -1765,7 +1994,7 @@
             await saveData();
             updateUI();
             document.getElementById('next-season-btn').style.display = 'inline-block';
-            alert('⚡ 赛季模拟完成！');
+            await showMessage('⚡ 赛季模拟完成！', '✅', 'success');
         }
 
         async function startNextSeason() {
@@ -1879,9 +2108,9 @@
                 }
                 
                 if (result.needsRegistration) {
-                    alert(`🎉 新赛季开始！\n\n你已从 ${previousLeague} 进入 ${currentLeague}\n\n⚠️ 请点击"动物登记"按钮登记25只动物！`);
+                    await showMessage(`🎉 新赛季开始！\n\n你已从 ${previousLeague} 进入 ${currentLeague}\n\n⚠️ 请点击"动物登记"按钮登记25只动物！`, '🎉', 'success');
                 } else {
-                    alert(`🏁 新赛季开始！当前联赛：${currentLeague}`);
+                    await showMessage(`🏁 新赛季开始！当前联赛：${currentLeague}`, '🏁', 'success');
                 }
                 
                 document.getElementById('next-season-btn').style.display = 'none';
@@ -1889,7 +2118,7 @@
                 updateUI();
                 
             } catch (error) {
-                alert('开始新赛季失败：' + error.message);
+                await showMessage('开始新赛季失败：' + error.message, '❌', 'error');
             }
         }
 
@@ -1953,10 +2182,10 @@
             }
         }
         
-        function openBattlePreparation() {
+        async function openBattlePreparation() {
             // 检查是否有可用动物
             if (playerAnimals.length === 0) {
-                alert('⚠️ 您还没有任何动物！\n\n请先在主场景中：\n1. 捕获野生动物\n2. 或在动物管理中心繁殖动物\n\n然后返回联赛系统参战。');
+                await showMessage('⚠️ 您还没有任何动物！\n\n请先在主场景中：\n1. 捕获野生动物\n2. 或在动物管理中心繁殖动物\n\n然后返回联赛系统参战。', '⚠️', 'warning');
                 return;
             }
             
@@ -2410,10 +2639,10 @@
         // 初始化选中的战斗动物数组
         window.selectedBattleAnimals = window.selectedBattleAnimals || [];
         
-        function openAnimalSelector(slotIndex) {
+        async function openAnimalSelector(slotIndex) {
             // 检查是否有动物
             if (playerAnimals.length === 0) {
-                alert('⚠️ 您还没有任何动物！\n请先在主场景中捕获或繁殖动物。');
+                await showMessage('⚠️ 您还没有任何动物！\n请先在主场景中捕获或繁殖动物。', '⚠️', 'warning');
                 return;
             }
             
@@ -2423,7 +2652,7 @@
             );
             
             if (availableAnimals.length === 0) {
-                alert('没有可用的动物了！所有动物都已被选择。');
+                await showMessage('没有可用的动物了！所有动物都已被选择。', 'ℹ️', 'info');
                 return;
             }
             
@@ -3963,7 +4192,7 @@
         }
         
         // 切换动物选择（登记用）
-        function toggleRosterAnimalSelection(animal, card) {
+        async function toggleRosterAnimalSelection(animal, card) {
             const index = selectedAnimals.findIndex(a => a.id === animal.id);
             
             if (index > -1) {
@@ -3974,7 +4203,7 @@
                     selectedAnimals.push(animal);
                     card.classList.add('selected');
                 } else {
-                    alert('最多只能选择25只动物！');
+                    await showMessage('最多只能选择25只动物！', '⚠️', 'warning');
                     return;
                 }
             }
@@ -3989,7 +4218,7 @@
         async function completeRosterRegistration() {
             // 修改：最少5只动物
             if (selectedAnimals.length < 5) {
-                alert('请至少选择5只动物！');
+                await showMessage('请至少选择5只动物！', '⚠️', 'warning');
                 return;
             }
 
@@ -3998,13 +4227,13 @@
                 const message = selectedAnimals.length < 25 ? 
                     `✅ 登记成功！已登记${selectedAnimals.length}只动物` :
                     '✅ 登记成功！';
-                alert(message);
+                await showMessage(message, '✅', 'success');
                 selectedAnimals = [];
                 await saveData();
                 updateTabContent('animal-roster');
                 updateBattlePreparationHint();
             } catch (error) {
-                alert('登记失败：' + error.message);
+                await showMessage('登记失败：' + error.message, '❌', 'error');
             }
         }
         
@@ -4059,7 +4288,7 @@
                 await leagueSystem.saveData();
             } catch (error) {
                 console.error('保存数据失败:', error);
-                alert('⚠️ 保存数据失败：' + error.message);
+                await showMessage('⚠️ 保存数据失败：' + error.message, '❌', 'error');
             }
         }
 
@@ -4072,7 +4301,7 @@
         }
         
         async function resetSeason() {
-            if (!confirm('⚠️ 确定要重置赛季吗？\n\n这将清除所有联赛数据，包括：\n• 当前赛季进度\n• 队伍信息\n• 比赛记录\n• 生涯历史\n\n此操作无法撤销！')) {
+            if (!await showConfirm('⚠️ 确定要重置赛季吗？\n\n这将清除所有联赛数据，包括：\n• 当前赛季进度\n• 队伍信息\n• 比赛记录\n• 生涯历史\n\n此操作无法撤销！', '⚠️')) {
                 return;
             }
             
@@ -4080,20 +4309,20 @@
                 // 清除 IndexedDB 中的联赛数据
                 await leagueSystem.clearAllData();
                 
-                alert('✅ 赛季已重置！页面将刷新。');
+                await showMessage('✅ 赛季已重置！页面将刷新。', '✅', 'success');
                 
                 // 刷新页面
                 location.reload();
             } catch (error) {
                 console.error('重置失败:', error);
-                alert('❌ 重置失败：' + error.message);
+                await showMessage('❌ 重置失败：' + error.message, '❌', 'error');
             }
         }
         
         // 快速模拟赛季（已弃用跳过小组赛功能）
         async function skipToKnockout() {
             // 新规则中没有小组赛，此按钮已隐藏
-            alert('此功能在新规则下不可用。');
+            await showMessage('此功能在新规则下不可用。', '📢', 'info');
         }
         
         // 检查玩家是否在周六有大陆赛事
@@ -4419,13 +4648,13 @@
         
         // 调试：直接胜利（单轮）
         async function debugAutoWin() {
-            if (!confirm('🎮 调试模式：直接获胜\n\n这将跳过战斗，直接判定玩家本轮获胜，并自动推进时间到下一个比赛日。')) {
+            if (!await showConfirm('🎮 调试模式：直接获胜\n\n这将跳过战斗，直接判定玩家本轮获胜，并自动推进时间到下一个比赛日。', '🎮')) {
                 return;
             }
             
             const playerTeam = leagueSystem.getPlayerTeam();
             if (!playerTeam.region) {
-                alert('请先加入联赛！');
+                await showMessage('请先加入联赛！', '⚠️', 'warning');
                 return;
             }
             
@@ -4444,7 +4673,7 @@
                     // 获取下一场比赛
                     const nextMatchInfo = getNextMatchInfo();
                     if (!nextMatchInfo) {
-                        alert('⚠️ 没有可进行的比赛！');
+                        await showMessage('⚠️ 没有可进行的比赛！', '⚠️', 'warning');
                         return;
                     }
                     
@@ -4452,7 +4681,7 @@
                     const mockResult = leagueSystem.playRound(playerTeam.region, playerTeam.league);
                     
                     if (mockResult.error) {
-                        alert(mockResult.error);
+                        await showMessage(mockResult.error, '❌', 'error');
                         return;
                     }
                     
@@ -4478,7 +4707,7 @@
                                 // 检查是否有玩家参加的大陆赛事
                                 const hasPlayerTournament = checkPlayerTournamentOnSaturday();
                                 if (hasPlayerTournament) {
-                                    alert('📅 已推进到周六（大陆赛事日）\n\n💡 提示：你有参赛资格的大陆赛事在今天进行！');
+                                    await showMessage('📅 已推进到周六（大陆赛事日）\n\n💡 提示：你有参赛资格的大陆赛事在今天进行！', '📅', 'info');
                                 }
                             } else {
                                 // 其他情况推进到下一个联赛比赛日（周一）
@@ -4490,7 +4719,7 @@
                         }
                     }
                     
-                    alert('✅ 已自动完成一轮联赛比赛！\n时间已推进到下一个比赛日。');
+                    await showMessage('✅ 已自动完成一轮联赛比赛！\n时间已推进到下一个比赛日。', '✅', 'success');
                     
                     if (mockResult.completed) {
                         document.getElementById('next-season-btn').style.display = 'inline-block';
@@ -4499,7 +4728,7 @@
                 
             } catch (error) {
                 console.error('调试失败:', error);
-                alert('❌ 调试失败：' + error.message);
+                await showMessage('❌ 调试失败：' + error.message, '❌', 'error');
             }
         }
         
@@ -4524,7 +4753,7 @@
                     if (advanceResult.success) {
                         await timeSystem.saveData();
                         updateTimeDisplay();
-                        alert(`📅 已推进到周一（第${advanceResult.week}周）\n继续联赛比赛`);
+                        await showMessage(`📅 已推进到周一（第${advanceResult.week}周）\n继续联赛比赛`, '📅', 'info');
                     }
                 } else if (hasWorldMatches) {
                     // 如果联赛已完成,但世界赛还有比赛,推进到下周六
@@ -4532,10 +4761,10 @@
                     if (advanceResult.success) {
                         await timeSystem.saveData();
                         updateTimeDisplay();
-                        alert(`📅 已推进到下周六（第${advanceResult.week}周）\n继续大陆赛事`);
+                        await showMessage(`📅 已推进到下周六（第${advanceResult.week}周）\n继续大陆赛事`, '📅', 'info');
                     }
                 } else {
-                    alert('🏁 所有比赛已完成！');
+                    await showMessage('🏁 所有比赛已完成！', '✅', 'success');
                 }
             }
             // 当前是周一或周四(联赛日)
@@ -4548,7 +4777,7 @@
                     }
                     await timeSystem.saveData();
                     updateTimeDisplay();
-                    alert(`📅 已推进到周四（联赛日）`);
+                    await showMessage(`📅 已推进到周四（联赛日）`, '📅', 'info');
                 } else if (currentTime.day === 4) {
                     // 周四完成,检查是否有世界赛,有则推进到周六,否则推进到下周一
                     if (hasWorldMatches) {
@@ -4557,16 +4786,16 @@
                         }
                         await timeSystem.saveData();
                         updateTimeDisplay();
-                        alert(`📅 已推进到周六（大陆赛事日）`);
+                        await showMessage(`📅 已推进到周六（大陆赛事日）`, '📅', 'info');
                     } else if (hasLeagueMatches) {
                         const advanceResult = timeSystem.advanceToNextLeagueMatchDay();
                         if (advanceResult.success) {
                             await timeSystem.saveData();
                             updateTimeDisplay();
-                            alert(`📅 已推进到下周一（第${advanceResult.week}周联赛日）`);
+                            await showMessage(`📅 已推进到下周一（第${advanceResult.week}周联赛日）`, '📅', 'info');
                         }
                     } else {
-                        alert('🏁 所有比赛已完成！');
+                        await showMessage('🏁 所有比赛已完成！', '✅', 'success');
                     }
                 }
             }
@@ -4575,7 +4804,7 @@
         // 新增：推进到下周一（跳过本周世界赛，但先模拟完本轮）
         async function skipToNextLeagueDay() {
             if (!timeSystem) {
-                alert('时间系统未初始化！');
+                await showMessage('时间系统未初始化！', '📢', 'info');
                 return;
             }
             
@@ -4598,7 +4827,7 @@
                         // 确认这轮玩家确实没有比赛
                         if (!result.noPlayerMatch && result.fixture) {
                             // 如果这轮有玩家的比赛，提示用户
-                            alert('⚠️ 当前轮次有你的比赛，无法跳过！\n请点击"直接胜利"完成比赛。');
+                            await showMessage('⚠️ 当前轮次有你的比赛，无法跳过！\n请点击"直接胜利"完成比赛。', '⚠️', 'warning');
                             updateAllTabs();
                             return;
                         }
@@ -4611,20 +4840,20 @@
                     await timeSystem.saveData();
                     updateTimeDisplay();
                     updateAllTabs();
-                    alert(`📅 已推进到周一（第${result.week}周）\n\n继续联赛比赛`);
+                    await showMessage(`📅 已推进到周一（第${result.week}周）\n\n继续联赛比赛`, '📅', 'info');
                 } else {
-                    alert(`❌ ${result.reason}`);
+                    await showMessage(`❌ ${result.reason}`, '❌', 'error');
                 }
             } catch (error) {
                 console.error('推进时间失败:', error);
-                alert(`❌ 推进失败：${error.message}`);
+                await showMessage(`❌ 推进失败：${error.message}`, '❌', 'error');
             }
         }
         
         // 新增：推进到下一周（处理淘汰赛等待情况）
         async function skipTournamentToNextRound() {
             if (!timeSystem) {
-                alert('时间系统未初始化！');
+                await showMessage('时间系统未初始化！', '📢', 'info');
                 return;
             }
             
@@ -4632,7 +4861,7 @@
                 const playerTeam = leagueSystem.getPlayerTeam();
                 
                 if (!playerTeam || !playerTeam.tournamentQualification) {
-                    alert('⚠️ 未找到大陆赛事参赛资格！');
+                    await showMessage('⚠️ 未找到大陆赛事参赛资格！', '⚠️', 'warning');
                     return;
                 }
                 
@@ -4641,7 +4870,7 @@
                 const tournament = leagueSystem.getTournamentInfo(season, tournamentName);
                 
                 if (!tournament) {
-                    alert('⚠️ 大陆赛事尚未生成！');
+                    await showMessage('⚠️ 大陆赛事尚未生成！', '⚠️', 'warning');
                     return;
                 }
                 
@@ -4651,7 +4880,7 @@
                 );
                 
                 if (!playerFixture) {
-                    alert('⚠️ 未找到玩家的比赛数据！');
+                    await showMessage('⚠️ 未找到玩家的比赛数据！', '⚠️', 'warning');
                     return;
                 }
                 
@@ -4695,11 +4924,11 @@
                 updateAllTabs();
                 
                 const statusText = playerFixture.winner.isPlayer ? '🎉 你已晋级' : '💀 你已淘汰';
-                alert(`✅ 已模拟完成所有组的${currentStage}\n\n${statusText}\n自动模拟了${autoSimulatedCount}场比赛\n\n时间已推进到下一个比赛日`);
+                await showMessage(`✅ 已模拟完成所有组的${currentStage}\n\n${statusText}\n自动模拟了${autoSimulatedCount}场比赛\n\n时间已推进到下一个比赛日`, '✅', 'success');
                 
             } catch (error) {
                 console.error('推进失败:', error);
-                alert(`❌ 推进失败：${error.message}`);
+                await showMessage(`❌ 推进失败：${error.message}`, '❌', 'error');
             }
         }
         
@@ -4710,12 +4939,12 @@
             const tournament = leagueSystem.getTournamentInfo(season, tournamentName);
             
             if (!tournament) {
-                alert('⚠️ 大陆赛事尚未生成！');
+                await showMessage('⚠️ 大陆赛事尚未生成！', '⚠️', 'warning');
                 return;
             }
             
             if (tournament.knockoutStageCompleted) {
-                alert('⚠️ 大陆赛事已结束！');
+                await showMessage('⚠️ 大陆赛事已结束！', '⚠️', 'warning');
                 return;
             }
             
@@ -4725,10 +4954,10 @@
                 await saveData();
                 
                 if (result.error) {
-                    alert(`⚠️ ${result.error}`);
+                    await showMessage(`⚠️ ${result.error}`, '⚠️', 'warning');
                 } else if (result.noPlayerMatch) {
                     // 玩家本轮没有比赛,推进到下一个比赛节点
-                    alert(`📅 本周没有你的比赛\n\n当前小组赛进度：第${result.currentRound}轮/共6轮`);
+                    await showMessage(`📅 本周没有你的比赛\n\n当前小组赛进度：第${result.currentRound}轮/共6轮`, '📅', 'info');
                     
                     // 推进到下一个有比赛的节点(联赛日或世界赛日)
                     if (timeSystem) {
@@ -4738,7 +4967,7 @@
                     updateAllTabs();
                 } else if (result.allCompleted) {
                     // 小组赛全部完成,推进到周一继续联赛
-                    alert(`✅ ${tournamentName}小组赛已全部完成！\n\n准备进入淘汰赛。`);
+                    await showMessage(`✅ ${tournamentName}小组赛已全部完成！\n\n准备进入淘汰赛。`, '✅', 'success');
                     
                     // 推进到下周一(联赛日)
                     if (timeSystem) {
@@ -4746,7 +4975,7 @@
                         if (advanceResult.success) {
                             await timeSystem.saveData();
                             updateTimeDisplay();
-                            alert(`📅 已推进到周一（第${advanceResult.week}周）\n继续联赛比赛`);
+                            await showMessage(`📅 已推进到周一（第${advanceResult.week}周）\n继续联赛比赛`, '📅', 'info');
                         }
                     }
                     
@@ -4757,7 +4986,7 @@
                     const playerWon = (result.fixture.home.isPlayer && result.result.homeWins > result.result.awayWins) ||
                                      (result.fixture.away.isPlayer && result.result.awayWins > result.result.homeWins);
                     
-                    alert(`✅ ${tournamentName}小组赛 第${result.currentRound}轮\n对阵：${opponent.teamName}\n结果：${playerWon ? '🎉 胜利！' : '💀 失败'}`);
+                    await showMessage(`✅ ${tournamentName}小组赛 第${result.currentRound}轮\n对阵：${opponent.teamName}\n结果：${playerWon ? '🎉 胜利！' : '💀 失败'}`, '✅', 'success');
                     
                     // 推进到下一个有比赛的节点
                     if (timeSystem) {
@@ -4766,7 +4995,7 @@
                     
                     updateAllTabs();
                 } else {
-                    alert(`⚠️ 未知的比赛结果`);
+                    await showMessage(`⚠️ 未知的比赛结果`, '⚠️', 'warning');
                     updateAllTabs();
                 }
             } else {
@@ -4844,9 +5073,9 @@
                         const resultText = `对阵：${opponent.teamName}\n比分：${team1Wins}:${team2Wins}\n结果：${playerFixture.winner.isPlayer ? '🎉 晋级！' : '💀 淘汰'}`;
                         
                         if (tournament.knockoutStageCompleted) {
-                            alert(`✅ ${tournamentName} ${currentStage}\n${resultText}\n\n🏆 恭喜获得${tournamentName}冠军！`);
+                            await showMessage(`✅ ${tournamentName} ${currentStage}\n${resultText}\n\n🏆 恭喜获得${tournamentName}冠军！`, '✅', 'success');
                         } else {
-                            alert(`✅ ${tournamentName} ${currentStage}\n${resultText}\n\n本阶段已全部完成`);
+                            await showMessage(`✅ ${tournamentName} ${currentStage}\n${resultText}\n\n本阶段已全部完成`, '✅', 'success');
                         }
                         
                         // 推进到下一个比赛节点
@@ -4864,7 +5093,7 @@
                             `结果：${playerFixture.winner.isPlayer ? '🎉 晋级！' : '💀 淘汰'}` :
                             `当前比分：${team1Wins}:${team2Wins}\n需要继续下周比赛`;
                         
-                        alert(`✅ ${tournamentName} ${currentStage}\n对阵：${opponent.teamName}\n${statusText}\n\n所有组本周比赛已完成`);
+                        await showMessage(`✅ ${tournamentName} ${currentStage}\n对阵：${opponent.teamName}\n${statusText}\n\n所有组本周比赛已完成`, '✅', 'success');
                         
                         // 推进到下一个比赛节点
                         if (timeSystem) {
@@ -4909,7 +5138,7 @@
                         
                         await saveData();
                         
-                        alert(`✅ ${tournamentName} ${currentStage}\n所有组本周比赛已完成${allStageComplete ? '\n\n本阶段已全部完成' : ''}`);
+                        await showMessage(`✅ ${tournamentName} ${currentStage}\n所有组本周比赛已完成${allStageComplete ? '\n\n本阶段已全部完成' : ''}`, '✅', 'success');
                         
                         // 推进到下一个比赛节点
                         if (timeSystem) {
@@ -4918,7 +5147,7 @@
                         
                         updateAllTabs();
                     } else {
-                        alert('⚠️ 没有可进行的淘汰赛比赛！');
+                        await showMessage('⚠️ 没有可进行的淘汰赛比赛！', '⚠️', 'warning');
                     }
                 }
             }
@@ -4926,24 +5155,24 @@
         
         // 调试：赛季胜利（全部轮次胜利）
         async function debugAutoWinSeason() {
-            if (!confirm('🏆 调试模式：赛季胜利\n\n这将自动完成所有剩余比赛，让玩家全部获胜。\n此操作会跳过所有战斗场景。')) {
+            if (!await showConfirm('🏆 调试模式：赛季胜利\n\n这将自动完成所有剩余比赛，让玩家全部获胜。\n此操作会跳过所有战斗场景。', '🏆')) {
                 return;
             }
             
             const playerTeam = leagueSystem.getPlayerTeam();
             if (!playerTeam.region) {
-                alert('请先加入联赛！');
+                await showMessage('请先加入联赛！', '⚠️', 'warning');
                 return;
             }
             
             const league = leagueSystem.getLeagueInfo(playerTeam.region, playerTeam.league);
             if (!league) {
-                alert('联赛数据不存在！');
+                await showMessage('联赛数据不存在！', '📢', 'info');
                 return;
             }
             
             if (league.completed) {
-                alert('赛季已经结束！');
+                await showMessage('赛季已经结束！', '📢', 'info');
                 return;
             }
             
@@ -4956,7 +5185,7 @@
                     const mockResult = leagueSystem.playRound(playerTeam.region, playerTeam.league);
                     
                     if (mockResult.error) {
-                        alert(`完成到第${roundsCompleted}轮时出错: ${mockResult.error}`);
+                        await showMessage(`完成到第${roundsCompleted}轮时出错: ${mockResult.error}`, '✅', 'success');
                         break;
                     }
                     
@@ -4966,12 +5195,12 @@
                 await saveData();
                 updateAllTabs();
                 
-                alert(`🏆 赛季胜利！\n\n已完成 ${roundsCompleted} 轮比赛（第${startRound + 1}轮 → 第${league.currentRound}轮）\n\n请查看最终排名！`);
+                await showMessage(`🏆 赛季胜利！\n\n已完成 ${roundsCompleted} 轮比赛（第${startRound + 1}轮 → 第${league.currentRound}轮）\n\n请查看最终排名！`, '⚠️', 'warning');
                 document.getElementById('next-season-btn').style.display = 'inline-block';
                 
             } catch (error) {
                 console.error('赛季胜利调试失败:', error);
-                alert('❌ 调试失败：' + error.message);
+                await showMessage('❌ 调试失败：' + error.message, '❌', 'error');
             }
         }
     </script>
