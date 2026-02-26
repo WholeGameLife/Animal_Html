@@ -643,16 +643,16 @@
     </div>
 
     <!-- 引入图片库 -->
-    <script src="image_library.js"></script>
+    <script src="../scripts/image_library.js"></script>
     <!-- 引入配置文件 -->
-    <script src="animal_config.js"></script>
+    <script src="../scripts/animal_config.js"></script>
     <!-- 引入繁育逻辑 -->
-    <script src="breeding_logic.js"></script>
-    <script src="breeding_debug.js"></script>
+    <script src="../scripts/breeding_logic.js"></script>
+    <script src="../scripts/debug.js"></script>
     <!-- 引入变异逻辑 -->
-    <script src="mutation_logic.js"></script>
+    <script src="../scripts/mutation_logic.js"></script>
     <!-- 引入技能获取系统 -->
-    <script src="skill_acquisition.js"></script>
+    <script src="../scripts/skill_acquisition.js"></script>
     
     <script>
         // ========== 技能查找辅助函数 ==========
@@ -879,7 +879,7 @@
                 }
             } else {
                 alert("游戏状态加载失败！将返回主场景。");
-                window.location.href = 'game3d.html';
+                window.location.href = '../pages/game3d.html';
             }
         }
 
@@ -899,7 +899,7 @@
 
         function saveAndReturn() {
             saveGameState();
-            window.location.href = 'game3d.html';
+            window.location.href = '../pages/game3d.html';
         }
 
         function setupEventListeners() {
@@ -4679,13 +4679,13 @@
                 }
                 
                 setTimeout(() => {
-                    window.location.href = 'game3d.html';
+                    window.location.href = '../pages/game3d.html';
                 }, 1000);
             }
         }
     </script>
     
     <!-- 引入调试工具 -->
-    <script src="debug.js"></script>
+    <script src="../scripts/debug.js"></script>
 </body>
 </html>

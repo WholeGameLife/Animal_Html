@@ -1063,10 +1063,10 @@
         </div>
     </div>
 
-    <script src="image_library.js"></script>
-    <script src="league_trainers_data.js"></script>
-    <script src="league_system.js"></script>
-    <script src="game_time_system.js"></script>
+    <script src="../scripts/image_library.js"></script>
+    <script src="../scripts/league_trainers_data.js"></script>
+    <script src="../scripts/league_system.js"></script>
+    <script src="../scripts/game_time_system.js"></script>
     <script>
         let leagueSystem;
         let timeSystem; // 新增：时间系统
@@ -1678,7 +1678,7 @@
             localStorage.setItem('battleReturnUrl', 'league.html');
             
             // 跳转到战斗场景
-            window.location.href = 'battle.html';
+            window.location.href = '../pages/battle.html';
         }
         
         // 完成联赛比赛（5v5结束后）
@@ -2343,7 +2343,7 @@
                         <div style="font-size: 3em; margin-bottom: 15px;">⚠️</div>
                         <h3 style="color: #fca5a5; font-size: 1.3em; margin-bottom: 10px;">没有可用的动物</h3>
                         <p style="color: #cbd5e1; margin-bottom: 20px;">请先在主场景中捕获或繁殖一些动物</p>
-                        <button class="btn btn-primary" onclick="window.location.href='game3d.html'">前往主场景</button>
+                        <button class="btn btn-primary" onclick="window.location.href = '../pages/game3d.html'">前往主场景</button>
                     </div>
                 `;
                 slotsContainer.innerHTML = html;

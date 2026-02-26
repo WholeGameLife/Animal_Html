@@ -825,9 +825,28 @@ class LeagueSystem {
             throw new Error(`当前只能轮换${this.playerTeam.availableSwaps}个动物`);
         }
         
-        // 冬季联赛需要检查是否为未养成动物
+        // 冬季联赛需要检查是否为未养成动物（初始等级）
         if (this.playerTeam.league === '冬季联赛') {
-            // 此处可添加未养成动物的验证逻辑
+            // 检查动物模板池获取初始等级
+            const animalPool = JSON.parse(localStorage.getItem('ANIMAL_POOL') || '[]');
+            
+            for (const animal of animalsToAdd) {
+                // 查找动物在模板池中的模板
+                const template = animalPool.find(t =>
+                    t.key === animal.templateKey || t.key === animal.animalId
+                );
+                
+                if (!template) {
+                    throw new Error(`无法找到动物 ${animal.name} 的模板信息`);
+                }
+                
+                // 检查初始等级（模板中的初始等级，通常为1）
+                const initialLevel = template.initialLevel || 1;
+                
+                if (animal.level !== initialLevel) {
+                    throw new Error(`冬季联赛要求所有动物必须为初始等级！\n动物 ${animal.name} 当前等级为 ${animal.level}，需要等级 ${initialLevel}。`);
+                }
+            }
         }
         
         animalsToRemove.forEach(animal => {
@@ -1702,9 +1721,28 @@ class LeagueSystem {
             throw new Error(`最多只能登记${config.registrationCount}个动物`);
         }
         
-        // 冬季联赛需要验证是否为未养成动物
+        // 冬季联赛需要验证是否为未养成动物（初始等级）
         if (this.playerTeam.league === '冬季联赛') {
-            // 此处可添加未养成动物的验证逻辑
+            // 检查动物模板池获取初始等级
+            const animalPool = JSON.parse(localStorage.getItem('ANIMAL_POOL') || '[]');
+            
+            for (const animal of animals) {
+                // 查找动物在模板池中的模板
+                const template = animalPool.find(t =>
+                    t.key === animal.templateKey || t.key === animal.animalId
+                );
+                
+                if (!template) {
+                    throw new Error(`无法找到动物 ${animal.name} 的模板信息`);
+                }
+                
+                // 检查初始等级（模板中的初始等级，通常为1）
+                const initialLevel = template.initialLevel || 1;
+                
+                if (animal.level !== initialLevel) {
+                    throw new Error(`冬季联赛要求所有动物必须为初始等级！\n动物 ${animal.name} 当前等级为 ${animal.level}，需要等级 ${initialLevel}。`);
+                }
+            }
         }
         
         this.playerTeam.registeredAnimals = [...animals];

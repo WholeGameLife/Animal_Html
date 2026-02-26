@@ -2063,7 +2063,7 @@ class BattleSystem {
         if (confirm("确定要从战斗中逃跑吗？")) {
             localStorage.removeItem('battleOpponent');
             localStorage.removeItem('battlePlayerAnimal');
-            window.location.href = 'game3d.html';
+            window.location.href = '../pages/game3d.html';
         }
     }
 

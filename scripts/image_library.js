@@ -5,7 +5,13 @@ class ImageLibrary {
     constructor() {
         this.STORAGE_KEY = 'IMAGE_LIBRARY';
         this.library = this.loadLibrary();
-        this.IMAGE_FOLDER = 'images/'; // 本地图片文件夹
+        // 自动检测当前路径，适配pages/和designers/文件夹
+        const currentPath = window.location.pathname;
+        if (currentPath.includes('/pages/') || currentPath.includes('/designers/')) {
+            this.IMAGE_FOLDER = '../images/'; // 从子文件夹访问
+        } else {
+            this.IMAGE_FOLDER = 'images/'; // 从根目录访问
+        }
         this.imageCache = {}; // 缓存已加载的图片
     }
     

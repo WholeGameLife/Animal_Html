@@ -6,6 +6,24 @@ let currentViewingTeamAnimal = null;
 let currentEditingSkillSlot = null;
 let currentEditingSkillAnimal = null;
 
+// 初始化时恢复出战队伍数据
+(function initBattleTeamData() {
+    try {
+        const battleDataStr = localStorage.getItem('battleTeamData');
+        if (battleDataStr && typeof gameState !== 'undefined') {
+            const battleData = JSON.parse(battleDataStr);
+            if (battleData.firstTeamMember !== undefined) {
+                gameState.firstTeamMember = battleData.firstTeamMember;
+            }
+            if (battleData.battleTeam !== undefined) {
+                gameState.battleTeam = battleData.battleTeam;
+            }
+        }
+    } catch (e) {
+        console.warn('恢复出战队伍数据失败:', e);
+    }
+})();
+
 // 全局函数：获取完整的战斗技能库（只从SKILL_POOL）
 function getBattleSkills() {
     // 从localStorage加载技能池（SKILL_POOL）
@@ -76,22 +94,26 @@ function renderBattleTeamSlots() {
             const isFirst = (gameState.firstTeamMember === animalId);
             slotDiv.className += isFirst ? ' border-yellow-500/80 bg-yellow-900/20' : ' border-purple-500/50';
             
-            // **关键修复**：如果动物没有头像但有templateKey，从模板加载头像
-            let avatarData = animal.avatarData;
-            if (!avatarData && animal.templateKey) {
-                const animalPool = JSON.parse(localStorage.getItem('ANIMAL_POOL') || '[]');
-                const template = animalPool.find(t => t.key === animal.templateKey);
-                if (template && template.avatarData) {
-                    avatarData = template.avatarData;
-                    // 缓存到动物对象中
-                    animal.avatarData = template.avatarData;
-                }
+            // 使用图像库获取头像
+            let avatarUrl = null;
+            if (typeof imageLibrary !== 'undefined') {
+                avatarUrl = imageLibrary.getAnimalAvatar(animal);
+            }
+            if (!avatarUrl && animal.avatarData) {
+                avatarUrl = animal.avatarData;
             }
             
-            // 优先使用头像图片，如果没有则使用颜色球+首字母
-            const avatarHtml = avatarData
-                ? `<div class="w-10 h-10 rounded-full border-2 border-white/30" style="background-image: url(${avatarData}); background-size: cover; background-position: center;"></div>`
-                : `<div style="background-color: ${colorHex};" class="w-10 h-10 rounded-full border-2 border-white/30 flex items-center justify-center text-white font-bold">${animal.name.charAt(0).toUpperCase()}</div>`;
+            // 使用img标签支持onerror回退
+            let avatarHtml;
+            if (avatarUrl) {
+                avatarHtml = `
+                    <div class="w-10 h-10 rounded-full border-2 border-white/30 overflow-hidden flex items-center justify-center" style="background-color: ${colorHex};">
+                        <img src="${avatarUrl}" class="w-full h-full object-cover" alt="${animal.name}"
+                             onerror="this.style.display='none'; this.parentElement.innerHTML='<span class=\\'text-white font-bold\\'>${animal.name.charAt(0).toUpperCase()}</span>';">
+                    </div>`;
+            } else {
+                avatarHtml = `<div style="background-color: ${colorHex};" class="w-10 h-10 rounded-full border-2 border-white/30 flex items-center justify-center text-white font-bold">${animal.name.charAt(0).toUpperCase()}</div>`;
+            }
             
             slotDiv.innerHTML = `
                 <div class="flex items-center space-x-2 mb-1">
@@ -134,31 +156,29 @@ function showAnimalDetailInInventory(animalId) {
     
     const colorHex = '#' + animal.color.toString(16).padStart(6, '0');
     
-    // **关键修复**：如果动物没有头像但有templateKey，从模板加载头像
-    let avatarData = animal.avatarData;
-    if (!avatarData && animal.templateKey) {
-        const animalPool = JSON.parse(localStorage.getItem('ANIMAL_POOL') || '[]');
-        const template = animalPool.find(t => t.key === animal.templateKey);
-        if (template && template.avatarData) {
-            avatarData = template.avatarData;
-            // 缓存到动物对象中，避免重复读取
-            animal.avatarData = template.avatarData;
-        }
+    // 使用图像库获取头像
+    let avatarUrl = null;
+    if (typeof imageLibrary !== 'undefined') {
+        avatarUrl = imageLibrary.getAnimalAvatar(animal);
+    }
+    if (!avatarUrl && animal.avatarData) {
+        avatarUrl = animal.avatarData;
     }
     
-    // 优先使用头像图片，如果没有则使用颜色球+首字母
+    // 使用img标签支持onerror回退
     if (ui.invDetailAvatar) {
-        if (avatarData) {
-            // 清除所有可能干扰的样式
-            ui.invDetailAvatar.style.cssText = '';
-            ui.invDetailAvatar.style.backgroundImage = `url(${avatarData})`;
-            ui.invDetailAvatar.style.backgroundSize = 'cover';
-            ui.invDetailAvatar.style.backgroundPosition = 'center';
-            ui.invDetailAvatar.className = 'w-16 h-16 rounded-full border-2';
-            ui.invDetailAvatar.textContent = '';
+        // 清除所有样式
+        ui.invDetailAvatar.style.cssText = '';
+        ui.invDetailAvatar.className = 'w-16 h-16 rounded-full border-2';
+        
+        if (avatarUrl) {
+            // 创建img标签并设置错误处理
+            ui.invDetailAvatar.innerHTML = `
+                <img src="${avatarUrl}" class="w-full h-full object-cover rounded-full" alt="${animal.name}"
+                     onerror="this.style.display='none'; const fallback = document.createElement('div'); fallback.style.backgroundColor='${colorHex}'; fallback.className='w-full h-full rounded-full flex items-center justify-center text-white font-bold text-2xl'; fallback.textContent='${animal.name.charAt(0).toUpperCase()}'; this.parentElement.appendChild(fallback);">
+            `;
         } else {
-            // 清除背景图片，使用颜色+首字母
-            ui.invDetailAvatar.style.cssText = '';
+            // 使用颜色+首字母
             ui.invDetailAvatar.style.backgroundColor = colorHex;
             ui.invDetailAvatar.className = 'w-16 h-16 rounded-full border-2 flex items-center justify-center text-white font-bold text-2xl';
             ui.invDetailAvatar.textContent = animal.name.charAt(0).toUpperCase();
@@ -531,22 +551,26 @@ window.openTeamSlotSelector = function(slotIndex) {
         availableAnimals.forEach(animal => {
             const colorHex = '#' + animal.color.toString(16).padStart(6, '0');
             
-            // **关键修复**：如果动物没有头像但有templateKey，从模板加载头像
-            let avatarData = animal.avatarData;
-            if (!avatarData && animal.templateKey) {
-                const animalPool = JSON.parse(localStorage.getItem('ANIMAL_POOL') || '[]');
-                const template = animalPool.find(t => t.key === animal.templateKey);
-                if (template && template.avatarData) {
-                    avatarData = template.avatarData;
-                    // 缓存到动物对象中
-                    animal.avatarData = template.avatarData;
-                }
+            // 使用图像库获取头像
+            let avatarUrl = null;
+            if (typeof imageLibrary !== 'undefined') {
+                avatarUrl = imageLibrary.getAnimalAvatar(animal);
+            }
+            if (!avatarUrl && animal.avatarData) {
+                avatarUrl = animal.avatarData;
             }
             
-            // 优先使用头像图片，如果没有则使用颜色球+首字母
-            const avatarHtml = avatarData
-                ? `<div class="w-12 h-12 rounded-full border-2 border-white/30" style="background-image: url(${avatarData}); background-size: cover; background-position: center;"></div>`
-                : `<div style="background-color: ${colorHex};" class="w-12 h-12 rounded-full border-2 border-white/30 flex items-center justify-center text-white font-bold text-lg">${animal.name.charAt(0).toUpperCase()}</div>`;
+            // 使用img标签支持onerror回退
+            let avatarHtml;
+            if (avatarUrl) {
+                avatarHtml = `
+                    <div class="w-12 h-12 rounded-full border-2 border-white/30 overflow-hidden flex items-center justify-center" style="background-color: ${colorHex};">
+                        <img src="${avatarUrl}" class="w-full h-full object-cover" alt="${animal.name}"
+                             onerror="this.style.display='none'; this.parentElement.innerHTML='<span class=\\'text-white font-bold text-lg\\'>${animal.name.charAt(0).toUpperCase()}</span>';">
+                    </div>`;
+            } else {
+                avatarHtml = `<div style="background-color: ${colorHex};" class="w-12 h-12 rounded-full border-2 border-white/30 flex items-center justify-center text-white font-bold text-lg">${animal.name.charAt(0).toUpperCase()}</div>`;
+            }
             
             const div = document.createElement('div');
             div.className = 'flex items-center justify-between p-3 bg-gray-700 rounded-lg hover:bg-gray-600 cursor-pointer transition-colors';
@@ -576,6 +600,16 @@ window.openTeamSlotSelector = function(slotIndex) {
             // 如果清空的是首发，同时清除首发设置
             if (gameState.firstTeamMember && gameState.battleTeam.indexOf(gameState.firstTeamMember) === -1) {
                 gameState.firstTeamMember = null;
+            }
+            // 只保存首发状态和出战队伍
+            try {
+                const battleData = {
+                    firstTeamMember: gameState.firstTeamMember,
+                    battleTeam: gameState.battleTeam
+                };
+                localStorage.setItem('battleTeamData', JSON.stringify(battleData));
+            } catch (e) {
+                console.warn('保存出战队伍数据失败:', e);
             }
             closeTeamSelector();
             renderBattleTeamSlots();
@@ -669,6 +703,16 @@ function setFirstTeamMember(animalId) {
     // 如果已经在第一个位置，直接设置为首发
     if (currentIndex === 0) {
         gameState.firstTeamMember = animalId;
+        // 只保存首发状态和出战队伍
+        try {
+            const battleData = {
+                firstTeamMember: gameState.firstTeamMember,
+                battleTeam: gameState.battleTeam
+            };
+            localStorage.setItem('battleTeamData', JSON.stringify(battleData));
+        } catch (e) {
+            console.warn('保存出战队伍数据失败:', e);
+        }
         showStatus(`⭐ ${animal.name} 已设置为首发！`, 2000);
         showAnimalDetailInInventory(animalId);
         return;
@@ -683,6 +727,17 @@ function setFirstTeamMember(animalId) {
     
     // 设置为首发
     gameState.firstTeamMember = animalId;
+    
+    // 只保存首发状态和出战队伍
+    try {
+        const battleData = {
+            firstTeamMember: gameState.firstTeamMember,
+            battleTeam: gameState.battleTeam
+        };
+        localStorage.setItem('battleTeamData', JSON.stringify(battleData));
+    } catch (e) {
+        console.warn('保存出战队伍数据失败:', e);
+    }
     
     showStatus(`⭐ ${animal.name} 已移至首发位置（槽位1）！`, 3000);
     
@@ -705,6 +760,17 @@ function removeFromTeam(animalId) {
     if (gameState.firstTeamMember === animalId) {
         gameState.firstTeamMember = null;
         showStatus('⚠️ 首发动物已被移除，请重新设置首发', 2000);
+    }
+    
+    // 只保存首发状态和出战队伍
+    try {
+        const battleData = {
+            firstTeamMember: gameState.firstTeamMember,
+            battleTeam: gameState.battleTeam
+        };
+        localStorage.setItem('battleTeamData', JSON.stringify(battleData));
+    } catch (e) {
+        console.warn('保存出战队伍数据失败:', e);
     }
     
     renderBattleTeamSlots();

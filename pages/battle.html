@@ -334,8 +334,8 @@
     </div>
 
     <!-- 引入图像库和战斗系统 -->
-    <script src="image_library.js"></script>
-    <script src="battle_system.js"></script>
+    <script src="../scripts/image_library.js"></script>
+    <script src="../scripts/battle_system.js"></script>
     <script>
         window.onload = function() {
             const opponentData = JSON.parse(localStorage.getItem('battleOpponent'));
@@ -343,7 +343,7 @@
 
             if (!opponentData || !playerData) {
                 alert("战斗数据加载失败！将返回主场景。");
-                window.location.href = 'game3d.html';
+                window.location.href = '../pages/game3d.html';
                 return;
             }
 

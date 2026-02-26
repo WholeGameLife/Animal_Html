@@ -264,7 +264,7 @@
                 }
             } else {
                 alert("数据加载失败，返回主页。");
-                window.location.href = 'game3d.html';
+                window.location.href = '../pages/game3d.html';
             }
         }
 
@@ -297,7 +297,7 @@
         function setupEventListeners() {
             document.getElementById('btn-return').addEventListener('click', () => {
                 saveGameState();
-                window.location.href = 'game3d.html';
+                window.location.href = '../pages/game3d.html';
             });
             document.getElementById('btn-close-selector').addEventListener('click', () => {
                 document.getElementById('animal-selector-modal').classList.add('hidden');
@@ -743,7 +743,7 @@
             localStorage.setItem('battleReturnUrl', 'exploration.html');
             
             saveGameState();
-            window.location.href = 'battle.html';
+            window.location.href = '../pages/battle.html';
         }
 
         function claimRewards(activeMission, mission) {

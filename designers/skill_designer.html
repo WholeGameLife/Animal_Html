@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>技能设计器 V2.0 - 电子盆栽</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="battle_system.js"></script>
+    <script src="../scripts/battle_system.js"></script>
     <style>
         body {
             background: linear-gradient(135deg, #1e3a8a 0%, #312e81 100%);
@@ -83,7 +83,7 @@
             <h1 class="text-4xl font-bold text-white mb-2">⚔️ 技能设计器 V2.0 ⚔️</h1>
             <p class="text-blue-200 mb-3">全新技能系统 - 灵活配置效果来源和参数</p>
             <div class="flex justify-center gap-3">
-                <a href="skill_viewer.html"
+                <a href='../designers/skill_viewer.html'
                    class="inline-flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-6 rounded-lg transition-colors">
                     <span>🎯</span>
                     <span>查看技能池</span>
@@ -986,7 +986,7 @@
                         <select id="${paramId}" class="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white text-sm">
                             ${getStatusOptions()}
                         </select>
-                        <p class="text-xs text-gray-500 mt-1">来自状态池 | <a href="status_designer.html" class="text-blue-400 hover:text-blue-300" target="_blank">创建新状态</a></p>
+                        <p class="text-xs text-gray-500 mt-1">来自状态池 | <a href='../designers/status_designer.html' class="text-blue-400 hover:text-blue-300" target="_blank">创建新状态</a></p>
                     </div>`;
                 
                 case 'status-chance':
@@ -1012,7 +1012,7 @@
                                 ${getStatusOptions()}
                             </optgroup>
                         </select>
-                        <p class="text-xs text-gray-500 mt-1">选择要驱散的状态类型 | <a href="status_designer.html" class="text-blue-400 hover:text-blue-300" target="_blank">管理状态</a></p>
+                        <p class="text-xs text-gray-500 mt-1">选择要驱散的状态类型 | <a href='../designers/status_designer.html' class="text-blue-400 hover:text-blue-300" target="_blank">管理状态</a></p>
                     </div>`;
                 
                 case 'purify-count':

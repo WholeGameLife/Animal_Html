@@ -422,10 +422,10 @@
         </div>
     </div>
 
-    <script src="animal_config.js"></script>
-    <script src="skill_acquisition.js"></script>
-    <script src="inventory_system.js"></script>
-    <script src="image_library.js"></script>
+    <script src="../scripts/animal_config.js"></script>
+    <script src="../scripts/skill_acquisition.js"></script>
+    <script src="../scripts/inventory_system.js"></script>
+    <script src="../scripts/image_library.js"></script>
     <script>
         // --- Config ---
         const mapConfigs = JSON.parse(localStorage.getItem('MAP_CONFIGS') || '[]');
@@ -560,7 +560,7 @@
                 gameState = JSON.parse(stateJSON);
             } else {
                 alert("数据加载失败，返回主页。");
-                window.location.href = 'game3d.html';
+                window.location.href = '../pages/game3d.html';
             }
         }
 
@@ -575,7 +575,7 @@
                     })
                 };
                 localStorage.setItem('gameState', JSON.stringify(optimizedState));
-                window.location.href = 'world_map.html';
+                window.location.href = '../pages/world_map.html';
             });
             
             document.getElementById('btn-return-parent-map').addEventListener('click', returnToParentMap);
@@ -1385,7 +1385,7 @@
             localStorage.setItem('battleOpponent', JSON.stringify(getSerializableAnimal(opponent)));
             localStorage.setItem('battlePlayerAnimal', JSON.stringify(getSerializableAnimal(playerAnimal)));
             localStorage.setItem('battleReturnUrl', window.location.href);
-            window.location.href = 'battle.html';
+            window.location.href = '../pages/battle.html';
         }
         
         function startCombat() {

@@ -836,14 +836,14 @@ document.body.insertAdjacentHTML('beforeend', debugPanelHTML);
             e.preventDefault();
             debugPanel.classList.toggle('hidden');
             // 更新动物信息
-            if (!isWorldMapPage && typeof debug.updateAnimalInfo === 'function') {
+            if (typeof debug.updateAnimalInfo === 'function') {
                 debug.updateAnimalInfo();
             }
         }
     });
     
     // 选中动物变化时更新信息显示
-    if (!isWorldMapPage) {
+    if (!window.location.pathname.includes('world_map.html')) {
         setInterval(() => {
             if (!debugPanel.classList.contains('hidden') && typeof debug.updateAnimalInfo === 'function') {
                 debug.updateAnimalInfo();
@@ -878,7 +878,7 @@ document.body.insertAdjacentHTML('beforeend', debugPanelHTML);
     });
     
     // 地图调试专用设置
-    if (isWorldMapPage) {
+    if (window.location.pathname.includes('world_map.html')) {
         // 加载数据
         debug.loadDebugData();
         debug.loadDebugMaps();

@@ -3,132 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>电子盆栽：动物栖息地 - 2D 基建系统</title>
+    <title>电子盆栽：动物栖息地 - 3D 核心循环演示</title>
     <!-- 引入 Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- 暂时保留 Three.js 以避免错误 -->
+    <!-- 引入 Three.js CDN -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <!-- 引入背包系统 -->
-    <script src="inventory_system.js"></script>
-    <!-- 引入时间系统 -->
-    <script src="game_time_system.js"></script>
+    <script src="../scripts/inventory_system.js"></script>
     <style>
-        /* 2D地图样式 */
+        /* 确保画布全屏且不显示滚动条 */
         body { margin: 0; overflow: hidden; font-family: 'Inter', sans-serif; background-color: #0a1120; }
-        
-        /* 隐藏3D canvas */
-        canvas { display: none !important; }
-        #container { display: none !important; }
-        
-        /* 2D地图容器 */
-        .map-container {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            background: linear-gradient(135deg, #1a4d2e 0%, #0f2f1a 100%);
-            overflow: hidden;
-            transition: transform 0.1s ease-out;
-        }
-        
-        /* 网格背景 */
-        .grid-background {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 90%;
-            height: 85%;
-            background-image:
-                linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px);
-            background-size: 60px 60px;
-            border: 2px solid rgba(255,255,255,0.1);
-            border-radius: 10px;
-        }
-        
-        /* 实体项（建筑、动物） */
-        .entity-item {
-            position: absolute;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            user-select: none;
-        }
-        
-        .entity-item:hover {
-            transform: scale(1.1);
-            filter: brightness(1.3);
-            z-index: 10;
-        }
-        
-        /* 建筑样式 */
-        .building-item {
-            width: 100px;
-            height: 100px;
-            border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
-            border: 2px solid rgba(255,255,255,0.2);
-            font-size: 56px;
-        }
-        
-        /* 动物样式 */
-        .animal-item {
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
-            border: 2px solid rgba(255,255,255,0.3);
-        }
-        
-        /* 可收集资源样式 */
-        .collectible-item {
-            width: 40px;
-            height: 40px;
-            font-size: 24px;
-            animation: float 2s ease-in-out infinite;
-        }
-        
-        @keyframes float {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-10px); }
-        }
-        
-        /* 预览样式 */
-        .preview-item {
-            opacity: 0.6;
-            border: 3px dashed #facc15 !important;
-            pointer-events: none;
-            will-change: transform;
-            transition: none !important;
-        }
-        
-        .preview-valid {
-            background-color: rgba(34, 197, 94, 0.3) !important;
-        }
-        
-        .preview-invalid {
-            background-color: rgba(239, 68, 68, 0.3) !important;
-        }
-        
-        /* 实体标签 */
-        .entity-label {
-            position: absolute;
-            bottom: -25px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(0, 0, 0, 0.8);
-            color: white;
-            padding: 2px 8px;
-            border-radius: 4px;
-            font-size: 11px;
-            white-space: nowrap;
-            pointer-events: none;
-        }
+        canvas { display: block; }
 
         /* 游戏 UI 样式 */
         .game-ui {
@@ -223,18 +108,8 @@
     <!-- 新增：模态框遮罩层 -->
     <div id="modal-overlay" class="hidden"></div>
 
-    <!-- 3D 容器（隐藏但保留以避免代码报错） -->
-    <div id="container" style="display: none;"></div>
-
-    <!-- 2D 地图容器 -->
-    <div id="map-container" class="map-container">
-        <div class="grid-background"></div>
-        <!-- 繁殖窝 (中心) -->
-        <div id="den-building" class="entity-item building-item" style="left: 50%; top: 50%; transform: translate(-50%, -50%); background: linear-gradient(135deg, #ef4444 0%, #991b1b 100%); width: 100px; height: 100px; font-size: 48px; z-index: 5;">
-            🏡
-            <div class="entity-label">繁殖窝 Lv.<span id="den-level-display">1</span></div>
-        </div>
-    </div>
+    <!-- 3D 渲染将在此处显示 -->
+    <div id="container"></div>
 
     <!-- 游戏 UI 界面 -->
     <div class="game-ui p-4 flex flex-col justify-between items-start">
@@ -247,12 +122,6 @@
             <!-- 资源/状态面板 (左上角) -->
             <div id="stats-panel" class="control-panel p-4 rounded-lg text-white">
                 <h2 class="text-xl font-bold mb-3 text-green-400 border-b border-gray-700 pb-2">栖息地状态</h2>
-                <!-- 游戏时间显示 -->
-                <div id="game-time-display" class="text-sm mb-3 pb-3 border-b border-gray-700" style="background: rgba(251, 191, 36, 0.1); padding: 8px; border-radius: 6px; border: 1px solid rgba(251, 191, 36, 0.3);">
-                    <div style="color: #fcd34d; font-weight: bold; margin-bottom: 4px;">🕐 游戏时间</div>
-                    <div id="time-display-text" class="font-mono text-cyan-300" style="font-size: 0.9em;">第1年 春季 第1周</div>
-                    <div id="round-display-text" class="font-mono text-gray-300" style="font-size: 0.8em; margin-top: 2px;">本周未开始</div>
-                </div>
                 <div id="stat-food" class="text-sm mb-1">🍎 食物: <span class="font-mono text-yellow-300">0</span></div>
                 <div id="stat-gold" class="text-sm mb-1">💰 金币: <span class="font-mono text-amber-400">0</span></div>
                 <div id="stat-wood" class="text-sm mb-1">🪵 木材: <span class="font-mono text-orange-400">0</span></div>
@@ -398,16 +267,6 @@
             <button id="btn-craft-potion" class="action-button w-full bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 text-white font-bold py-3 px-4 rounded-lg mt-3 shadow-lg hover:shadow-cyan-500/50 transition-all duration-200 hidden">
                 🧪 合成药水
             </button>
-            
-            <!-- 7. 移动和拆除按钮 -->
-            <div class="grid grid-cols-2 gap-2 mt-3">
-                <button id="btn-move-building" class="action-button bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">
-                    📍 移动
-                </button>
-                <button id="btn-demolish-building" class="action-button bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg">
-                    🗑️ 拆除
-                </button>
-            </div>
 
         </div>
 
@@ -640,80 +499,6 @@
             <p class="text-sm text-gray-400 mb-2" id="target-selector-prompt">请选择一只动物：</p>
             <div id="target-animal-list" class="space-y-2 max-h-80 overflow-y-auto custom-scrollbar">
                 <!-- 动物列表 -->
-            </div>
-        </div>
-
-        <!-- 新增：调试器面板 -->
-        <div id="debug-panel" class="control-panel p-5 rounded-xl text-white hidden w-full max-w-2xl" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 70;">
-            <div class="flex justify-between items-center mb-4 pb-3 border-b border-yellow-500/50">
-                <h3 class="text-2xl font-bold text-yellow-400">🛠️ 调试器</h3>
-                <button id="btn-close-debug" class="text-3xl text-gray-400 hover:text-white">&times;</button>
-            </div>
-            
-            <!-- 资源调整 -->
-            <div class="mb-6">
-                <h4 class="text-lg font-bold text-green-400 mb-3">💰 资源调整</h4>
-                <div class="grid grid-cols-2 gap-3">
-                    <div class="bg-gray-800/50 p-3 rounded-lg">
-                        <label class="text-sm text-gray-400 mb-1 block">🍎 食物</label>
-                        <input type="number" id="debug-food" class="w-full bg-gray-900 text-white rounded px-2 py-1 text-sm" value="0">
-                        <button onclick="setResource('food')" class="w-full mt-1 bg-green-600 hover:bg-green-700 text-white text-xs py-1 rounded">设置</button>
-                    </div>
-                    <div class="bg-gray-800/50 p-3 rounded-lg">
-                        <label class="text-sm text-gray-400 mb-1 block">💰 金币</label>
-                        <input type="number" id="debug-gold" class="w-full bg-gray-900 text-white rounded px-2 py-1 text-sm" value="0">
-                        <button onclick="setResource('gold')" class="w-full mt-1 bg-amber-600 hover:bg-amber-700 text-white text-xs py-1 rounded">设置</button>
-                    </div>
-                    <div class="bg-gray-800/50 p-3 rounded-lg">
-                        <label class="text-sm text-gray-400 mb-1 block">🪵 木材</label>
-                        <input type="number" id="debug-wood" class="w-full bg-gray-900 text-white rounded px-2 py-1 text-sm" value="0">
-                        <button onclick="setResource('wood')" class="w-full mt-1 bg-orange-600 hover:bg-orange-700 text-white text-xs py-1 rounded">设置</button>
-                    </div>
-                    <div class="bg-gray-800/50 p-3 rounded-lg">
-                        <label class="text-sm text-gray-400 mb-1 block">🪨 石材</label>
-                        <input type="number" id="debug-stone" class="w-full bg-gray-900 text-white rounded px-2 py-1 text-sm" value="0">
-                        <button onclick="setResource('stone')" class="w-full mt-1 bg-slate-600 hover:bg-slate-700 text-white text-xs py-1 rounded">设置</button>
-                    </div>
-                    <div class="bg-gray-800/50 p-3 rounded-lg">
-                        <label class="text-sm text-gray-400 mb-1 block">💎 宝石</label>
-                        <input type="number" id="debug-gems" class="w-full bg-gray-900 text-white rounded px-2 py-1 text-sm" value="0">
-                        <button onclick="setResource('gems')" class="w-full mt-1 bg-pink-600 hover:bg-pink-700 text-white text-xs py-1 rounded">设置</button>
-                    </div>
-                    <div class="bg-gray-800/50 p-3 rounded-lg">
-                        <label class="text-sm text-gray-400 mb-1 block">🌿 经验草</label>
-                        <input type="number" id="debug-expGrass" class="w-full bg-gray-900 text-white rounded px-2 py-1 text-sm" value="0">
-                        <button onclick="setResource('expGrass')" class="w-full mt-1 bg-green-500 hover:bg-green-600 text-white text-xs py-1 rounded">设置</button>
-                    </div>
-                </div>
-                <div class="mt-3 flex gap-2">
-                    <button onclick="addAllResources(1000)" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">➕ 所有+1000</button>
-                    <button onclick="addAllResources(10000)" class="flex-1 bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded">➕➕ 所有+10000</button>
-                </div>
-            </div>
-            
-            <!-- 时间调整 -->
-            <div class="mb-6">
-                <h4 class="text-lg font-bold text-cyan-400 mb-3">🕐 时间调整</h4>
-                <div class="grid grid-cols-3 gap-2 mb-3">
-                    <div class="bg-gray-800/50 p-3 rounded-lg text-center">
-                        <div class="text-sm text-gray-400 mb-1">当前年份</div>
-                        <div class="text-xl font-bold text-cyan-300" id="debug-year">1</div>
-                    </div>
-                    <div class="bg-gray-800/50 p-3 rounded-lg text-center">
-                        <div class="text-sm text-gray-400 mb-1">当前季节</div>
-                        <div class="text-xl font-bold text-cyan-300" id="debug-season">春季</div>
-                    </div>
-                    <div class="bg-gray-800/50 p-3 rounded-lg text-center">
-                        <div class="text-sm text-gray-400 mb-1">当前周</div>
-                        <div class="text-xl font-bold text-cyan-300" id="debug-week">1</div>
-                    </div>
-                </div>
-                <div class="grid grid-cols-2 gap-2">
-                    <button onclick="debugAdvanceWeek()" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded">⏩ 推进1周</button>
-                    <button onclick="debugAdvanceToSeason('夏季')" class="bg-orange-600 hover:bg-orange-700 text-white font-bold py-2 px-4 rounded">☀️ 跳到夏季</button>
-                    <button onclick="debugAdvanceToSeason('冬季')" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">❄️ 跳到冬季</button>
-                    <button onclick="debugResetTime()" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">🔄 重置时间</button>
-                </div>
             </div>
         </div>
 
@@ -1010,12 +795,7 @@
                     🌍 世界地图<br><span class="text-xs"> (区域探索)</span>
                 </button>
                 
-                <!-- 2.71 联赛系统 -->
-                <button id="btn-open-league" class="action-button bg-amber-600 hover:bg-amber-700 text-white font-bold py-3 px-4 rounded-lg text-center">
-                    🏆 联赛系统<br><span class="text-xs"> (竞技征程)</span>
-                </button>
-                
-                <!-- 2.8 道具商店 -->
+                <!-- 2.7 道具商店 -->
                 <button id="btn-open-shop" class="action-button bg-pink-600 hover:bg-pink-700 text-white font-bold py-3 px-4 rounded-lg text-center">
                     🛒 道具商店<br><span class="text-xs"> (购买补给)</span>
                 </button>
@@ -1029,11 +809,6 @@
                 <button id="btn-open-build" class="action-button bg-yellow-600 hover:bg-yellow-700 text-black font-bold py-3 px-4 rounded-lg text-center">
                     🔨 放置建筑
                 </button>
-                
-                <!-- 新增：调试器按钮 -->
-                <button id="btn-open-debug" class="action-button bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-4 rounded-lg text-center">
-                    🛠️ 调试器<br><span class="text-xs"> (资源/时间)</span>
-                </button>
             </div>
         </div>
 
@@ -1042,21 +817,18 @@
     <script>
         // --- 全局变量和配置 ---
         let scene, camera, renderer;
-        let worldGroup;
-        let habitatMesh;
-        let denMesh;
-        let collectiblesGroup;
-        let foodTimer;
-        let gemTimer;
-        let animalGroup;
-        let raycaster;
-        let pointer;
-        let previewMesh; // 3D建筑预览模型
-        let previewElement = null; // 2D建筑预览元素
-        let selectedBuilding = null;
-        let cameraMovement = { forward: false, backward: false, left: false, right: false };
-        let mapOffset = { x: 0, y: 0 }; // 2D地图偏移量
-        const MAP_MOVE_SPEED = 5; // 地图移动速度（像素/帧）
+        let worldGroup; // 用于包裹所有 3D 对象，实现场景统一旋转
+        let habitatMesh; // 栖息地模型 (用于射线投射)
+        let denMesh; // 繁殖窝模型
+        let collectiblesGroup; // 新增：用于存放所有可收集物品的组
+        let foodTimer; // 食物产出定时器
+        let gemTimer; // 宝石产出定时器
+        let animalGroup; // 动物群组
+        let raycaster; // 射线投射器
+        let pointer; // 鼠标/触摸位置
+        let previewMesh; // 建筑预览模型
+        let selectedBuilding = null; // 当前选中的建筑对象
+        let cameraMovement = { forward: false, backward: false, left: false, right: false }; // 新增：相机移动状态
         const GRID_SIZE = 30;
         const GRID_DIVISIONS = 30;
 
@@ -1119,9 +891,7 @@
         const BUILDINGS = {
             Farm: {
                 cost: 50,
-                color: 0xffa500,
-                icon: '🚜',
-                bgColor: '#fb923c',
+                color: 0xffa500, // 橙色
                 name_cn: '农场',
                 maxLevel: 3,
                 levels: {
@@ -1143,9 +913,7 @@
             },
             LumberMill: {
                 cost: 75,
-                color: 0x8B4513,
-                icon: '🪵',
-                bgColor: '#92400e',
+                color: 0x8B4513, // 鞍褐色
                 name_cn: '伐木场',
                 maxLevel: 3,
                 levels: {
@@ -1156,9 +924,7 @@
             },
             Quarry: {
                 cost: 75,
-                color: 0x708090,
-                icon: '🪨',
-                bgColor: '#64748b',
+                color: 0x708090, // 石板灰
                 name_cn: '采石场',
                 maxLevel: 3,
                 levels: {
@@ -1169,9 +935,7 @@
             },
             HerbGarden: {
                 cost: 100,
-                color: 0x22c55e,
-                icon: '🌿',
-                bgColor: '#16a34a',
+                color: 0x22c55e, // 绿色
                 name_cn: '草药园',
                 maxLevel: 3,
                 levels: {
@@ -1182,9 +946,7 @@
             },
             MoonGarden: {
                 cost: 100,
-                color: 0xa855f7,
-                icon: '🌙',
-                bgColor: '#9333ea',
+                color: 0xa855f7, // 紫色
                 name_cn: '月光花园',
                 maxLevel: 3,
                 levels: {
@@ -1195,9 +957,7 @@
             },
             CrystalCave: {
                 cost: 150,
-                color: 0x06b6d4,
-                icon: '💠',
-                bgColor: '#0891b2',
+                color: 0x06b6d4, // 青色
                 name_cn: '晶体洞穴',
                 maxLevel: 3,
                 levels: {
@@ -1208,9 +968,7 @@
             },
             VoidRift: {
                 cost: 150,
-                color: 0x4c1d95,
-                icon: '🌌',
-                bgColor: '#4c1d95',
+                color: 0x4c1d95, // 深紫色
                 name_cn: '虚空裂隙',
                 maxLevel: 3,
                 levels: {
@@ -1220,10 +978,8 @@
                 }
             },
             Museum: {
-                cost: 200,
-                color: 0x9333ea,
-                icon: '🏛️',
-                bgColor: '#7e22ce',
+                cost: 200, // Stone
+                color: 0x9333ea, // Purple
                 name_cn: '文物馆',
                 maxLevel: 3,
                 levels: {
@@ -1234,10 +990,8 @@
             }
             ,
             Exchange: {
-                cost: 500,
-                color: 0x10b981,
-                icon: '🔄',
-                bgColor: '#059669',
+                cost: 500, // Gold
+                color: 0x10b981, // Emerald
                 name_cn: '交易所',
                 maxLevel: 1,
                 levels: {
@@ -1248,9 +1002,7 @@
                 costGold: 500,
                 costWood: 100,
                 costStone: 100,
-                color: 0xe879f9,
-                icon: '💎',
-                bgColor: '#db2777',
+                color: 0xe879f9, // Fuchsia
                 name_cn: '宝石矿',
                 maxLevel: 3,
                 levels: {
@@ -1263,9 +1015,7 @@
                 costGold: 600,
                 costWood: 150,
                 costStone: 150,
-                color: 0xef4444,
-                icon: '⚔️',
-                bgColor: '#dc2626',
+                color: 0xef4444, // Red
                 name_cn: '训练场',
                 maxLevel: 3,
                 levels: {
@@ -1278,9 +1028,7 @@
                 costGold: 1000,
                 costWood: 200,
                 costStone: 200,
-                color: 0xfbbf24,
-                icon: '🏛️',
-                bgColor: '#d97706',
+                color: 0xfbbf24, // Amber
                 name_cn: '圣域神殿',
                 maxLevel: 3,
                 levels: {
@@ -1293,9 +1041,7 @@
                 costGold: 800,
                 costWood: 150,
                 costStone: 150,
-                color: 0x06b6d4,
-                icon: '🧪',
-                bgColor: '#0891b2',
+                color: 0x06b6d4, // Cyan
                 name_cn: '经验药水工坊',
                 maxLevel: 3,
                 levels: {
@@ -1308,9 +1054,7 @@
                 costGold: 1000,
                 costWood: 200,
                 costStone: 200,
-                color: 0x9333ea,
-                icon: '🧬',
-                bgColor: '#7e22ce',
+                color: 0x9333ea, // Purple
                 name_cn: '变异实验室',
                 maxLevel: 3,
                 levels: {
@@ -1321,9 +1065,6 @@
             }
         };
 
-        // 游戏时间系统（全局）
-        let gameTimeSystem = null;
-        
         // 游戏状态
         const gameState = {
             food: 200000,
@@ -1343,8 +1084,7 @@
             buildings: [], // 存储已放置的建筑
             isDragging: false,
             isBuildingMode: false,
-            buildingToPlace: null,
-            movingBuilding: null, // 新增：正在移动的建筑
+            buildingToPlace: null, 
             previousMouseX: 0,
             lastStockRefreshDate: null, // 新增：商店刷新日期
             auctions: { // 新增：拍卖行状态
@@ -1353,7 +1093,7 @@
             },
             exchangeStock: [], // 新增：交易所库存
             collectibles: [], // 新增：存储可收集的资源对象
-            animalToPlace: null,
+            animalToPlace: null, 
             assigningWorkerForBuilding: null, // 新增：记录正在为哪个建筑分配工人
             upgradingBuildings: {}, // 新增：正在升级的建筑 {buildingId: {endTime, nextLevel}}
             wildAnimals: [], // 新增：野生动物
@@ -1399,7 +1139,6 @@
             buildAdvancedMenu: document.getElementById('build-advanced-menu'),
             buildButtons: document.querySelectorAll('.build-button'),
             container: document.getElementById('container'),
-            mapContainer: document.getElementById('map-container'),
             
             // 建筑详情 UI 元素
             detailPanel: document.getElementById('building-details-panel'),
@@ -1412,8 +1151,6 @@
             nextLevel: document.getElementById('next-level'),
             btnUpgradeBuilding: document.getElementById('btn-upgrade-building'),
             btnCraftPotion: document.getElementById('btn-craft-potion'),
-            btnMoveBuilding: document.getElementById('btn-move-building'),
-            btnDemolishBuilding: document.getElementById('btn-demolish-building'),
             upgradeCostDisplay: document.getElementById('upgrade-cost-display'),
             btnCloseDetails: document.getElementById('btn-close-details'),
             workerSlot: document.getElementById('worker-slot'),
@@ -1432,7 +1169,6 @@
             btnOpenExploration: document.getElementById('btn-open-exploration'),
             btnOpenMining: document.getElementById('btn-open-mining'),
             btnOpenWorldMap: document.getElementById('btn-open-world-map'),
-            btnOpenLeague: document.getElementById('btn-open-league'), // 新增
             btnOpenShop: document.getElementById('btn-open-shop'),
             btnOpenInventory: document.getElementById('btn-open-inventory'), // 新增
             btnPlaceAnimal: document.getElementById('btn-place-animal'),
@@ -1541,12 +1277,7 @@
 
         // --- Three.js 初始化和事件处理 (与之前版本一致) ---
 
-        function init2DMap() {
-            // 为2D地图添加点击事件
-            ui.mapContainer.addEventListener('click', on2DMapClick);
-            ui.mapContainer.addEventListener('mousemove', on2DMapMove);
-            
-            // 绑定UI事件
+        function initThreeJS() {
             const width = window.innerWidth;
             const height = window.innerHeight;
 
@@ -1643,10 +1374,8 @@
             ui.btnOpenExploration.addEventListener('click', openExplorationPage, false);
             ui.btnOpenMining.addEventListener('click', openMiningPage, false);
             ui.btnOpenWorldMap.addEventListener('click', openWorldMapPage, false);
-            ui.btnOpenLeague.addEventListener('click', openLeaguePage, false); // 新增
             ui.btnOpenShop.addEventListener('click', openShopPanel, false);
             ui.btnOpenInventory.addEventListener('click', openInventoryPanel, false); // 新增
-            document.getElementById('btn-open-debug').addEventListener('click', openDebugPanel, false); // 新增
 
             ui.btnCloseStandaloneDetails.addEventListener('click', closeStandaloneAnimalDetails, false);
             ui.btnCloseBattleSetupPanel.addEventListener('click', closeBattleSetupPanel, false);
@@ -1666,430 +1395,15 @@
                 ui.btnCloseSkillSelector.addEventListener('click', closeSkillSelector, false);
             }
             ui.btnCloseShop.addEventListener('click', closeShopPanel, false);
-            document.getElementById('btn-close-debug').addEventListener('click', closeDebugPanel, false);
             ui.buildButtons.forEach(button => {
                 button.addEventListener('click', (event) => {
                     const buildingType = event.currentTarget.dataset.building;
-                    enter2DBuildMode(buildingType);
+                    enterBuildMode(buildingType);
                 });
             });
-        }
-        
-        function initThreeJS() {
-            // 保留3D初始化但不执行关键渲染
-            const width = window.innerWidth;
-            const height = window.innerHeight;
-            scene = new THREE.Scene();
-            camera = new THREE.PerspectiveCamera(50, width / height, 0.1, 1000);
-            camera.position.set(0, 15, 25);
-            renderer = new THREE.WebGLRenderer({ antialias: true });
-            renderer.setSize(width, height);
-            if (ui.container) ui.container.appendChild(renderer.domElement);
-            raycaster = new THREE.Raycaster();
-            pointer = new THREE.Vector2();
-            worldGroup = new THREE.Group();
-            scene.add(worldGroup);
-            
-            // 创建基础对象避免undefined错误
-            habitatMesh = new THREE.Mesh(new THREE.PlaneGeometry(30, 30), new THREE.MeshLambertMaterial());
-            habitatMesh.userData.isHabitat = true;
-            worldGroup.add(habitatMesh);
-            
-            denMesh = new THREE.Mesh(new THREE.BoxGeometry(2, 2, 2), new THREE.MeshPhongMaterial());
-            worldGroup.add(denMesh);
-            
-            animalGroup = new THREE.Group();
-            worldGroup.add(animalGroup);
-            
-            collectiblesGroup = new THREE.Group();
-            worldGroup.add(collectiblesGroup);
-            
-            // 绑定UI事件
-            ui.btnCloseDetails.addEventListener('click', closeBuildingDetails);
-            ui.btnUpgradeBuilding.addEventListener('click', () => upgradeBuilding(selectedBuilding));
-            ui.btnCraftPotion.addEventListener('click', () => craftPotion(selectedBuilding));
-            ui.btnMoveBuilding.addEventListener('click', () => startMoveBuilding(selectedBuilding));
-            ui.btnDemolishBuilding.addEventListener('click', () => demolishBuilding(selectedBuilding));
-            ui.btnCloseWorkerSelection.addEventListener('click', closeWorkerSelection);
-            ui.btnAssignWorker.addEventListener('click', openWorkerSelection);
-            ui.btnOpenAnimalSystem.addEventListener('click', openAnimalManagementPage);
-            ui.btnOpenEncyclopedia.addEventListener('click', openEncyclopediaPage);
-            ui.btnOpenExploration.addEventListener('click', openExplorationPage);
-            ui.btnOpenMining.addEventListener('click', openMiningPage);
-            ui.btnOpenWorldMap.addEventListener('click', openWorldMapPage);
-            ui.btnOpenLeague.addEventListener('click', openLeaguePage);
-            ui.btnOpenShop.addEventListener('click', openShopPanel);
-            ui.btnOpenInventory.addEventListener('click', openInventoryPanel);
-            ui.btnCloseStandaloneDetails.addEventListener('click', closeStandaloneAnimalDetails);
-            ui.btnCloseBattleSetupPanel.addEventListener('click', closeBattleSetupPanel);
-            ui.btnExecuteBattle.addEventListener('click', startCombat);
-            ui.btnCloseMuseum.addEventListener('click', closeMuseumPanel);
-            ui.btnCloseExchange.addEventListener('click', closeExchangePanel);
-            ui.btnCloseBidPanel.addEventListener('click', closeAuctionBidPanel);
-            document.getElementById('btn-place-bid').addEventListener('click', placeBid);
-            ui.btnCloseInventory.addEventListener('click', closeInventoryPanel);
-            ui.btnCloseTargetSelector.addEventListener('click', closeTargetSelector);
-            if (ui.btnCloseTeamSelector) {
-                ui.btnCloseTeamSelector.addEventListener('click', closeTeamSelector);
-            }
-            if (ui.btnCloseSkillSelector) {
-                ui.btnCloseSkillSelector.addEventListener('click', closeSkillSelector);
-            }
-            ui.btnCloseShop.addEventListener('click', closeShopPanel);
-        }
-        
-        // 2D地图点击处理
-        function on2DMapClick(event) {
-            // 如果点击的是UI元素，忽略
-            if (event.target.classList.contains('entity-item') || event.target.closest('.entity-item')) {
-                // 点击了建筑或动物
-                const clickedItem = event.target.classList.contains('entity-item') ? event.target : event.target.closest('.entity-item');
-                const buildingId = clickedItem.dataset.buildingId;
-                const animalId = clickedItem.dataset.animalId;
-                const collectibleId = clickedItem.dataset.collectibleId;
-                
-                if (collectibleId) {
-                    collect2DResource(collectibleId);
-                } else if (buildingId) {
-                    const building = gameState.buildings.find(b => b.id === buildingId);
-                    if (building) {
-                        if (building.type === 'Museum') {
-                            openMuseumPanel(building);
-                        } else if (building.type === 'Exchange') {
-                            openExchangePanel();
-                        } else {
-                            showBuildingDetails(building);
-                        }
-                    }
-                } else if (animalId) {
-                    openStandaloneAnimalDetails(animalId);
-                }
-                return;
-            }
-            
-            // 点击空地 - 放置建筑或移动建筑
-            if (gameState.isBuildingMode) {
-                const rect = ui.mapContainer.getBoundingClientRect();
-                const x = ((event.clientX - rect.left) / rect.width) * 100; // 百分比
-                const y = ((event.clientY - rect.top) / rect.height) * 100;
-                
-                // 检查是否点击在网格内（5%-95%）
-                if (x >= 5 && x <= 95 && y >= 7.5 && y <= 92.5) {
-                    if (gameState.movingBuilding) {
-                        finishMoveBuilding(x, y);
-                    } else if (gameState.buildingToPlace) {
-                        place2DBuilding(x, y);
-                    }
-                } else {
-                    showStatus('❌ 请点击网格内的位置', 2000);
-                }
-            } else {
-                // 点击空白处关闭面板
-                closeAllDetailPanels();
-            }
-        }
-        
-        // 2D地图鼠标移动处理（预览）- 优化版本
-        let previewUpdateFrame = null;
-        function on2DMapMove(event) {
-            if (!gameState.isBuildingMode || !previewElement) return;
-            
-            // 使用requestAnimationFrame节流，提高流畅度
-            if (previewUpdateFrame) return;
-            
-            previewUpdateFrame = requestAnimationFrame(() => {
-                const rect = ui.mapContainer.getBoundingClientRect();
-                const x = ((event.clientX - rect.left) / rect.width) * 100;
-                const y = ((event.clientY - rect.top) / rect.height) * 100;
-                
-                // 使用transform而不是left/top，性能更好
-                previewElement.style.left = '0';
-                previewElement.style.top = '0';
-                previewElement.style.transform = `translate(${event.clientX - rect.left}px, ${event.clientY - rect.top}px) translate(-50%, -50%)`;
-                
-                // 检查是否可以放置
-                const canPlace = x >= 5 && x <= 95 && y >= 7.5 && y <= 92.5 && is2DValidPlacement(x, y);
-                if (canPlace) {
-                    previewElement.classList.remove('preview-invalid');
-                    previewElement.classList.add('preview-valid');
-                } else {
-                    previewElement.classList.remove('preview-valid');
-                    previewElement.classList.add('preview-invalid');
-                }
-                
-                previewUpdateFrame = null;
-            });
-        }
-        
-        // 进入2D建造模式
-        function enter2DBuildMode(buildingType) {
-            closeAllDetailPanels();
-            if (previewElement) previewElement.remove();
-            
-            gameState.buildingToPlace = buildingType;
-            gameState.isBuildingMode = true;
-            ui.btnOpenBuild.classList.add('build-mode-active');
-            
-            const config = BUILDINGS[buildingType];
-            if (!config) {
-                showStatus(`❌ 未知的建筑类型: ${buildingType}`, 3000);
-                exit2DBuildMode();
-                return;
-            }
-            
-            // 创建2D预览元素
-            previewElement = document.createElement('div');
-            previewElement.className = 'entity-item building-item preview-item';
-            previewElement.style.background = config.bgColor || '#666';
-            previewElement.style.fontSize = '56px';
-            previewElement.textContent = config.icon || '🏗️';
-            ui.mapContainer.appendChild(previewElement);
-            
-            showStatus(`🔨 已选择 ${config.name_cn}。点击地图放置！`, 3000);
-        }
-        
-        // 退出2D建造模式
-        function exit2DBuildMode() {
-            gameState.isBuildingMode = false;
-            gameState.buildingToPlace = null;
-            ui.buildMainMenu.classList.add('hidden');
-            ui.buildMaterialMenu.classList.add('hidden');
-            ui.buildExchangeMenu.classList.add('hidden');
-            ui.buildLandmarksMenu.classList.add('hidden');
-            ui.buildAdvancedMenu.classList.add('hidden');
-            ui.btnOpenBuild.classList.remove('build-mode-active');
-            if (previewElement) {
-                previewElement.remove();
-                previewElement = null;
-            }
-        }
-        
-        // 检查2D放置位置是否有效
-        function is2DValidPlacement(x, y) {
-            // 检查是否太靠近中心（繁殖窝）
-            if (Math.abs(x - 50) < 10 && Math.abs(y - 50) < 10) return false;
-            
-            // 检查是否与其他建筑重叠
-            return !gameState.buildings.some(b => {
-                const bx = parseFloat(b.position2D.x);
-                const by = parseFloat(b.position2D.y);
-                return Math.abs(bx - x) < 10 && Math.abs(by - y) < 10;
-            });
-        }
-        
-        // 放置2D建筑
-        function place2DBuilding(x, y) {
-            const type = gameState.buildingToPlace;
-            const config = BUILDINGS[type];
-            
-            // 检查建造成本（使用原有逻辑）
-            if (config.costGold !== undefined) {
-                if (gameState.gold < config.costGold) {
-                    showStatus(`❌ 金币不足! 需要 ${config.costGold} 金币。`, 3000);
-                    return;
-                }
-                if (gameState.wood < config.costWood) {
-                    showStatus(`❌ 木材不足! 需要 ${config.costWood} 木材。`, 3000);
-                    return;
-                }
-                if (gameState.stone < config.costStone) {
-                    showStatus(`❌ 石材不足! 需要 ${config.costStone} 石材。`, 3000);
-                    return;
-                }
-                gameState.gold -= config.costGold;
-                gameState.wood -= config.costWood;
-                gameState.stone -= config.costStone;
-            } else {
-                let costResource = 'food';
-                let costAmount = config.cost;
-                if (type === 'Museum') costResource = 'stone';
-                if (type === 'Exchange') costResource = 'gold';
-                
-                if (gameState[costResource] < costAmount) {
-                    const resourceName = costResource === 'food' ? '食物' : (costResource === 'stone' ? '石材' : '金币');
-                    showStatus(`❌ 放置失败: 需要 ${costAmount} ${resourceName}。`, 3000);
-                    return;
-                }
-                gameState[costResource] -= costAmount;
-            }
-            
-            // 创建2D建筑元素
-            const buildingElement = document.createElement('div');
-            const buildingId = crypto.randomUUID();
-            buildingElement.id = `building-${buildingId}`;
-            buildingElement.className = 'entity-item building-item';
-            buildingElement.dataset.buildingId = buildingId;
-            buildingElement.style.left = `${x}%`;
-            buildingElement.style.top = `${y}%`;
-            buildingElement.style.transform = 'translate(-50%, -50%)';
-            buildingElement.style.background = config.bgColor || '#666';
-            buildingElement.style.fontSize = '56px';
-            // 使用建筑特定的图标
-            buildingElement.textContent = config.icon || '🏗️';
-            
-            // 添加标签
-            const label = document.createElement('div');
-            label.className = 'entity-label';
-            label.textContent = `${config.name_cn} Lv.1`;
-            buildingElement.appendChild(label);
-            
-            ui.mapContainer.appendChild(buildingElement);
-            
-            // 创建建筑数据（保留mesh以兼容现有代码）
-            const building = {
-                type: type,
-                element: buildingElement,
-                position2D: { x, y },
-                position: { x: 0, y: 0, z: 0 }, // 兼容3D代码
-                level: 1,
-                id: buildingId,
-                workerId: null,
-                placedArtifacts: [],
-                mesh: { // 创建假mesh对象以兼容现有代码
-                    position: { x: 0, y: 0, z: 0 },
-                    geometry: { parameters: {} },
-                    userData: { buildingId }
-                }
-            };
-            
-            gameState.buildings.push(building);
-            showStatus(`✅ 成功放置 ${config.name_cn}!`, 3000);
-            exit2DBuildMode();
-            updateUI();
-        }
-        
-        // 收集2D资源
-        function collect2DResource(collectibleId) {
-            const index = gameState.collectibles.findIndex(c => c.id === collectibleId);
-            if (index === -1) return;
-            
-            const collectible = gameState.collectibles[index];
-            gameState[collectible.type] += collectible.amount;
-            
-            const iconMap = {
-                food: '🍎', gold: '💰', wood: '🪵', stone: '🪨', gems: '💎',
-                expGrass: '🌿', moonFlower: '🌙', mutationCrystal: '💠', voidEssence: '🌌'
-            };
-            showStatus(`${iconMap[collectible.type] || '📦'} +${collectible.amount}`, 1500);
-            updateUI();
-            
-            // 从DOM中移除
-            if (collectible.element) {
-                collectible.element.remove();
-            }
-            gameState.collectibles.splice(index, 1);
-        }
-        
-        // 开始移动建筑
-        function startMoveBuilding(building) {
-            if (!building || !building.element) return;
-            
-            closeBuildingDetails();
-            gameState.isBuildingMode = true;
-            gameState.movingBuilding = building;
-            
-            // 创建移动预览
-            const config = BUILDINGS[building.type];
-            previewElement = document.createElement('div');
-            previewElement.className = 'entity-item building-item preview-item';
-            previewElement.style.background = config.bgColor || '#666';
-            previewElement.style.fontSize = '56px';
-            previewElement.textContent = config.icon || '🏗️';
-            ui.mapContainer.appendChild(previewElement);
-            
-            // 隐藏原建筑
-            building.element.style.opacity = '0.3';
-            
-            showStatus(`📍 正在移动 ${config.name_cn}，点击新位置放置`, 4000);
-        }
-        
-        // 完成移动建筑
-        function finishMoveBuilding(x, y) {
-            const building = gameState.movingBuilding;
-            if (!building) return;
-            
-            // 检查是否可以放置
-            if (!is2DValidPlacement(x, y)) {
-                showStatus(`❌ 此位置无法放置，请选择其他位置`, 2000);
-                return;
-            }
-            
-            // 更新位置
-            building.position2D = { x, y };
-            building.element.style.left = `${x}%`;
-            building.element.style.top = `${y}%`;
-            building.element.style.opacity = '1';
-            building.element.style.transform = 'translate(-50%, -50%)';
-            
-            // 更新该建筑上的所有可收集物位置
-            gameState.collectibles.filter(c => c.buildingId === building.id).forEach(c => {
-                if (c.element) {
-                    c.element.style.left = `${x}%`;
-                    c.element.style.top = `${y - 8}%`;
-                }
-            });
-            
-            showStatus(`✅ ${BUILDINGS[building.type].name_cn} 已移动到新位置`, 2000);
-            exit2DBuildMode();
-        }
-        
-        // 拆除建筑
-        function demolishBuilding(building) {
-            if (!building) return;
-            
-            const config = BUILDINGS[building.type];
-            const refundAmount = Math.floor(config.cost * 0.5); // 返还50%成本
-            
-            if (!confirm(`确定要拆除 ${config.name_cn} 吗？将返还 ${refundAmount} 资源。`)) {
-                return;
-            }
-            
-            // 如果有工人，先移除
-            if (building.workerId) {
-                const worker = gameState.animals.find(a => a.id === building.workerId);
-                if (worker) {
-                    worker.workingBuildingId = null;
-                    worker.workStartTime = null;
-                }
-            }
-            
-            // 返还资源
-            let refundResource = 'food';
-            if (building.type === 'Museum') refundResource = 'stone';
-            if (building.type === 'Exchange') refundResource = 'gold';
-            
-            if (config.costGold !== undefined) {
-                // 进阶建筑返还多种资源
-                gameState.gold += Math.floor(config.costGold * 0.5);
-                gameState.wood += Math.floor(config.costWood * 0.5);
-                gameState.stone += Math.floor(config.costStone * 0.5);
-            } else {
-                gameState[refundResource] += refundAmount;
-            }
-            
-            // 移除该建筑上的所有可收集物
-            gameState.collectibles = gameState.collectibles.filter(c => {
-                if (c.buildingId === building.id) {
-                    if (c.element) c.element.remove();
-                    return false;
-                }
-                return true;
-            });
-            
-            // 从DOM中移除
-            if (building.element) {
-                building.element.remove();
-            }
-            
-            // 从数据中移除
-            const index = gameState.buildings.findIndex(b => b.id === building.id);
-            if (index > -1) {
-                gameState.buildings.splice(index, 1);
-            }
-            
-            showStatus(`✅ 已拆除 ${config.name_cn}，返还了 ${refundAmount} 资源`, 3000);
-            closeBuildingDetails();
-            updateUI();
+
+            // 启动动画循环
+            animate();
         }
 
         // 窗口尺寸变化处理
@@ -2113,34 +1427,24 @@
             closeAuctionBidPanel();
             closeInventoryPanel();
             closeTargetSelector();
-            closeDebugPanel();
             if (typeof closeTeamSelector === 'function') closeTeamSelector();
             if (typeof closeSkillSelector === 'function') closeSkillSelector();
         }
 
-        // 新增：键盘按下事件处理（2D地图移动）
+        // 新增：键盘按下事件处理
         function onKeyDown(event) {
-            // 如果在输入框中，不处理
-            if (event.target.tagName === 'INPUT' || event.target.tagName === 'TEXTAREA') {
-                return;
-            }
-            
             switch (event.code) {
                 case 'KeyW':
                     cameraMovement.forward = true;
-                    event.preventDefault();
                     break;
                 case 'KeyA':
                     cameraMovement.left = true;
-                    event.preventDefault();
                     break;
                 case 'KeyS':
                     cameraMovement.backward = true;
-                    event.preventDefault();
                     break;
                 case 'KeyD':
                     cameraMovement.right = true;
-                    event.preventDefault();
                     break;
             }
         }
@@ -2152,19 +1456,6 @@
                 case 'KeyA': cameraMovement.left = false; break;
                 case 'KeyS': cameraMovement.backward = false; break;
                 case 'KeyD': cameraMovement.right = false; break;
-            }
-        }
-        
-        // 新增：更新2D地图位置
-        function update2DMapPosition() {
-            if (cameraMovement.forward || cameraMovement.backward || cameraMovement.left || cameraMovement.right) {
-                if (cameraMovement.forward) mapOffset.y += MAP_MOVE_SPEED;
-                if (cameraMovement.backward) mapOffset.y -= MAP_MOVE_SPEED;
-                if (cameraMovement.left) mapOffset.x += MAP_MOVE_SPEED;
-                if (cameraMovement.right) mapOffset.x -= MAP_MOVE_SPEED;
-                
-                // 应用偏移
-                ui.mapContainer.style.transform = `translate(${mapOffset.x}px, ${mapOffset.y}px)`;
             }
         }
 
@@ -2333,10 +1624,7 @@
         function animate() {
             requestAnimationFrame(animate);
 
-            // 更新2D地图位置（WASD控制）
-            update2DMapPosition();
-
-            // 更新相机位置（3D模式备用）
+            // 更新相机位置
             const moveSpeed = 0.2;
             const cameraDirection = new THREE.Vector3();
             camera.getWorldDirection(cameraDirection);
@@ -2346,11 +1634,24 @@
             const rightDirection = new THREE.Vector3();
             rightDirection.crossVectors(camera.up, cameraDirection).normalize();
 
+            if (cameraMovement.forward) {
+                camera.position.addScaledVector(cameraDirection, moveSpeed);
+            }
+            if (cameraMovement.backward) {
+                camera.position.addScaledVector(cameraDirection, -moveSpeed);
+            }
+            if (cameraMovement.left) {
+                camera.position.addScaledVector(rightDirection, moveSpeed);
+            }
+            if (cameraMovement.right) {
+                camera.position.addScaledVector(rightDirection, -moveSpeed);
+            }
+
             // 动物和繁殖窝轻微摇摆 (增加盆栽活力)
             const time = Date.now() * 0.0005;
             denMesh.rotation.y += 0.005;
             gameState.animals.forEach(animalData => {
-                // 只让未放置（在"家"里）的动物摇摆
+                // 只让未放置（在“家”里）的动物摇摆
                 if (!animalData.isPlaced) {
                     const animal = animalData.mesh;
                     animal.position.y = 1 + Math.sin(time * 5 + animalData.id.charCodeAt(0)) * 0.1;
@@ -2517,71 +1818,66 @@
             spawnCollectible(building, resourceType, Math.floor(finalAmount + extraAmount));
         }
 
-        // 新增：生成可收集的资源对象（2D版本）
+        // 新增：生成可收集的资源对象
         function spawnCollectible(building, resourceType, amount) {
             // 检查是否已有同类型的可收集物在该建筑上
             const existingCollectible = gameState.collectibles.find(c => c.buildingId === building.id && c.type === resourceType);
 
             if (existingCollectible) {
-                // 如果有，只增加数量
+                // 如果有，只增加数量（数据层面累加）
                 existingCollectible.amount += amount;
-                // 给一个轻微的视觉反馈
-                if (existingCollectible.element) {
-                    existingCollectible.element.style.transform = 'translateY(-10px) scale(1.2)';
-                    setTimeout(() => {
-                        existingCollectible.element.style.transform = 'translateY(0px)';
-                    }, 200);
-                }
-                return;
+                
+                // 给一个轻微的视觉反馈，但不改变实际大小
+                const mesh = existingCollectible.mesh;
+                const originalY = mesh.position.y;
+                mesh.position.y = originalY + 0.2;
+                setTimeout(() => {
+                    mesh.position.y = originalY;
+                }, 150);
+                return; // 完成操作，不再创建新模型
             }
 
             const collectibleId = crypto.randomUUID();
             
-            // 资源图标配置
-            const resourceIcons = {
-                food: '🍎',
-                gold: '💰',
-                wood: '🪵',
-                stone: '🪨',
-                gems: '💎',
-                expGrass: '🌿',
-                moonFlower: '🌙',
-                mutationCrystal: '💠',
-                voidEssence: '🌌'
+            const resourceConfig = {
+                food:  { geometry: new THREE.SphereGeometry(0.3, 8, 8),   color: 0xff4444 }, // 苹果
+                gold:  { geometry: new THREE.CylinderGeometry(0.2, 0.2, 0.1, 12), color: 0xffd700 }, // 金币
+                wood:  { geometry: new THREE.BoxGeometry(0.2, 0.2, 0.6),  color: 0x8B4513 }, // 木材
+                stone: { geometry: new THREE.DodecahedronGeometry(0.3),   color: 0x808080 }, // 石材
+                gems:  { geometry: new THREE.OctahedronGeometry(0.25),    color: 0xff69b4 }, // 宝石 (粉色)
+                expGrass: { geometry: new THREE.ConeGeometry(0.2, 0.4, 6), color: 0x22c55e }, // 经验草 (绿色)
+                moonFlower: { geometry: new THREE.TorusGeometry(0.2, 0.08, 8, 6), color: 0xa855f7 }, // 月光花 (紫色)
+                mutationCrystal: { geometry: new THREE.OctahedronGeometry(0.25), color: 0x06b6d4 }, // 变异晶体 (青色)
+                voidEssence: { geometry: new THREE.IcosahedronGeometry(0.2), color: 0x4c1d95 }, // 虚空精华 (深紫)
             };
-            
-            const icon = resourceIcons[resourceType] || '📦';
-            
-            // 创建2D可收集物DOM元素
-            const collectibleElement = document.createElement('div');
-            collectibleElement.className = 'entity-item collectible-item';
-            collectibleElement.dataset.collectibleId = collectibleId;
-            collectibleElement.textContent = icon;
-            collectibleElement.style.cursor = 'pointer';
-            
-            // 如果建筑有2D位置，放在建筑上方
-            if (building.position2D) {
-                collectibleElement.style.left = `${building.position2D.x}%`;
-                collectibleElement.style.top = `${building.position2D.y - 8}%`; // 建筑上方
-            } else {
-                // 兼容旧的3D建筑（不应该发生）
-                collectibleElement.style.left = '50%';
-                collectibleElement.style.top = '50%';
+
+            const config = resourceConfig[resourceType];
+            if (!config) {
+                console.warn(`未知的资源类型: ${resourceType}`);
+                return;
             }
-            collectibleElement.style.transform = 'translate(-50%, -50%)';
-            
-            ui.mapContainer.appendChild(collectibleElement);
-            
+
+            const material = new THREE.MeshStandardMaterial({ color: config.color, metalness: 0.3, roughness: 0.6 });
+            const mesh = new THREE.Mesh(config.geometry, material);
+
+            // 计算基础高度
+            const buildingHeight = building.mesh.geometry.parameters.height || (building.mesh.geometry.parameters.radius * 2) || 1;
+            const baseY = building.mesh.position.y + buildingHeight / 2 + 0.5;
+
+            mesh.position.set(building.mesh.position.x, baseY, building.mesh.position.z);
+            mesh.userData.collectibleId = collectibleId;
+
             const collectible = {
                 id: collectibleId,
                 type: resourceType,
                 amount: amount,
                 buildingId: building.id,
-                element: collectibleElement,
-                mesh: { userData: { collectibleId } } // 兼容3D代码
+                mesh: mesh,
+                baseY: baseY,
             };
-            
+
             gameState.collectibles.push(collectible);
+            collectiblesGroup.add(mesh);
         }
 
         // 新增：收集资源
@@ -3335,33 +2631,20 @@
             completeUpgrade(building, nextLevel, nextConfig);
         }
 
-        // 新增：完成建筑升级（2D版本）
+        // 新增：完成建筑升级
         function completeUpgrade(building, nextLevel, nextConfig) {
             building.level = nextLevel;
 
-            // 更新2D建筑显示
-            if (building.element) {
-                const config = BUILDINGS[building.type];
-                const scale = nextConfig.scale || 1.0;
-                const newSize = 100 * scale; // 基础尺寸 * 缩放比例
-                const newFontSize = 56 * scale;
-                
-                building.element.style.width = `${newSize}px`;
-                building.element.style.height = `${newSize}px`;
-                building.element.style.fontSize = `${newFontSize}px`;
-                
-                // 更新标签
-                const label = building.element.querySelector('.entity-label');
-                if (label) {
-                    label.textContent = `${config.name_cn} Lv.${nextLevel}`;
-                }
-                
-                // 闪烁效果
-                building.element.style.filter = 'brightness(1.5)';
-                setTimeout(() => {
-                    building.element.style.filter = 'brightness(1)';
-                }, 500);
-            }
+            const mesh = building.mesh;
+            
+            mesh.geometry.dispose();
+            mesh.geometry = nextConfig.shape;
+            
+            const newHeight = nextConfig.shape.parameters.height || (nextConfig.shape.parameters.radiusTop || nextConfig.shape.parameters.radius) * 2;
+            mesh.position.y = newHeight / 2;
+            
+            mesh.material.emissive.setHex(0x333333);
+            setTimeout(() => mesh.material.emissive.setHex(0x000000), 500);
 
             const config = BUILDINGS[building.type];
             showStatus(`⬆️ ${config.name_cn} 升级至 Lv.${nextLevel}! 效果提升!`, 4000);
@@ -3719,7 +3002,7 @@
             localStorage.setItem('battlePlayerAnimal', JSON.stringify(getSerializableAnimal(playerAnimal)));
     
             // 跳转到战斗场景
-            window.location.href = 'battle.html';
+            window.location.href = '../pages/battle.html';
         }
 
         // --- 新增：商店系统逻辑 ---
@@ -4183,7 +3466,7 @@
                 return value;
             }));
             localStorage.setItem('gameState', JSON.stringify(serializableGameState));
-            window.location.href = 'encyclopedia.html';
+            window.location.href = '../pages/encyclopedia.html';
         }
 
         function generateRandomAnimalData() {
@@ -4415,48 +3698,14 @@
         // --- 新的页面跳转和数据处理逻辑 ---
 
         function openAnimalManagementPage() {
-            // 优化：直接构建对象，避免慢速深拷贝，移除avatarData以节省空间
-            const serializableGameState = {
-                food: gameState.food,
-                gold: gameState.gold,
-                wood: gameState.wood,
-                stone: gameState.stone,
-                gems: gameState.gems,
-                expGrass: gameState.expGrass,
-                moonFlower: gameState.moonFlower,
-                mutationCrystal: gameState.mutationCrystal,
-                voidEssence: gameState.voidEssence,
-                breedingDenLevel: gameState.breedingDenLevel,
-                maxAnimals: gameState.maxAnimals,
-                animalCount: gameState.animalCount,
-                upgradingBuildings: gameState.upgradingBuildings,
-                activeExplorations: gameState.activeExplorations,
-                mining: gameState.mining,
-                artifacts: gameState.artifacts,
-                inventory: gameState.inventory,
-                battleTeam: gameState.battleTeam,
-                firstTeamMember: gameState.firstTeamMember,
-                auctions: gameState.auctions,
-                lastStockRefreshDate: gameState.lastStockRefreshDate,
-                exchangeStock: gameState.exchangeStock.map(a => {
-                    const { avatarData, ...rest } = a;
-                    return rest;
-                }),
-                unlockedEncyclopedia: gameState.unlockedEncyclopedia,
-                currentMapKey: gameState.currentMapKey,
-                mapHistory: gameState.mapHistory,
-                animals: gameState.animals.map(a => {
-                    const { mesh, avatarData, ...rest } = a;
-                    return rest;
-                }),
-                buildings: gameState.buildings.map(b => {
-                    const { mesh, element, ...rest } = b;
-                    return rest;
-                })
-            };
+            // 移除无法序列化的 'mesh' 和大型的 'avatarData' 属性
+            const serializableGameState = JSON.parse(JSON.stringify(gameState, (key, value) => {
+                if (key === 'mesh' || key === 'avatarData') return undefined;
+                return value;
+            }));
 
             localStorage.setItem('gameState', JSON.stringify(serializableGameState));
-            window.location.href = 'animal_management.html';
+            window.location.href = '../pages/animal_management.html';
         }
 
         function openExplorationPage() {
@@ -4466,7 +3715,7 @@
                 return value;
             }));
             localStorage.setItem('gameState', JSON.stringify(serializableGameState));
-            window.location.href = 'exploration.html';
+            window.location.href = '../pages/exploration.html';
         }
 
         function openMiningPage() {
@@ -4476,7 +3725,7 @@
                 return value;
             }));
             localStorage.setItem('gameState', JSON.stringify(serializableGameState));
-            window.location.href = 'mining.html';
+            window.location.href = '../pages/mining.html';
         }
 
         function openWorldMapPage() {
@@ -4486,164 +3735,8 @@
                 return value;
             }));
             localStorage.setItem('gameState', JSON.stringify(serializableGameState));
-            window.location.href = 'world_map.html';
+            window.location.href = '../pages/world_map.html';
         }
-
-        function openLeaguePage() {
-            // 保存游戏状态并跳转到联赛系统
-            const serializableGameState = JSON.parse(JSON.stringify(gameState, (key, value) => {
-                if (key === 'mesh' || key === 'avatarData') return undefined;
-                return value;
-            }));
-            localStorage.setItem('gameState', JSON.stringify(serializableGameState));
-            
-            // 保存时间系统数据
-            if (gameTimeSystem) {
-                gameTimeSystem.saveData();
-            }
-            
-            window.location.href = 'league.html';
-        }
-        
-        // 新增：调试器相关函数
-        function openDebugPanel() {
-            closeAllDetailPanels();
-            
-            // 填充当前值
-            document.getElementById('debug-food').value = Math.floor(gameState.food);
-            document.getElementById('debug-gold').value = gameState.gold;
-            document.getElementById('debug-wood').value = gameState.wood;
-            document.getElementById('debug-stone').value = gameState.stone;
-            document.getElementById('debug-gems').value = gameState.gems;
-            document.getElementById('debug-expGrass').value = gameState.expGrass;
-            
-            // 更新时间显示
-            if (gameTimeSystem) {
-                const timeInfo = gameTimeSystem.getCurrentTime();
-                document.getElementById('debug-year').textContent = timeInfo.year;
-                document.getElementById('debug-season').textContent = timeInfo.season;
-                document.getElementById('debug-week').textContent = timeInfo.week;
-            }
-            
-            ui.modalOverlay.classList.remove('hidden');
-            document.getElementById('debug-panel').classList.remove('hidden');
-        }
-        
-        function closeDebugPanel() {
-            document.getElementById('debug-panel').classList.add('hidden');
-            ui.modalOverlay.classList.add('hidden');
-        }
-        
-        window.setResource = function(resourceType) {
-            const inputId = `debug-${resourceType}`;
-            const value = parseInt(document.getElementById(inputId).value, 10);
-            if (isNaN(value) || value < 0) {
-                showStatus('❌ 请输入有效的数值', 2000);
-                return;
-            }
-            gameState[resourceType] = value;
-            updateUI();
-            showStatus(`✅ ${resourceType} 已设置为 ${value}`, 2000);
-        };
-        
-        window.addAllResources = function(amount) {
-            gameState.food += amount;
-            gameState.gold += amount;
-            gameState.wood += amount;
-            gameState.stone += amount;
-            gameState.gems += amount;
-            gameState.expGrass += amount;
-            gameState.moonFlower += amount;
-            gameState.mutationCrystal += amount;
-            gameState.voidEssence += amount;
-            updateUI();
-            showStatus(`✅ 所有资源 +${amount}`, 2000);
-        };
-        
-        window.debugAdvanceWeek = async function() {
-            if (!gameTimeSystem) {
-                showStatus('❌ 时间系统未初始化', 2000);
-                return;
-            }
-            const result = gameTimeSystem.advanceWeek();
-            if (result.success) {
-                await gameTimeSystem.saveData();
-                updateGameTimeDisplay();
-                // 更新调试面板显示
-                const timeInfo = gameTimeSystem.getCurrentTime();
-                document.getElementById('debug-year').textContent = timeInfo.year;
-                document.getElementById('debug-season').textContent = timeInfo.season;
-                document.getElementById('debug-week').textContent = timeInfo.week;
-                showStatus(`✅ 时间推进到第${timeInfo.year}年 ${timeInfo.season} 第${timeInfo.week}周`, 2500);
-            } else {
-                showStatus(`❌ ${result.reason}`, 2000);
-            }
-        };
-        
-        window.debugAdvanceToSeason = async function(targetSeason) {
-            if (!gameTimeSystem) {
-                showStatus('❌ 时间系统未初始化', 2000);
-                return;
-            }
-            
-            const seasonWeeks = {
-                '春季': 1,
-                '夏季': 14,
-                '秋季': 27,
-                '冬季': 40
-            };
-            
-            const targetWeek = seasonWeeks[targetSeason];
-            if (!targetWeek) return;
-            
-            const timeInfo = gameTimeSystem.getCurrentTime();
-            let weeksToAdvance = 0;
-            
-            if (timeInfo.week <= targetWeek) {
-                weeksToAdvance = targetWeek - timeInfo.week;
-            } else {
-                // 跨年
-                weeksToAdvance = (52 - timeInfo.week) + targetWeek;
-            }
-            
-            if (weeksToAdvance > 0) {
-                const result = gameTimeSystem.fastForward(weeksToAdvance);
-                if (result.success) {
-                    await gameTimeSystem.saveData();
-                    updateGameTimeDisplay();
-                    // 更新调试面板显示
-                    const newTimeInfo = gameTimeSystem.getCurrentTime();
-                    document.getElementById('debug-year').textContent = newTimeInfo.year;
-                    document.getElementById('debug-season').textContent = newTimeInfo.season;
-                    document.getElementById('debug-week').textContent = newTimeInfo.week;
-                    showStatus(`✅ 已跳转到${targetSeason}：第${newTimeInfo.year}年第${newTimeInfo.week}周`, 3000);
-                }
-            } else {
-                showStatus(`ℹ️ 当前已经是${targetSeason}`, 2000);
-            }
-        };
-        
-        window.debugResetTime = async function() {
-            if (!gameTimeSystem) {
-                showStatus('❌ 时间系统未初始化', 2000);
-                return;
-            }
-            
-            if (!confirm('确定要重置时间到第1年春季第1周吗？')) {
-                return;
-            }
-            
-            gameTimeSystem.reset();
-            await gameTimeSystem.saveData();
-            updateGameTimeDisplay();
-            
-            // 更新调试面板显示
-            document.getElementById('debug-year').textContent = '1';
-            document.getElementById('debug-season').textContent = '春季';
-            document.getElementById('debug-week').textContent = '1';
-            
-            showStatus('🔄 时间已重置', 2000);
-        };
 
         function loadGameStateFromStorage() {
             const storedStateJSON = localStorage.getItem('gameState');
@@ -4720,42 +3813,17 @@
                     return animalData;
                 });
 
-                // 3. 重建建筑（2D版本）
+                // 3. 重建建筑（为了同步 workerId）
+                gameState.buildings.forEach(b => worldGroup.remove(b.mesh)); // 移除旧模型
                 gameState.buildings = storedState.buildings.map(buildingData => {
                     const config = BUILDINGS[buildingData.type];
-                    
-                    // 重建2D DOM元素
-                    if (buildingData.position2D) {
-                        const buildingElement = document.createElement('div');
-                        buildingElement.id = `building-${buildingData.id}`;
-                        buildingElement.className = 'entity-item building-item';
-                        buildingElement.dataset.buildingId = buildingData.id;
-                        buildingElement.style.left = `${buildingData.position2D.x}%`;
-                        buildingElement.style.top = `${buildingData.position2D.y}%`;
-                        buildingElement.style.transform = 'translate(-50%, -50%)';
-                        buildingElement.style.background = config.bgColor || '#666';
-                        buildingElement.style.fontSize = '56px';
-                        buildingElement.textContent = config.icon || '🏗️';
-                        
-                        // 添加标签
-                        const label = document.createElement('div');
-                        label.className = 'entity-label';
-                        label.textContent = `${config.name_cn} Lv.${buildingData.level}`;
-                        buildingElement.appendChild(label);
-                        
-                        ui.mapContainer.appendChild(buildingElement);
-                        buildingData.element = buildingElement;
-                    }
-                    
-                    // 保持3D兼容性
-                    if (!buildingData.mesh || !buildingData.mesh.userData) {
-                        buildingData.mesh = {
-                            position: buildingData.position || { x: 0, y: 0, z: 0 },
-                            geometry: { parameters: {} },
-                            userData: { buildingId: buildingData.id }
-                        };
-                    }
-                    
+                    const levelConfig = config.levels[buildingData.level];
+                    const material = new THREE.MeshPhongMaterial({ color: config.color, shininess: 100 });
+                    const mesh = new THREE.Mesh(levelConfig.shape, material);
+                    mesh.position.set(buildingData.position.x, buildingData.position.y, buildingData.position.z);
+                    mesh.userData.buildingId = buildingData.id;
+                    worldGroup.add(mesh);
+                    buildingData.mesh = mesh;
                     return buildingData;
                 });
 
@@ -4899,12 +3967,9 @@
                 gameState.foodPerTick += 5; 
                 gameState.maxAnimals += 5; 
                 
-                // 更新2D繁殖窝显示
-                document.getElementById('den-level-display').textContent = gameState.breedingDenLevel;
-                const denElement = document.getElementById('den-building');
-                const newSize = 100 + gameState.breedingDenLevel * 10;
-                denElement.style.width = `${newSize}px`;
-                denElement.style.height = `${newSize}px`;
+                // 3D 模型变化：繁殖窝尺寸增大
+                denMesh.scale.set(1 + gameState.breedingDenLevel * 0.1, 1 + gameState.breedingDenLevel * 0.1, 1 + gameState.breedingDenLevel * 0.1);
+                denMesh.material.color.setHex(0xef4444 + gameState.breedingDenLevel * 0x0500);
 
                 showStatus(`🏡 繁殖窝升级成功! 容量: ${gameState.maxAnimals}`, 3000);
             } else {
@@ -5103,15 +4168,8 @@
         }
 
         // --- 应用启动 ---
-        window.onload = async function() {
-            initThreeJS(); // 初始化3D基础对象避免错误
-            init2DMap(); // 初始化2D地图和事件
-            
-            // 初始化时间系统
-            gameTimeSystem = new GameTimeSystem();
-            await gameTimeSystem.loadData();
-            updateGameTimeDisplay();
-            
+        window.onload = function() {
+            initThreeJS();
             loadGameStateFromStorage();
             processCapturedAnimal();
             
@@ -5128,26 +4186,9 @@
             startAuctionUpdateLoop();
             startResourceLoops();
             startGameStateUpdateLoop();
-            animate(); // 启动动画循环（包含WASD移动更新）
             updateUI();
-            showStatus("欢迎来到电子盆栽！使用 WASD 键移动视角，点击🐾动物系统进行繁殖和查看名册。", 5000);
+            showStatus("欢迎来到电子盆栽！拖动可旋转视角，点击🐾动物系统进行繁殖和查看名册。", 5000);
         };
-        
-        // 新增：更新游戏时间显示
-        function updateGameTimeDisplay() {
-            if (!gameTimeSystem) return;
-            
-            const timeInfo = gameTimeSystem.getCurrentTime();
-            const timeDisplayText = document.getElementById('time-display-text');
-            const roundDisplayText = document.getElementById('round-display-text');
-            
-            if (timeDisplayText) {
-                timeDisplayText.textContent = timeInfo.displayText;
-            }
-            if (roundDisplayText) {
-                roundDisplayText.textContent = timeInfo.roundDisplayText;
-            }
-        }
         
         // 从模板创建动物
         function createAnimalFromTemplate(template) {

@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>动物图鉴 - 电子盆栽</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 引入图像库系统 -->
+    <script src="../scripts/image_library.js"></script>
     <style>
         body {
             background: linear-gradient(135deg, #0a1120 0%, #1e293b 100%);
@@ -356,7 +358,7 @@
                 }
             } else {
                 alert("游戏状态加载失败！将返回栖息地。");
-                window.location.href = 'game3d.html';
+                window.location.href = '../pages/game3d.html';
             }
         }
         
@@ -372,7 +374,7 @@
         // 返回游戏
         function backToGame() {
             saveGameState();
-            window.location.href = 'game3d.html';
+            window.location.href = '../pages/game3d.html';
         }
         
         // 设置事件监听器
@@ -623,8 +625,17 @@
             // 头像
             let avatarHtml = '<div class="w-24 h-24 rounded-full mx-auto mb-3 flex items-center justify-center text-5xl grayscale blur-sm bg-gray-800 border-2 border-gray-600">❓</div>';
             if (hasUnlocked) {
-                if (displayVariant.avatarData) {
-                    avatarHtml = `<img src="${displayVariant.avatarData}" class="w-24 h-24 rounded-full mx-auto mb-3 border-3 border-teal-400 object-cover shadow-lg" alt="${species.species}">`;
+                // 使用图像库获取头像
+                let avatarUrl = null;
+                if (typeof imageLibrary !== 'undefined') {
+                    avatarUrl = imageLibrary.getAnimalAvatar(displayVariant);
+                }
+                if (!avatarUrl && displayVariant.avatarData) {
+                    avatarUrl = displayVariant.avatarData;
+                }
+                
+                if (avatarUrl) {
+                    avatarHtml = `<img src="${avatarUrl}" class="w-24 h-24 rounded-full mx-auto mb-3 border-3 border-teal-400 object-cover shadow-lg" alt="${species.species}" onerror="this.style.display='none'; this.parentElement.innerHTML='<div class=\\'w-24 h-24 rounded-full mx-auto mb-3 border-3 border-teal-400 shadow-lg\\' style=\\'background-color: ${displayVariant.color}\\'></div>';">`;
                 } else {
                     avatarHtml = `<div class="w-24 h-24 rounded-full mx-auto mb-3 border-3 border-teal-400 shadow-lg" style="background-color: ${displayVariant.color}"></div>`;
                 }
@@ -837,8 +848,17 @@
                 `;
                 
                 if (isUnlocked) {
-                    if (variant.avatarData) {
-                        html += `<img src="${variant.avatarData}" class="w-20 h-20 rounded-full border-3 border-teal-400 object-cover shadow-lg" alt="${variant.name}">`;
+                    // 使用图像库获取头像
+                    let avatarUrl = null;
+                    if (typeof imageLibrary !== 'undefined') {
+                        avatarUrl = imageLibrary.getAnimalAvatar(variant);
+                    }
+                    if (!avatarUrl && variant.avatarData) {
+                        avatarUrl = variant.avatarData;
+                    }
+                    
+                    if (avatarUrl) {
+                        html += `<img src="${avatarUrl}" class="w-20 h-20 rounded-full border-3 border-teal-400 object-cover shadow-lg" alt="${variant.name}" onerror="this.style.display='none'; this.outerHTML='<div class=\\'w-20 h-20 rounded-full border-3 border-teal-400 shadow-lg\\' style=\\'background-color: ${variant.color}\\'></div>';">`;
                     } else {
                         html += `<div class="w-20 h-20 rounded-full border-3 border-teal-400 shadow-lg" style="background-color: ${variant.color}"></div>`;
                     }
@@ -1046,8 +1066,17 @@
                                     <div class="flex-shrink-0">
                         `;
                         
-                        if (variant.avatarData) {
-                            html += `<img src="${variant.avatarData}" class="w-16 h-16 rounded-full border-2 border-pink-400 object-cover shadow-lg" alt="${variant.name}">`;
+                        // 使用图像库获取头像
+                        let avatarUrl = null;
+                        if (typeof imageLibrary !== 'undefined') {
+                            avatarUrl = imageLibrary.getAnimalAvatar(variant);
+                        }
+                        if (!avatarUrl && variant.avatarData) {
+                            avatarUrl = variant.avatarData;
+                        }
+                        
+                        if (avatarUrl) {
+                            html += `<img src="${avatarUrl}" class="w-16 h-16 rounded-full border-2 border-pink-400 object-cover shadow-lg" alt="${variant.name}" onerror="this.style.display='none'; this.outerHTML='<div class=\\'w-16 h-16 rounded-full border-2 border-pink-400 shadow-lg\\' style=\\'background-color: ${variant.color}\\'></div>';">`;
                         } else {
                             html += `<div class="w-16 h-16 rounded-full border-2 border-pink-400 shadow-lg" style="background-color: ${variant.color}"></div>`;
                         }
