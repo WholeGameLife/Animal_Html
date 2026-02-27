@@ -259,31 +259,43 @@
             </div>
             
             <!-- 筛选和搜索 -->
-            <div class="mb-4 flex gap-3">
-                <input type="text" id="skill-search" placeholder="🔍 搜索技能名称..."
-                    class="flex-1 bg-gray-800 border border-gray-600 rounded-lg px-4 py-2 text-white text-sm focus:outline-none focus:border-blue-500">
-                <select id="skill-type-filter"
-                    class="bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-blue-500">
-                    <option value="">全部类型</option>
-                    <option value="attack">⚔️ 攻击型</option>
-                    <option value="defense">🛡️ 防御型</option>
-                    <option value="agility">⚡ 敏捷型</option>
-                    <option value="buff">💪 增益型</option>
-                    <option value="debuff">🔻 减益型</option>
-                    <option value="heal">💚 治疗型</option>
-                </select>
-                <select id="skill-category-filter"
-                    class="bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-blue-500">
-                    <option value="">全部系别</option>
-                    <option value="element-normal">⭕ 普通</option>
-                    <option value="element-water">💧 水系</option>
-                    <option value="element-fire">🔥 火系</option>
-                    <option value="element-grass">🌿 草系</option>
-                    <option value="element-wind">💨 风系</option>
-                    <option value="element-metal">🪙 金系</option>
-                    <option value="element-earth">🪨 土系</option>
-                    <option value="mutation">✨ 变异系</option>
-                </select>
+            <div class="mb-4 space-y-2">
+                <div class="flex gap-3">
+                    <input type="text" id="skill-search" placeholder="🔍 搜索技能名称..."
+                        class="flex-1 bg-gray-800 border border-gray-600 rounded-lg px-4 py-2 text-white text-sm focus:outline-none focus:border-blue-500">
+                    <select id="skill-type-filter"
+                        class="bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-blue-500">
+                        <option value="">全部类型</option>
+                        <option value="attack">⚔️ 攻击型</option>
+                        <option value="defense">🛡️ 防御型</option>
+                        <option value="agility">⚡ 敏捷型</option>
+                        <option value="buff">💪 增益型</option>
+                        <option value="debuff">🔻 减益型</option>
+                        <option value="heal">💚 治疗型</option>
+                    </select>
+                    <select id="skill-category-filter"
+                        class="bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-blue-500">
+                        <option value="">全部系别</option>
+                        <option value="element-normal">⭕ 普通</option>
+                        <option value="element-water">💧 水系</option>
+                        <option value="element-fire">🔥 火系</option>
+                        <option value="element-grass">🌿 草系</option>
+                        <option value="element-wind">💨 风系</option>
+                        <option value="element-metal">🪙 金系</option>
+                        <option value="element-earth">🪨 土系</option>
+                        <option value="mutation">✨ 变异系</option>
+                    </select>
+                </div>
+                <div class="flex gap-3">
+                    <select id="skill-batch-filter"
+                        class="flex-1 bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-blue-500">
+                        <option value="">🏷️ 全部批次ID</option>
+                    </select>
+                    <button id="refresh-batch-filter-btn"
+                        class="bg-gray-700 hover:bg-gray-600 text-white text-sm font-bold py-2 px-4 rounded-lg transition-colors">
+                        🔄 刷新
+                    </button>
+                </div>
             </div>
             
             <div id="skill-pool-list" class="space-y-2 overflow-y-auto flex-1">
@@ -324,6 +336,8 @@
 
         // 初始化
         function init() {
+            // 重新加载技能库（确保获取最新的技能数据）
+            skillLibrary = JSON.parse(localStorage.getItem('SKILL_POOL') || '[]');
             renderPoolsList();
             setupFormListeners();
             updatePoolCount();
@@ -403,6 +417,10 @@
         // 为指定稀有度添加技能
         window.addSkillToRarity = function(rarity) {
             currentRarity = rarity;
+            // 重新加载技能库（确保获取最新的技能数据，包括新导入的技能）
+            skillLibrary = JSON.parse(localStorage.getItem('SKILL_POOL') || '[]');
+            // 更新批次ID筛选器
+            updateBatchFilterOptions();
             renderSkillLibrary();
             document.getElementById('skill-select-modal').classList.remove('hidden');
         }
@@ -421,6 +439,47 @@
             document.getElementById('skill-search').addEventListener('input', renderSkillLibrary);
             document.getElementById('skill-type-filter').addEventListener('change', renderSkillLibrary);
             document.getElementById('skill-category-filter').addEventListener('change', renderSkillLibrary);
+            document.getElementById('skill-batch-filter').addEventListener('change', renderSkillLibrary);
+            document.getElementById('refresh-batch-filter-btn').addEventListener('click', updateBatchFilterOptions);
+            
+            // 初始化批次ID筛选器
+            updateBatchFilterOptions();
+        }
+        
+        // 更新批次ID筛选器选项
+        function updateBatchFilterOptions() {
+            // 重新加载技能库（确保获取最新的技能数据）
+            skillLibrary = JSON.parse(localStorage.getItem('SKILL_POOL') || '[]');
+            
+            const batchIds = new Set();
+            skillLibrary.forEach(skill => {
+                if (skill.batchId) {
+                    batchIds.add(skill.batchId);
+                }
+            });
+            
+            const batchFilter = document.getElementById('skill-batch-filter');
+            const currentValue = batchFilter.value;
+            
+            batchFilter.innerHTML = '<option value="">🏷️ 全部批次ID</option>';
+            
+            if (batchIds.size > 0) {
+                const sortedBatchIds = Array.from(batchIds).sort();
+                sortedBatchIds.forEach(batchId => {
+                    const option = document.createElement('option');
+                    option.value = batchId;
+                    option.textContent = `🏷️ ${batchId}`;
+                    batchFilter.appendChild(option);
+                });
+            }
+            
+            // 恢复之前选择的值（如果还存在）
+            if (currentValue && batchIds.has(currentValue)) {
+                batchFilter.value = currentValue;
+            }
+            
+            // 刷新后重新渲染技能列表
+            renderSkillLibrary();
         }
 
         // 渲染技能库列表
@@ -441,6 +500,7 @@
             const searchText = document.getElementById('skill-search').value.toLowerCase();
             const typeFilter = document.getElementById('skill-type-filter').value;
             const categoryFilter = document.getElementById('skill-category-filter').value;
+            const batchFilter = document.getElementById('skill-batch-filter').value;
 
             // 过滤已配置到任何稀有度列的技能（同一技能不能重复添加）
             const configuredKeys = new Set();
@@ -471,6 +531,11 @@
                 } else {
                     availableSkills = availableSkills.filter(s => s.category === categoryFilter);
                 }
+            }
+            
+            // 应用批次ID过滤
+            if (batchFilter) {
+                availableSkills = availableSkills.filter(s => s.batchId === batchFilter);
             }
 
             if (availableSkills.length === 0) {

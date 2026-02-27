@@ -404,23 +404,22 @@
                 <!-- 已创建技能列表 -->
                 <div class="bg-gray-900/80 backdrop-blur-lg rounded-xl p-6 border border-gray-700">
                     <div class="flex justify-between items-center mb-4">
-                        <h3 class="text-xl font-bold text-white">📋 技能列表 (<span id="skill-count">0</span>)</h3>
-                        <div class="flex gap-2">
-                            <label for="import-file"
-                                class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold py-2 px-4 rounded-lg transition-colors cursor-pointer">
-                                📤 导入
-                            </label>
-                            <input type="file" id="import-file" accept=".json" class="hidden">
-                            <button id="export-btn"
-                                class="bg-green-600 hover:bg-green-700 text-white text-sm font-bold py-2 px-4 rounded-lg transition-colors">
-                                📥 导出JSON
-                            </button>
-                            <button id="export-csv-btn"
-                                class="bg-teal-600 hover:bg-teal-700 text-white text-sm font-bold py-2 px-4 rounded-lg transition-colors">
-                                📊 导出CSV
-                            </button>
-                        </div>
+                    <h3 class="text-xl font-bold text-white">📋 技能列表 (<span id="skill-count">0</span>)</h3>
+                    <div class="flex gap-2">
+                        <button id="import-btn"
+                            class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold py-2 px-4 rounded-lg transition-colors">
+                            📤 导入
+                        </button>
+                        <button id="export-btn"
+                            class="bg-green-600 hover:bg-green-700 text-white text-sm font-bold py-2 px-4 rounded-lg transition-colors">
+                            📥 导出JSON
+                        </button>
+                        <button id="export-csv-btn"
+                            class="bg-teal-600 hover:bg-teal-700 text-white text-sm font-bold py-2 px-4 rounded-lg transition-colors">
+                            📊 导出CSV
+                        </button>
                     </div>
+                </div>
                     <div id="skills-list" class="space-y-3 max-h-96 overflow-y-auto">
                         <div class="text-center text-gray-500 text-sm py-8">
                             暂无技能
@@ -439,6 +438,39 @@
                 </div>
                 <div id="emoji-grid" class="emoji-picker bg-gray-800 rounded-lg p-4">
                     <!-- Emoji列表 -->
+                </div>
+            </div>
+        </div>
+
+        <!-- 导入技能模态框 -->
+        <div id="import-modal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+            <div class="bg-gray-900 rounded-xl p-6 max-w-md w-full mx-4 border border-gray-700">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-xl font-bold text-white">📤 导入技能</h3>
+                    <button id="close-import-modal" class="text-gray-400 hover:text-white text-2xl">×</button>
+                </div>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-2">批次ID（可选）</label>
+                        <input type="text" id="import-batch-id" placeholder="例如：草系技能2024"
+                            class="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500">
+                        <p class="text-xs text-gray-400 mt-1">💡 为本次导入的所有技能添加标识，方便后续筛选</p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-2">选择文件</label>
+                        <input type="file" id="import-file-input" accept=".json"
+                            class="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-2 text-white file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-blue-600 file:text-white hover:file:bg-blue-700">
+                    </div>
+                    <div class="flex gap-3">
+                        <button id="confirm-import-btn"
+                            class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition-colors">
+                            确认导入
+                        </button>
+                        <button id="cancel-import-btn"
+                            class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-3 px-6 rounded-lg transition-colors">
+                            取消
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -750,7 +782,7 @@
 
             document.getElementById('export-btn').onclick = exportSkills;
             document.getElementById('export-csv-btn').onclick = exportSkillsToCSV;
-            document.getElementById('import-file').onchange = importSkills;
+            document.getElementById('import-btn').onclick = openImportModal;
         }
 
         // 动态显示相关参数（每个效果独立配置）
@@ -1548,10 +1580,28 @@
             return status ? status.name : type;
         }
 
+        // 打开导入模态框
+        function openImportModal() {
+            document.getElementById('import-modal').classList.remove('hidden');
+            document.getElementById('import-batch-id').value = '';
+            document.getElementById('import-file-input').value = '';
+        }
+
+        // 关闭导入模态框
+        function closeImportModal() {
+            document.getElementById('import-modal').classList.add('hidden');
+        }
+
         // 导入技能
-        function importSkills(e) {
-            const file = e.target.files[0];
-            if (!file) return;
+        function importSkills() {
+            const fileInput = document.getElementById('import-file-input');
+            const batchId = document.getElementById('import-batch-id').value.trim();
+            const file = fileInput.files[0];
+            
+            if (!file) {
+                alert('❌ 请选择要导入的文件！');
+                return;
+            }
 
             const reader = new FileReader();
             reader.onload = (event) => {
@@ -1563,22 +1613,35 @@
                         return;
                     }
 
+                    // 为所有导入的技能添加批次ID
+                    const processedSkills = importedSkills.map(skill => {
+                        const newSkill = {...skill};
+                        if (batchId) {
+                            newSkill.batchId = batchId;
+                        }
+                        return newSkill;
+                    });
+
                     const existingKeys = new Set(skills.map(s => s.key));
-                    const newSkills = importedSkills.filter(s => !existingKeys.has(s.key));
+                    const newSkills = processedSkills.filter(s => !existingKeys.has(s.key));
                     
                     skills = [...skills, ...newSkills];
                     saveSkillPool();
                     
                     renderSkillsList();
                     updateSkillCount();
-                    alert(`✅ 成功导入 ${newSkills.length} 个新技能！`);
+                    closeImportModal();
+                    
+                    if (batchId) {
+                        alert(`✅ 成功导入 ${newSkills.length} 个新技能！\n批次ID: ${batchId}`);
+                    } else {
+                        alert(`✅ 成功导入 ${newSkills.length} 个新技能！`);
+                    }
                 } catch (error) {
                     alert('❌ 导入失败：' + error.message);
                 }
             };
             reader.readAsText(file);
-            
-            e.target.value = '';
         }
 
         // 辅助函数
@@ -2969,6 +3032,14 @@
         // 初始化应用
         init();
         setupTestButton();
+        
+        // 设置导入模态框事件监听器
+        document.getElementById('close-import-modal').onclick = closeImportModal;
+        document.getElementById('cancel-import-btn').onclick = closeImportModal;
+        document.getElementById('confirm-import-btn').onclick = importSkills;
+        document.getElementById('import-modal').onclick = (e) => {
+            if (e.target.id === 'import-modal') closeImportModal();
+        };
     </script>
 </body>
 </html>
