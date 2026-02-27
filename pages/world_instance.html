@@ -810,7 +810,8 @@
             let avatarData = null;
             if (window.imageLibrary) {
                 // 尝试获取本地图片或localStorage中的图片
-                avatarData = window.imageLibrary.getImageUrl(animalData.templateKey || animalData.animalId || animalData.key);
+                // 优先使用animalId，然后key，最后templateKey
+                avatarData = window.imageLibrary.getImageUrl(animalData.animalId || animalData.key || animalData.templateKey);
                 if (!avatarData) {
                     avatarData = window.imageLibrary.getImageByAnimal(animalData);
                 }

@@ -99,10 +99,13 @@ class ImageLibrary {
         let syncCount = 0;
         
         animalPool.forEach(animal => {
-            if (animal.avatarData && animal.key) {
-                // 使用templateKey作为图像库的key
-                this.setImage(animal.key, animal.avatarData);
-                syncCount++;
+            if (animal.avatarData) {
+                // 优先使用animalId，其次使用key
+                const imageKey = animal.animalId || animal.key;
+                if (imageKey) {
+                    this.setImage(imageKey, animal.avatarData);
+                    syncCount++;
+                }
             }
         });
         
@@ -111,25 +114,25 @@ class ImageLibrary {
     }
     
     // 获取图像（支持多种key类型）
-    // 优先级：本地文件 > localStorage > animalId > templateKey
+    // 优先级：本地文件 > localStorage > animalId > key > templateKey
     getImageByAnimal(animalData) {
         if (!animalData) return null;
         
-        // 1. 尝试使用animalId
+        // 1. 优先使用animalId（新的索引方式）
         if (animalData.animalId) {
             const image = this.getImage(animalData.animalId);
             if (image) return image;
         }
         
-        // 2. 尝试使用templateKey
-        if (animalData.templateKey) {
-            const image = this.getImage(animalData.templateKey);
+        // 2. 尝试使用key（兼容旧数据）
+        if (animalData.key) {
+            const image = this.getImage(animalData.key);
             if (image) return image;
         }
         
-        // 3. 尝试使用key（动物池中的key）
-        if (animalData.key) {
-            const image = this.getImage(animalData.key);
+        // 3. 尝试使用templateKey（最后的备选）
+        if (animalData.templateKey) {
+            const image = this.getImage(animalData.templateKey);
             if (image) return image;
         }
         
@@ -200,9 +203,13 @@ class ImageLibrary {
         } else {
             // 如果传入的是动物对象，按优先级尝试多个key
             const animal = animalOrKey;
-            if (animal.templateKey) keysToTry.push(animal.templateKey);
+            // 1. 优先使用animalId（新的索引方式）
             if (animal.animalId) keysToTry.push(animal.animalId);
+            // 2. 尝试使用key（兼容旧数据）
             if (animal.key) keysToTry.push(animal.key);
+            // 3. 尝试使用templateKey（备选）
+            if (animal.templateKey) keysToTry.push(animal.templateKey);
+            // 4. 最后尝试使用id
             if (animal.id) keysToTry.push(animal.id);
         }
         

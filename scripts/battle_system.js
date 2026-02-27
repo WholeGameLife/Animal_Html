@@ -648,7 +648,8 @@ class BattleSystem {
         let avatarData = this.playerData.avatarData;
         if (!avatarData && window.imageLibrary) {
             // 尝试获取本地图片或localStorage中的图片
-            avatarData = window.imageLibrary.getImageUrl(this.playerData.templateKey || this.playerData.animalId || this.playerData.key);
+            // 优先使用animalId，然后key，最后templateKey
+            avatarData = window.imageLibrary.getImageUrl(this.playerData.animalId || this.playerData.key || this.playerData.templateKey);
             if (!avatarData) {
                 avatarData = window.imageLibrary.getImageByAnimal(this.playerData);
             }
@@ -688,7 +689,8 @@ class BattleSystem {
         let avatarData = this.opponentData.avatarData;
         if (!avatarData && window.imageLibrary) {
             // 尝试获取本地图片或localStorage中的图片
-            avatarData = window.imageLibrary.getImageUrl(this.opponentData.templateKey || this.opponentData.animalId || this.opponentData.key);
+            // 优先使用animalId，然后key，最后templateKey
+            avatarData = window.imageLibrary.getImageUrl(this.opponentData.animalId || this.opponentData.key || this.opponentData.templateKey);
             if (!avatarData) {
                 avatarData = window.imageLibrary.getImageByAnimal(this.opponentData);
             }
