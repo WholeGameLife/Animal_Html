@@ -827,7 +827,7 @@
                 if (avatarUrl) {
                     avatarHtml = `
                         <img src="${avatarUrl}"
-                             class="w-12 h-12 rounded-full border-2 border-white object-cover"
+                             class="w-16 h-16 rounded-full border-2 border-white object-cover flex-shrink-0"
                              alt="${animal.name}">
                     `;
                 }
@@ -839,10 +839,13 @@
                             <div class="flex-1 min-w-0">
                                 <div class="flex items-center gap-2 mb-1 flex-wrap">
                                     <h5 class="text-sm font-bold text-white">${animal.name}</h5>
+                                    ${animal.animalId ? `<span class="text-xs text-gray-400 font-mono">#${animal.animalId}</span>` : ''}
+                                </div>
+                                <div class="flex items-center gap-2 mb-1 flex-wrap">
                                     <span class="badge ${elementClass} text-xs">${getElementName(animal.element)}</span>
                                     <span class="badge ${rarityClass} text-xs">${getRarityName(animal.rarity)}</span>
                                 </div>
-                                <div class="flex gap-2 text-xs flex-wrap">
+                                <div class="flex gap-2 text-xs whitespace-nowrap overflow-x-auto">
                                     <span class="text-orange-400">📊Lv.${animal.level}</span>
                                     <span class="text-pink-400">💗${animal.health}</span>
                                     <span class="text-red-400">⚔️${animal.attack}</span>
@@ -850,14 +853,14 @@
                                     <span class="text-yellow-400">⚡${animal.agility}</span>
                                 </div>
                             </div>
-                            <div class="flex gap-1 flex-shrink-0">
+                            <div class="flex flex-col gap-3 flex-shrink-0">
                                 <button onclick="editAnimal(${index})"
                                     class="text-blue-400 hover:text-blue-300 text-lg px-2"
                                     title="编辑">
                                     ✏️
                                 </button>
                                 <button onclick="deleteAnimal(${index})"
-                                    class="text-red-400 hover:text-red-300 text-xl"
+                                    class="text-red-400 hover:text-red-300 text-xl px-2"
                                     title="删除">
                                     ×
                                 </button>
