@@ -33,10 +33,10 @@
         /* 系别颜色 */
         .element-water { background: linear-gradient(135deg, #3b82f6, #1d4ed8); }
         .element-fire { background: linear-gradient(135deg, #ef4444, #dc2626); }
+        .element-metal { background: linear-gradient(135deg, #eab308, #ca8a04); }
         .element-grass { background: linear-gradient(135deg, #22c55e, #16a34a); }
-        .element-wind { background: linear-gradient(135deg, #06b6d4, #0891b2); }
-        .element-electric { background: linear-gradient(135deg, #eab308, #ca8a04); }
         .element-earth { background: linear-gradient(135deg, #a16207, #854d0e); }
+        .element-wind { background: linear-gradient(135deg, #06b6d4, #0891b2); }
         
         /* 稀有度颜色 */
         .rarity-common { background: linear-gradient(135deg, #6b7280, #4b5563); }
@@ -44,13 +44,6 @@
         .rarity-prismatic { background: linear-gradient(135deg, #ec4899, #8b5cf6, #3b82f6); }
         .rarity-stellar { background: linear-gradient(135deg, #fef3c7, #fde68a, #fbbf24); color: #92400e; }
         
-        .color-preview {
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            border: 3px solid white;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
-        }
     </style>
 </head>
 <body class="p-6">
@@ -94,35 +87,6 @@
                         </p>
                     </div>
                     
-                    <div class="grid grid-cols-2 gap-4">
-                        <div class="col-span-2">
-                            <label class="block text-sm font-medium text-gray-300 mb-2">颜色 (十六进制)</label>
-                            <div class="flex gap-2">
-                                <input type="color" id="animal-color" required
-                                    class="w-16 h-10 bg-gray-800 border border-gray-600 rounded-lg cursor-pointer">
-                                <input type="text" id="animal-color-hex" required pattern="^#[0-9A-Fa-f]{6}$"
-                                    class="flex-1 bg-gray-800 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-green-500"
-                                    placeholder="#FF5733">
-                            </div>
-                        </div>
-                        
-                        <div class="col-span-2">
-                            <label class="block text-sm font-medium text-gray-300 mb-2">头像图片 (可选)</label>
-                            <div class="flex gap-2">
-                                <label for="animal-avatar-input" class="flex-1 bg-gray-800 border border-gray-600 rounded-lg px-4 py-2 text-gray-400 hover:border-purple-500 cursor-pointer transition-colors flex items-center justify-center">
-                                    <span id="avatar-filename">点击选择图片</span>
-                                </label>
-                                <input type="file" id="animal-avatar-input" accept="image/*" class="hidden">
-                                <button type="button" id="clear-avatar-btn" class="bg-red-600 hover:bg-red-700 text-white px-4 rounded-lg hidden">
-                                    清除
-                                </button>
-                            </div>
-                            <div id="avatar-preview" class="mt-2 hidden">
-                                <img id="avatar-preview-img" class="w-20 h-20 rounded-full border-2 border-gray-600 object-cover" alt="头像预览">
-                            </div>
-                            <p class="text-xs text-gray-400 mt-1">支持 JPG、PNG、GIF 格式，建议尺寸 200x200</p>
-                        </div>
-                    </div>
 
                     <!-- 系别和稀有度 -->
                     <div class="grid grid-cols-2 gap-4">
@@ -133,10 +97,10 @@
                                 <option value="">选择系别</option>
                                 <option value="water">💧 水系</option>
                                 <option value="fire">🔥 火系</option>
+                                <option value="metal">🪙 金系</option>
                                 <option value="grass">🌿 草系</option>
-                                <option value="wind">💨 风系</option>
-                                <option value="electric">⚡ 电系</option>
                                 <option value="earth">🪨 土系</option>
+                                <option value="wind">💨 风系</option>
                             </select>
                         </div>
                         <div>
@@ -440,11 +404,6 @@
         let skillPool = JSON.parse(localStorage.getItem('SKILL_POOL') || '[]');
         // 当前编辑的动物索引
         let editingIndex = -1;
-        // 当前选择的头像数据
-        let currentAvatarData = null;
-        // 头像是否被修改过
-        let avatarModified = false;
-
         // DOM元素
         const form = document.getElementById('animal-form');
         const preview = document.getElementById('animal-preview');
@@ -454,61 +413,13 @@
         const submitBtn = document.getElementById('submit-btn');
         const submitText = document.getElementById('submit-text');
         const exportBtn = document.getElementById('export-btn');
-        const colorInput = document.getElementById('animal-color');
-        const colorHexInput = document.getElementById('animal-color-hex');
 
         // 初始化
         function init() {
             renderAnimalsList();
             setupFormListeners();
             updateAnimalCount();
-            syncColorInputs();
             setupSkillModal();
-            setupAvatarUpload();
-        }
-        
-        // 设置头像上传
-        function setupAvatarUpload() {
-            const avatarInput = document.getElementById('animal-avatar-input');
-            const avatarFilename = document.getElementById('avatar-filename');
-            const avatarPreview = document.getElementById('avatar-preview');
-            const avatarPreviewImg = document.getElementById('avatar-preview-img');
-            const clearAvatarBtn = document.getElementById('clear-avatar-btn');
-            
-            avatarInput.addEventListener('change', (e) => {
-                const file = e.target.files[0];
-                if (!file) return;
-                
-                // 检查文件大小（限制2MB）
-                if (file.size > 2 * 1024 * 1024) {
-                    alert('❌ 图片文件过大！请选择小于2MB的图片。');
-                    return;
-                }
-                
-                const reader = new FileReader();
-                reader.onload = (event) => {
-                    const base64Data = event.target.result;
-                    currentAvatarData = base64Data;
-                    avatarModified = true;
-                    
-                    avatarPreviewImg.src = base64Data;
-                    avatarPreview.classList.remove('hidden');
-                    avatarFilename.textContent = file.name;
-                    clearAvatarBtn.classList.remove('hidden');
-                    updatePreview();
-                };
-                reader.readAsDataURL(file);
-            });
-            
-            clearAvatarBtn.addEventListener('click', () => {
-                currentAvatarData = null;
-                avatarModified = true;
-                avatarInput.value = '';
-                avatarPreview.classList.add('hidden');
-                avatarFilename.textContent = '点击选择图片';
-                clearAvatarBtn.classList.add('hidden');
-                updatePreview();
-            });
         }
 
         // 设置技能池选择器
@@ -602,22 +513,6 @@
             infoDiv.classList.remove('hidden');
         }
 
-        // 同步颜色输入
-        function syncColorInputs() {
-            colorInput.addEventListener('input', (e) => {
-                colorHexInput.value = e.target.value.toUpperCase();
-                updatePreview();
-            });
-
-            colorHexInput.addEventListener('input', (e) => {
-                const hex = e.target.value;
-                if (/^#[0-9A-Fa-f]{6}$/.test(hex)) {
-                    colorInput.value = hex;
-                    updatePreview();
-                }
-            });
-        }
-
         // 更新动物数量显示
         function updateAnimalCount() {
             document.getElementById('animal-count').textContent = animals.length;
@@ -643,12 +538,6 @@
             // 清空按钮
             clearBtn.onclick = () => {
                 form.reset();
-                currentAvatarData = null;
-                avatarModified = false;
-                document.getElementById('animal-avatar-input').value = '';
-                document.getElementById('avatar-preview').classList.add('hidden');
-                document.getElementById('avatar-filename').textContent = '点击选择图片';
-                document.getElementById('clear-avatar-btn').classList.add('hidden');
                 loadSkillPoolOptions('');
                 cancelEdit();
                 updatePreview();
@@ -657,12 +546,6 @@
             // 取消编辑按钮
             cancelEditBtn.onclick = () => {
                 form.reset();
-                currentAvatarData = null;
-                avatarModified = false;
-                document.getElementById('animal-avatar-input').value = '';
-                document.getElementById('avatar-preview').classList.add('hidden');
-                document.getElementById('avatar-filename').textContent = '点击选择图片';
-                document.getElementById('clear-avatar-btn').classList.add('hidden');
                 loadSkillPoolOptions('');
                 cancelEdit();
                 updatePreview();
@@ -694,18 +577,9 @@
 
             const elementClass = data.element ? `element-${data.element}` : 'bg-gray-700';
             const rarityClass = data.rarity ? `rarity-${data.rarity}` : 'bg-gray-700';
-            
-            // 头像或颜色预览
-            let avatarHtml;
-            if (currentAvatarData) {
-                avatarHtml = `<img src="${currentAvatarData}" class="color-preview object-cover" alt="头像预览">`;
-            } else {
-                avatarHtml = `<div class="color-preview" style="background-color: ${data.color}"></div>`;
-            }
 
             preview.innerHTML = `
                 <div class="flex items-start gap-3">
-                    ${avatarHtml}
                     <div class="flex-1">
                         <div class="flex items-center gap-2 mb-2">
                             <h4 class="text-lg font-bold text-white">${data.name}</h4>
@@ -732,7 +606,6 @@
             return {
                 animalId: document.getElementById('animal-id').value.toUpperCase(),
                 name: document.getElementById('animal-name').value,
-                color: document.getElementById('animal-color-hex').value,
                 element: document.getElementById('animal-element').value,
                 rarity: document.getElementById('animal-rarity').value,
                 level: parseInt(document.getElementById('animal-level').value) || 1,
@@ -783,7 +656,6 @@
             const animal = {
                 key: animalKey,
                 ...data,
-                avatarData: currentAvatarData,
                 createdAt: new Date().toISOString()
             };
 
@@ -818,7 +690,6 @@
             const animal = {
                 key: animals[editingIndex].key,
                 ...data,
-                avatarData: avatarModified ? currentAvatarData : animals[editingIndex].avatarData,
                 createdAt: animals[editingIndex].createdAt,
                 updatedAt: new Date().toISOString()
             };
@@ -849,14 +720,11 @@
         // 编辑动物模板
         function editAnimal(index) {
             editingIndex = index;
-            avatarModified = false;
             const animal = animals[index];
             
             // 填充表单
             document.getElementById('animal-id').value = animal.animalId || '';
             document.getElementById('animal-name').value = animal.name;
-            document.getElementById('animal-color').value = animal.color;
-            document.getElementById('animal-color-hex').value = animal.color;
             document.getElementById('animal-element').value = animal.element;
             document.getElementById('animal-rarity').value = animal.rarity;
             document.getElementById('animal-level').value = animal.level;
@@ -896,20 +764,6 @@
             document.getElementById('animal-desc').value = animal.desc || '';
             
             loadSkillPoolOptions(animal.skillPoolKey || '');
-            
-            // 恢复头像
-            if (animal.avatarData) {
-                currentAvatarData = animal.avatarData;
-                document.getElementById('avatar-preview-img').src = animal.avatarData;
-                document.getElementById('avatar-preview').classList.remove('hidden');
-                document.getElementById('avatar-filename').textContent = '已加载保存的头像';
-                document.getElementById('clear-avatar-btn').classList.remove('hidden');
-            } else {
-                currentAvatarData = null;
-                document.getElementById('avatar-preview').classList.add('hidden');
-                document.getElementById('avatar-filename').textContent = '点击选择图片';
-                document.getElementById('clear-avatar-btn').classList.add('hidden');
-            }
             
             // 更新UI
             submitText.textContent = '💾 保存修改';
@@ -965,22 +819,17 @@
                 const elementClass = `element-${animal.element}`;
                 const rarityClass = `rarity-${animal.rarity}`;
                 
-                // 使用图片库获取头像（优先本地文件）
+                // 使用图片库获取头像（如果有）
                 const avatarUrl = window.imageLibrary ? window.imageLibrary.getAnimalAvatar(animal) : null;
                 
-                // 头像或颜色球
-                let avatarHtml;
+                // 头像显示（如果有）
+                let avatarHtml = '';
                 if (avatarUrl) {
                     avatarHtml = `
                         <img src="${avatarUrl}"
                              class="w-12 h-12 rounded-full border-2 border-white object-cover"
-                             alt="${animal.name}"
-                             onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
-                        <div class="w-12 h-12 rounded-full border-2 border-white"
-                             style="background-color: ${animal.color}; display: none;"></div>
+                             alt="${animal.name}">
                     `;
-                } else {
-                    avatarHtml = `<div class="w-12 h-12 rounded-full border-2 border-white" style="background-color: ${animal.color}"></div>`;
                 }
                 
                 return `
@@ -1063,13 +912,13 @@
             };
 
             const headers = [
-                '动物ID', '动物名称', '描述', '颜色', '系别', '稀有度',
+                '动物ID', '动物名称', '描述', '系别', '稀有度',
                 '初始等级', '基础经验值', '经验增长系数',
                 '生命值', '体力', '攻击', '防御', '敏捷', '好感度',
                 '平庸_生命', '平庸_体力', '平庸_攻击', '平庸_防御', '平庸_敏捷', '平庸_好感',
                 '超常_生命', '超常_体力', '超常_攻击', '超常_防御', '超常_敏捷', '超常_好感',
                 '璀璨_生命', '璀璨_体力', '璀璨_攻击', '璀璨_防御', '璀璨_敏捷', '璀璨_好感',
-                '关联技能池', '是否有头像', '创建时间', '更新时间'
+                '关联技能池', '创建时间', '更新时间'
             ];
 
             let csvContent = headers.join(',') + '\n';
@@ -1079,7 +928,6 @@
                     escapeCSV(animal.animalId || ''),
                     escapeCSV(animal.name),
                     escapeCSV(animal.desc || ''),
-                    escapeCSV(animal.color),
                     escapeCSV(getElementName(animal.element)),
                     escapeCSV(getRarityName(animal.rarity)),
                     escapeCSV(animal.level),
@@ -1119,7 +967,6 @@
 
                 row.push(
                     escapeCSV(skillPoolName),
-                    escapeCSV(animal.avatarData ? '是' : '否'),
                     escapeCSV(animal.createdAt ? new Date(animal.createdAt).toLocaleString('zh-CN') : ''),
                     escapeCSV(animal.updatedAt ? new Date(animal.updatedAt).toLocaleString('zh-CN') : '')
                 );
@@ -1210,10 +1057,10 @@
             const names = {
                 'water': '水系',
                 'fire': '火系',
+                'metal': '金系',
                 'grass': '草系',
-                'wind': '风系',
-                'electric': '电系',
-                'earth': '土系'
+                'earth': '土系',
+                'wind': '风系'
             };
             return names[element] || '未知';
         }
