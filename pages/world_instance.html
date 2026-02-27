@@ -970,8 +970,11 @@
         function createAnimalFromTemplate(template, rarityType, growthType, config) {
             const id = crypto.randomUUID();
             
+            // 安全获取颜色值，避免 template.color 为 undefined
+            const templateColor = template.color ? parseInt(template.color.replace('#', ''), 16) : 0xcccccc;
+            
             const rarityColors = {
-                'common': parseInt(template.color.replace('#', ''), 16),
+                'common': templateColor,
                 'shiny': 0xffd700,
                 'prismatic': 0xff69b4,
                 'stellar': 0x9400d3

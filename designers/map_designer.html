@@ -251,6 +251,9 @@
         </div>
     </div>
 
+    <!-- 引入图片库 -->
+    <script src="../scripts/image_library.js"></script>
+    
     <script>
         // 地图配置存储
         let maps = JSON.parse(localStorage.getItem('MAP_CONFIGS') || '[]');
@@ -459,13 +462,14 @@
                 }
             });
             
+            // 只显示普通稀有度的动物
             const availableAnimals = animalPool.filter(animal => {
-                // 如果动物已经作为组存在，不显示
-                if (configuredKeys.has(animal.key)) {
+                // 只显示普通稀有度
+                if (animal.rarity !== 'common') {
                     return false;
                 }
-                // 如果是非普通稀有度且已单独添加，不显示
-                if (animal.rarity !== 'common' && configuredKeys.has(`${animal.key}_${animal.rarity}`)) {
+                // 如果动物已经作为组存在，不显示
+                if (configuredKeys.has(animal.key)) {
                     return false;
                 }
                 return true;
@@ -484,11 +488,18 @@
                 const elementClass = `element-${animal.element}`;
                 const rarityClass = `rarity-${animal.rarity}`;
                 
+                // 使用图片库获取头像（如果有）
+                const avatarUrl = window.imageLibrary ? window.imageLibrary.getAnimalAvatar(animal) : null;
+                let avatarHtml = '';
+                if (avatarUrl) {
+                    avatarHtml = `<img src="${avatarUrl}" alt="${animal.name}" class="w-12 h-12 rounded-full border-2 border-white object-cover flex-shrink-0">`;
+                }
+                
                 return `
                     <div class="bg-gray-800 rounded-lg p-3 border border-gray-600 hover:border-green-500 cursor-pointer transition-colors"
                          onclick="selectAnimal('${animal.key}')">
                         <div class="flex items-start gap-3">
-                            <div class="w-12 h-12 rounded-full border-2 border-white flex-shrink-0" style="background-color: ${animal.color}"></div>
+                            ${avatarHtml}
                             <div class="flex-1 min-w-0">
                                 <div class="flex items-center gap-2 mb-1 flex-wrap">
                                     <h5 class="text-sm font-bold text-white">${animal.name}</h5>
@@ -687,19 +698,24 @@
                                                     </div>
                                                 </div>
                                                 
-                                                ${selectedAnimal ? `
-                                                    <div class="bg-gray-800/50 rounded p-2 mb-2 border border-${colorTheme}-600/30">
-                                                        <div class="flex items-center gap-2">
-                                                            <div class="w-8 h-8 rounded-full border border-white flex-shrink-0" style="background-color: ${selectedAnimal.color}"></div>
-                                                            <div class="flex-1 min-w-0">
-                                                                <div class="text-xs font-bold text-white truncate">${selectedAnimal.name}</div>
-                                                                <div class="text-xs text-gray-400">
-                                                                    ⚔️${selectedAnimal.attack} 🛡️${selectedAnimal.defense} ⚡${selectedAnimal.agility}
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                ` : ''}
+                                                ${selectedAnimal ? (() => {
+                                                   const avatarUrl2 = window.imageLibrary ? window.imageLibrary.getAnimalAvatar(selectedAnimal) : null;
+                                                   let avatarHtml2 = '';
+                                                   if (avatarUrl2) {
+                                                       avatarHtml2 = '<img src="' + avatarUrl2 + '" alt="' + selectedAnimal.name + '" class="w-8 h-8 rounded-full border border-white flex-shrink-0 object-cover">';
+                                                   }
+                                                   return '<div class="bg-gray-800/50 rounded p-2 mb-2 border border-' + colorTheme + '-600/30">' +
+                                                           '<div class="flex items-center gap-2">' +
+                                                               avatarHtml2 +
+                                                               '<div class="flex-1 min-w-0">' +
+                                                                '<div class="text-xs font-bold text-white truncate">' + selectedAnimal.name + '</div>' +
+                                                                '<div class="text-xs text-gray-400">' +
+                                                                    '⚔️' + selectedAnimal.attack + ' 🛡️' + selectedAnimal.defense + ' ⚡' + selectedAnimal.agility +
+                                                                '</div>' +
+                                                            '</div>' +
+                                                        '</div>' +
+                                                    '</div>';
+                                                })() : ''}
                                                 
                                                 <div class="bg-gray-800/50 rounded p-2 border ${isValid ? 'border-gray-600' : 'border-red-500'}">
                                                     <div class="text-xs text-gray-400 mb-1">📈 潜力比例</div>
@@ -777,11 +793,18 @@
                     'stellar': 'orange'
                 };
                 const colorTheme = colorThemes[rarityType] || 'gray';
+                
+                // 使用图片库获取头像（如果有）
+                const avatarUrl = window.imageLibrary ? window.imageLibrary.getAnimalAvatar(animal) : null;
+                let avatarHtml = '';
+                if (avatarUrl) {
+                    avatarHtml = `<img src="${avatarUrl}" alt="${animal.name}" class="w-10 h-10 rounded-full border-2 border-white object-cover flex-shrink-0">`;
+                }
 
                 html += `
                     <div class="bg-gray-700/50 rounded-lg p-3 border border-${colorTheme}-600/50 mb-2">
                         <div class="flex items-start gap-2">
-                            <div class="w-10 h-10 rounded-full border-2 border-white flex-shrink-0" style="background-color: ${animal.color}"></div>
+                            ${avatarHtml}
                             <div class="flex-1 min-w-0">
                                 <div class="flex items-center gap-1 mb-2 flex-wrap">
                                     <span class="text-sm font-bold text-white truncate">${animal.name}</span>
@@ -996,11 +1019,18 @@
                 const elementClass = `element-${animal.element}`;
                 const rarityClass = `rarity-${animal.rarity}`;
                 
+                // 使用图片库获取头像（如果有）
+                const avatarUrl = window.imageLibrary ? window.imageLibrary.getAnimalAvatar(animal) : null;
+                let avatarHtml = '';
+                if (avatarUrl) {
+                    avatarHtml = `<img src="${avatarUrl}" alt="${animal.name}" class="w-12 h-12 rounded-full border-2 border-white object-cover flex-shrink-0">`;
+                }
+                
                 return `
                     <div class="bg-gray-800 rounded-lg p-3 border border-gray-600 hover:border-green-500 cursor-pointer transition-colors"
                          onclick="confirmVariantTemplate('${animal.key}')">
                         <div class="flex items-start gap-3">
-                            <div class="w-12 h-12 rounded-full border-2 border-white flex-shrink-0" style="background-color: ${animal.color}"></div>
+                            ${avatarHtml}
                             <div class="flex-1 min-w-0">
                                 <div class="flex items-center gap-2 mb-1 flex-wrap">
                                     <h5 class="text-sm font-bold text-white">${animal.name}</h5>

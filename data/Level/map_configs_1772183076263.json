@@ -1,0 +1,557 @@
+[
+  {
+    "key": "MAP_1767595496803",
+    "name": "苍白海",
+    "icon": "🗺️",
+    "level": 1,
+    "spawnInterval": 4,
+    "maxAnimals": 5,
+    "desc": "",
+    "submaps": [
+      {
+        "mapKey": "MAP_1768980060391"
+      }
+    ],
+    "animals": [
+      {
+        "animalKey": "ANIMAL_1767595473179",
+        "rarityType": "common",
+        "weight": 100,
+        "growthRatios": {
+          "mediocre": 60,
+          "extraordinary": 35,
+          "brilliant": 5
+        },
+        "groupId": "GROUP_1767597105339"
+      },
+      {
+        "animalKey": "ANIMAL_1767595473179",
+        "rarityType": "shiny",
+        "weight": 100,
+        "growthRatios": {
+          "mediocre": 30,
+          "extraordinary": 50,
+          "brilliant": 20
+        },
+        "groupId": "GROUP_1767597105339",
+        "selectedAnimalKey": "ANIMAL_1767596442914"
+      },
+      {
+        "animalKey": "ANIMAL_1767595473179",
+        "rarityType": "prismatic",
+        "weight": 2.5,
+        "growthRatios": {
+          "mediocre": 10,
+          "extraordinary": 40,
+          "brilliant": 50
+        },
+        "groupId": "GROUP_1767597105339",
+        "selectedAnimalKey": "ANIMAL_1767597440618"
+      },
+      {
+        "animalKey": "ANIMAL_1767595473179",
+        "rarityType": "stellar",
+        "weight": 0.5,
+        "growthRatios": {
+          "mediocre": 0,
+          "extraordinary": 20,
+          "brilliant": 80
+        },
+        "groupId": "GROUP_1767597105339"
+      },
+      {
+        "animalKey": "ANIMAL_1767775536506",
+        "rarityType": "common",
+        "weight": 85,
+        "growthRatios": {
+          "mediocre": 60,
+          "extraordinary": 35,
+          "brilliant": 5
+        },
+        "groupId": "GROUP_1768554442245"
+      },
+      {
+        "animalKey": "ANIMAL_1767775536506",
+        "rarityType": "shiny",
+        "weight": 12,
+        "growthRatios": {
+          "mediocre": 30,
+          "extraordinary": 50,
+          "brilliant": 20
+        },
+        "groupId": "GROUP_1768554442245",
+        "selectedAnimalKey": "ANIMAL_1767603997508"
+      },
+      {
+        "animalKey": "ANIMAL_1767775536506",
+        "rarityType": "prismatic",
+        "weight": 2.5,
+        "growthRatios": {
+          "mediocre": 10,
+          "extraordinary": 40,
+          "brilliant": 50
+        },
+        "groupId": "GROUP_1768554442245",
+        "selectedAnimalKey": "ANIMAL_1767604037212"
+      },
+      {
+        "animalKey": "ANIMAL_1767775536506",
+        "rarityType": "stellar",
+        "weight": 0.5,
+        "growthRatios": {
+          "mediocre": 0,
+          "extraordinary": 20,
+          "brilliant": 80
+        },
+        "groupId": "GROUP_1768554442245",
+        "selectedAnimalKey": "ANIMAL_1767604097436"
+      },
+      {
+        "animalKey": "ANIMAL_1768553905628",
+        "rarityType": "common",
+        "weight": 85,
+        "growthRatios": {
+          "mediocre": 60,
+          "extraordinary": 35,
+          "brilliant": 5
+        },
+        "groupId": "GROUP_1768554451853"
+      },
+      {
+        "animalKey": "ANIMAL_1768553905628",
+        "rarityType": "shiny",
+        "weight": 12,
+        "growthRatios": {
+          "mediocre": 30,
+          "extraordinary": 50,
+          "brilliant": 20
+        },
+        "groupId": "GROUP_1768554451853"
+      },
+      {
+        "animalKey": "ANIMAL_1768553905628",
+        "rarityType": "prismatic",
+        "weight": 2.5,
+        "growthRatios": {
+          "mediocre": 10,
+          "extraordinary": 40,
+          "brilliant": 50
+        },
+        "groupId": "GROUP_1768554451853"
+      },
+      {
+        "animalKey": "ANIMAL_1768553905628",
+        "rarityType": "stellar",
+        "weight": 0.5,
+        "growthRatios": {
+          "mediocre": 0,
+          "extraordinary": 20,
+          "brilliant": 80
+        },
+        "groupId": "GROUP_1768554451853"
+      },
+      {
+        "animalKey": "ANIMAL_1767603935732",
+        "rarityType": "common",
+        "weight": 85,
+        "growthRatios": {
+          "mediocre": 60,
+          "extraordinary": 35,
+          "brilliant": 5
+        },
+        "groupId": "GROUP_1768554587861"
+      },
+      {
+        "animalKey": "ANIMAL_1767603935732",
+        "rarityType": "shiny",
+        "weight": 12,
+        "growthRatios": {
+          "mediocre": 30,
+          "extraordinary": 50,
+          "brilliant": 20
+        },
+        "groupId": "GROUP_1768554587861",
+        "selectedAnimalKey": "ANIMAL_1767603997508"
+      },
+      {
+        "animalKey": "ANIMAL_1767603935732",
+        "rarityType": "prismatic",
+        "weight": 2.5,
+        "growthRatios": {
+          "mediocre": 10,
+          "extraordinary": 40,
+          "brilliant": 50
+        },
+        "groupId": "GROUP_1768554587861"
+      },
+      {
+        "animalKey": "ANIMAL_1767603935732",
+        "rarityType": "stellar",
+        "weight": 0.5,
+        "growthRatios": {
+          "mediocre": 0,
+          "extraordinary": 20,
+          "brilliant": 80
+        },
+        "groupId": "GROUP_1768554587861"
+      }
+    ],
+    "createdAt": "2026-01-05T06:44:56.803Z",
+    "updatedAt": "2026-01-21T07:21:05.247Z"
+  },
+  {
+    "key": "MAP_1768980060391",
+    "name": "火山禁地",
+    "icon": "🗺️",
+    "level": 1,
+    "spawnInterval": 12,
+    "maxAnimals": 5,
+    "desc": "",
+    "submaps": [],
+    "animals": [
+      {
+        "animalKey": "ANIMAL_1768979646245",
+        "rarityType": "common",
+        "weight": 85,
+        "growthRatios": {
+          "mediocre": 60,
+          "extraordinary": 35,
+          "brilliant": 5
+        },
+        "groupId": "GROUP_1768980039758"
+      },
+      {
+        "animalKey": "ANIMAL_1768979646245",
+        "rarityType": "shiny",
+        "weight": 12,
+        "growthRatios": {
+          "mediocre": 30,
+          "extraordinary": 50,
+          "brilliant": 20
+        },
+        "groupId": "GROUP_1768980039758",
+        "selectedAnimalKey": "ANIMAL_1768979966742"
+      },
+      {
+        "animalKey": "ANIMAL_1768979646245",
+        "rarityType": "prismatic",
+        "weight": 2.5,
+        "growthRatios": {
+          "mediocre": 10,
+          "extraordinary": 40,
+          "brilliant": 50
+        },
+        "groupId": "GROUP_1768980039758",
+        "selectedAnimalKey": "ANIMAL_1768979995959"
+      },
+      {
+        "animalKey": "ANIMAL_1768979646245",
+        "rarityType": "stellar",
+        "weight": 0.5,
+        "growthRatios": {
+          "mediocre": 0,
+          "extraordinary": 20,
+          "brilliant": 80
+        },
+        "groupId": "GROUP_1768980039758",
+        "selectedAnimalKey": "ANIMAL_1768980025359"
+      }
+    ],
+    "createdAt": "2026-01-21T07:21:00.391Z",
+    "updatedAt": "2026-01-21T07:44:46.809Z"
+  },
+  {
+    "key": "MAP_1772182300734",
+    "name": "千里原",
+    "icon": "🗺️",
+    "level": 1,
+    "spawnInterval": 15,
+    "maxAnimals": 10,
+    "desc": "",
+    "submaps": [],
+    "animals": [
+      {
+        "animalKey": "ANIMAL_1772091294469",
+        "rarityType": "common",
+        "weight": 85,
+        "growthRatios": {
+          "mediocre": 60,
+          "extraordinary": 35,
+          "brilliant": 5
+        },
+        "groupId": "GROUP_1772182275567"
+      },
+      {
+        "animalKey": "ANIMAL_1772091294469",
+        "rarityType": "shiny",
+        "weight": 12,
+        "growthRatios": {
+          "mediocre": 30,
+          "extraordinary": 50,
+          "brilliant": 20
+        },
+        "groupId": "GROUP_1772182275567",
+        "selectedAnimalKey": "ANIMAL_1772091796525"
+      },
+      {
+        "animalKey": "ANIMAL_1772091294469",
+        "rarityType": "prismatic",
+        "weight": 2.5,
+        "growthRatios": {
+          "mediocre": 10,
+          "extraordinary": 40,
+          "brilliant": 50
+        },
+        "groupId": "GROUP_1772182275567",
+        "selectedAnimalKey": "ANIMAL_1772091815968"
+      },
+      {
+        "animalKey": "ANIMAL_1772091294469",
+        "rarityType": "stellar",
+        "weight": 0.5,
+        "growthRatios": {
+          "mediocre": 0,
+          "extraordinary": 20,
+          "brilliant": 80
+        },
+        "groupId": "GROUP_1772182275567",
+        "selectedAnimalKey": "ANIMAL_1772091833429"
+      },
+      {
+        "animalKey": "ANIMAL_1772157517340",
+        "rarityType": "common",
+        "weight": 85,
+        "growthRatios": {
+          "mediocre": 60,
+          "extraordinary": 35,
+          "brilliant": 5
+        },
+        "groupId": "GROUP_1772182288574"
+      },
+      {
+        "animalKey": "ANIMAL_1772157517340",
+        "rarityType": "shiny",
+        "weight": 12,
+        "growthRatios": {
+          "mediocre": 30,
+          "extraordinary": 50,
+          "brilliant": 20
+        },
+        "groupId": "GROUP_1772182288574"
+      },
+      {
+        "animalKey": "ANIMAL_1772157517340",
+        "rarityType": "prismatic",
+        "weight": 2.5,
+        "growthRatios": {
+          "mediocre": 10,
+          "extraordinary": 40,
+          "brilliant": 50
+        },
+        "groupId": "GROUP_1772182288574"
+      },
+      {
+        "animalKey": "ANIMAL_1772157517340",
+        "rarityType": "stellar",
+        "weight": 0.5,
+        "growthRatios": {
+          "mediocre": 0,
+          "extraordinary": 20,
+          "brilliant": 80
+        },
+        "groupId": "GROUP_1772182288574"
+      },
+      {
+        "animalKey": "ANIMAL_1772160715263",
+        "rarityType": "common",
+        "weight": 85,
+        "growthRatios": {
+          "mediocre": 60,
+          "extraordinary": 35,
+          "brilliant": 5
+        },
+        "groupId": "GROUP_1772182292438"
+      },
+      {
+        "animalKey": "ANIMAL_1772160715263",
+        "rarityType": "shiny",
+        "weight": 12,
+        "growthRatios": {
+          "mediocre": 30,
+          "extraordinary": 50,
+          "brilliant": 20
+        },
+        "groupId": "GROUP_1772182292438"
+      },
+      {
+        "animalKey": "ANIMAL_1772160715263",
+        "rarityType": "prismatic",
+        "weight": 2.5,
+        "growthRatios": {
+          "mediocre": 10,
+          "extraordinary": 40,
+          "brilliant": 50
+        },
+        "groupId": "GROUP_1772182292438"
+      },
+      {
+        "animalKey": "ANIMAL_1772160715263",
+        "rarityType": "stellar",
+        "weight": 0.5,
+        "growthRatios": {
+          "mediocre": 0,
+          "extraordinary": 20,
+          "brilliant": 80
+        },
+        "groupId": "GROUP_1772182292438"
+      }
+    ],
+    "createdAt": "2026-02-27T08:51:40.734Z"
+  },
+  {
+    "key": "MAP_1772182325887",
+    "name": "暴风岛",
+    "icon": "🗺️",
+    "level": 1,
+    "spawnInterval": 10,
+    "maxAnimals": 10,
+    "desc": "",
+    "submaps": [],
+    "animals": [
+      {
+        "animalKey": "ANIMAL_1768553905628",
+        "rarityType": "common",
+        "weight": 85,
+        "growthRatios": {
+          "mediocre": 60,
+          "extraordinary": 35,
+          "brilliant": 5
+        },
+        "groupId": "GROUP_1772182311736"
+      },
+      {
+        "animalKey": "ANIMAL_1768553905628",
+        "rarityType": "shiny",
+        "weight": 12,
+        "growthRatios": {
+          "mediocre": 30,
+          "extraordinary": 50,
+          "brilliant": 20
+        },
+        "groupId": "GROUP_1772182311736"
+      },
+      {
+        "animalKey": "ANIMAL_1768553905628",
+        "rarityType": "prismatic",
+        "weight": 2.5,
+        "growthRatios": {
+          "mediocre": 10,
+          "extraordinary": 40,
+          "brilliant": 50
+        },
+        "groupId": "GROUP_1772182311736"
+      },
+      {
+        "animalKey": "ANIMAL_1768553905628",
+        "rarityType": "stellar",
+        "weight": 0.5,
+        "growthRatios": {
+          "mediocre": 0,
+          "extraordinary": 20,
+          "brilliant": 80
+        },
+        "groupId": "GROUP_1772182311736"
+      },
+      {
+        "animalKey": "ANIMAL_1772157615597",
+        "rarityType": "common",
+        "weight": 100,
+        "growthRatios": {
+          "mediocre": 60,
+          "extraordinary": 35,
+          "brilliant": 5
+        },
+        "groupId": "GROUP_1772182319703"
+      },
+      {
+        "animalKey": "ANIMAL_1772157615597",
+        "rarityType": "shiny",
+        "weight": 0,
+        "growthRatios": {
+          "mediocre": 30,
+          "extraordinary": 50,
+          "brilliant": 20
+        },
+        "groupId": "GROUP_1772182319703"
+      },
+      {
+        "animalKey": "ANIMAL_1772157615597",
+        "rarityType": "prismatic",
+        "weight": 0,
+        "growthRatios": {
+          "mediocre": 10,
+          "extraordinary": 40,
+          "brilliant": 50
+        },
+        "groupId": "GROUP_1772182319703"
+      },
+      {
+        "animalKey": "ANIMAL_1772157615597",
+        "rarityType": "stellar",
+        "weight": 0,
+        "growthRatios": {
+          "mediocre": 0,
+          "extraordinary": 20,
+          "brilliant": 80
+        },
+        "groupId": "GROUP_1772182319703"
+      },
+      {
+        "animalKey": "ANIMAL_1772176178207",
+        "rarityType": "common",
+        "weight": 85,
+        "growthRatios": {
+          "mediocre": 60,
+          "extraordinary": 35,
+          "brilliant": 5
+        },
+        "groupId": "GROUP_1772182322757"
+      },
+      {
+        "animalKey": "ANIMAL_1772176178207",
+        "rarityType": "shiny",
+        "weight": 12,
+        "growthRatios": {
+          "mediocre": 30,
+          "extraordinary": 50,
+          "brilliant": 20
+        },
+        "groupId": "GROUP_1772182322757"
+      },
+      {
+        "animalKey": "ANIMAL_1772176178207",
+        "rarityType": "prismatic",
+        "weight": 2.5,
+        "growthRatios": {
+          "mediocre": 10,
+          "extraordinary": 40,
+          "brilliant": 50
+        },
+        "groupId": "GROUP_1772182322757"
+      },
+      {
+        "animalKey": "ANIMAL_1772176178207",
+        "rarityType": "stellar",
+        "weight": 0.5,
+        "growthRatios": {
+          "mediocre": 0,
+          "extraordinary": 20,
+          "brilliant": 80
+        },
+        "groupId": "GROUP_1772182322757"
+      }
+    ],
+    "createdAt": "2026-02-27T08:52:05.887Z",
+    "updatedAt": "2026-02-27T08:56:11.398Z"
+  }
+]

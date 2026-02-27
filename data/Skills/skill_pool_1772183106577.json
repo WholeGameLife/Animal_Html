@@ -3960,5 +3960,2770 @@
       "debuff_defense_bonus": 0.5
     },
     "createdAt": "2026-02-26T08:33:06.000Z"
+  },
+  {
+    "key": "CUSTOM_1772173101405_0",
+    "name": "新芽突刺",
+    "icon": "🌱",
+    "description": "催生尖锐的嫩芽刺向敌人",
+    "category": "element-grass",
+    "type": "attack",
+    "effects": [
+      "direct_attack"
+    ],
+    "params": {
+      "cooldown": 0,
+      "duration": 0,
+      "count": 1,
+      "direct_attack_effect-source": "self-current-attack",
+      "direct_attack_bonus": 0.9
+    },
+    "createdAt": "2026-02-27T06:18:21.000Z"
+  },
+  {
+    "key": "CUSTOM_1772173101405_1",
+    "name": "藤蔓缠绕",
+    "icon": "🌿",
+    "description": "藤蔓缠住敌人降低其速度",
+    "category": "element-grass",
+    "type": "debuff",
+    "effects": [
+      "direct_attack",
+      "debuff_speed"
+    ],
+    "params": {
+      "cooldown": 1,
+      "duration": 2,
+      "count": 1,
+      "direct_attack_effect-source": "self-current-attack",
+      "direct_attack_bonus": 0.7,
+      "debuff_speed_effect-source": "enemy-current-agility",
+      "debuff_speed_target": "enemy-single",
+      "debuff_speed_bonus": 0.4
+    },
+    "createdAt": "2026-02-27T06:18:21.000Z"
+  },
+  {
+    "key": "CUSTOM_1772173101405_2",
+    "name": "光合治愈",
+    "icon": "☀️",
+    "description": "吸收阳光恢复自身生命",
+    "category": "element-grass",
+    "type": "heal",
+    "effects": [
+      "heal_direct"
+    ],
+    "params": {
+      "cooldown": 2,
+      "duration": 0,
+      "count": 1,
+      "heal_direct_effect-source": "self-max-hp",
+      "heal_direct_target": "self",
+      "heal_direct_bonus": 0.35
+    },
+    "createdAt": "2026-02-27T06:18:21.000Z"
+  },
+  {
+    "key": "CUSTOM_1772173101405_3",
+    "name": "飞叶快刀",
+    "icon": "🍃",
+    "description": "锋利的叶片连续切割敌人",
+    "category": "element-grass",
+    "type": "attack",
+    "effects": [
+      "multi_attack"
+    ],
+    "params": {
+      "cooldown": 1,
+      "duration": 0,
+      "count": 1,
+      "multi_attack_effect-source": "self-current-attack",
+      "multi_attack_multi-bonus": [
+        0.5,
+        0.6,
+        0.7
+      ]
+    },
+    "createdAt": "2026-02-27T06:18:21.000Z"
+  },
+  {
+    "key": "CUSTOM_1772173101405_4",
+    "name": "根系护甲",
+    "icon": "🛡️",
+    "description": "根系缠绕全身形成防护",
+    "category": "element-grass",
+    "type": "defense",
+    "effects": [
+      "direct_defense"
+    ],
+    "params": {
+      "cooldown": 2,
+      "duration": 0,
+      "count": 1,
+      "direct_defense_effect-source": "self-current-defense",
+      "direct_defense_bonus": 1.2
+    },
+    "createdAt": "2026-02-27T06:18:21.000Z"
+  },
+  {
+    "key": "CUSTOM_1772173101405_5",
+    "name": "种子机关枪",
+    "icon": "🌰",
+    "description": "发射大量种子进行连续攻击",
+    "category": "element-grass",
+    "type": "attack",
+    "effects": [
+      "multi_attack"
+    ],
+    "params": {
+      "cooldown": 2,
+      "duration": 0,
+      "count": 1,
+      "multi_attack_effect-source": "self-current-attack",
+      "multi_attack_multi-bonus": [
+        0.4,
+        0.4,
+        0.5,
+        0.5,
+        0.6
+      ]
+    },
+    "createdAt": "2026-02-27T06:18:21.000Z"
+  },
+  {
+    "key": "CUSTOM_1772173101405_6",
+    "name": "毒粉散布",
+    "icon": "☠️",
+    "description": "散布有毒花粉使敌人中毒",
+    "category": "element-grass",
+    "type": "debuff",
+    "effects": [
+      "direct_attack",
+      "buff_status_enemy"
+    ],
+    "params": {
+      "cooldown": 1,
+      "duration": 0,
+      "count": 1,
+      "direct_attack_effect-source": "self-current-attack",
+      "direct_attack_bonus": 0.6,
+      "buff_status_enemy_status-type": "STATUS_1768184706523",
+      "buff_status_enemy_status-chance": 75,
+      "buff_status_enemy_status-stacks": 1
+    },
+    "createdAt": "2026-02-27T06:18:21.000Z"
+  },
+  {
+    "key": "CUSTOM_1772173101405_7",
+    "name": "荆棘反击",
+    "icon": "🌵",
+    "description": "身上长出荆棘防御并反击",
+    "category": "element-grass",
+    "type": "defense",
+    "effects": [
+      "defense_counter"
+    ],
+    "params": {
+      "cooldown": 3,
+      "duration": 0,
+      "count": 1,
+      "defense_counter_effect-source": "self-current-defense",
+      "defense_counter_defense-bonus": 1,
+      "defense_counter_counter-effect-source": "enemy-turn-damage",
+      "defense_counter_counter-bonus": 0.6
+    },
+    "createdAt": "2026-02-27T06:18:21.000Z"
+  },
+  {
+    "key": "CUSTOM_1772173101405_8",
+    "name": "绿叶风暴",
+    "icon": "🍂",
+    "description": "卷起叶片风暴攻击所有敌人",
+    "category": "element-grass",
+    "type": "attack",
+    "effects": [
+      "direct_attack"
+    ],
+    "params": {
+      "cooldown": 3,
+      "duration": 0,
+      "count": 1,
+      "direct_attack_effect-source": "self-current-attack",
+      "direct_attack_bonus": 1.3
+    },
+    "createdAt": "2026-02-27T06:18:21.000Z"
+  },
+  {
+    "key": "CUSTOM_1772173101405_9",
+    "name": "生命汲取",
+    "icon": "💚",
+    "description": "从敌人身上吸取生命力",
+    "category": "element-grass",
+    "type": "attack",
+    "effects": [
+      "direct_attack",
+      "heal_lifesteal"
+    ],
+    "params": {
+      "cooldown": 2,
+      "duration": 0,
+      "count": 1,
+      "direct_attack_effect-source": "self-current-attack",
+      "direct_attack_bonus": 1,
+      "heal_lifesteal_effect-source": "enemy-turn-damage",
+      "heal_lifesteal_bonus": 0.4
+    },
+    "createdAt": "2026-02-27T06:18:21.000Z"
+  },
+  {
+    "key": "CUSTOM_1772173101405_10",
+    "name": "花粉麻痹",
+    "icon": "🌼",
+    "description": "释放麻痹花粉使敌人行动迟缓",
+    "category": "element-grass",
+    "type": "debuff",
+    "effects": [
+      "buff_status_enemy"
+    ],
+    "params": {
+      "cooldown": 2,
+      "duration": 0,
+      "count": 1,
+      "buff_status_enemy_status-type": "STATUS_1768185372172",
+      "buff_status_enemy_status-chance": 85,
+      "buff_status_enemy_status-stacks": 1
+    },
+    "createdAt": "2026-02-27T06:18:21.000Z"
+  },
+  {
+    "key": "CUSTOM_1772173101405_11",
+    "name": "自然之力",
+    "icon": "🌳",
+    "description": "借助自然之力提升攻击和防御",
+    "category": "element-grass",
+    "type": "buff",
+    "effects": [
+      "buff_attack",
+      "buff_defense"
+    ],
+    "params": {
+      "cooldown": 3,
+      "duration": 3,
+      "count": 1,
+      "buff_attack_effect-source": "self-current-attack",
+      "buff_attack_target": "self",
+      "buff_attack_bonus": 0.5,
+      "buff_defense_effect-source": "self-current-defense",
+      "buff_defense_target": "self",
+      "buff_defense_bonus": 0.5
+    },
+    "createdAt": "2026-02-27T06:18:21.000Z"
+  },
+  {
+    "key": "CUSTOM_1772173101405_12",
+    "name": "疾风草刃",
+    "icon": "🌾",
+    "description": "高速挥动草刃并提升自身速度",
+    "category": "element-grass",
+    "type": "attack",
+    "effects": [
+      "direct_attack",
+      "direct_speed"
+    ],
+    "params": {
+      "cooldown": 1,
+      "duration": 0,
+      "count": 1,
+      "direct_attack_effect-source": "self-current-attack",
+      "direct_attack_bonus": 0.8,
+      "direct_speed_effect-source": "self-current-agility",
+      "direct_speed_bonus": 0.3
+    },
+    "createdAt": "2026-02-27T06:18:21.000Z"
+  },
+  {
+    "key": "CUSTOM_1772173101405_13",
+    "name": "森之守护",
+    "icon": "🌲",
+    "description": "森林的力量持续恢复生命",
+    "category": "element-grass",
+    "type": "heal",
+    "effects": [
+      "heal_continuous"
+    ],
+    "params": {
+      "cooldown": 3,
+      "duration": 3,
+      "count": 1,
+      "heal_continuous_effect-source": "self-max-hp",
+      "heal_continuous_target": "self",
+      "heal_continuous_bonus": 0.15
+    },
+    "createdAt": "2026-02-27T06:18:21.000Z"
+  },
+  {
+    "key": "CUSTOM_1772173101405_14",
+    "name": "荆棘地狱",
+    "icon": "🥀",
+    "description": "地面长出大量荆棘造成持续伤害",
+    "category": "element-grass",
+    "type": "attack",
+    "effects": [
+      "direct_attack",
+      "dot_damage"
+    ],
+    "params": {
+      "cooldown": 4,
+      "duration": 3,
+      "count": 1,
+      "direct_attack_effect-source": "self-current-attack",
+      "direct_attack_bonus": 1,
+      "dot_damage_effect-source": "self-current-attack",
+      "dot_damage_bonus": 0.4
+    },
+    "createdAt": "2026-02-27T06:18:21.000Z"
+  },
+  {
+    "key": "CUSTOM_1772173101405_15",
+    "name": "花海祝福",
+    "icon": "🌺",
+    "description": "花海的祝福治愈所有友方",
+    "category": "element-grass",
+    "type": "heal",
+    "effects": [
+      "heal_direct"
+    ],
+    "params": {
+      "cooldown": 4,
+      "duration": 0,
+      "count": 1,
+      "heal_direct_effect-source": "self-max-hp",
+      "heal_direct_target": "ally-all",
+      "heal_direct_bonus": 0.45
+    },
+    "createdAt": "2026-02-27T06:18:21.000Z"
+  },
+  {
+    "key": "CUSTOM_1772173101405_16",
+    "name": "木遁·树界降诞",
+    "icon": "🌴",
+    "description": "召唤巨树束缚敌人并削弱其攻击",
+    "category": "element-grass",
+    "type": "debuff",
+    "effects": [
+      "direct_attack",
+      "debuff_attack",
+      "debuff_speed"
+    ],
+    "params": {
+      "cooldown": 5,
+      "duration": 2,
+      "count": 1,
+      "direct_attack_effect-source": "self-current-attack",
+      "direct_attack_bonus": 1.5,
+      "debuff_attack_effect-source": "enemy-current-attack",
+      "debuff_attack_target": "enemy-single",
+      "debuff_attack_bonus": 0.5,
+      "debuff_speed_effect-source": "enemy-current-agility",
+      "debuff_speed_target": "enemy-single",
+      "debuff_speed_bonus": 0.6
+    },
+    "createdAt": "2026-02-27T06:18:21.000Z"
+  },
+  {
+    "key": "CUSTOM_1772173101405_17",
+    "name": "叶刃斩",
+    "icon": "⚔️",
+    "description": "用锋利的叶片斩击敌人",
+    "category": "element-grass",
+    "type": "attack",
+    "effects": [
+      "direct_attack"
+    ],
+    "params": {
+      "cooldown": 0,
+      "duration": 0,
+      "count": 1,
+      "direct_attack_effect-source": "self-current-attack",
+      "direct_attack_bonus": 1.1
+    },
+    "createdAt": "2026-02-27T06:18:21.000Z"
+  },
+  {
+    "key": "CUSTOM_1772173101405_18",
+    "name": "寄生种子",
+    "icon": "🌱",
+    "description": "种下种子持续吸取敌人生命",
+    "category": "element-grass",
+    "type": "attack",
+    "effects": [
+      "dot_damage",
+      "heal_continuous"
+    ],
+    "params": {
+      "cooldown": 3,
+      "duration": 4,
+      "count": 1,
+      "dot_damage_effect-source": "enemy-max-hp",
+      "dot_damage_bonus": 0.08,
+      "heal_continuous_effect-source": "enemy-max-hp",
+      "heal_continuous_target": "self",
+      "heal_continuous_bonus": 0.08
+    },
+    "createdAt": "2026-02-27T06:18:21.000Z"
+  },
+  {
+    "key": "CUSTOM_1772173101405_19",
+    "name": "净化之露",
+    "icon": "💧",
+    "description": "清除自身所有负面状态",
+    "category": "element-grass",
+    "type": "buff",
+    "effects": [
+      "buff_purify",
+      "heal_direct"
+    ],
+    "params": {
+      "cooldown": 4,
+      "duration": 0,
+      "count": 1,
+      "buff_purify_target": "self",
+      "buff_purify_purify-type": "negative",
+      "buff_purify_purify-count": "all",
+      "heal_direct_effect-source": "self-max-hp",
+      "heal_direct_target": "self",
+      "heal_direct_bonus": 0.25
+    },
+    "createdAt": "2026-02-27T06:18:21.000Z"
+  },
+  {
+    "key": "CUSTOM_1772173101405_20",
+    "name": "草系增幅",
+    "icon": "🍀",
+    "description": "增强草系伤害",
+    "category": "element-grass",
+    "type": "buff",
+    "effects": [
+      "buff_element_damage"
+    ],
+    "params": {
+      "cooldown": 3,
+      "duration": 3,
+      "count": 1,
+      "buff_element_damage_target": "self",
+      "buff_element_damage_element-type": "grass",
+      "buff_element_damage_damage-bonus": 0.4
+    },
+    "createdAt": "2026-02-27T06:18:21.000Z"
+  },
+  {
+    "key": "CUSTOM_1772173101405_21",
+    "name": "鹿角冲击",
+    "icon": "🦌",
+    "description": "用木质化的鹿角猛烈冲撞",
+    "category": "element-grass",
+    "type": "attack",
+    "effects": [
+      "direct_attack",
+      "debuff_defense"
+    ],
+    "params": {
+      "cooldown": 2,
+      "duration": 2,
+      "count": 1,
+      "direct_attack_effect-source": "self-current-attack",
+      "direct_attack_bonus": 1.2,
+      "debuff_defense_effect-source": "enemy-current-defense",
+      "debuff_defense_target": "enemy-single",
+      "debuff_defense_bonus": 0.3
+    },
+    "createdAt": "2026-02-27T06:18:21.000Z"
+  },
+  {
+    "key": "CUSTOM_1772173101405_22",
+    "name": "森之怒吼",
+    "icon": "🌳",
+    "description": "释放森林的愤怒攻击所有敌人并削弱其防御",
+    "category": "element-grass",
+    "type": "attack",
+    "effects": [
+      "direct_attack",
+      "debuff_defense"
+    ],
+    "params": {
+      "cooldown": 4,
+      "duration": 2,
+      "count": 1,
+      "direct_attack_effect-source": "self-current-attack",
+      "direct_attack_bonus": 1.6,
+      "debuff_defense_effect-source": "enemy-current-defense",
+      "debuff_defense_target": "enemy-all",
+      "debuff_defense_bonus": 0.4
+    },
+    "createdAt": "2026-02-27T06:18:21.000Z"
+  },
+  {
+    "key": "CUSTOM_1772173101405_23",
+    "name": "生命果实",
+    "icon": "🍎",
+    "description": "结出魔法果实大幅恢复生命",
+    "category": "element-grass",
+    "type": "heal",
+    "effects": [
+      "heal_percent"
+    ],
+    "params": {
+      "cooldown": 5,
+      "duration": 0,
+      "count": 1,
+      "heal_percent_effect-source": "self-max-hp",
+      "heal_percent_target": "self",
+      "heal_percent_percent": 0.5
+    },
+    "createdAt": "2026-02-27T06:18:21.000Z"
+  },
+  {
+    "key": "CUSTOM_1772173101405_24",
+    "name": "神圣重生",
+    "icon": "✨",
+    "description": "濒死时触发重生效果",
+    "category": "element-grass",
+    "type": "heal",
+    "effects": [
+      "heal_rebirth"
+    ],
+    "params": {
+      "cooldown": 0,
+      "duration": 0,
+      "count": 1,
+      "heal_rebirth_effect-source": "self-max-hp",
+      "heal_rebirth_target": "self",
+      "heal_rebirth_percent": 0.5,
+      "heal_rebirth_rebirth-condition": "death"
+    },
+    "createdAt": "2026-02-27T06:18:21.000Z"
+  },
+  {
+    "key": "CUSTOM_1772173860343_0",
+    "name": "微风轻抚",
+    "icon": "💨",
+    "description": "幼年态召唤温和的微风，轻柔地吹拂敌人",
+    "category": "element-wind",
+    "type": "attack",
+    "effects": [
+      "direct_attack"
+    ],
+    "params": {
+      "cooldown": 0,
+      "duration": 0,
+      "count": 1,
+      "direct_attack_effect-source": "self-current-attack",
+      "direct_attack_bonus": 0.8
+    },
+    "createdAt": "2026-02-27T06:31:00.000Z",
+    "batchId": "10007"
+  },
+  {
+    "key": "CUSTOM_1772173860343_1",
+    "name": "气流护盾",
+    "icon": "🌀",
+    "description": "凝聚周身气流形成防护罩",
+    "category": "element-wind",
+    "type": "defense",
+    "effects": [
+      "direct_defense"
+    ],
+    "params": {
+      "cooldown": 1,
+      "duration": 0,
+      "count": 1,
+      "direct_defense_effect-source": "self-current-defense",
+      "direct_defense_bonus": 1
+    },
+    "createdAt": "2026-02-27T06:31:00.000Z",
+    "batchId": "10007"
+  },
+  {
+    "key": "CUSTOM_1772173860343_2",
+    "name": "疾风步",
+    "icon": "💨",
+    "description": "借助风之力提升自身速度",
+    "category": "element-wind",
+    "type": "agility",
+    "effects": [
+      "direct_speed"
+    ],
+    "params": {
+      "cooldown": 1,
+      "duration": 0,
+      "count": 1,
+      "direct_speed_effect-source": "self-current-agility",
+      "direct_speed_bonus": 0.5
+    },
+    "createdAt": "2026-02-27T06:31:00.000Z",
+    "batchId": "10007"
+  },
+  {
+    "key": "CUSTOM_1772173860343_3",
+    "name": "风刃斩",
+    "icon": "🗡️",
+    "description": "凝聚锋利的风刃切割敌人",
+    "category": "element-wind",
+    "type": "attack",
+    "effects": [
+      "direct_attack"
+    ],
+    "params": {
+      "cooldown": 0,
+      "duration": 0,
+      "count": 1,
+      "direct_attack_effect-source": "self-current-attack",
+      "direct_attack_bonus": 1
+    },
+    "createdAt": "2026-02-27T06:31:00.000Z",
+    "batchId": "10007"
+  },
+  {
+    "key": "CUSTOM_1772173860343_4",
+    "name": "轻盈之风",
+    "icon": "✨",
+    "description": "风之力减轻队友负担，提升速度",
+    "category": "element-wind",
+    "type": "buff",
+    "effects": [
+      "buff_speed"
+    ],
+    "params": {
+      "cooldown": 2,
+      "duration": 2,
+      "count": 1,
+      "buff_speed_effect-source": "self-current-agility",
+      "buff_speed_target": "ally-all",
+      "buff_speed_bonus": 0.3
+    },
+    "createdAt": "2026-02-27T06:31:00.000Z",
+    "batchId": "10007"
+  },
+  {
+    "key": "CUSTOM_1772173860343_5",
+    "name": "旋风连击",
+    "icon": "🌪️",
+    "description": "青年态释放连续的旋风攻击",
+    "category": "element-wind",
+    "type": "attack",
+    "effects": [
+      "multi_attack"
+    ],
+    "params": {
+      "cooldown": 2,
+      "duration": 0,
+      "count": 1,
+      "multi_attack_effect-source": "self-current-attack",
+      "multi_attack_multi-bonus": [
+        0.5,
+        0.7,
+        0.9
+      ]
+    },
+    "createdAt": "2026-02-27T06:31:00.000Z",
+    "batchId": "10007"
+  },
+  {
+    "key": "CUSTOM_1772173860343_6",
+    "name": "风暴之眼",
+    "icon": "👁️",
+    "description": "在风暴中心获得强大防御并反击",
+    "category": "element-wind",
+    "type": "defense",
+    "effects": [
+      "defense_counter"
+    ],
+    "params": {
+      "cooldown": 3,
+      "duration": 0,
+      "count": 1,
+      "defense_counter_effect-source": "self-current-defense",
+      "defense_counter_defense-bonus": 1.2,
+      "defense_counter_counter-effect-source": "enemy-turn-damage",
+      "defense_counter_counter-bonus": 0.5
+    },
+    "createdAt": "2026-02-27T06:31:00.000Z",
+    "batchId": "10007"
+  },
+  {
+    "key": "CUSTOM_1772173860343_7",
+    "name": "气流加速",
+    "icon": "⚡",
+    "description": "持续的风力推动提升速度",
+    "category": "element-wind",
+    "type": "agility",
+    "effects": [
+      "continuous_speed"
+    ],
+    "params": {
+      "cooldown": 2,
+      "duration": 3,
+      "count": 1,
+      "continuous_speed_effect-source": "self-current-agility",
+      "continuous_speed_bonus": 0.4
+    },
+    "createdAt": "2026-02-27T06:31:00.000Z",
+    "batchId": "10007"
+  },
+  {
+    "key": "CUSTOM_1772173860343_8",
+    "name": "风压削弱",
+    "icon": "💨",
+    "description": "强大的风压降低敌人攻击力",
+    "category": "element-wind",
+    "type": "debuff",
+    "effects": [
+      "debuff_attack"
+    ],
+    "params": {
+      "cooldown": 2,
+      "duration": 2,
+      "count": 1,
+      "debuff_attack_effect-source": "enemy-current-attack",
+      "debuff_attack_target": "enemy-single",
+      "debuff_attack_bonus": 0.4
+    },
+    "createdAt": "2026-02-27T06:31:00.000Z",
+    "batchId": "10007"
+  },
+  {
+    "key": "CUSTOM_1772173860343_9",
+    "name": "飓风冲击",
+    "icon": "🌪️",
+    "description": "释放强力飓风造成大量伤害",
+    "category": "element-wind",
+    "type": "attack",
+    "effects": [
+      "direct_attack"
+    ],
+    "params": {
+      "cooldown": 1,
+      "duration": 0,
+      "count": 1,
+      "direct_attack_effect-source": "self-current-attack",
+      "direct_attack_bonus": 1.3
+    },
+    "createdAt": "2026-02-27T06:31:00.000Z",
+    "batchId": "10007"
+  },
+  {
+    "key": "CUSTOM_1772173860343_10",
+    "name": "风之祝福",
+    "icon": "✨",
+    "description": "风之力量强化自身攻击",
+    "category": "element-wind",
+    "type": "buff",
+    "effects": [
+      "buff_attack"
+    ],
+    "params": {
+      "cooldown": 2,
+      "duration": 2,
+      "count": 1,
+      "buff_attack_effect-source": "self-current-attack",
+      "buff_attack_target": "self",
+      "buff_attack_bonus": 0.5
+    },
+    "createdAt": "2026-02-27T06:31:00.000Z",
+    "batchId": "10007"
+  },
+  {
+    "key": "CUSTOM_1772173860343_11",
+    "name": "风刃乱舞",
+    "icon": "⚔️",
+    "description": "青年态释放多道风刃连续攻击并削弱敌人防御",
+    "category": "element-wind",
+    "type": "attack",
+    "effects": [
+      "multi_attack",
+      "debuff_defense"
+    ],
+    "params": {
+      "cooldown": 3,
+      "duration": 2,
+      "count": 1,
+      "multi_attack_effect-source": "self-current-attack",
+      "multi_attack_multi-bonus": [
+        0.6,
+        0.8,
+        1
+      ],
+      "debuff_defense_effect-source": "enemy-current-defense",
+      "debuff_defense_target": "enemy-single",
+      "debuff_defense_bonus": 0.3
+    },
+    "createdAt": "2026-02-27T06:31:00.000Z",
+    "batchId": "10007"
+  },
+  {
+    "key": "CUSTOM_1772173860343_12",
+    "name": "气旋守护",
+    "icon": "🌀",
+    "description": "持续的气旋提供防护",
+    "category": "element-wind",
+    "type": "defense",
+    "effects": [
+      "continuous_defense"
+    ],
+    "params": {
+      "cooldown": 2,
+      "duration": 2,
+      "count": 1,
+      "continuous_defense_effect-source": "self-current-defense",
+      "continuous_defense_bonus": 0.8
+    },
+    "createdAt": "2026-02-27T06:31:00.000Z",
+    "batchId": "10007"
+  },
+  {
+    "key": "CUSTOM_1772173860343_13",
+    "name": "风蚀之力",
+    "icon": "💨",
+    "description": "持续的风蚀造成持续伤害",
+    "category": "element-wind",
+    "type": "attack",
+    "effects": [
+      "dot_damage"
+    ],
+    "params": {
+      "cooldown": 2,
+      "duration": 3,
+      "count": 1,
+      "dot_damage_effect-source": "self-current-attack",
+      "dot_damage_bonus": 0.4
+    },
+    "createdAt": "2026-02-27T06:31:00.000Z",
+    "batchId": "10007"
+  },
+  {
+    "key": "CUSTOM_1772173860343_14",
+    "name": "疾风突袭",
+    "icon": "⚡",
+    "description": "极速攻击并提升自身速度",
+    "category": "element-wind",
+    "type": "attack",
+    "effects": [
+      "direct_attack",
+      "buff_speed"
+    ],
+    "params": {
+      "cooldown": 2,
+      "duration": 1,
+      "count": 1,
+      "direct_attack_effect-source": "self-current-attack",
+      "direct_attack_bonus": 1,
+      "buff_speed_effect-source": "self-current-agility",
+      "buff_speed_target": "self",
+      "buff_speed_bonus": 0.4
+    },
+    "createdAt": "2026-02-27T06:31:00.000Z",
+    "batchId": "10007"
+  },
+  {
+    "key": "CUSTOM_1772173860343_15",
+    "name": "风暴领域",
+    "icon": "🌪️",
+    "description": "成年态创造风暴领域，全面提升自身属性",
+    "category": "element-wind",
+    "type": "buff",
+    "effects": [
+      "buff_attack",
+      "buff_defense",
+      "buff_speed"
+    ],
+    "params": {
+      "cooldown": 4,
+      "duration": 3,
+      "count": 1,
+      "buff_attack_effect-source": "self-current-attack",
+      "buff_attack_target": "self",
+      "buff_attack_bonus": 0.6,
+      "buff_defense_effect-source": "self-current-defense",
+      "buff_defense_target": "self",
+      "buff_defense_bonus": 0.5,
+      "buff_speed_effect-source": "self-current-agility",
+      "buff_speed_target": "self",
+      "buff_speed_bonus": 0.7
+    },
+    "createdAt": "2026-02-27T06:31:00.000Z",
+    "batchId": "10007"
+  },
+  {
+    "key": "CUSTOM_1772173860343_16",
+    "name": "龙卷风暴",
+    "icon": "🌪️",
+    "description": "成年态释放毁灭性龙卷风",
+    "category": "element-wind",
+    "type": "attack",
+    "effects": [
+      "direct_attack",
+      "buff_status_enemy"
+    ],
+    "params": {
+      "cooldown": 3,
+      "duration": 0,
+      "count": 1,
+      "direct_attack_effect-source": "self-current-attack",
+      "direct_attack_bonus": 1.8,
+      "buff_status_enemy_status-type": "STATUS_1768185372172",
+      "buff_status_enemy_status-chance": 75,
+      "buff_status_enemy_status-stacks": 1
+    },
+    "createdAt": "2026-02-27T06:31:00.000Z",
+    "batchId": "10007"
+  },
+  {
+    "key": "CUSTOM_1772173860343_17",
+    "name": "天灾飓风",
+    "icon": "💥",
+    "description": "成年态终极攻击，多段打击并削弱全体敌人",
+    "category": "element-wind",
+    "type": "attack",
+    "effects": [
+      "multi_attack",
+      "debuff_attack",
+      "debuff_defense"
+    ],
+    "params": {
+      "cooldown": 5,
+      "duration": 2,
+      "count": 1,
+      "multi_attack_effect-source": "self-current-attack",
+      "multi_attack_multi-bonus": [
+        0.7,
+        0.9,
+        1.1,
+        1.3,
+        1.5
+      ],
+      "debuff_attack_effect-source": "enemy-current-attack",
+      "debuff_attack_target": "enemy-all",
+      "debuff_attack_bonus": 0.5,
+      "debuff_defense_effect-source": "enemy-current-defense",
+      "debuff_defense_target": "enemy-all",
+      "debuff_defense_bonus": 0.4
+    },
+    "createdAt": "2026-02-27T06:31:00.000Z",
+    "batchId": "10007"
+  },
+  {
+    "key": "CUSTOM_1772173860343_18",
+    "name": "风之净化",
+    "icon": "✨",
+    "description": "清风驱散所有负面状态",
+    "category": "element-wind",
+    "type": "buff",
+    "effects": [
+      "buff_purify"
+    ],
+    "params": {
+      "cooldown": 3,
+      "duration": 0,
+      "count": 1,
+      "buff_purify_target": "self",
+      "buff_purify_purify-type": "negative",
+      "buff_purify_purify-count": "all"
+    },
+    "createdAt": "2026-02-27T06:31:00.000Z",
+    "batchId": "10007"
+  },
+  {
+    "key": "CUSTOM_1772173860343_19",
+    "name": "气流回复",
+    "icon": "💚",
+    "description": "温和的风之力持续恢复生命",
+    "category": "element-wind",
+    "type": "heal",
+    "effects": [
+      "heal_continuous"
+    ],
+    "params": {
+      "cooldown": 2,
+      "duration": 3,
+      "count": 1,
+      "heal_continuous_effect-source": "self-max-hp",
+      "heal_continuous_target": "self",
+      "heal_continuous_bonus": 0.08
+    },
+    "createdAt": "2026-02-27T06:31:00.000Z",
+    "batchId": "10007"
+  },
+  {
+    "key": "CUSTOM_1772173860343_20",
+    "name": "风刃切割",
+    "icon": "🗡️",
+    "description": "锋利风刃造成百分比伤害",
+    "category": "element-wind",
+    "type": "attack",
+    "effects": [
+      "percent_damage"
+    ],
+    "params": {
+      "cooldown": 3,
+      "duration": 0,
+      "count": 1,
+      "percent_damage_effect-source": "enemy-max-hp",
+      "percent_damage_percent": 0.15
+    },
+    "createdAt": "2026-02-27T06:31:00.000Z",
+    "batchId": "10007"
+  },
+  {
+    "key": "CUSTOM_1772173860343_21",
+    "name": "风之治愈",
+    "icon": "💙",
+    "description": "风之力量直接恢复生命",
+    "category": "element-wind",
+    "type": "heal",
+    "effects": [
+      "heal_direct"
+    ],
+    "params": {
+      "cooldown": 2,
+      "duration": 0,
+      "count": 1,
+      "heal_direct_effect-source": "self-current-attack",
+      "heal_direct_target": "self",
+      "heal_direct_bonus": 1
+    },
+    "createdAt": "2026-02-27T06:31:00.000Z",
+    "batchId": "10007"
+  },
+  {
+    "key": "CUSTOM_1772173860343_22",
+    "name": "狂风怒号",
+    "icon": "🌪️",
+    "description": "成年态狂暴攻击并大幅提升自身攻击力",
+    "category": "element-wind",
+    "type": "attack",
+    "effects": [
+      "direct_attack",
+      "buff_attack"
+    ],
+    "params": {
+      "cooldown": 3,
+      "duration": 2,
+      "count": 1,
+      "direct_attack_effect-source": "self-current-attack",
+      "direct_attack_bonus": 1.5,
+      "buff_attack_effect-source": "self-current-attack",
+      "buff_attack_target": "self",
+      "buff_attack_bonus": 0.8
+    },
+    "createdAt": "2026-02-27T06:31:00.000Z",
+    "batchId": "10007"
+  },
+  {
+    "key": "CUSTOM_1772173860343_23",
+    "name": "风属增幅",
+    "icon": "💨",
+    "description": "强化风系伤害",
+    "category": "element-wind",
+    "type": "buff",
+    "effects": [
+      "buff_element_damage"
+    ],
+    "params": {
+      "cooldown": 3,
+      "duration": 3,
+      "count": 1,
+      "buff_element_damage_target": "self",
+      "buff_element_damage_element-type": "wind",
+      "buff_element_damage_damage-bonus": 0.4
+    },
+    "createdAt": "2026-02-27T06:31:00.000Z",
+    "batchId": "10007"
+  },
+  {
+    "key": "CUSTOM_1772173860343_24",
+    "name": "风暴重生",
+    "icon": "🔄",
+    "description": "成年态终极能力，濒死时可重生",
+    "category": "element-wind",
+    "type": "heal",
+    "effects": [
+      "heal_rebirth"
+    ],
+    "params": {
+      "cooldown": 5,
+      "duration": 0,
+      "count": 1,
+      "heal_rebirth_effect-source": "self-max-hp",
+      "heal_rebirth_target": "self",
+      "heal_rebirth_percent": 0.5,
+      "heal_rebirth_rebirth-condition": "death"
+    },
+    "createdAt": "2026-02-27T06:31:00.000Z",
+    "batchId": "10007"
+  },
+  {
+    "key": "CUSTOM_1772174819116_0",
+    "name": "碎石冲击",
+    "icon": "🪨",
+    "description": "用坚硬的岩石头盔撞击敌人",
+    "category": "element-earth",
+    "type": "attack",
+    "effects": [
+      "direct_attack"
+    ],
+    "params": {
+      "cooldown": 0,
+      "duration": 0,
+      "count": 1,
+      "direct_attack_effect-source": "self-current-attack",
+      "direct_attack_bonus": 0.9
+    },
+    "createdAt": "2026-02-27T06:46:59.000Z",
+    "batchId": "10008"
+  },
+  {
+    "key": "CUSTOM_1772174819116_1",
+    "name": "土墙守护",
+    "icon": "🛡️",
+    "description": "在身前筑起坚固的土墙进行防御",
+    "category": "element-earth",
+    "type": "defense",
+    "effects": [
+      "direct_defense"
+    ],
+    "params": {
+      "cooldown": 1,
+      "duration": 0,
+      "count": 1,
+      "direct_defense_effect-source": "self-current-defense",
+      "direct_defense_bonus": 1
+    },
+    "createdAt": "2026-02-27T06:46:59.000Z",
+    "batchId": "10008"
+  },
+  {
+    "key": "CUSTOM_1772174819116_2",
+    "name": "砂尘迷雾",
+    "icon": "💨",
+    "description": "扬起沙尘降低敌人命中率",
+    "category": "element-earth",
+    "type": "debuff",
+    "effects": [
+      "debuff_speed"
+    ],
+    "params": {
+      "cooldown": 2,
+      "duration": 0,
+      "count": 1,
+      "debuff_speed_effect-source": "enemy-current-agility",
+      "debuff_speed_target": "enemy-single",
+      "debuff_speed_bonus": 0.3
+    },
+    "createdAt": "2026-02-27T06:46:59.000Z",
+    "batchId": "10008"
+  },
+  {
+    "key": "CUSTOM_1772174819116_3",
+    "name": "大地之力",
+    "icon": "💪",
+    "description": "汲取大地能量增强自身攻击力",
+    "category": "element-earth",
+    "type": "buff",
+    "effects": [
+      "buff_attack"
+    ],
+    "params": {
+      "cooldown": 2,
+      "duration": 0,
+      "count": 1,
+      "buff_attack_effect-source": "self-current-attack",
+      "buff_attack_target": "self",
+      "buff_attack_bonus": 0.4
+    },
+    "createdAt": "2026-02-27T06:46:59.000Z",
+    "batchId": "10008"
+  },
+  {
+    "key": "CUSTOM_1772174819116_4",
+    "name": "岩石飞弹",
+    "icon": "🪨",
+    "description": "发射多块岩石碎片连续攻击",
+    "category": "element-earth",
+    "type": "attack",
+    "effects": [
+      "multi_attack"
+    ],
+    "params": {
+      "cooldown": 1,
+      "duration": 0,
+      "count": 1,
+      "multi_attack_effect-source": "self-current-attack",
+      "multi_attack_multi-bonus": [
+        0.5,
+        0.6,
+        0.7
+      ]
+    },
+    "createdAt": "2026-02-27T06:46:59.000Z",
+    "batchId": "10008"
+  },
+  {
+    "key": "CUSTOM_1772174819116_5",
+    "name": "石化凝视",
+    "icon": "👁️",
+    "description": "用黑色圆眼凝视敌人使其麻痹",
+    "category": "element-earth",
+    "type": "debuff",
+    "effects": [
+      "direct_attack",
+      "buff_status_enemy"
+    ],
+    "params": {
+      "cooldown": 3,
+      "duration": 0,
+      "count": 1,
+      "direct_attack_effect-source": "self-current-attack",
+      "direct_attack_bonus": 0.7,
+      "buff_status_enemy_status-type": "STATUS_1768185372172",
+      "buff_status_enemy_status-chance": 70,
+      "buff_status_enemy_status-stacks": 1
+    },
+    "createdAt": "2026-02-27T06:46:59.000Z",
+    "batchId": "10008"
+  },
+  {
+    "key": "CUSTOM_1772174819116_6",
+    "name": "山岳之躯",
+    "icon": "⛰️",
+    "description": "身体化作山岳般坚固，大幅提升防御",
+    "category": "element-earth",
+    "type": "buff",
+    "effects": [
+      "buff_defense"
+    ],
+    "params": {
+      "cooldown": 2,
+      "duration": 0,
+      "count": 1,
+      "buff_defense_effect-source": "self-current-defense",
+      "buff_defense_target": "self",
+      "buff_defense_bonus": 0.5
+    },
+    "createdAt": "2026-02-27T06:46:59.000Z",
+    "batchId": "10008"
+  },
+  {
+    "key": "CUSTOM_1772174819116_7",
+    "name": "地刺突袭",
+    "icon": "⚔️",
+    "description": "从地面突起尖锐石刺刺穿敌人",
+    "category": "element-earth",
+    "type": "attack",
+    "effects": [
+      "direct_attack"
+    ],
+    "params": {
+      "cooldown": 1,
+      "duration": 0,
+      "count": 1,
+      "direct_attack_effect-source": "self-current-attack",
+      "direct_attack_bonus": 1.1
+    },
+    "createdAt": "2026-02-27T06:46:59.000Z",
+    "batchId": "10008"
+  },
+  {
+    "key": "CUSTOM_1772174819116_8",
+    "name": "岩层护甲",
+    "icon": "🧱",
+    "description": "背部岩板展开形成多层防护",
+    "category": "element-earth",
+    "type": "defense",
+    "effects": [
+      "continuous_defense"
+    ],
+    "params": {
+      "cooldown": 3,
+      "duration": 2,
+      "count": 1,
+      "continuous_defense_effect-source": "self-current-defense",
+      "continuous_defense_bonus": 0.6
+    },
+    "createdAt": "2026-02-27T06:46:59.000Z",
+    "batchId": "10008"
+  },
+  {
+    "key": "CUSTOM_1772174819116_9",
+    "name": "碎岩猛击",
+    "icon": "💥",
+    "description": "全力挥动岩石装甲造成重击并提升自身攻击",
+    "category": "element-earth",
+    "type": "attack",
+    "effects": [
+      "direct_attack",
+      "buff_attack"
+    ],
+    "params": {
+      "cooldown": 2,
+      "duration": 0,
+      "count": 1,
+      "direct_attack_effect-source": "self-current-attack",
+      "direct_attack_bonus": 1,
+      "buff_attack_effect-source": "self-current-attack",
+      "buff_attack_target": "self",
+      "buff_attack_bonus": 0.3
+    },
+    "createdAt": "2026-02-27T06:46:59.000Z",
+    "batchId": "10008"
+  },
+  {
+    "key": "CUSTOM_1772174819116_10",
+    "name": "黄晶能量",
+    "icon": "💎",
+    "description": "激活体内黄色晶体恢复生命",
+    "category": "element-earth",
+    "type": "heal",
+    "effects": [
+      "heal_direct"
+    ],
+    "params": {
+      "cooldown": 3,
+      "duration": 0,
+      "count": 1,
+      "heal_direct_effect-source": "self-max-hp",
+      "heal_direct_target": "self",
+      "heal_direct_bonus": 0.3
+    },
+    "createdAt": "2026-02-27T06:46:59.000Z",
+    "batchId": "10008"
+  },
+  {
+    "key": "CUSTOM_1772174819116_11",
+    "name": "地动山摇",
+    "icon": "🌍",
+    "description": "震动大地降低所有敌人的防御力",
+    "category": "element-earth",
+    "type": "debuff",
+    "effects": [
+      "debuff_defense"
+    ],
+    "params": {
+      "cooldown": 3,
+      "duration": 0,
+      "count": 1,
+      "debuff_defense_effect-source": "enemy-current-defense",
+      "debuff_defense_target": "enemy-all",
+      "debuff_defense_bonus": 0.4
+    },
+    "createdAt": "2026-02-27T06:46:59.000Z",
+    "batchId": "10008"
+  },
+  {
+    "key": "CUSTOM_1772174819116_12",
+    "name": "岩石共生",
+    "icon": "🔗",
+    "description": "与岩石装甲深度融合，持续恢复生命",
+    "category": "element-earth",
+    "type": "heal",
+    "effects": [
+      "heal_continuous"
+    ],
+    "params": {
+      "cooldown": 4,
+      "duration": 3,
+      "count": 1,
+      "heal_continuous_effect-source": "self-max-hp",
+      "heal_continuous_target": "self",
+      "heal_continuous_bonus": 0.15
+    },
+    "createdAt": "2026-02-27T06:46:59.000Z",
+    "batchId": "10008"
+  },
+  {
+    "key": "CUSTOM_1772174819116_13",
+    "name": "尖峰突刺",
+    "icon": "⚡",
+    "description": "背部尖峰刺出造成多段伤害",
+    "category": "element-earth",
+    "type": "attack",
+    "effects": [
+      "multi_attack"
+    ],
+    "params": {
+      "cooldown": 2,
+      "duration": 0,
+      "count": 1,
+      "multi_attack_effect-source": "self-current-attack",
+      "multi_attack_multi-bonus": [
+        0.6,
+        0.7,
+        0.8,
+        0.9
+      ]
+    },
+    "createdAt": "2026-02-27T06:46:59.000Z",
+    "batchId": "10008"
+  },
+  {
+    "key": "CUSTOM_1772174819116_14",
+    "name": "岩盾反击",
+    "icon": "🛡️",
+    "description": "用岩石装甲防御并反击敌人",
+    "category": "element-earth",
+    "type": "defense",
+    "effects": [
+      "defense_counter"
+    ],
+    "params": {
+      "cooldown": 3,
+      "duration": 0,
+      "count": 1,
+      "defense_counter_effect-source": "self-current-defense",
+      "defense_counter_defense-bonus": 1,
+      "defense_counter_counter-effect-source": "enemy-turn-damage",
+      "defense_counter_counter-bonus": 0.5
+    },
+    "createdAt": "2026-02-27T06:46:59.000Z",
+    "batchId": "10008"
+  },
+  {
+    "key": "CUSTOM_1772174819116_15",
+    "name": "紫晶觉醒",
+    "icon": "💠",
+    "description": "激活紫色晶簇全面提升属性",
+    "category": "element-earth",
+    "type": "buff",
+    "effects": [
+      "buff_attack",
+      "buff_defense",
+      "buff_speed"
+    ],
+    "params": {
+      "cooldown": 5,
+      "duration": 0,
+      "count": 1,
+      "buff_attack_effect-source": "self-current-attack",
+      "buff_attack_target": "self",
+      "buff_attack_bonus": 0.5,
+      "buff_defense_effect-source": "self-current-defense",
+      "buff_defense_target": "self",
+      "buff_defense_bonus": 0.5,
+      "buff_speed_effect-source": "self-current-agility",
+      "buff_speed_target": "self",
+      "buff_speed_bonus": 0.6
+    },
+    "createdAt": "2026-02-27T06:46:59.000Z",
+    "batchId": "10008"
+  },
+  {
+    "key": "CUSTOM_1772174819116_16",
+    "name": "晶刃斩击",
+    "icon": "🗡️",
+    "description": "用前爪晶刃进行致命斩击",
+    "category": "element-earth",
+    "type": "attack",
+    "effects": [
+      "direct_attack"
+    ],
+    "params": {
+      "cooldown": 2,
+      "duration": 0,
+      "count": 1,
+      "direct_attack_effect-source": "self-current-attack",
+      "direct_attack_bonus": 1.5
+    },
+    "createdAt": "2026-02-27T06:46:59.000Z",
+    "batchId": "10008"
+  },
+  {
+    "key": "CUSTOM_1772174819116_17",
+    "name": "地脉共鸣",
+    "icon": "🌊",
+    "description": "与大地脉动共鸣，持续提升防御",
+    "category": "element-earth",
+    "type": "buff",
+    "effects": [
+      "buff_defense"
+    ],
+    "params": {
+      "cooldown": 3,
+      "duration": 0,
+      "count": 1,
+      "buff_defense_effect-source": "self-current-defense",
+      "buff_defense_target": "self",
+      "buff_defense_bonus": 0.7
+    },
+    "createdAt": "2026-02-27T06:46:59.000Z",
+    "batchId": "10008"
+  },
+  {
+    "key": "CUSTOM_1772174819116_18",
+    "name": "山崩地裂",
+    "icon": "💥",
+    "description": "引发大规模山崩对所有敌人造成伤害",
+    "category": "element-earth",
+    "type": "attack",
+    "effects": [
+      "direct_attack"
+    ],
+    "params": {
+      "cooldown": 4,
+      "duration": 0,
+      "count": 1,
+      "direct_attack_effect-source": "self-current-attack",
+      "direct_attack_bonus": 1.8
+    },
+    "createdAt": "2026-02-27T06:46:59.000Z",
+    "batchId": "10008"
+  },
+  {
+    "key": "CUSTOM_1772174819116_19",
+    "name": "岩石风暴",
+    "icon": "🌪️",
+    "description": "卷起岩石风暴造成持续伤害",
+    "category": "element-earth",
+    "type": "attack",
+    "effects": [
+      "dot_damage"
+    ],
+    "params": {
+      "cooldown": 3,
+      "duration": 3,
+      "count": 1,
+      "dot_damage_effect-source": "self-current-attack",
+      "dot_damage_bonus": 0.4
+    },
+    "createdAt": "2026-02-27T06:46:59.000Z",
+    "batchId": "10008"
+  },
+  {
+    "key": "CUSTOM_1772174819116_20",
+    "name": "晶体护盾",
+    "icon": "🛡️",
+    "description": "紫色晶体形成能量护盾大幅提升防御",
+    "category": "element-earth",
+    "type": "defense",
+    "effects": [
+      "direct_defense"
+    ],
+    "params": {
+      "cooldown": 2,
+      "duration": 0,
+      "count": 1,
+      "direct_defense_effect-source": "self-current-defense",
+      "direct_defense_bonus": 1.5
+    },
+    "createdAt": "2026-02-27T06:46:59.000Z",
+    "batchId": "10008"
+  },
+  {
+    "key": "CUSTOM_1772174819116_21",
+    "name": "地脉汲取",
+    "icon": "💚",
+    "description": "从大地汲取能量转化为生命力",
+    "category": "element-earth",
+    "type": "heal",
+    "effects": [
+      "heal_lifesteal"
+    ],
+    "params": {
+      "cooldown": 3,
+      "duration": 0,
+      "count": 1,
+      "heal_lifesteal_effect-source": "self-turn-damage",
+      "heal_lifesteal_bonus": 0.4
+    },
+    "createdAt": "2026-02-27T06:46:59.000Z",
+    "batchId": "10008"
+  },
+  {
+    "key": "CUSTOM_1772174819116_22",
+    "name": "紫晶领域",
+    "icon": "🔮",
+    "description": "展开紫晶能量领域压制敌人并增强土系伤害",
+    "category": "element-earth",
+    "type": "buff",
+    "effects": [
+      "debuff_attack",
+      "buff_element_damage"
+    ],
+    "params": {
+      "cooldown": 4,
+      "duration": 0,
+      "count": 1,
+      "debuff_attack_effect-source": "enemy-current-attack",
+      "debuff_attack_target": "enemy-all",
+      "debuff_attack_bonus": 0.4,
+      "buff_element_damage_target": "self",
+      "buff_element_damage_element-type": "earth",
+      "buff_element_damage_damage-bonus": 0.3
+    },
+    "createdAt": "2026-02-27T06:46:59.000Z",
+    "batchId": "10008"
+  },
+  {
+    "key": "CUSTOM_1772174819116_23",
+    "name": "大地重踏",
+    "icon": "👣",
+    "description": "用巨岩桩柱般的四足重踏大地造成伤害并降低敌人速度",
+    "category": "element-earth",
+    "type": "attack",
+    "effects": [
+      "direct_attack",
+      "debuff_speed"
+    ],
+    "params": {
+      "cooldown": 2,
+      "duration": 0,
+      "count": 1,
+      "direct_attack_effect-source": "self-current-attack",
+      "direct_attack_bonus": 1.2,
+      "debuff_speed_effect-source": "enemy-current-agility",
+      "debuff_speed_target": "enemy-single",
+      "debuff_speed_bonus": 0.5
+    },
+    "createdAt": "2026-02-27T06:46:59.000Z",
+    "batchId": "10008"
+  },
+  {
+    "key": "CUSTOM_1772174819116_24",
+    "name": "远古地脉",
+    "icon": "🌋",
+    "description": "唤醒远古地脉之力，造成巨额伤害并附加流血状态",
+    "category": "element-earth",
+    "type": "attack",
+    "effects": [
+      "direct_attack",
+      "buff_status_enemy"
+    ],
+    "params": {
+      "cooldown": 5,
+      "duration": 0,
+      "count": 1,
+      "direct_attack_effect-source": "self-current-attack",
+      "direct_attack_bonus": 2,
+      "buff_status_enemy_status-type": "STATUS_1768187052339",
+      "buff_status_enemy_status-chance": 85,
+      "buff_status_enemy_status-stacks": 2
+    },
+    "createdAt": "2026-02-27T06:46:59.000Z",
+    "batchId": "10008"
+  },
+  {
+    "key": "CUSTOM_1772175519108_0",
+    "name": "火花溅射",
+    "icon": "🔥",
+    "description": "尾巴末端的小火苗溅射出微弱火星，对敌人造成轻微灼伤",
+    "category": "element-fire",
+    "type": "attack",
+    "effects": [
+      "direct_attack"
+    ],
+    "params": {
+      "cooldown": 0,
+      "duration": 0,
+      "count": 1,
+      "direct_attack_effect-source": "self-current-attack",
+      "direct_attack_bonus": 0.8
+    },
+    "createdAt": "2026-02-27T06:58:39.000Z",
+    "batchId": "10009"
+  },
+  {
+    "key": "CUSTOM_1772175519108_1",
+    "name": "温暖拥抱",
+    "icon": "💚",
+    "description": "释放温和的火焰能量，治愈自身伤口",
+    "category": "element-fire",
+    "type": "heal",
+    "effects": [
+      "heal_direct"
+    ],
+    "params": {
+      "cooldown": 1,
+      "duration": 0,
+      "count": 1,
+      "heal_direct_effect-source": "self-max-hp",
+      "heal_direct_target": "self",
+      "heal_direct_bonus": 0.3
+    },
+    "createdAt": "2026-02-27T06:58:39.000Z",
+    "batchId": "10009"
+  },
+  {
+    "key": "CUSTOM_1772175519108_2",
+    "name": "灼热印记",
+    "icon": "🔥",
+    "description": "在敌人身上留下灼热的火焰印记，持续造成伤害",
+    "category": "element-fire",
+    "type": "attack",
+    "effects": [
+      "direct_attack",
+      "buff_status_enemy"
+    ],
+    "params": {
+      "cooldown": 1,
+      "duration": 0,
+      "count": 1,
+      "direct_attack_effect-source": "self-current-attack",
+      "direct_attack_bonus": 0.9,
+      "buff_status_enemy_status-type": "STATUS_1768187052339",
+      "buff_status_enemy_status-chance": 70,
+      "buff_status_enemy_status-stacks": 1
+    },
+    "createdAt": "2026-02-27T06:58:39.000Z",
+    "batchId": "10009"
+  },
+  {
+    "key": "CUSTOM_1772175519108_3",
+    "name": "火焰护体",
+    "icon": "🛡️",
+    "description": "用火焰形成一层薄薄的防护罩",
+    "category": "element-fire",
+    "type": "defense",
+    "effects": [
+      "direct_defense"
+    ],
+    "params": {
+      "cooldown": 2,
+      "duration": 0,
+      "count": 1,
+      "direct_defense_effect-source": "self-current-defense",
+      "direct_defense_bonus": 1
+    },
+    "createdAt": "2026-02-27T06:58:39.000Z",
+    "batchId": "10009"
+  },
+  {
+    "key": "CUSTOM_1772175519108_4",
+    "name": "火焰跃动",
+    "icon": "💨",
+    "description": "火焰能量加速身体反应速度",
+    "category": "element-fire",
+    "type": "agility",
+    "effects": [
+      "direct_speed"
+    ],
+    "params": {
+      "cooldown": 1,
+      "duration": 0,
+      "count": 1,
+      "direct_speed_effect-source": "self-current-agility",
+      "direct_speed_bonus": 0.5
+    },
+    "createdAt": "2026-02-27T06:58:39.000Z",
+    "batchId": "10009"
+  },
+  {
+    "key": "CUSTOM_1772175519108_5",
+    "name": "烈焰冲击",
+    "icon": "💥",
+    "description": "熔岩般的火焰形成冲击波，连续打击敌人",
+    "category": "element-fire",
+    "type": "attack",
+    "effects": [
+      "multi_attack"
+    ],
+    "params": {
+      "cooldown": 2,
+      "duration": 0,
+      "count": 1,
+      "multi_attack_effect-source": "self-current-attack",
+      "multi_attack_multi-bonus": [
+        0.6,
+        0.8,
+        1
+      ]
+    },
+    "createdAt": "2026-02-27T06:58:39.000Z",
+    "batchId": "10009"
+  },
+  {
+    "key": "CUSTOM_1772175519108_6",
+    "name": "炎之觉醒",
+    "icon": "⚡",
+    "description": "觉醒体内的火焰之力，大幅提升攻击能力",
+    "category": "element-fire",
+    "type": "buff",
+    "effects": [
+      "buff_attack"
+    ],
+    "params": {
+      "cooldown": 2,
+      "duration": 0,
+      "count": 1,
+      "buff_attack_effect-source": "self-current-attack",
+      "buff_attack_target": "self",
+      "buff_attack_bonus": 0.6
+    },
+    "createdAt": "2026-02-27T06:58:39.000Z",
+    "batchId": "10009"
+  },
+  {
+    "key": "CUSTOM_1772175519108_7",
+    "name": "熔岩之盾",
+    "icon": "🛡️",
+    "description": "半透明的熔融玻璃质感防御层，受击后反弹火焰伤害",
+    "category": "element-fire",
+    "type": "defense",
+    "effects": [
+      "defense_counter"
+    ],
+    "params": {
+      "cooldown": 3,
+      "duration": 0,
+      "count": 1,
+      "defense_counter_effect-source": "self-current-defense",
+      "defense_counter_defense-bonus": 1.2,
+      "defense_counter_counter-effect-source": "enemy-turn-damage",
+      "defense_counter_counter-bonus": 0.4
+    },
+    "createdAt": "2026-02-27T06:58:39.000Z",
+    "batchId": "10009"
+  },
+  {
+    "key": "CUSTOM_1772175519108_8",
+    "name": "火焰鞭笞",
+    "icon": "🔥",
+    "description": "尾巴化作流动火焰形态，抽打敌人并降低其防御",
+    "category": "element-fire",
+    "type": "attack",
+    "effects": [
+      "direct_attack",
+      "debuff_defense"
+    ],
+    "params": {
+      "cooldown": 2,
+      "duration": 0,
+      "count": 1,
+      "direct_attack_effect-source": "self-current-attack",
+      "direct_attack_bonus": 1.1,
+      "debuff_defense_effect-source": "enemy-current-defense",
+      "debuff_defense_target": "enemy-single",
+      "debuff_defense_bonus": 0.3
+    },
+    "createdAt": "2026-02-27T06:58:39.000Z",
+    "batchId": "10009"
+  },
+  {
+    "key": "CUSTOM_1772175519108_9",
+    "name": "灼热践踏",
+    "icon": "💥",
+    "description": "足底迸发火星，踩踏地面留下焦痕，对敌人造成伤害并减速",
+    "category": "element-fire",
+    "type": "attack",
+    "effects": [
+      "direct_attack",
+      "debuff_speed"
+    ],
+    "params": {
+      "cooldown": 2,
+      "duration": 0,
+      "count": 1,
+      "direct_attack_effect-source": "self-current-attack",
+      "direct_attack_bonus": 1,
+      "debuff_speed_effect-source": "enemy-current-agility",
+      "debuff_speed_target": "enemy-single",
+      "debuff_speed_bonus": 0.4
+    },
+    "createdAt": "2026-02-27T06:58:39.000Z",
+    "batchId": "10009"
+  },
+  {
+    "key": "CUSTOM_1772175519108_10",
+    "name": "火焰再生",
+    "icon": "💊",
+    "description": "持续燃烧的火焰能量治愈伤口",
+    "category": "element-fire",
+    "type": "heal",
+    "effects": [
+      "heal_continuous"
+    ],
+    "params": {
+      "cooldown": 2,
+      "duration": 3,
+      "count": 1,
+      "heal_continuous_effect-source": "self-max-hp",
+      "heal_continuous_target": "self",
+      "heal_continuous_bonus": 0.15
+    },
+    "createdAt": "2026-02-27T06:58:39.000Z",
+    "batchId": "10009"
+  },
+  {
+    "key": "CUSTOM_1772175519108_11",
+    "name": "炎爆",
+    "icon": "💥",
+    "description": "体内熔岩能量爆发，造成大范围伤害",
+    "category": "element-fire",
+    "type": "attack",
+    "effects": [
+      "direct_attack"
+    ],
+    "params": {
+      "cooldown": 3,
+      "duration": 0,
+      "count": 1,
+      "direct_attack_effect-source": "self-current-attack",
+      "direct_attack_bonus": 1.5
+    },
+    "createdAt": "2026-02-27T06:58:39.000Z",
+    "batchId": "10009"
+  },
+  {
+    "key": "CUSTOM_1772175519108_12",
+    "name": "火焰净化",
+    "icon": "✨",
+    "description": "火焰能量驱散自身负面状态",
+    "category": "element-fire",
+    "type": "buff",
+    "effects": [
+      "buff_purify"
+    ],
+    "params": {
+      "cooldown": 3,
+      "duration": 0,
+      "count": 1,
+      "buff_purify_target": "self",
+      "buff_purify_purify-type": "negative",
+      "buff_purify_purify-count": 2
+    },
+    "createdAt": "2026-02-27T06:58:39.000Z",
+    "batchId": "10009"
+  },
+  {
+    "key": "CUSTOM_1772175519108_13",
+    "name": "烈焰强袭",
+    "icon": "⚔️",
+    "description": "耳朵内嵌的熔岩纹路发光，提升火系伤害",
+    "category": "element-fire",
+    "type": "buff",
+    "effects": [
+      "buff_element_damage"
+    ],
+    "params": {
+      "cooldown": 2,
+      "duration": 0,
+      "count": 1,
+      "buff_element_damage_target": "self",
+      "buff_element_damage_element-type": "fire",
+      "buff_element_damage_damage-bonus": 0.3
+    },
+    "createdAt": "2026-02-27T06:58:39.000Z",
+    "batchId": "10009"
+  },
+  {
+    "key": "CUSTOM_1772175519108_14",
+    "name": "火焰吞噬",
+    "icon": "🔥",
+    "description": "攻击敌人并吸取部分生命值转化为自身能量",
+    "category": "element-fire",
+    "type": "attack",
+    "effects": [
+      "direct_attack",
+      "heal_lifesteal"
+    ],
+    "params": {
+      "cooldown": 2,
+      "duration": 0,
+      "count": 1,
+      "direct_attack_effect-source": "self-current-attack",
+      "direct_attack_bonus": 1.2,
+      "heal_lifesteal_effect-source": "enemy-turn-damage",
+      "heal_lifesteal_bonus": 0.3
+    },
+    "createdAt": "2026-02-27T06:58:39.000Z",
+    "batchId": "10009"
+  },
+  {
+    "key": "CUSTOM_1772175519108_15",
+    "name": "九尾火舞",
+    "icon": "🌀",
+    "description": "九条尾巴交织成火焰漩涡，连续多段攻击",
+    "category": "element-fire",
+    "type": "attack",
+    "effects": [
+      "multi_attack"
+    ],
+    "params": {
+      "cooldown": 4,
+      "duration": 0,
+      "count": 1,
+      "multi_attack_effect-source": "self-current-attack",
+      "multi_attack_multi-bonus": [
+        0.5,
+        0.7,
+        0.9,
+        1.1,
+        1.3
+      ]
+    },
+    "createdAt": "2026-02-27T06:58:39.000Z",
+    "batchId": "10009"
+  },
+  {
+    "key": "CUSTOM_1772175519108_16",
+    "name": "太阳冠冕",
+    "icon": "☀️",
+    "description": "头顶鬃毛永久燃烧形成火焰风暴，全面强化自身",
+    "category": "element-fire",
+    "type": "buff",
+    "effects": [
+      "buff_attack",
+      "buff_defense",
+      "buff_speed"
+    ],
+    "params": {
+      "cooldown": 4,
+      "duration": 0,
+      "count": 1,
+      "buff_attack_effect-source": "self-current-attack",
+      "buff_attack_target": "self",
+      "buff_attack_bonus": 0.7,
+      "buff_defense_effect-source": "self-current-defense",
+      "buff_defense_target": "self",
+      "buff_defense_bonus": 0.6,
+      "buff_speed_effect-source": "self-current-agility",
+      "buff_speed_target": "self",
+      "buff_speed_bonus": 0.8
+    },
+    "createdAt": "2026-02-27T06:58:39.000Z",
+    "batchId": "10009"
+  },
+  {
+    "key": "CUSTOM_1772175519108_17",
+    "name": "雷火交织",
+    "icon": "⚡",
+    "description": "尾巴和肩部释放持续电弧与火焰，造成混合伤害并麻痹敌人",
+    "category": "element-fire",
+    "type": "attack",
+    "effects": [
+      "direct_attack",
+      "buff_status_enemy"
+    ],
+    "params": {
+      "cooldown": 3,
+      "duration": 0,
+      "count": 1,
+      "direct_attack_effect-source": "self-current-attack",
+      "direct_attack_bonus": 1.6,
+      "buff_status_enemy_status-type": "STATUS_1768185372172",
+      "buff_status_enemy_status-chance": 85,
+      "buff_status_enemy_status-stacks": 2
+    },
+    "createdAt": "2026-02-27T06:58:39.000Z",
+    "batchId": "10009"
+  },
+  {
+    "key": "CUSTOM_1772175519108_18",
+    "name": "焚天之怒",
+    "icon": "🔥",
+    "description": "释放体内所有火焰能量，造成毁灭性伤害",
+    "category": "element-fire",
+    "type": "attack",
+    "effects": [
+      "direct_attack",
+      "dot_damage"
+    ],
+    "params": {
+      "cooldown": 5,
+      "duration": 3,
+      "count": 1,
+      "direct_attack_effect-source": "self-current-attack",
+      "direct_attack_bonus": 2,
+      "dot_damage_effect-source": "self-current-attack",
+      "dot_damage_bonus": 0.5
+    },
+    "createdAt": "2026-02-27T06:58:39.000Z",
+    "batchId": "10009"
+  },
+  {
+    "key": "CUSTOM_1772175519108_19",
+    "name": "不死火凤",
+    "icon": "🔮",
+    "description": "火焰化身的终极能力，死亡后以部分生命值重生",
+    "category": "element-fire",
+    "type": "heal",
+    "effects": [
+      "heal_rebirth"
+    ],
+    "params": {
+      "cooldown": 5,
+      "duration": 0,
+      "count": 1,
+      "heal_rebirth_effect-source": "self-max-hp",
+      "heal_rebirth_target": "self",
+      "heal_rebirth_percent": 0.5,
+      "heal_rebirth_rebirth-condition": "death"
+    },
+    "createdAt": "2026-02-27T06:58:39.000Z",
+    "batchId": "10009"
+  },
+  {
+    "key": "CUSTOM_1772175519108_20",
+    "name": "炎狱封印",
+    "icon": "🔥",
+    "description": "用火焰囚笼困住敌人，持续灼烧并禁止其恢复生命",
+    "category": "element-fire",
+    "type": "debuff",
+    "effects": [
+      "dot_damage",
+      "debuff_no_heal"
+    ],
+    "params": {
+      "cooldown": 4,
+      "duration": 3,
+      "count": 1,
+      "dot_damage_effect-source": "self-current-attack",
+      "dot_damage_bonus": 0.6,
+      "debuff_no_heal_target": "enemy-single"
+    },
+    "createdAt": "2026-02-27T06:58:39.000Z",
+    "batchId": "10009"
+  },
+  {
+    "key": "CUSTOM_1772175519108_21",
+    "name": "火焰风暴",
+    "icon": "🌀",
+    "description": "全身火焰爆发形成风暴，对所有敌人造成伤害",
+    "category": "element-fire",
+    "type": "attack",
+    "effects": [
+      "direct_attack"
+    ],
+    "params": {
+      "cooldown": 4,
+      "duration": 0,
+      "count": 1,
+      "direct_attack_effect-source": "self-current-attack",
+      "direct_attack_bonus": 1.3
+    },
+    "createdAt": "2026-02-27T06:58:39.000Z",
+    "batchId": "10009"
+  },
+  {
+    "key": "CUSTOM_1772175519108_22",
+    "name": "琥珀之眼",
+    "icon": "💎",
+    "description": "火焰瞳孔凝视敌人，削弱其攻击和防御",
+    "category": "element-fire",
+    "type": "debuff",
+    "effects": [
+      "debuff_attack",
+      "debuff_defense"
+    ],
+    "params": {
+      "cooldown": 3,
+      "duration": 0,
+      "count": 1,
+      "debuff_attack_effect-source": "enemy-current-attack",
+      "debuff_attack_target": "enemy-single",
+      "debuff_attack_bonus": 0.4,
+      "debuff_defense_effect-source": "enemy-current-defense",
+      "debuff_defense_target": "enemy-single",
+      "debuff_defense_bonus": 0.4
+    },
+    "createdAt": "2026-02-27T06:58:39.000Z",
+    "batchId": "10009"
+  },
+  {
+    "key": "CUSTOM_1772175519108_23",
+    "name": "烈焰审判",
+    "icon": "⚔️",
+    "description": "太阳符文发光，对敌人造成基于其最大生命值的百分比伤害",
+    "category": "element-fire",
+    "type": "attack",
+    "effects": [
+      "percent_damage"
+    ],
+    "params": {
+      "cooldown": 4,
+      "duration": 0,
+      "count": 1,
+      "percent_damage_effect-source": "enemy-max-hp",
+      "percent_damage_percent": 0.25
+    },
+    "createdAt": "2026-02-27T06:58:39.000Z",
+    "batchId": "10009"
+  },
+  {
+    "key": "CUSTOM_1772175519108_24",
+    "name": "灼热献祭",
+    "icon": "🔥",
+    "description": "燃烧自身部分生命值，大幅提升攻击力",
+    "category": "element-fire",
+    "type": "buff",
+    "effects": [
+      "debuff_hp_cost",
+      "buff_attack"
+    ],
+    "params": {
+      "cooldown": 3,
+      "duration": 0,
+      "count": 1,
+      "debuff_hp_cost_effect-source": "self-max-hp",
+      "debuff_hp_cost_bonus": 0.2,
+      "debuff_hp_cost_target": "self",
+      "buff_attack_effect-source": "self-current-attack",
+      "buff_attack_target": "self",
+      "buff_attack_bonus": 1.2
+    },
+    "createdAt": "2026-02-27T06:58:39.000Z",
+    "batchId": "10009"
+  },
+  {
+    "key": "CUSTOM_1772176437230_0",
+    "name": "疾风刃",
+    "icon": "💨",
+    "description": "凝聚风元素形成锋利的气刃斩击敌人",
+    "category": "element-wind",
+    "type": "attack",
+    "effects": [
+      "direct_attack"
+    ],
+    "params": {
+      "cooldown": 0,
+      "duration": 0,
+      "count": 1,
+      "direct_attack_effect-source": "self-current-attack",
+      "direct_attack_bonus": 0.9
+    },
+    "createdAt": "2026-02-27T07:13:57.000Z",
+    "batchId": "10010"
+  },
+  {
+    "key": "CUSTOM_1772176437230_1",
+    "name": "风之守护",
+    "icon": "🌀",
+    "description": "召唤旋转的气流形成防护屏障",
+    "category": "element-wind",
+    "type": "defense",
+    "effects": [
+      "direct_defense"
+    ],
+    "params": {
+      "cooldown": 1,
+      "duration": 0,
+      "count": 1,
+      "direct_defense_effect-source": "self-current-defense",
+      "direct_defense_bonus": 1
+    },
+    "createdAt": "2026-02-27T07:13:57.000Z",
+    "batchId": "10010"
+  },
+  {
+    "key": "CUSTOM_1772176437230_2",
+    "name": "轻风步",
+    "icon": "💨",
+    "description": "借助风之力提升自身移动速度",
+    "category": "element-wind",
+    "type": "agility",
+    "effects": [
+      "direct_speed"
+    ],
+    "params": {
+      "cooldown": 1,
+      "duration": 0,
+      "count": 1,
+      "direct_speed_effect-source": "self-current-agility",
+      "direct_speed_bonus": 0.4
+    },
+    "createdAt": "2026-02-27T07:13:57.000Z",
+    "batchId": "10010"
+  },
+  {
+    "key": "CUSTOM_1772176437230_3",
+    "name": "狂风连斩",
+    "icon": "⚔️",
+    "description": "化身疾风对敌人进行多次连续斩击",
+    "category": "element-wind",
+    "type": "attack",
+    "effects": [
+      "multi_attack"
+    ],
+    "params": {
+      "cooldown": 2,
+      "duration": 0,
+      "count": 1,
+      "multi_attack_effect-source": "self-current-attack",
+      "multi_attack_multi-bonus": [
+        0.5,
+        0.7,
+        0.9
+      ]
+    },
+    "createdAt": "2026-02-27T07:13:57.000Z",
+    "batchId": "10010"
+  },
+  {
+    "key": "CUSTOM_1772176437230_4",
+    "name": "风刃乱舞",
+    "icon": "💨",
+    "description": "释放多道风刃攻击敌人并提升自身攻击力",
+    "category": "element-wind",
+    "type": "attack",
+    "effects": [
+      "direct_attack",
+      "buff_attack"
+    ],
+    "params": {
+      "cooldown": 2,
+      "duration": 0,
+      "count": 1,
+      "direct_attack_effect-source": "self-current-attack",
+      "direct_attack_bonus": 1,
+      "buff_attack_effect-source": "self-current-attack",
+      "buff_attack_target": "self",
+      "buff_attack_bonus": 0.3
+    },
+    "createdAt": "2026-02-27T07:13:57.000Z",
+    "batchId": "10010"
+  },
+  {
+    "key": "CUSTOM_1772176437230_5",
+    "name": "气流屏障",
+    "icon": "🛡️",
+    "description": "形成持续的风之屏障保护自身",
+    "category": "element-wind",
+    "type": "defense",
+    "effects": [
+      "continuous_defense"
+    ],
+    "params": {
+      "cooldown": 2,
+      "duration": 2,
+      "count": 1,
+      "continuous_defense_effect-source": "self-current-defense",
+      "continuous_defense_bonus": 0.6
+    },
+    "createdAt": "2026-02-27T07:13:57.000Z",
+    "batchId": "10010"
+  },
+  {
+    "key": "CUSTOM_1772176437230_6",
+    "name": "风之祝福",
+    "icon": "✨",
+    "description": "风元素的祝福提升全体友方的速度",
+    "category": "element-wind",
+    "type": "buff",
+    "effects": [
+      "buff_speed"
+    ],
+    "params": {
+      "cooldown": 3,
+      "duration": 0,
+      "count": 1,
+      "buff_speed_effect-source": "self-current-agility",
+      "buff_speed_target": "ally-all",
+      "buff_speed_bonus": 0.4
+    },
+    "createdAt": "2026-02-27T07:13:57.000Z",
+    "batchId": "10010"
+  },
+  {
+    "key": "CUSTOM_1772176437230_7",
+    "name": "切割气流",
+    "icon": "💨",
+    "description": "锋利的气流持续切割敌人造成伤害",
+    "category": "element-wind",
+    "type": "attack",
+    "effects": [
+      "dot_damage"
+    ],
+    "params": {
+      "cooldown": 1,
+      "duration": 3,
+      "count": 1,
+      "dot_damage_effect-source": "self-current-attack",
+      "dot_damage_bonus": 0.5
+    },
+    "createdAt": "2026-02-27T07:13:57.000Z",
+    "batchId": "10010"
+  },
+  {
+    "key": "CUSTOM_1772176437230_8",
+    "name": "飓风之眼",
+    "icon": "🌀",
+    "description": "在敌人周围形成飓风持续造成伤害并降低其防御",
+    "category": "element-wind",
+    "type": "attack",
+    "effects": [
+      "dot_damage",
+      "debuff_defense"
+    ],
+    "params": {
+      "cooldown": 3,
+      "duration": 2,
+      "count": 1,
+      "dot_damage_effect-source": "self-current-attack",
+      "dot_damage_bonus": 0.6,
+      "debuff_defense_effect-source": "enemy-current-defense",
+      "debuff_defense_target": "enemy-single",
+      "debuff_defense_bonus": 0.3
+    },
+    "createdAt": "2026-02-27T07:13:57.000Z",
+    "batchId": "10010"
+  },
+  {
+    "key": "CUSTOM_1772176437230_9",
+    "name": "风压斩",
+    "icon": "⚔️",
+    "description": "压缩的风压形成强力斩击",
+    "category": "element-wind",
+    "type": "attack",
+    "effects": [
+      "direct_attack"
+    ],
+    "params": {
+      "cooldown": 1,
+      "duration": 0,
+      "count": 1,
+      "direct_attack_effect-source": "self-current-attack",
+      "direct_attack_bonus": 1.2
+    },
+    "createdAt": "2026-02-27T07:13:57.000Z",
+    "batchId": "10010"
+  },
+  {
+    "key": "CUSTOM_1772176437230_10",
+    "name": "真空斩",
+    "icon": "💨",
+    "description": "抽取空气形成真空区域造成百分比伤害",
+    "category": "element-wind",
+    "type": "attack",
+    "effects": [
+      "percent_damage"
+    ],
+    "params": {
+      "cooldown": 4,
+      "duration": 0,
+      "count": 1,
+      "percent_damage_effect-source": "enemy-max-hp",
+      "percent_damage_percent": 0.15
+    },
+    "createdAt": "2026-02-27T07:13:57.000Z",
+    "batchId": "10010"
+  },
+  {
+    "key": "CUSTOM_1772176437230_11",
+    "name": "风之反击",
+    "icon": "🌀",
+    "description": "用风之力防御并反击敌人",
+    "category": "element-wind",
+    "type": "defense",
+    "effects": [
+      "defense_counter"
+    ],
+    "params": {
+      "cooldown": 2,
+      "duration": 0,
+      "count": 1,
+      "defense_counter_effect-source": "self-current-defense",
+      "defense_counter_defense-bonus": 0.8,
+      "defense_counter_counter-effect-source": "enemy-turn-damage",
+      "defense_counter_counter-bonus": 0.5
+    },
+    "createdAt": "2026-02-27T07:13:57.000Z",
+    "batchId": "10010"
+  },
+  {
+    "key": "CUSTOM_1772176437230_12",
+    "name": "风之治愈",
+    "icon": "💚",
+    "description": "温和的风元素恢复自身生命",
+    "category": "element-wind",
+    "type": "heal",
+    "effects": [
+      "heal_direct"
+    ],
+    "params": {
+      "cooldown": 2,
+      "duration": 0,
+      "count": 1,
+      "heal_direct_effect-source": "self-max-hp",
+      "heal_direct_target": "self",
+      "heal_direct_bonus": 0.4
+    },
+    "createdAt": "2026-02-27T07:13:57.000Z",
+    "batchId": "10010"
+  },
+  {
+    "key": "CUSTOM_1772176437230_13",
+    "name": "疾风突袭",
+    "icon": "⚡",
+    "description": "高速突进攻击敌人并提升自身速度",
+    "category": "element-wind",
+    "type": "attack",
+    "effects": [
+      "direct_attack",
+      "buff_speed"
+    ],
+    "params": {
+      "cooldown": 2,
+      "duration": 0,
+      "count": 1,
+      "direct_attack_effect-source": "self-current-attack",
+      "direct_attack_bonus": 0.9,
+      "buff_speed_effect-source": "self-current-agility",
+      "buff_speed_target": "self",
+      "buff_speed_bonus": 0.5
+    },
+    "createdAt": "2026-02-27T07:13:57.000Z",
+    "batchId": "10010"
+  },
+  {
+    "key": "CUSTOM_1772176437230_14",
+    "name": "风暴之怒",
+    "icon": "🌪️",
+    "description": "召唤强力风暴对所有敌人造成伤害",
+    "category": "element-wind",
+    "type": "attack",
+    "effects": [
+      "direct_attack"
+    ],
+    "params": {
+      "cooldown": 4,
+      "duration": 0,
+      "count": 1,
+      "direct_attack_effect-source": "self-current-attack",
+      "direct_attack_bonus": 1.8
+    },
+    "createdAt": "2026-02-27T07:13:57.000Z",
+    "batchId": "10010"
+  },
+  {
+    "key": "CUSTOM_1772176437230_15",
+    "name": "风之侵蚀",
+    "icon": "💨",
+    "description": "持续的风蚀降低敌人的攻击力",
+    "category": "element-wind",
+    "type": "debuff",
+    "effects": [
+      "debuff_attack"
+    ],
+    "params": {
+      "cooldown": 2,
+      "duration": 0,
+      "count": 1,
+      "debuff_attack_effect-source": "enemy-current-attack",
+      "debuff_attack_target": "enemy-single",
+      "debuff_attack_bonus": 0.4
+    },
+    "createdAt": "2026-02-27T07:13:57.000Z",
+    "batchId": "10010"
+  },
+  {
+    "key": "CUSTOM_1772176437230_16",
+    "name": "气流回旋",
+    "icon": "🌀",
+    "description": "回旋的气流持续恢复自身生命",
+    "category": "element-wind",
+    "type": "heal",
+    "effects": [
+      "heal_continuous"
+    ],
+    "params": {
+      "cooldown": 3,
+      "duration": 3,
+      "count": 1,
+      "heal_continuous_effect-source": "self-max-hp",
+      "heal_continuous_target": "self",
+      "heal_continuous_bonus": 0.3
+    },
+    "createdAt": "2026-02-27T07:13:57.000Z",
+    "batchId": "10010"
+  },
+  {
+    "key": "CUSTOM_1772176437230_17",
+    "name": "风刃麻痹",
+    "icon": "⚔️",
+    "description": "风刃攻击并有概率使敌人麻痹",
+    "category": "element-wind",
+    "type": "attack",
+    "effects": [
+      "direct_attack",
+      "buff_status_enemy"
+    ],
+    "params": {
+      "cooldown": 2,
+      "duration": 0,
+      "count": 1,
+      "direct_attack_effect-source": "self-current-attack",
+      "direct_attack_bonus": 0.8,
+      "buff_status_enemy_status-type": "STATUS_1768185372172",
+      "buff_status_enemy_status-chance": 70,
+      "buff_status_enemy_status-stacks": 1
+    },
+    "createdAt": "2026-02-27T07:13:57.000Z",
+    "batchId": "10010"
+  },
+  {
+    "key": "CUSTOM_1772176437230_18",
+    "name": "净化之风",
+    "icon": "✨",
+    "description": "清风净化自身所有负面状态",
+    "category": "element-wind",
+    "type": "buff",
+    "effects": [
+      "buff_purify"
+    ],
+    "params": {
+      "cooldown": 3,
+      "duration": 0,
+      "count": 1,
+      "buff_purify_target": "self",
+      "buff_purify_purify-type": "negative",
+      "buff_purify_purify-count": "all"
+    },
+    "createdAt": "2026-02-27T07:13:57.000Z",
+    "batchId": "10010"
+  },
+  {
+    "key": "CUSTOM_1772176437230_19",
+    "name": "风之增幅",
+    "icon": "💨",
+    "description": "风元素增强提升风系伤害",
+    "category": "element-wind",
+    "type": "buff",
+    "effects": [
+      "buff_element_damage"
+    ],
+    "params": {
+      "cooldown": 3,
+      "duration": 0,
+      "count": 1,
+      "buff_element_damage_target": "self",
+      "buff_element_damage_element-type": "wind",
+      "buff_element_damage_damage-bonus": 0.4
+    },
+    "createdAt": "2026-02-27T07:13:57.000Z",
+    "batchId": "10010"
+  },
+  {
+    "key": "CUSTOM_1772176437230_20",
+    "name": "龙卷风暴",
+    "icon": "🌪️",
+    "description": "召唤龙卷风多次攻击并降低敌人速度",
+    "category": "element-wind",
+    "type": "attack",
+    "effects": [
+      "multi_attack",
+      "debuff_speed"
+    ],
+    "params": {
+      "cooldown": 3,
+      "duration": 0,
+      "count": 1,
+      "multi_attack_effect-source": "self-current-attack",
+      "multi_attack_multi-bonus": [
+        0.6,
+        0.8,
+        1,
+        1.2
+      ],
+      "debuff_speed_effect-source": "enemy-current-agility",
+      "debuff_speed_target": "enemy-single",
+      "debuff_speed_bonus": 0.5
+    },
+    "createdAt": "2026-02-27T07:13:57.000Z",
+    "batchId": "10010"
+  },
+  {
+    "key": "CUSTOM_1772176437230_21",
+    "name": "生命之风",
+    "icon": "💚",
+    "description": "恢复生命并提升防御力",
+    "category": "element-wind",
+    "type": "heal",
+    "effects": [
+      "heal_percent",
+      "buff_defense"
+    ],
+    "params": {
+      "cooldown": 4,
+      "duration": 0,
+      "count": 1,
+      "heal_percent_effect-source": "self-max-hp",
+      "heal_percent_target": "self",
+      "heal_percent_percent": 0.2,
+      "buff_defense_effect-source": "self-current-defense",
+      "buff_defense_target": "self",
+      "buff_defense_bonus": 0.4
+    },
+    "createdAt": "2026-02-27T07:13:57.000Z",
+    "batchId": "10010"
+  },
+  {
+    "key": "CUSTOM_1772176437230_22",
+    "name": "风之汲取",
+    "icon": "💨",
+    "description": "攻击敌人并吸取生命",
+    "category": "element-wind",
+    "type": "attack",
+    "effects": [
+      "direct_attack",
+      "heal_lifesteal"
+    ],
+    "params": {
+      "cooldown": 2,
+      "duration": 0,
+      "count": 1,
+      "direct_attack_effect-source": "self-current-attack",
+      "direct_attack_bonus": 1,
+      "heal_lifesteal_effect-source": "self-turn-damage",
+      "heal_lifesteal_bonus": 0.3
+    },
+    "createdAt": "2026-02-27T07:13:57.000Z",
+    "batchId": "10010"
+  },
+  {
+    "key": "CUSTOM_1772176437230_23",
+    "name": "九天罡风",
+    "icon": "🌪️",
+    "description": "释放终极风暴攻击、增强自身并削弱敌人",
+    "category": "element-wind",
+    "type": "attack",
+    "effects": [
+      "direct_attack",
+      "buff_attack",
+      "debuff_defense"
+    ],
+    "params": {
+      "cooldown": 5,
+      "duration": 0,
+      "count": 1,
+      "direct_attack_effect-source": "self-current-attack",
+      "direct_attack_bonus": 2,
+      "buff_attack_effect-source": "self-current-attack",
+      "buff_attack_target": "self",
+      "buff_attack_bonus": 0.6,
+      "debuff_defense_effect-source": "enemy-current-defense",
+      "debuff_defense_target": "enemy-all",
+      "debuff_defense_bonus": 0.4
+    },
+    "createdAt": "2026-02-27T07:13:57.000Z",
+    "batchId": "10010"
+  },
+  {
+    "key": "CUSTOM_1772176437230_24",
+    "name": "风之重生",
+    "icon": "✨",
+    "description": "风之力在濒死时使自身重生",
+    "category": "element-wind",
+    "type": "heal",
+    "effects": [
+      "heal_rebirth"
+    ],
+    "params": {
+      "cooldown": 5,
+      "duration": 0,
+      "count": 1,
+      "heal_rebirth_effect-source": "self-max-hp",
+      "heal_rebirth_target": "self",
+      "heal_rebirth_percent": 0.5,
+      "heal_rebirth_rebirth-condition": "death"
+    },
+    "createdAt": "2026-02-27T07:13:57.000Z",
+    "batchId": "10010"
   }
 ]

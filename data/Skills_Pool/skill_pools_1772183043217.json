@@ -1,0 +1,3040 @@
+[
+  {
+    "key": "SKILLPOOL_1768549661703",
+    "name": "普通伊卡",
+    "icon": "🎲",
+    "description": "",
+    "skills": [
+      {
+        "skillKey": "CUSTOM_1767595428450",
+        "weight": 14,
+        "unlockLevel": 1,
+        "rarity": "common"
+      },
+      {
+        "skillKey": "CUSTOM_1767599396527",
+        "weight": 14,
+        "unlockLevel": 1,
+        "rarity": "common"
+      },
+      {
+        "skillKey": "CUSTOM_1767599565248",
+        "weight": 14,
+        "unlockLevel": 1,
+        "rarity": "common"
+      },
+      {
+        "skillKey": "CUSTOM_1767599253688",
+        "weight": 14,
+        "unlockLevel": 1,
+        "rarity": "common"
+      },
+      {
+        "skillKey": "CUSTOM_1767599206496",
+        "weight": 14,
+        "unlockLevel": 1,
+        "rarity": "common"
+      },
+      {
+        "skillKey": "CUSTOM_1767599602303",
+        "weight": 5,
+        "unlockLevel": 1,
+        "rarity": "rare"
+      },
+      {
+        "skillKey": "CUSTOM_1767599307416",
+        "weight": 5,
+        "unlockLevel": 1,
+        "rarity": "rare"
+      },
+      {
+        "skillKey": "CUSTOM_1767599641168",
+        "weight": 5,
+        "unlockLevel": 1,
+        "rarity": "rare"
+      },
+      {
+        "skillKey": "CUSTOM_1767599517223",
+        "weight": 5,
+        "unlockLevel": 1,
+        "rarity": "rare"
+      },
+      {
+        "skillKey": "CUSTOM_1767599433249",
+        "weight": 3,
+        "unlockLevel": 1,
+        "rarity": "epic"
+      },
+      {
+        "skillKey": "CUSTOM_1767599349321",
+        "weight": 3,
+        "unlockLevel": 1,
+        "rarity": "epic"
+      },
+      {
+        "skillKey": "CUSTOM_1767599147105",
+        "weight": 3,
+        "unlockLevel": 1,
+        "rarity": "epic"
+      },
+      {
+        "skillKey": "CUSTOM_1767603887716",
+        "weight": 0.5,
+        "unlockLevel": 1,
+        "rarity": "legendary"
+      },
+      {
+        "skillKey": "CUSTOM_1767603859844",
+        "weight": 0.5,
+        "unlockLevel": 1,
+        "rarity": "legendary"
+      }
+    ],
+    "rarityWeights": {
+      "common": 70,
+      "rare": 20,
+      "epic": 9,
+      "legendary": 1
+    },
+    "skillsByRarity": {
+      "common": [
+        {
+          "skillKey": "CUSTOM_1767595428450",
+          "weight": 14,
+          "unlockLevel": 1
+        },
+        {
+          "skillKey": "CUSTOM_1767599396527",
+          "weight": 14,
+          "unlockLevel": 1
+        },
+        {
+          "skillKey": "CUSTOM_1767599565248",
+          "weight": 14,
+          "unlockLevel": 1
+        },
+        {
+          "skillKey": "CUSTOM_1767599253688",
+          "weight": 14,
+          "unlockLevel": 1
+        },
+        {
+          "skillKey": "CUSTOM_1767599206496",
+          "weight": 14,
+          "unlockLevel": 1
+        }
+      ],
+      "rare": [
+        {
+          "skillKey": "CUSTOM_1767599602303",
+          "weight": 5,
+          "unlockLevel": 1
+        },
+        {
+          "skillKey": "CUSTOM_1767599307416",
+          "weight": 5,
+          "unlockLevel": 1
+        },
+        {
+          "skillKey": "CUSTOM_1767599641168",
+          "weight": 5,
+          "unlockLevel": 1
+        },
+        {
+          "skillKey": "CUSTOM_1767599517223",
+          "weight": 5,
+          "unlockLevel": 1
+        }
+      ],
+      "epic": [
+        {
+          "skillKey": "CUSTOM_1767599433249",
+          "weight": 3,
+          "unlockLevel": 1
+        },
+        {
+          "skillKey": "CUSTOM_1767599349321",
+          "weight": 3,
+          "unlockLevel": 1
+        },
+        {
+          "skillKey": "CUSTOM_1767599147105",
+          "weight": 3,
+          "unlockLevel": 1
+        }
+      ],
+      "legendary": [
+        {
+          "skillKey": "CUSTOM_1767603887716",
+          "weight": 0.5,
+          "unlockLevel": 1
+        },
+        {
+          "skillKey": "CUSTOM_1767603859844",
+          "weight": 0.5,
+          "unlockLevel": 1
+        }
+      ]
+    },
+    "createdAt": "2026-01-16T07:47:41.703Z",
+    "updatedAt": "2026-01-16T07:48:39.262Z"
+  },
+  {
+    "key": "SKILLPOOL_1768552409915",
+    "name": "普通海灵",
+    "icon": "🎲",
+    "description": "",
+    "skills": [
+      {
+        "skillKey": "CUSTOM_1768552090319_0",
+        "weight": 10,
+        "unlockLevel": 1,
+        "rarity": "common"
+      },
+      {
+        "skillKey": "CUSTOM_1768552090319_1",
+        "weight": 10,
+        "unlockLevel": 1,
+        "rarity": "common"
+      },
+      {
+        "skillKey": "CUSTOM_1768552090319_3",
+        "weight": 10,
+        "unlockLevel": 1,
+        "rarity": "common"
+      },
+      {
+        "skillKey": "CUSTOM_1768552090319_4",
+        "weight": 10,
+        "unlockLevel": 1,
+        "rarity": "common"
+      },
+      {
+        "skillKey": "CUSTOM_1768552090319_5",
+        "weight": 10,
+        "unlockLevel": 1,
+        "rarity": "common"
+      },
+      {
+        "skillKey": "CUSTOM_1768552090319_2",
+        "weight": 10,
+        "unlockLevel": 1,
+        "rarity": "common"
+      },
+      {
+        "skillKey": "CUSTOM_1768552090319_14",
+        "weight": 10,
+        "unlockLevel": 1,
+        "rarity": "common"
+      },
+      {
+        "skillKey": "CUSTOM_1768552090319_6",
+        "weight": 5,
+        "unlockLevel": 1,
+        "rarity": "rare"
+      },
+      {
+        "skillKey": "CUSTOM_1768552090319_7",
+        "weight": 5,
+        "unlockLevel": 1,
+        "rarity": "rare"
+      },
+      {
+        "skillKey": "CUSTOM_1768552090319_8",
+        "weight": 5,
+        "unlockLevel": 1,
+        "rarity": "rare"
+      },
+      {
+        "skillKey": "CUSTOM_1768552090319_9",
+        "weight": 5,
+        "unlockLevel": 1,
+        "rarity": "rare"
+      },
+      {
+        "skillKey": "CUSTOM_1768472425546_9",
+        "weight": 2,
+        "unlockLevel": 1,
+        "rarity": "epic"
+      },
+      {
+        "skillKey": "CUSTOM_1768552090319_10",
+        "weight": 2,
+        "unlockLevel": 1,
+        "rarity": "epic"
+      },
+      {
+        "skillKey": "CUSTOM_1768552090319_12",
+        "weight": 2,
+        "unlockLevel": 1,
+        "rarity": "epic"
+      },
+      {
+        "skillKey": "CUSTOM_1768552090319_13",
+        "weight": 2,
+        "unlockLevel": 1,
+        "rarity": "epic"
+      },
+      {
+        "skillKey": "CUSTOM_1768552090319_18",
+        "weight": 0.5,
+        "unlockLevel": 1,
+        "rarity": "legendary"
+      },
+      {
+        "skillKey": "CUSTOM_1768552090319_20",
+        "weight": 0.5,
+        "unlockLevel": 1,
+        "rarity": "legendary"
+      },
+      {
+        "skillKey": "CUSTOM_1768552090319_21",
+        "weight": 0.5,
+        "unlockLevel": 1,
+        "rarity": "legendary"
+      },
+      {
+        "skillKey": "CUSTOM_1768552090319_15",
+        "weight": 0.5,
+        "unlockLevel": 1,
+        "rarity": "legendary"
+      }
+    ],
+    "rarityWeights": {
+      "common": 70,
+      "rare": 20,
+      "epic": 8,
+      "legendary": 2
+    },
+    "skillsByRarity": {
+      "common": [
+        {
+          "skillKey": "CUSTOM_1768552090319_0",
+          "weight": 10,
+          "unlockLevel": 1
+        },
+        {
+          "skillKey": "CUSTOM_1768552090319_1",
+          "weight": 10,
+          "unlockLevel": 1
+        },
+        {
+          "skillKey": "CUSTOM_1768552090319_3",
+          "weight": 10,
+          "unlockLevel": 1
+        },
+        {
+          "skillKey": "CUSTOM_1768552090319_4",
+          "weight": 10,
+          "unlockLevel": 1
+        },
+        {
+          "skillKey": "CUSTOM_1768552090319_5",
+          "weight": 10,
+          "unlockLevel": 1
+        },
+        {
+          "skillKey": "CUSTOM_1768552090319_2",
+          "weight": 10,
+          "unlockLevel": 1
+        },
+        {
+          "skillKey": "CUSTOM_1768552090319_14",
+          "weight": 10,
+          "unlockLevel": 1
+        }
+      ],
+      "rare": [
+        {
+          "skillKey": "CUSTOM_1768552090319_6",
+          "weight": 5,
+          "unlockLevel": 1
+        },
+        {
+          "skillKey": "CUSTOM_1768552090319_7",
+          "weight": 5,
+          "unlockLevel": 1
+        },
+        {
+          "skillKey": "CUSTOM_1768552090319_8",
+          "weight": 5,
+          "unlockLevel": 1
+        },
+        {
+          "skillKey": "CUSTOM_1768552090319_9",
+          "weight": 5,
+          "unlockLevel": 1
+        }
+      ],
+      "epic": [
+        {
+          "skillKey": "CUSTOM_1768472425546_9",
+          "weight": 2,
+          "unlockLevel": 1
+        },
+        {
+          "skillKey": "CUSTOM_1768552090319_10",
+          "weight": 2,
+          "unlockLevel": 1
+        },
+        {
+          "skillKey": "CUSTOM_1768552090319_12",
+          "weight": 2,
+          "unlockLevel": 1
+        },
+        {
+          "skillKey": "CUSTOM_1768552090319_13",
+          "weight": 2,
+          "unlockLevel": 1
+        }
+      ],
+      "legendary": [
+        {
+          "skillKey": "CUSTOM_1768552090319_18",
+          "weight": 0.5,
+          "unlockLevel": 1
+        },
+        {
+          "skillKey": "CUSTOM_1768552090319_20",
+          "weight": 0.5,
+          "unlockLevel": 1
+        },
+        {
+          "skillKey": "CUSTOM_1768552090319_21",
+          "weight": 0.5,
+          "unlockLevel": 1
+        },
+        {
+          "skillKey": "CUSTOM_1768552090319_15",
+          "weight": 0.5,
+          "unlockLevel": 1
+        }
+      ]
+    },
+    "createdAt": "2026-01-16T08:33:29.915Z"
+  },
+  {
+    "key": "SKILLPOOL_1768553887364",
+    "name": "普通风灵",
+    "icon": "🎲",
+    "description": "",
+    "skills": [
+      {
+        "skillKey": "CUSTOM_1768553149183_0",
+        "weight": 8.75,
+        "unlockLevel": 1,
+        "rarity": "common"
+      },
+      {
+        "skillKey": "CUSTOM_1768553149183_4",
+        "weight": 8.75,
+        "unlockLevel": 1,
+        "rarity": "common"
+      },
+      {
+        "skillKey": "CUSTOM_1768553149183_15",
+        "weight": 8.75,
+        "unlockLevel": 1,
+        "rarity": "common"
+      },
+      {
+        "skillKey": "CUSTOM_1768553149183_13",
+        "weight": 8.75,
+        "unlockLevel": 1,
+        "rarity": "common"
+      },
+      {
+        "skillKey": "CUSTOM_1768553149183_19",
+        "weight": 8.75,
+        "unlockLevel": 1,
+        "rarity": "common"
+      },
+      {
+        "skillKey": "CUSTOM_1768553149183_16",
+        "weight": 8.75,
+        "unlockLevel": 1,
+        "rarity": "common"
+      },
+      {
+        "skillKey": "CUSTOM_1768553149183_12",
+        "weight": 8.75,
+        "unlockLevel": 1,
+        "rarity": "common"
+      },
+      {
+        "skillKey": "CUSTOM_1768553149183_7",
+        "weight": 8.75,
+        "unlockLevel": 1,
+        "rarity": "common"
+      },
+      {
+        "skillKey": "CUSTOM_1768553149183_9",
+        "weight": 2.86,
+        "unlockLevel": 1,
+        "rarity": "rare"
+      },
+      {
+        "skillKey": "CUSTOM_1768553149183_1",
+        "weight": 2.86,
+        "unlockLevel": 1,
+        "rarity": "rare"
+      },
+      {
+        "skillKey": "CUSTOM_1768553149183_14",
+        "weight": 2.86,
+        "unlockLevel": 1,
+        "rarity": "rare"
+      },
+      {
+        "skillKey": "CUSTOM_1768553149183_10",
+        "weight": 2.86,
+        "unlockLevel": 1,
+        "rarity": "rare"
+      },
+      {
+        "skillKey": "CUSTOM_1768553149183_11",
+        "weight": 2.86,
+        "unlockLevel": 1,
+        "rarity": "rare"
+      },
+      {
+        "skillKey": "CUSTOM_1768553149183_17",
+        "weight": 2.86,
+        "unlockLevel": 1,
+        "rarity": "rare"
+      },
+      {
+        "skillKey": "CUSTOM_1768553149183_21",
+        "weight": 2.86,
+        "unlockLevel": 1,
+        "rarity": "rare"
+      },
+      {
+        "skillKey": "CUSTOM_1768553149183_8",
+        "weight": 1.33,
+        "unlockLevel": 1,
+        "rarity": "epic"
+      },
+      {
+        "skillKey": "CUSTOM_1768553149183_5",
+        "weight": 1.33,
+        "unlockLevel": 1,
+        "rarity": "epic"
+      },
+      {
+        "skillKey": "CUSTOM_1768553149183_24",
+        "weight": 1.33,
+        "unlockLevel": 1,
+        "rarity": "epic"
+      },
+      {
+        "skillKey": "CUSTOM_1768553149183_2",
+        "weight": 1.33,
+        "unlockLevel": 1,
+        "rarity": "epic"
+      },
+      {
+        "skillKey": "CUSTOM_1768553149183_6",
+        "weight": 1.33,
+        "unlockLevel": 1,
+        "rarity": "epic"
+      },
+      {
+        "skillKey": "CUSTOM_1768553149183_20",
+        "weight": 1.33,
+        "unlockLevel": 1,
+        "rarity": "epic"
+      },
+      {
+        "skillKey": "CUSTOM_1768553149183_3",
+        "weight": 0.5,
+        "unlockLevel": 1,
+        "rarity": "legendary"
+      },
+      {
+        "skillKey": "CUSTOM_1768553149183_18",
+        "weight": 0.5,
+        "unlockLevel": 1,
+        "rarity": "legendary"
+      },
+      {
+        "skillKey": "CUSTOM_1768553149183_22",
+        "weight": 0.5,
+        "unlockLevel": 1,
+        "rarity": "legendary"
+      },
+      {
+        "skillKey": "CUSTOM_1768553149183_23",
+        "weight": 0.5,
+        "unlockLevel": 1,
+        "rarity": "legendary"
+      }
+    ],
+    "rarityWeights": {
+      "common": 70,
+      "rare": 20,
+      "epic": 8,
+      "legendary": 2
+    },
+    "skillsByRarity": {
+      "common": [
+        {
+          "skillKey": "CUSTOM_1768553149183_0",
+          "weight": 8.75,
+          "unlockLevel": 1
+        },
+        {
+          "skillKey": "CUSTOM_1768553149183_4",
+          "weight": 8.75,
+          "unlockLevel": 1
+        },
+        {
+          "skillKey": "CUSTOM_1768553149183_15",
+          "weight": 8.75,
+          "unlockLevel": 1
+        },
+        {
+          "skillKey": "CUSTOM_1768553149183_13",
+          "weight": 8.75,
+          "unlockLevel": 1
+        },
+        {
+          "skillKey": "CUSTOM_1768553149183_19",
+          "weight": 8.75,
+          "unlockLevel": 1
+        },
+        {
+          "skillKey": "CUSTOM_1768553149183_16",
+          "weight": 8.75,
+          "unlockLevel": 1
+        },
+        {
+          "skillKey": "CUSTOM_1768553149183_12",
+          "weight": 8.75,
+          "unlockLevel": 1
+        },
+        {
+          "skillKey": "CUSTOM_1768553149183_7",
+          "weight": 8.75,
+          "unlockLevel": 1
+        }
+      ],
+      "rare": [
+        {
+          "skillKey": "CUSTOM_1768553149183_9",
+          "weight": 2.86,
+          "unlockLevel": 1
+        },
+        {
+          "skillKey": "CUSTOM_1768553149183_1",
+          "weight": 2.86,
+          "unlockLevel": 1
+        },
+        {
+          "skillKey": "CUSTOM_1768553149183_14",
+          "weight": 2.86,
+          "unlockLevel": 1
+        },
+        {
+          "skillKey": "CUSTOM_1768553149183_10",
+          "weight": 2.86,
+          "unlockLevel": 1
+        },
+        {
+          "skillKey": "CUSTOM_1768553149183_11",
+          "weight": 2.86,
+          "unlockLevel": 1
+        },
+        {
+          "skillKey": "CUSTOM_1768553149183_17",
+          "weight": 2.86,
+          "unlockLevel": 1
+        },
+        {
+          "skillKey": "CUSTOM_1768553149183_21",
+          "weight": 2.86,
+          "unlockLevel": 1
+        }
+      ],
+      "epic": [
+        {
+          "skillKey": "CUSTOM_1768553149183_8",
+          "weight": 1.33,
+          "unlockLevel": 1
+        },
+        {
+          "skillKey": "CUSTOM_1768553149183_5",
+          "weight": 1.33,
+          "unlockLevel": 1
+        },
+        {
+          "skillKey": "CUSTOM_1768553149183_24",
+          "weight": 1.33,
+          "unlockLevel": 1
+        },
+        {
+          "skillKey": "CUSTOM_1768553149183_2",
+          "weight": 1.33,
+          "unlockLevel": 1
+        },
+        {
+          "skillKey": "CUSTOM_1768553149183_6",
+          "weight": 1.33,
+          "unlockLevel": 1
+        },
+        {
+          "skillKey": "CUSTOM_1768553149183_20",
+          "weight": 1.33,
+          "unlockLevel": 1
+        }
+      ],
+      "legendary": [
+        {
+          "skillKey": "CUSTOM_1768553149183_3",
+          "weight": 0.5,
+          "unlockLevel": 1
+        },
+        {
+          "skillKey": "CUSTOM_1768553149183_18",
+          "weight": 0.5,
+          "unlockLevel": 1
+        },
+        {
+          "skillKey": "CUSTOM_1768553149183_22",
+          "weight": 0.5,
+          "unlockLevel": 1
+        },
+        {
+          "skillKey": "CUSTOM_1768553149183_23",
+          "weight": 0.5,
+          "unlockLevel": 1
+        }
+      ]
+    },
+    "createdAt": "2026-01-16T08:58:07.364Z",
+    "updatedAt": "2026-01-19T06:27:11.392Z"
+  },
+  {
+    "key": "SKILLPOOL_1768979625327",
+    "name": "普通火灵",
+    "icon": "🎲",
+    "description": "",
+    "skills": [
+      {
+        "skillKey": "CUSTOM_1768294375328",
+        "weight": 7.78,
+        "unlockLevel": 1,
+        "rarity": "common"
+      },
+      {
+        "skillKey": "CUSTOM_1768979105044_2",
+        "weight": 7.78,
+        "unlockLevel": 1,
+        "rarity": "common"
+      },
+      {
+        "skillKey": "CUSTOM_1768979105044_0",
+        "weight": 7.78,
+        "unlockLevel": 1,
+        "rarity": "common"
+      },
+      {
+        "skillKey": "CUSTOM_1768979105044_3",
+        "weight": 7.78,
+        "unlockLevel": 1,
+        "rarity": "common"
+      },
+      {
+        "skillKey": "CUSTOM_1768979105044_20",
+        "weight": 7.78,
+        "unlockLevel": 1,
+        "rarity": "common"
+      },
+      {
+        "skillKey": "CUSTOM_1768979105044_10",
+        "weight": 7.78,
+        "unlockLevel": 1,
+        "rarity": "common"
+      },
+      {
+        "skillKey": "CUSTOM_1768294521728",
+        "weight": 7.78,
+        "unlockLevel": 1,
+        "rarity": "common"
+      },
+      {
+        "skillKey": "CUSTOM_1768979105044_16",
+        "weight": 7.78,
+        "unlockLevel": 1,
+        "rarity": "common"
+      },
+      {
+        "skillKey": "CUSTOM_1768979105044_18",
+        "weight": 7.78,
+        "unlockLevel": 1,
+        "rarity": "common"
+      },
+      {
+        "skillKey": "CUSTOM_1768979105044_1",
+        "weight": 2.5,
+        "unlockLevel": 1,
+        "rarity": "rare"
+      },
+      {
+        "skillKey": "CUSTOM_1768979105044_9",
+        "weight": 2.5,
+        "unlockLevel": 1,
+        "rarity": "rare"
+      },
+      {
+        "skillKey": "CUSTOM_1768979105044_11",
+        "weight": 2.5,
+        "unlockLevel": 1,
+        "rarity": "rare"
+      },
+      {
+        "skillKey": "CUSTOM_1768979105044_12",
+        "weight": 2.5,
+        "unlockLevel": 1,
+        "rarity": "rare"
+      },
+      {
+        "skillKey": "CUSTOM_1768979105044_17",
+        "weight": 2.5,
+        "unlockLevel": 1,
+        "rarity": "rare"
+      },
+      {
+        "skillKey": "CUSTOM_1768979105044_14",
+        "weight": 2.5,
+        "unlockLevel": 1,
+        "rarity": "rare"
+      },
+      {
+        "skillKey": "CUSTOM_1768979105044_13",
+        "weight": 2.5,
+        "unlockLevel": 1,
+        "rarity": "rare"
+      },
+      {
+        "skillKey": "CUSTOM_1768979105044_24",
+        "weight": 2.5,
+        "unlockLevel": 1,
+        "rarity": "rare"
+      },
+      {
+        "skillKey": "CUSTOM_1768979105044_15",
+        "weight": 1.33,
+        "unlockLevel": 1,
+        "rarity": "epic"
+      },
+      {
+        "skillKey": "CUSTOM_1768979105044_4",
+        "weight": 1.33,
+        "unlockLevel": 1,
+        "rarity": "epic"
+      },
+      {
+        "skillKey": "CUSTOM_1768294973584",
+        "weight": 1.33,
+        "unlockLevel": 1,
+        "rarity": "epic"
+      },
+      {
+        "skillKey": "CUSTOM_1768979105044_7",
+        "weight": 1.33,
+        "unlockLevel": 1,
+        "rarity": "epic"
+      },
+      {
+        "skillKey": "CUSTOM_1768979105044_5",
+        "weight": 1.33,
+        "unlockLevel": 1,
+        "rarity": "epic"
+      },
+      {
+        "skillKey": "CUSTOM_1768295043352",
+        "weight": 1.33,
+        "unlockLevel": 1,
+        "rarity": "epic"
+      },
+      {
+        "skillKey": "CUSTOM_1768979105044_8",
+        "weight": 0.33,
+        "unlockLevel": 1,
+        "rarity": "legendary"
+      },
+      {
+        "skillKey": "CUSTOM_1768979105044_19",
+        "weight": 0.33,
+        "unlockLevel": 1,
+        "rarity": "legendary"
+      },
+      {
+        "skillKey": "CUSTOM_1768979105044_23",
+        "weight": 0.33,
+        "unlockLevel": 1,
+        "rarity": "legendary"
+      },
+      {
+        "skillKey": "CUSTOM_1768979105044_21",
+        "weight": 0.33,
+        "unlockLevel": 1,
+        "rarity": "legendary"
+      },
+      {
+        "skillKey": "CUSTOM_1768979105044_6",
+        "weight": 0.33,
+        "unlockLevel": 1,
+        "rarity": "legendary"
+      },
+      {
+        "skillKey": "CUSTOM_1768979105044_22",
+        "weight": 0.33,
+        "unlockLevel": 1,
+        "rarity": "legendary"
+      }
+    ],
+    "rarityWeights": {
+      "common": 70,
+      "rare": 20,
+      "epic": 8,
+      "legendary": 2
+    },
+    "skillsByRarity": {
+      "common": [
+        {
+          "skillKey": "CUSTOM_1768294375328",
+          "weight": 7.78,
+          "unlockLevel": 1,
+          "rarity": "common"
+        },
+        {
+          "skillKey": "CUSTOM_1768979105044_2",
+          "weight": 7.78,
+          "unlockLevel": 1,
+          "rarity": "common"
+        },
+        {
+          "skillKey": "CUSTOM_1768979105044_0",
+          "weight": 7.78,
+          "unlockLevel": 1,
+          "rarity": "common"
+        },
+        {
+          "skillKey": "CUSTOM_1768979105044_3",
+          "weight": 7.78,
+          "unlockLevel": 1,
+          "rarity": "common"
+        },
+        {
+          "skillKey": "CUSTOM_1768979105044_20",
+          "weight": 7.78,
+          "unlockLevel": 1,
+          "rarity": "common"
+        },
+        {
+          "skillKey": "CUSTOM_1768979105044_10",
+          "weight": 7.78,
+          "unlockLevel": 1,
+          "rarity": "common"
+        },
+        {
+          "skillKey": "CUSTOM_1768294521728",
+          "weight": 7.78,
+          "unlockLevel": 1,
+          "rarity": "common"
+        },
+        {
+          "skillKey": "CUSTOM_1768979105044_16",
+          "weight": 7.78,
+          "unlockLevel": 1,
+          "rarity": "common"
+        },
+        {
+          "skillKey": "CUSTOM_1768979105044_18",
+          "weight": 7.78,
+          "unlockLevel": 1,
+          "rarity": "common"
+        }
+      ],
+      "rare": [
+        {
+          "skillKey": "CUSTOM_1768979105044_1",
+          "weight": 2.5,
+          "unlockLevel": 1,
+          "rarity": "rare"
+        },
+        {
+          "skillKey": "CUSTOM_1768979105044_9",
+          "weight": 2.5,
+          "unlockLevel": 1,
+          "rarity": "rare"
+        },
+        {
+          "skillKey": "CUSTOM_1768979105044_11",
+          "weight": 2.5,
+          "unlockLevel": 1,
+          "rarity": "rare"
+        },
+        {
+          "skillKey": "CUSTOM_1768979105044_12",
+          "weight": 2.5,
+          "unlockLevel": 1,
+          "rarity": "rare"
+        },
+        {
+          "skillKey": "CUSTOM_1768979105044_17",
+          "weight": 2.5,
+          "unlockLevel": 1,
+          "rarity": "rare"
+        },
+        {
+          "skillKey": "CUSTOM_1768979105044_14",
+          "weight": 2.5,
+          "unlockLevel": 1,
+          "rarity": "rare"
+        },
+        {
+          "skillKey": "CUSTOM_1768979105044_13",
+          "weight": 2.5,
+          "unlockLevel": 1,
+          "rarity": "rare"
+        },
+        {
+          "skillKey": "CUSTOM_1768979105044_24",
+          "weight": 2.5,
+          "unlockLevel": 1,
+          "rarity": "rare"
+        }
+      ],
+      "epic": [
+        {
+          "skillKey": "CUSTOM_1768979105044_15",
+          "weight": 1.33,
+          "unlockLevel": 1,
+          "rarity": "epic"
+        },
+        {
+          "skillKey": "CUSTOM_1768979105044_4",
+          "weight": 1.33,
+          "unlockLevel": 1,
+          "rarity": "epic"
+        },
+        {
+          "skillKey": "CUSTOM_1768294973584",
+          "weight": 1.33,
+          "unlockLevel": 1,
+          "rarity": "epic"
+        },
+        {
+          "skillKey": "CUSTOM_1768979105044_7",
+          "weight": 1.33,
+          "unlockLevel": 1,
+          "rarity": "epic"
+        },
+        {
+          "skillKey": "CUSTOM_1768979105044_5",
+          "weight": 1.33,
+          "unlockLevel": 1,
+          "rarity": "epic"
+        },
+        {
+          "skillKey": "CUSTOM_1768295043352",
+          "weight": 1.33,
+          "unlockLevel": 1,
+          "rarity": "epic"
+        }
+      ],
+      "legendary": [
+        {
+          "skillKey": "CUSTOM_1768979105044_8",
+          "weight": 0.33,
+          "unlockLevel": 1,
+          "rarity": "legendary"
+        },
+        {
+          "skillKey": "CUSTOM_1768979105044_19",
+          "weight": 0.33,
+          "unlockLevel": 1,
+          "rarity": "legendary"
+        },
+        {
+          "skillKey": "CUSTOM_1768979105044_23",
+          "weight": 0.33,
+          "unlockLevel": 1,
+          "rarity": "legendary"
+        },
+        {
+          "skillKey": "CUSTOM_1768979105044_21",
+          "weight": 0.33,
+          "unlockLevel": 1,
+          "rarity": "legendary"
+        },
+        {
+          "skillKey": "CUSTOM_1768979105044_6",
+          "weight": 0.33,
+          "unlockLevel": 1,
+          "rarity": "legendary"
+        },
+        {
+          "skillKey": "CUSTOM_1768979105044_22",
+          "weight": 0.33,
+          "unlockLevel": 1,
+          "rarity": "legendary"
+        }
+      ]
+    },
+    "createdAt": "2026-01-21T07:13:45.327Z"
+  },
+  {
+    "key": "SKILLPOOL_1772157796573",
+    "name": "普通土灵",
+    "icon": "🎲",
+    "description": "",
+    "skills": [
+      {
+        "skillKey": "CUSTOM_1772094786155_0",
+        "weight": 7.78,
+        "unlockLevel": 1,
+        "rarity": "common"
+      },
+      {
+        "skillKey": "CUSTOM_1772094786155_10",
+        "weight": 7.78,
+        "unlockLevel": 1,
+        "rarity": "common"
+      },
+      {
+        "skillKey": "CUSTOM_1772094786155_24",
+        "weight": 7.78,
+        "unlockLevel": 1,
+        "rarity": "common"
+      },
+      {
+        "skillKey": "CUSTOM_1772094786155_9",
+        "weight": 7.78,
+        "unlockLevel": 1,
+        "rarity": "common"
+      },
+      {
+        "skillKey": "CUSTOM_1772094786155_15",
+        "weight": 7.78,
+        "unlockLevel": 1,
+        "rarity": "common"
+      },
+      {
+        "skillKey": "CUSTOM_1772094786155_2",
+        "weight": 7.78,
+        "unlockLevel": 1,
+        "rarity": "common"
+      },
+      {
+        "skillKey": "CUSTOM_1772094786155_19",
+        "weight": 7.78,
+        "unlockLevel": 1,
+        "rarity": "common"
+      },
+      {
+        "skillKey": "CUSTOM_1772094786155_1",
+        "weight": 7.78,
+        "unlockLevel": 1,
+        "rarity": "common"
+      },
+      {
+        "skillKey": "CUSTOM_1772094786155_17",
+        "weight": 7.78,
+        "unlockLevel": 1,
+        "rarity": "common"
+      },
+      {
+        "skillKey": "CUSTOM_1772094786155_13",
+        "weight": 3.33,
+        "unlockLevel": 1,
+        "rarity": "rare"
+      },
+      {
+        "skillKey": "CUSTOM_1772094786155_16",
+        "weight": 3.33,
+        "unlockLevel": 1,
+        "rarity": "rare"
+      },
+      {
+        "skillKey": "CUSTOM_1772094786155_11",
+        "weight": 3.33,
+        "unlockLevel": 1,
+        "rarity": "rare"
+      },
+      {
+        "skillKey": "CUSTOM_1772094786155_6",
+        "weight": 3.33,
+        "unlockLevel": 1,
+        "rarity": "rare"
+      },
+      {
+        "skillKey": "CUSTOM_1772094786155_12",
+        "weight": 3.33,
+        "unlockLevel": 1,
+        "rarity": "rare"
+      },
+      {
+        "skillKey": "CUSTOM_1772094786155_7",
+        "weight": 3.33,
+        "unlockLevel": 1,
+        "rarity": "rare"
+      },
+      {
+        "skillKey": "CUSTOM_1772094786155_4",
+        "weight": 1.6,
+        "unlockLevel": 1,
+        "rarity": "epic"
+      },
+      {
+        "skillKey": "CUSTOM_1772094786155_14",
+        "weight": 1.6,
+        "unlockLevel": 1,
+        "rarity": "epic"
+      },
+      {
+        "skillKey": "CUSTOM_1772094786155_8",
+        "weight": 1.6,
+        "unlockLevel": 1,
+        "rarity": "epic"
+      },
+      {
+        "skillKey": "CUSTOM_1772094786155_22",
+        "weight": 1.6,
+        "unlockLevel": 1,
+        "rarity": "epic"
+      },
+      {
+        "skillKey": "CUSTOM_1772094786155_3",
+        "weight": 1.6,
+        "unlockLevel": 1,
+        "rarity": "epic"
+      },
+      {
+        "skillKey": "CUSTOM_1772094786155_23",
+        "weight": 0.4,
+        "unlockLevel": 1,
+        "rarity": "legendary"
+      },
+      {
+        "skillKey": "CUSTOM_1772094786155_5",
+        "weight": 0.4,
+        "unlockLevel": 1,
+        "rarity": "legendary"
+      },
+      {
+        "skillKey": "CUSTOM_1772094786155_18",
+        "weight": 0.4,
+        "unlockLevel": 1,
+        "rarity": "legendary"
+      },
+      {
+        "skillKey": "CUSTOM_1772094786155_21",
+        "weight": 0.4,
+        "unlockLevel": 1,
+        "rarity": "legendary"
+      },
+      {
+        "skillKey": "CUSTOM_1772094786155_20",
+        "weight": 0.4,
+        "unlockLevel": 1,
+        "rarity": "legendary"
+      }
+    ],
+    "rarityWeights": {
+      "common": 70,
+      "rare": 20,
+      "epic": 8,
+      "legendary": 2
+    },
+    "skillsByRarity": {
+      "common": [
+        {
+          "skillKey": "CUSTOM_1772094786155_0",
+          "weight": 7.78,
+          "unlockLevel": 1,
+          "rarity": "common"
+        },
+        {
+          "skillKey": "CUSTOM_1772094786155_10",
+          "weight": 7.78,
+          "unlockLevel": 1,
+          "rarity": "common"
+        },
+        {
+          "skillKey": "CUSTOM_1772094786155_24",
+          "weight": 7.78,
+          "unlockLevel": 1,
+          "rarity": "common"
+        },
+        {
+          "skillKey": "CUSTOM_1772094786155_9",
+          "weight": 7.78,
+          "unlockLevel": 1,
+          "rarity": "common"
+        },
+        {
+          "skillKey": "CUSTOM_1772094786155_15",
+          "weight": 7.78,
+          "unlockLevel": 1,
+          "rarity": "common"
+        },
+        {
+          "skillKey": "CUSTOM_1772094786155_2",
+          "weight": 7.78,
+          "unlockLevel": 1,
+          "rarity": "common"
+        },
+        {
+          "skillKey": "CUSTOM_1772094786155_19",
+          "weight": 7.78,
+          "unlockLevel": 1,
+          "rarity": "common"
+        },
+        {
+          "skillKey": "CUSTOM_1772094786155_1",
+          "weight": 7.78,
+          "unlockLevel": 1,
+          "rarity": "common"
+        },
+        {
+          "skillKey": "CUSTOM_1772094786155_17",
+          "weight": 7.78,
+          "unlockLevel": 1,
+          "rarity": "common"
+        }
+      ],
+      "rare": [
+        {
+          "skillKey": "CUSTOM_1772094786155_13",
+          "weight": 3.33,
+          "unlockLevel": 1,
+          "rarity": "rare"
+        },
+        {
+          "skillKey": "CUSTOM_1772094786155_16",
+          "weight": 3.33,
+          "unlockLevel": 1,
+          "rarity": "rare"
+        },
+        {
+          "skillKey": "CUSTOM_1772094786155_11",
+          "weight": 3.33,
+          "unlockLevel": 1,
+          "rarity": "rare"
+        },
+        {
+          "skillKey": "CUSTOM_1772094786155_6",
+          "weight": 3.33,
+          "unlockLevel": 1,
+          "rarity": "rare"
+        },
+        {
+          "skillKey": "CUSTOM_1772094786155_12",
+          "weight": 3.33,
+          "unlockLevel": 1,
+          "rarity": "rare"
+        },
+        {
+          "skillKey": "CUSTOM_1772094786155_7",
+          "weight": 3.33,
+          "unlockLevel": 1,
+          "rarity": "rare"
+        }
+      ],
+      "epic": [
+        {
+          "skillKey": "CUSTOM_1772094786155_4",
+          "weight": 1.6,
+          "unlockLevel": 1,
+          "rarity": "epic"
+        },
+        {
+          "skillKey": "CUSTOM_1772094786155_14",
+          "weight": 1.6,
+          "unlockLevel": 1,
+          "rarity": "epic"
+        },
+        {
+          "skillKey": "CUSTOM_1772094786155_8",
+          "weight": 1.6,
+          "unlockLevel": 1,
+          "rarity": "epic"
+        },
+        {
+          "skillKey": "CUSTOM_1772094786155_22",
+          "weight": 1.6,
+          "unlockLevel": 1,
+          "rarity": "epic"
+        },
+        {
+          "skillKey": "CUSTOM_1772094786155_3",
+          "weight": 1.6,
+          "unlockLevel": 1,
+          "rarity": "epic"
+        }
+      ],
+      "legendary": [
+        {
+          "skillKey": "CUSTOM_1772094786155_23",
+          "weight": 0.4,
+          "unlockLevel": 1,
+          "rarity": "legendary"
+        },
+        {
+          "skillKey": "CUSTOM_1772094786155_5",
+          "weight": 0.4,
+          "unlockLevel": 1,
+          "rarity": "legendary"
+        },
+        {
+          "skillKey": "CUSTOM_1772094786155_18",
+          "weight": 0.4,
+          "unlockLevel": 1,
+          "rarity": "legendary"
+        },
+        {
+          "skillKey": "CUSTOM_1772094786155_21",
+          "weight": 0.4,
+          "unlockLevel": 1,
+          "rarity": "legendary"
+        },
+        {
+          "skillKey": "CUSTOM_1772094786155_20",
+          "weight": 0.4,
+          "unlockLevel": 1,
+          "rarity": "legendary"
+        }
+      ]
+    },
+    "createdAt": "2026-02-27T02:03:16.573Z"
+  },
+  {
+    "key": "SKILLPOOL_1772173530097",
+    "name": "普通萌芽团",
+    "icon": "🎲",
+    "description": "",
+    "skills": [
+      {
+        "skillKey": "CUSTOM_1772173101405_0",
+        "weight": 10,
+        "unlockLevel": 1,
+        "rarity": "common"
+      },
+      {
+        "skillKey": "CUSTOM_1772173101405_12",
+        "weight": 10,
+        "unlockLevel": 1,
+        "rarity": "common"
+      },
+      {
+        "skillKey": "CUSTOM_1772173101405_8",
+        "weight": 10,
+        "unlockLevel": 1,
+        "rarity": "common"
+      },
+      {
+        "skillKey": "CUSTOM_1772173101405_3",
+        "weight": 10,
+        "unlockLevel": 1,
+        "rarity": "common"
+      },
+      {
+        "skillKey": "CUSTOM_1772173101405_17",
+        "weight": 10,
+        "unlockLevel": 1,
+        "rarity": "common"
+      },
+      {
+        "skillKey": "CUSTOM_1772173101405_19",
+        "weight": 10,
+        "unlockLevel": 1,
+        "rarity": "common"
+      },
+      {
+        "skillKey": "CUSTOM_1772173101405_4",
+        "weight": 10,
+        "unlockLevel": 1,
+        "rarity": "common"
+      },
+      {
+        "skillKey": "CUSTOM_1772173101405_21",
+        "weight": 2.86,
+        "unlockLevel": 1,
+        "rarity": "rare"
+      },
+      {
+        "skillKey": "CUSTOM_1772173101405_9",
+        "weight": 2.86,
+        "unlockLevel": 1,
+        "rarity": "rare"
+      },
+      {
+        "skillKey": "CUSTOM_1772173101405_11",
+        "weight": 2.86,
+        "unlockLevel": 1,
+        "rarity": "rare"
+      },
+      {
+        "skillKey": "CUSTOM_1772173101405_10",
+        "weight": 2.86,
+        "unlockLevel": 1,
+        "rarity": "rare"
+      },
+      {
+        "skillKey": "CUSTOM_1772173101405_23",
+        "weight": 2.86,
+        "unlockLevel": 1,
+        "rarity": "rare"
+      },
+      {
+        "skillKey": "CUSTOM_1772173101405_22",
+        "weight": 2.86,
+        "unlockLevel": 1,
+        "rarity": "rare"
+      },
+      {
+        "skillKey": "CUSTOM_1772173101405_6",
+        "weight": 2.86,
+        "unlockLevel": 1,
+        "rarity": "rare"
+      },
+      {
+        "skillKey": "CUSTOM_1772173101405_5",
+        "weight": 1.14,
+        "unlockLevel": 1,
+        "rarity": "epic"
+      },
+      {
+        "skillKey": "CUSTOM_1772173101405_18",
+        "weight": 1.14,
+        "unlockLevel": 1,
+        "rarity": "epic"
+      },
+      {
+        "skillKey": "CUSTOM_1772173101405_7",
+        "weight": 1.14,
+        "unlockLevel": 1,
+        "rarity": "epic"
+      },
+      {
+        "skillKey": "CUSTOM_1772173101405_20",
+        "weight": 1.14,
+        "unlockLevel": 1,
+        "rarity": "epic"
+      },
+      {
+        "skillKey": "CUSTOM_1772173101405_13",
+        "weight": 1.14,
+        "unlockLevel": 1,
+        "rarity": "epic"
+      },
+      {
+        "skillKey": "CUSTOM_1772173101405_15",
+        "weight": 1.14,
+        "unlockLevel": 1,
+        "rarity": "epic"
+      },
+      {
+        "skillKey": "CUSTOM_1772173101405_2",
+        "weight": 1.14,
+        "unlockLevel": 1,
+        "rarity": "epic"
+      },
+      {
+        "skillKey": "CUSTOM_1772173101405_24",
+        "weight": 0.5,
+        "unlockLevel": 1,
+        "rarity": "legendary"
+      },
+      {
+        "skillKey": "CUSTOM_1772173101405_16",
+        "weight": 0.5,
+        "unlockLevel": 1,
+        "rarity": "legendary"
+      },
+      {
+        "skillKey": "CUSTOM_1772173101405_1",
+        "weight": 0.5,
+        "unlockLevel": 1,
+        "rarity": "legendary"
+      },
+      {
+        "skillKey": "CUSTOM_1772173101405_14",
+        "weight": 0.5,
+        "unlockLevel": 1,
+        "rarity": "legendary"
+      }
+    ],
+    "rarityWeights": {
+      "common": 70,
+      "rare": 20,
+      "epic": 8,
+      "legendary": 2
+    },
+    "skillsByRarity": {
+      "common": [
+        {
+          "skillKey": "CUSTOM_1772173101405_0",
+          "weight": 10,
+          "unlockLevel": 1,
+          "rarity": "common"
+        },
+        {
+          "skillKey": "CUSTOM_1772173101405_12",
+          "weight": 10,
+          "unlockLevel": 1,
+          "rarity": "common"
+        },
+        {
+          "skillKey": "CUSTOM_1772173101405_8",
+          "weight": 10,
+          "unlockLevel": 1,
+          "rarity": "common"
+        },
+        {
+          "skillKey": "CUSTOM_1772173101405_3",
+          "weight": 10,
+          "unlockLevel": 1,
+          "rarity": "common"
+        },
+        {
+          "skillKey": "CUSTOM_1772173101405_17",
+          "weight": 10,
+          "unlockLevel": 1,
+          "rarity": "common"
+        },
+        {
+          "skillKey": "CUSTOM_1772173101405_19",
+          "weight": 10,
+          "unlockLevel": 1,
+          "rarity": "common"
+        },
+        {
+          "skillKey": "CUSTOM_1772173101405_4",
+          "weight": 10,
+          "unlockLevel": 1,
+          "rarity": "common"
+        }
+      ],
+      "rare": [
+        {
+          "skillKey": "CUSTOM_1772173101405_21",
+          "weight": 2.86,
+          "unlockLevel": 1,
+          "rarity": "rare"
+        },
+        {
+          "skillKey": "CUSTOM_1772173101405_9",
+          "weight": 2.86,
+          "unlockLevel": 1,
+          "rarity": "rare"
+        },
+        {
+          "skillKey": "CUSTOM_1772173101405_11",
+          "weight": 2.86,
+          "unlockLevel": 1,
+          "rarity": "rare"
+        },
+        {
+          "skillKey": "CUSTOM_1772173101405_10",
+          "weight": 2.86,
+          "unlockLevel": 1,
+          "rarity": "rare"
+        },
+        {
+          "skillKey": "CUSTOM_1772173101405_23",
+          "weight": 2.86,
+          "unlockLevel": 1,
+          "rarity": "rare"
+        },
+        {
+          "skillKey": "CUSTOM_1772173101405_22",
+          "weight": 2.86,
+          "unlockLevel": 1,
+          "rarity": "rare"
+        },
+        {
+          "skillKey": "CUSTOM_1772173101405_6",
+          "weight": 2.86,
+          "unlockLevel": 1,
+          "rarity": "rare"
+        }
+      ],
+      "epic": [
+        {
+          "skillKey": "CUSTOM_1772173101405_5",
+          "weight": 1.14,
+          "unlockLevel": 1,
+          "rarity": "epic"
+        },
+        {
+          "skillKey": "CUSTOM_1772173101405_18",
+          "weight": 1.14,
+          "unlockLevel": 1,
+          "rarity": "epic"
+        },
+        {
+          "skillKey": "CUSTOM_1772173101405_7",
+          "weight": 1.14,
+          "unlockLevel": 1,
+          "rarity": "epic"
+        },
+        {
+          "skillKey": "CUSTOM_1772173101405_20",
+          "weight": 1.14,
+          "unlockLevel": 1,
+          "rarity": "epic"
+        },
+        {
+          "skillKey": "CUSTOM_1772173101405_13",
+          "weight": 1.14,
+          "unlockLevel": 1,
+          "rarity": "epic"
+        },
+        {
+          "skillKey": "CUSTOM_1772173101405_15",
+          "weight": 1.14,
+          "unlockLevel": 1,
+          "rarity": "epic"
+        },
+        {
+          "skillKey": "CUSTOM_1772173101405_2",
+          "weight": 1.14,
+          "unlockLevel": 1,
+          "rarity": "epic"
+        }
+      ],
+      "legendary": [
+        {
+          "skillKey": "CUSTOM_1772173101405_24",
+          "weight": 0.5,
+          "unlockLevel": 1,
+          "rarity": "legendary"
+        },
+        {
+          "skillKey": "CUSTOM_1772173101405_16",
+          "weight": 0.5,
+          "unlockLevel": 1,
+          "rarity": "legendary"
+        },
+        {
+          "skillKey": "CUSTOM_1772173101405_1",
+          "weight": 0.5,
+          "unlockLevel": 1,
+          "rarity": "legendary"
+        },
+        {
+          "skillKey": "CUSTOM_1772173101405_14",
+          "weight": 0.5,
+          "unlockLevel": 1,
+          "rarity": "legendary"
+        }
+      ]
+    },
+    "createdAt": "2026-02-27T06:25:30.097Z"
+  },
+  {
+    "key": "SKILLPOOL_1772174649364",
+    "name": "旋风崽",
+    "icon": "🎲",
+    "description": "",
+    "skills": [
+      {
+        "skillKey": "CUSTOM_1772173860343_13",
+        "weight": 7.78,
+        "unlockLevel": 1,
+        "rarity": "common"
+      },
+      {
+        "skillKey": "CUSTOM_1772173860343_0",
+        "weight": 7.78,
+        "unlockLevel": 1,
+        "rarity": "common"
+      },
+      {
+        "skillKey": "CUSTOM_1772173860343_20",
+        "weight": 7.78,
+        "unlockLevel": 1,
+        "rarity": "common"
+      },
+      {
+        "skillKey": "CUSTOM_1772173860343_22",
+        "weight": 7.78,
+        "unlockLevel": 1,
+        "rarity": "common"
+      },
+      {
+        "skillKey": "CUSTOM_1772173860343_21",
+        "weight": 7.78,
+        "unlockLevel": 1,
+        "rarity": "common"
+      },
+      {
+        "skillKey": "CUSTOM_1772173860343_6",
+        "weight": 7.78,
+        "unlockLevel": 1,
+        "rarity": "common"
+      },
+      {
+        "skillKey": "CUSTOM_1772173860343_1",
+        "weight": 7.78,
+        "unlockLevel": 1,
+        "rarity": "common"
+      },
+      {
+        "skillKey": "CUSTOM_1772173860343_7",
+        "weight": 7.78,
+        "unlockLevel": 1,
+        "rarity": "common"
+      },
+      {
+        "skillKey": "CUSTOM_1772173860343_2",
+        "weight": 7.78,
+        "unlockLevel": 1,
+        "rarity": "common"
+      },
+      {
+        "skillKey": "CUSTOM_1772173860343_3",
+        "weight": 3.33,
+        "unlockLevel": 1,
+        "rarity": "rare"
+      },
+      {
+        "skillKey": "CUSTOM_1772173860343_9",
+        "weight": 3.33,
+        "unlockLevel": 1,
+        "rarity": "rare"
+      },
+      {
+        "skillKey": "CUSTOM_1772173860343_12",
+        "weight": 3.33,
+        "unlockLevel": 1,
+        "rarity": "rare"
+      },
+      {
+        "skillKey": "CUSTOM_1772173860343_19",
+        "weight": 3.33,
+        "unlockLevel": 1,
+        "rarity": "rare"
+      },
+      {
+        "skillKey": "CUSTOM_1772173860343_18",
+        "weight": 3.33,
+        "unlockLevel": 1,
+        "rarity": "rare"
+      },
+      {
+        "skillKey": "CUSTOM_1772173860343_16",
+        "weight": 3.33,
+        "unlockLevel": 1,
+        "rarity": "rare"
+      },
+      {
+        "skillKey": "CUSTOM_1772173860343_15",
+        "weight": 1.33,
+        "unlockLevel": 1,
+        "rarity": "epic"
+      },
+      {
+        "skillKey": "CUSTOM_1772173860343_23",
+        "weight": 1.33,
+        "unlockLevel": 1,
+        "rarity": "epic"
+      },
+      {
+        "skillKey": "CUSTOM_1772173860343_17",
+        "weight": 1.33,
+        "unlockLevel": 1,
+        "rarity": "epic"
+      },
+      {
+        "skillKey": "CUSTOM_1772173860343_11",
+        "weight": 1.33,
+        "unlockLevel": 1,
+        "rarity": "epic"
+      },
+      {
+        "skillKey": "CUSTOM_1772173860343_5",
+        "weight": 1.33,
+        "unlockLevel": 1,
+        "rarity": "epic"
+      },
+      {
+        "skillKey": "CUSTOM_1772173860343_14",
+        "weight": 1.33,
+        "unlockLevel": 1,
+        "rarity": "epic"
+      },
+      {
+        "skillKey": "CUSTOM_1772173860343_24",
+        "weight": 0.5,
+        "unlockLevel": 1,
+        "rarity": "legendary"
+      },
+      {
+        "skillKey": "CUSTOM_1772173860343_8",
+        "weight": 0.5,
+        "unlockLevel": 1,
+        "rarity": "legendary"
+      },
+      {
+        "skillKey": "CUSTOM_1772173860343_10",
+        "weight": 0.5,
+        "unlockLevel": 1,
+        "rarity": "legendary"
+      },
+      {
+        "skillKey": "CUSTOM_1772173860343_4",
+        "weight": 0.5,
+        "unlockLevel": 1,
+        "rarity": "legendary"
+      }
+    ],
+    "rarityWeights": {
+      "common": 70,
+      "rare": 20,
+      "epic": 8,
+      "legendary": 2
+    },
+    "skillsByRarity": {
+      "common": [
+        {
+          "skillKey": "CUSTOM_1772173860343_13",
+          "weight": 7.78,
+          "unlockLevel": 1,
+          "rarity": "common"
+        },
+        {
+          "skillKey": "CUSTOM_1772173860343_0",
+          "weight": 7.78,
+          "unlockLevel": 1,
+          "rarity": "common"
+        },
+        {
+          "skillKey": "CUSTOM_1772173860343_20",
+          "weight": 7.78,
+          "unlockLevel": 1,
+          "rarity": "common"
+        },
+        {
+          "skillKey": "CUSTOM_1772173860343_22",
+          "weight": 7.78,
+          "unlockLevel": 1,
+          "rarity": "common"
+        },
+        {
+          "skillKey": "CUSTOM_1772173860343_21",
+          "weight": 7.78,
+          "unlockLevel": 1,
+          "rarity": "common"
+        },
+        {
+          "skillKey": "CUSTOM_1772173860343_6",
+          "weight": 7.78,
+          "unlockLevel": 1,
+          "rarity": "common"
+        },
+        {
+          "skillKey": "CUSTOM_1772173860343_1",
+          "weight": 7.78,
+          "unlockLevel": 1,
+          "rarity": "common"
+        },
+        {
+          "skillKey": "CUSTOM_1772173860343_7",
+          "weight": 7.78,
+          "unlockLevel": 1,
+          "rarity": "common"
+        },
+        {
+          "skillKey": "CUSTOM_1772173860343_2",
+          "weight": 7.78,
+          "unlockLevel": 1,
+          "rarity": "common"
+        }
+      ],
+      "rare": [
+        {
+          "skillKey": "CUSTOM_1772173860343_3",
+          "weight": 3.33,
+          "unlockLevel": 1,
+          "rarity": "rare"
+        },
+        {
+          "skillKey": "CUSTOM_1772173860343_9",
+          "weight": 3.33,
+          "unlockLevel": 1,
+          "rarity": "rare"
+        },
+        {
+          "skillKey": "CUSTOM_1772173860343_12",
+          "weight": 3.33,
+          "unlockLevel": 1,
+          "rarity": "rare"
+        },
+        {
+          "skillKey": "CUSTOM_1772173860343_19",
+          "weight": 3.33,
+          "unlockLevel": 1,
+          "rarity": "rare"
+        },
+        {
+          "skillKey": "CUSTOM_1772173860343_18",
+          "weight": 3.33,
+          "unlockLevel": 1,
+          "rarity": "rare"
+        },
+        {
+          "skillKey": "CUSTOM_1772173860343_16",
+          "weight": 3.33,
+          "unlockLevel": 1,
+          "rarity": "rare"
+        }
+      ],
+      "epic": [
+        {
+          "skillKey": "CUSTOM_1772173860343_15",
+          "weight": 1.33,
+          "unlockLevel": 1,
+          "rarity": "epic"
+        },
+        {
+          "skillKey": "CUSTOM_1772173860343_23",
+          "weight": 1.33,
+          "unlockLevel": 1,
+          "rarity": "epic"
+        },
+        {
+          "skillKey": "CUSTOM_1772173860343_17",
+          "weight": 1.33,
+          "unlockLevel": 1,
+          "rarity": "epic"
+        },
+        {
+          "skillKey": "CUSTOM_1772173860343_11",
+          "weight": 1.33,
+          "unlockLevel": 1,
+          "rarity": "epic"
+        },
+        {
+          "skillKey": "CUSTOM_1772173860343_5",
+          "weight": 1.33,
+          "unlockLevel": 1,
+          "rarity": "epic"
+        },
+        {
+          "skillKey": "CUSTOM_1772173860343_14",
+          "weight": 1.33,
+          "unlockLevel": 1,
+          "rarity": "epic"
+        }
+      ],
+      "legendary": [
+        {
+          "skillKey": "CUSTOM_1772173860343_24",
+          "weight": 0.5,
+          "unlockLevel": 1,
+          "rarity": "legendary"
+        },
+        {
+          "skillKey": "CUSTOM_1772173860343_8",
+          "weight": 0.5,
+          "unlockLevel": 1,
+          "rarity": "legendary"
+        },
+        {
+          "skillKey": "CUSTOM_1772173860343_10",
+          "weight": 0.5,
+          "unlockLevel": 1,
+          "rarity": "legendary"
+        },
+        {
+          "skillKey": "CUSTOM_1772173860343_4",
+          "weight": 0.5,
+          "unlockLevel": 1,
+          "rarity": "legendary"
+        }
+      ]
+    },
+    "createdAt": "2026-02-27T06:44:09.364Z"
+  },
+  {
+    "key": "SKILLPOOL_1772174926569",
+    "name": "石子怪",
+    "icon": "🎲",
+    "description": "",
+    "skills": [
+      {
+        "skillKey": "CUSTOM_1772174819116_9",
+        "weight": 8.75,
+        "unlockLevel": 1,
+        "rarity": "common"
+      },
+      {
+        "skillKey": "CUSTOM_1772174819116_19",
+        "weight": 8.75,
+        "unlockLevel": 1,
+        "rarity": "common"
+      },
+      {
+        "skillKey": "CUSTOM_1772174819116_23",
+        "weight": 8.75,
+        "unlockLevel": 1,
+        "rarity": "common"
+      },
+      {
+        "skillKey": "CUSTOM_1772174819116_24",
+        "weight": 8.75,
+        "unlockLevel": 1,
+        "rarity": "common"
+      },
+      {
+        "skillKey": "CUSTOM_1772174819116_15",
+        "weight": 8.75,
+        "unlockLevel": 1,
+        "rarity": "common"
+      },
+      {
+        "skillKey": "CUSTOM_1772174819116_14",
+        "weight": 8.75,
+        "unlockLevel": 1,
+        "rarity": "common"
+      },
+      {
+        "skillKey": "CUSTOM_1772174819116_20",
+        "weight": 8.75,
+        "unlockLevel": 1,
+        "rarity": "common"
+      },
+      {
+        "skillKey": "CUSTOM_1772174819116_10",
+        "weight": 8.75,
+        "unlockLevel": 1,
+        "rarity": "common"
+      },
+      {
+        "skillKey": "CUSTOM_1772174819116_0",
+        "weight": 2.86,
+        "unlockLevel": 1,
+        "rarity": "rare"
+      },
+      {
+        "skillKey": "CUSTOM_1772174819116_13",
+        "weight": 2.86,
+        "unlockLevel": 1,
+        "rarity": "rare"
+      },
+      {
+        "skillKey": "CUSTOM_1772174819116_22",
+        "weight": 2.86,
+        "unlockLevel": 1,
+        "rarity": "rare"
+      },
+      {
+        "skillKey": "CUSTOM_1772174819116_2",
+        "weight": 2.86,
+        "unlockLevel": 1,
+        "rarity": "rare"
+      },
+      {
+        "skillKey": "CUSTOM_1772174819116_8",
+        "weight": 2.86,
+        "unlockLevel": 1,
+        "rarity": "rare"
+      },
+      {
+        "skillKey": "CUSTOM_1772174819116_7",
+        "weight": 2.86,
+        "unlockLevel": 1,
+        "rarity": "rare"
+      },
+      {
+        "skillKey": "CUSTOM_1772174819116_4",
+        "weight": 2.86,
+        "unlockLevel": 1,
+        "rarity": "rare"
+      },
+      {
+        "skillKey": "CUSTOM_1772174819116_6",
+        "weight": 1.33,
+        "unlockLevel": 1,
+        "rarity": "epic"
+      },
+      {
+        "skillKey": "CUSTOM_1772174819116_3",
+        "weight": 1.33,
+        "unlockLevel": 1,
+        "rarity": "epic"
+      },
+      {
+        "skillKey": "CUSTOM_1772174819116_11",
+        "weight": 1.33,
+        "unlockLevel": 1,
+        "rarity": "epic"
+      },
+      {
+        "skillKey": "CUSTOM_1772174819116_1",
+        "weight": 1.33,
+        "unlockLevel": 1,
+        "rarity": "epic"
+      },
+      {
+        "skillKey": "CUSTOM_1772174819116_18",
+        "weight": 1.33,
+        "unlockLevel": 1,
+        "rarity": "epic"
+      },
+      {
+        "skillKey": "CUSTOM_1772174819116_16",
+        "weight": 1.33,
+        "unlockLevel": 1,
+        "rarity": "epic"
+      },
+      {
+        "skillKey": "CUSTOM_1772174819116_12",
+        "weight": 0.5,
+        "unlockLevel": 1,
+        "rarity": "legendary"
+      },
+      {
+        "skillKey": "CUSTOM_1772174819116_5",
+        "weight": 0.5,
+        "unlockLevel": 1,
+        "rarity": "legendary"
+      },
+      {
+        "skillKey": "CUSTOM_1772174819116_21",
+        "weight": 0.5,
+        "unlockLevel": 1,
+        "rarity": "legendary"
+      },
+      {
+        "skillKey": "CUSTOM_1772174819116_17",
+        "weight": 0.5,
+        "unlockLevel": 1,
+        "rarity": "legendary"
+      }
+    ],
+    "rarityWeights": {
+      "common": 70,
+      "rare": 20,
+      "epic": 8,
+      "legendary": 2
+    },
+    "skillsByRarity": {
+      "common": [
+        {
+          "skillKey": "CUSTOM_1772174819116_9",
+          "weight": 8.75,
+          "unlockLevel": 1,
+          "rarity": "common"
+        },
+        {
+          "skillKey": "CUSTOM_1772174819116_19",
+          "weight": 8.75,
+          "unlockLevel": 1,
+          "rarity": "common"
+        },
+        {
+          "skillKey": "CUSTOM_1772174819116_23",
+          "weight": 8.75,
+          "unlockLevel": 1,
+          "rarity": "common"
+        },
+        {
+          "skillKey": "CUSTOM_1772174819116_24",
+          "weight": 8.75,
+          "unlockLevel": 1,
+          "rarity": "common"
+        },
+        {
+          "skillKey": "CUSTOM_1772174819116_15",
+          "weight": 8.75,
+          "unlockLevel": 1,
+          "rarity": "common"
+        },
+        {
+          "skillKey": "CUSTOM_1772174819116_14",
+          "weight": 8.75,
+          "unlockLevel": 1,
+          "rarity": "common"
+        },
+        {
+          "skillKey": "CUSTOM_1772174819116_20",
+          "weight": 8.75,
+          "unlockLevel": 1,
+          "rarity": "common"
+        },
+        {
+          "skillKey": "CUSTOM_1772174819116_10",
+          "weight": 8.75,
+          "unlockLevel": 1,
+          "rarity": "common"
+        }
+      ],
+      "rare": [
+        {
+          "skillKey": "CUSTOM_1772174819116_0",
+          "weight": 2.86,
+          "unlockLevel": 1,
+          "rarity": "rare"
+        },
+        {
+          "skillKey": "CUSTOM_1772174819116_13",
+          "weight": 2.86,
+          "unlockLevel": 1,
+          "rarity": "rare"
+        },
+        {
+          "skillKey": "CUSTOM_1772174819116_22",
+          "weight": 2.86,
+          "unlockLevel": 1,
+          "rarity": "rare"
+        },
+        {
+          "skillKey": "CUSTOM_1772174819116_2",
+          "weight": 2.86,
+          "unlockLevel": 1,
+          "rarity": "rare"
+        },
+        {
+          "skillKey": "CUSTOM_1772174819116_8",
+          "weight": 2.86,
+          "unlockLevel": 1,
+          "rarity": "rare"
+        },
+        {
+          "skillKey": "CUSTOM_1772174819116_7",
+          "weight": 2.86,
+          "unlockLevel": 1,
+          "rarity": "rare"
+        },
+        {
+          "skillKey": "CUSTOM_1772174819116_4",
+          "weight": 2.86,
+          "unlockLevel": 1,
+          "rarity": "rare"
+        }
+      ],
+      "epic": [
+        {
+          "skillKey": "CUSTOM_1772174819116_6",
+          "weight": 1.33,
+          "unlockLevel": 1,
+          "rarity": "epic"
+        },
+        {
+          "skillKey": "CUSTOM_1772174819116_3",
+          "weight": 1.33,
+          "unlockLevel": 1,
+          "rarity": "epic"
+        },
+        {
+          "skillKey": "CUSTOM_1772174819116_11",
+          "weight": 1.33,
+          "unlockLevel": 1,
+          "rarity": "epic"
+        },
+        {
+          "skillKey": "CUSTOM_1772174819116_1",
+          "weight": 1.33,
+          "unlockLevel": 1,
+          "rarity": "epic"
+        },
+        {
+          "skillKey": "CUSTOM_1772174819116_18",
+          "weight": 1.33,
+          "unlockLevel": 1,
+          "rarity": "epic"
+        },
+        {
+          "skillKey": "CUSTOM_1772174819116_16",
+          "weight": 1.33,
+          "unlockLevel": 1,
+          "rarity": "epic"
+        }
+      ],
+      "legendary": [
+        {
+          "skillKey": "CUSTOM_1772174819116_12",
+          "weight": 0.5,
+          "unlockLevel": 1,
+          "rarity": "legendary"
+        },
+        {
+          "skillKey": "CUSTOM_1772174819116_5",
+          "weight": 0.5,
+          "unlockLevel": 1,
+          "rarity": "legendary"
+        },
+        {
+          "skillKey": "CUSTOM_1772174819116_21",
+          "weight": 0.5,
+          "unlockLevel": 1,
+          "rarity": "legendary"
+        },
+        {
+          "skillKey": "CUSTOM_1772174819116_17",
+          "weight": 0.5,
+          "unlockLevel": 1,
+          "rarity": "legendary"
+        }
+      ]
+    },
+    "createdAt": "2026-02-27T06:48:46.569Z"
+  },
+  {
+    "key": "SKILLPOOL_1772176138526",
+    "name": "火球",
+    "icon": "🎲",
+    "description": "",
+    "skills": [
+      {
+        "skillKey": "CUSTOM_1772175519108_0",
+        "weight": 8.75,
+        "unlockLevel": 1,
+        "rarity": "common"
+      },
+      {
+        "skillKey": "CUSTOM_1772175519108_9",
+        "weight": 8.75,
+        "unlockLevel": 1,
+        "rarity": "common"
+      },
+      {
+        "skillKey": "CUSTOM_1772175519108_14",
+        "weight": 8.75,
+        "unlockLevel": 1,
+        "rarity": "common"
+      },
+      {
+        "skillKey": "CUSTOM_1772175519108_10",
+        "weight": 8.75,
+        "unlockLevel": 1,
+        "rarity": "common"
+      },
+      {
+        "skillKey": "CUSTOM_1772175519108_2",
+        "weight": 8.75,
+        "unlockLevel": 1,
+        "rarity": "common"
+      },
+      {
+        "skillKey": "CUSTOM_1772175519108_8",
+        "weight": 8.75,
+        "unlockLevel": 1,
+        "rarity": "common"
+      },
+      {
+        "skillKey": "CUSTOM_1772175519108_11",
+        "weight": 8.75,
+        "unlockLevel": 1,
+        "rarity": "common"
+      },
+      {
+        "skillKey": "CUSTOM_1772175519108_7",
+        "weight": 8.75,
+        "unlockLevel": 1,
+        "rarity": "common"
+      },
+      {
+        "skillKey": "CUSTOM_1772175519108_18",
+        "weight": 2.86,
+        "unlockLevel": 1,
+        "rarity": "rare"
+      },
+      {
+        "skillKey": "CUSTOM_1772175519108_21",
+        "weight": 2.86,
+        "unlockLevel": 1,
+        "rarity": "rare"
+      },
+      {
+        "skillKey": "CUSTOM_1772175519108_15",
+        "weight": 2.86,
+        "unlockLevel": 1,
+        "rarity": "rare"
+      },
+      {
+        "skillKey": "CUSTOM_1772175519108_13",
+        "weight": 2.86,
+        "unlockLevel": 1,
+        "rarity": "rare"
+      },
+      {
+        "skillKey": "CUSTOM_1772175519108_6",
+        "weight": 2.86,
+        "unlockLevel": 1,
+        "rarity": "rare"
+      },
+      {
+        "skillKey": "CUSTOM_1772175519108_24",
+        "weight": 2.86,
+        "unlockLevel": 1,
+        "rarity": "rare"
+      },
+      {
+        "skillKey": "CUSTOM_1772175519108_5",
+        "weight": 2.86,
+        "unlockLevel": 1,
+        "rarity": "rare"
+      },
+      {
+        "skillKey": "CUSTOM_1772175519108_1",
+        "weight": 1.33,
+        "unlockLevel": 1,
+        "rarity": "epic"
+      },
+      {
+        "skillKey": "CUSTOM_1772175519108_22",
+        "weight": 1.33,
+        "unlockLevel": 1,
+        "rarity": "epic"
+      },
+      {
+        "skillKey": "CUSTOM_1772175519108_12",
+        "weight": 1.33,
+        "unlockLevel": 1,
+        "rarity": "epic"
+      },
+      {
+        "skillKey": "CUSTOM_1772175519108_4",
+        "weight": 1.33,
+        "unlockLevel": 1,
+        "rarity": "epic"
+      },
+      {
+        "skillKey": "CUSTOM_1772175519108_3",
+        "weight": 1.33,
+        "unlockLevel": 1,
+        "rarity": "epic"
+      },
+      {
+        "skillKey": "CUSTOM_1772175519108_17",
+        "weight": 1.33,
+        "unlockLevel": 1,
+        "rarity": "epic"
+      },
+      {
+        "skillKey": "CUSTOM_1772175519108_19",
+        "weight": 0.5,
+        "unlockLevel": 1,
+        "rarity": "legendary"
+      },
+      {
+        "skillKey": "CUSTOM_1772175519108_20",
+        "weight": 0.5,
+        "unlockLevel": 1,
+        "rarity": "legendary"
+      },
+      {
+        "skillKey": "CUSTOM_1772175519108_16",
+        "weight": 0.5,
+        "unlockLevel": 1,
+        "rarity": "legendary"
+      },
+      {
+        "skillKey": "CUSTOM_1772175519108_23",
+        "weight": 0.5,
+        "unlockLevel": 1,
+        "rarity": "legendary"
+      }
+    ],
+    "rarityWeights": {
+      "common": 70,
+      "rare": 20,
+      "epic": 8,
+      "legendary": 2
+    },
+    "skillsByRarity": {
+      "common": [
+        {
+          "skillKey": "CUSTOM_1772175519108_0",
+          "weight": 8.75,
+          "unlockLevel": 1,
+          "rarity": "common"
+        },
+        {
+          "skillKey": "CUSTOM_1772175519108_9",
+          "weight": 8.75,
+          "unlockLevel": 1,
+          "rarity": "common"
+        },
+        {
+          "skillKey": "CUSTOM_1772175519108_14",
+          "weight": 8.75,
+          "unlockLevel": 1,
+          "rarity": "common"
+        },
+        {
+          "skillKey": "CUSTOM_1772175519108_10",
+          "weight": 8.75,
+          "unlockLevel": 1,
+          "rarity": "common"
+        },
+        {
+          "skillKey": "CUSTOM_1772175519108_2",
+          "weight": 8.75,
+          "unlockLevel": 1,
+          "rarity": "common"
+        },
+        {
+          "skillKey": "CUSTOM_1772175519108_8",
+          "weight": 8.75,
+          "unlockLevel": 1,
+          "rarity": "common"
+        },
+        {
+          "skillKey": "CUSTOM_1772175519108_11",
+          "weight": 8.75,
+          "unlockLevel": 1,
+          "rarity": "common"
+        },
+        {
+          "skillKey": "CUSTOM_1772175519108_7",
+          "weight": 8.75,
+          "unlockLevel": 1,
+          "rarity": "common"
+        }
+      ],
+      "rare": [
+        {
+          "skillKey": "CUSTOM_1772175519108_18",
+          "weight": 2.86,
+          "unlockLevel": 1,
+          "rarity": "rare"
+        },
+        {
+          "skillKey": "CUSTOM_1772175519108_21",
+          "weight": 2.86,
+          "unlockLevel": 1,
+          "rarity": "rare"
+        },
+        {
+          "skillKey": "CUSTOM_1772175519108_15",
+          "weight": 2.86,
+          "unlockLevel": 1,
+          "rarity": "rare"
+        },
+        {
+          "skillKey": "CUSTOM_1772175519108_13",
+          "weight": 2.86,
+          "unlockLevel": 1,
+          "rarity": "rare"
+        },
+        {
+          "skillKey": "CUSTOM_1772175519108_6",
+          "weight": 2.86,
+          "unlockLevel": 1,
+          "rarity": "rare"
+        },
+        {
+          "skillKey": "CUSTOM_1772175519108_24",
+          "weight": 2.86,
+          "unlockLevel": 1,
+          "rarity": "rare"
+        },
+        {
+          "skillKey": "CUSTOM_1772175519108_5",
+          "weight": 2.86,
+          "unlockLevel": 1,
+          "rarity": "rare"
+        }
+      ],
+      "epic": [
+        {
+          "skillKey": "CUSTOM_1772175519108_1",
+          "weight": 1.33,
+          "unlockLevel": 1,
+          "rarity": "epic"
+        },
+        {
+          "skillKey": "CUSTOM_1772175519108_22",
+          "weight": 1.33,
+          "unlockLevel": 1,
+          "rarity": "epic"
+        },
+        {
+          "skillKey": "CUSTOM_1772175519108_12",
+          "weight": 1.33,
+          "unlockLevel": 1,
+          "rarity": "epic"
+        },
+        {
+          "skillKey": "CUSTOM_1772175519108_4",
+          "weight": 1.33,
+          "unlockLevel": 1,
+          "rarity": "epic"
+        },
+        {
+          "skillKey": "CUSTOM_1772175519108_3",
+          "weight": 1.33,
+          "unlockLevel": 1,
+          "rarity": "epic"
+        },
+        {
+          "skillKey": "CUSTOM_1772175519108_17",
+          "weight": 1.33,
+          "unlockLevel": 1,
+          "rarity": "epic"
+        }
+      ],
+      "legendary": [
+        {
+          "skillKey": "CUSTOM_1772175519108_19",
+          "weight": 0.5,
+          "unlockLevel": 1,
+          "rarity": "legendary"
+        },
+        {
+          "skillKey": "CUSTOM_1772175519108_20",
+          "weight": 0.5,
+          "unlockLevel": 1,
+          "rarity": "legendary"
+        },
+        {
+          "skillKey": "CUSTOM_1772175519108_16",
+          "weight": 0.5,
+          "unlockLevel": 1,
+          "rarity": "legendary"
+        },
+        {
+          "skillKey": "CUSTOM_1772175519108_23",
+          "weight": 0.5,
+          "unlockLevel": 1,
+          "rarity": "legendary"
+        }
+      ]
+    },
+    "createdAt": "2026-02-27T07:08:58.526Z"
+  },
+  {
+    "key": "SKILLPOOL_1772176642982",
+    "name": "息风团",
+    "icon": "🎲",
+    "description": "",
+    "skills": [
+      {
+        "skillKey": "CUSTOM_1772176437230_4",
+        "weight": 8.75,
+        "unlockLevel": 1,
+        "rarity": "common"
+      },
+      {
+        "skillKey": "CUSTOM_1772176437230_20",
+        "weight": 8.75,
+        "unlockLevel": 1,
+        "rarity": "common"
+      },
+      {
+        "skillKey": "CUSTOM_1772176437230_17",
+        "weight": 8.75,
+        "unlockLevel": 1,
+        "rarity": "common"
+      },
+      {
+        "skillKey": "CUSTOM_1772176437230_7",
+        "weight": 8.75,
+        "unlockLevel": 1,
+        "rarity": "common"
+      },
+      {
+        "skillKey": "CUSTOM_1772176437230_18",
+        "weight": 8.75,
+        "unlockLevel": 1,
+        "rarity": "common"
+      },
+      {
+        "skillKey": "CUSTOM_1772176437230_15",
+        "weight": 8.75,
+        "unlockLevel": 1,
+        "rarity": "common"
+      },
+      {
+        "skillKey": "CUSTOM_1772176437230_5",
+        "weight": 8.75,
+        "unlockLevel": 1,
+        "rarity": "common"
+      },
+      {
+        "skillKey": "CUSTOM_1772176437230_21",
+        "weight": 8.75,
+        "unlockLevel": 1,
+        "rarity": "common"
+      },
+      {
+        "skillKey": "CUSTOM_1772176437230_9",
+        "weight": 3.33,
+        "unlockLevel": 1,
+        "rarity": "rare"
+      },
+      {
+        "skillKey": "CUSTOM_1772176437230_6",
+        "weight": 3.33,
+        "unlockLevel": 1,
+        "rarity": "rare"
+      },
+      {
+        "skillKey": "CUSTOM_1772176437230_3",
+        "weight": 3.33,
+        "unlockLevel": 1,
+        "rarity": "rare"
+      },
+      {
+        "skillKey": "CUSTOM_1772176437230_13",
+        "weight": 3.33,
+        "unlockLevel": 1,
+        "rarity": "rare"
+      },
+      {
+        "skillKey": "CUSTOM_1772176437230_0",
+        "weight": 3.33,
+        "unlockLevel": 1,
+        "rarity": "rare"
+      },
+      {
+        "skillKey": "CUSTOM_1772176437230_16",
+        "weight": 3.33,
+        "unlockLevel": 1,
+        "rarity": "rare"
+      },
+      {
+        "skillKey": "CUSTOM_1772176437230_14",
+        "weight": 1.14,
+        "unlockLevel": 1,
+        "rarity": "epic"
+      },
+      {
+        "skillKey": "CUSTOM_1772176437230_22",
+        "weight": 1.14,
+        "unlockLevel": 1,
+        "rarity": "epic"
+      },
+      {
+        "skillKey": "CUSTOM_1772176437230_10",
+        "weight": 1.14,
+        "unlockLevel": 1,
+        "rarity": "epic"
+      },
+      {
+        "skillKey": "CUSTOM_1772176437230_1",
+        "weight": 1.14,
+        "unlockLevel": 1,
+        "rarity": "epic"
+      },
+      {
+        "skillKey": "CUSTOM_1772176437230_11",
+        "weight": 1.14,
+        "unlockLevel": 1,
+        "rarity": "epic"
+      },
+      {
+        "skillKey": "CUSTOM_1772176437230_8",
+        "weight": 1.14,
+        "unlockLevel": 1,
+        "rarity": "epic"
+      },
+      {
+        "skillKey": "CUSTOM_1772176437230_12",
+        "weight": 1.14,
+        "unlockLevel": 1,
+        "rarity": "epic"
+      },
+      {
+        "skillKey": "CUSTOM_1772176437230_24",
+        "weight": 0.5,
+        "unlockLevel": 1,
+        "rarity": "legendary"
+      },
+      {
+        "skillKey": "CUSTOM_1772176437230_19",
+        "weight": 0.5,
+        "unlockLevel": 1,
+        "rarity": "legendary"
+      },
+      {
+        "skillKey": "CUSTOM_1772176437230_2",
+        "weight": 0.5,
+        "unlockLevel": 1,
+        "rarity": "legendary"
+      },
+      {
+        "skillKey": "CUSTOM_1772176437230_23",
+        "weight": 0.5,
+        "unlockLevel": 1,
+        "rarity": "legendary"
+      }
+    ],
+    "rarityWeights": {
+      "common": 70,
+      "rare": 20,
+      "epic": 8,
+      "legendary": 2
+    },
+    "skillsByRarity": {
+      "common": [
+        {
+          "skillKey": "CUSTOM_1772176437230_4",
+          "weight": 8.75,
+          "unlockLevel": 1,
+          "rarity": "common"
+        },
+        {
+          "skillKey": "CUSTOM_1772176437230_20",
+          "weight": 8.75,
+          "unlockLevel": 1,
+          "rarity": "common"
+        },
+        {
+          "skillKey": "CUSTOM_1772176437230_17",
+          "weight": 8.75,
+          "unlockLevel": 1,
+          "rarity": "common"
+        },
+        {
+          "skillKey": "CUSTOM_1772176437230_7",
+          "weight": 8.75,
+          "unlockLevel": 1,
+          "rarity": "common"
+        },
+        {
+          "skillKey": "CUSTOM_1772176437230_18",
+          "weight": 8.75,
+          "unlockLevel": 1,
+          "rarity": "common"
+        },
+        {
+          "skillKey": "CUSTOM_1772176437230_15",
+          "weight": 8.75,
+          "unlockLevel": 1,
+          "rarity": "common"
+        },
+        {
+          "skillKey": "CUSTOM_1772176437230_5",
+          "weight": 8.75,
+          "unlockLevel": 1,
+          "rarity": "common"
+        },
+        {
+          "skillKey": "CUSTOM_1772176437230_21",
+          "weight": 8.75,
+          "unlockLevel": 1,
+          "rarity": "common"
+        }
+      ],
+      "rare": [
+        {
+          "skillKey": "CUSTOM_1772176437230_9",
+          "weight": 3.33,
+          "unlockLevel": 1,
+          "rarity": "rare"
+        },
+        {
+          "skillKey": "CUSTOM_1772176437230_6",
+          "weight": 3.33,
+          "unlockLevel": 1,
+          "rarity": "rare"
+        },
+        {
+          "skillKey": "CUSTOM_1772176437230_3",
+          "weight": 3.33,
+          "unlockLevel": 1,
+          "rarity": "rare"
+        },
+        {
+          "skillKey": "CUSTOM_1772176437230_13",
+          "weight": 3.33,
+          "unlockLevel": 1,
+          "rarity": "rare"
+        },
+        {
+          "skillKey": "CUSTOM_1772176437230_0",
+          "weight": 3.33,
+          "unlockLevel": 1,
+          "rarity": "rare"
+        },
+        {
+          "skillKey": "CUSTOM_1772176437230_16",
+          "weight": 3.33,
+          "unlockLevel": 1,
+          "rarity": "rare"
+        }
+      ],
+      "epic": [
+        {
+          "skillKey": "CUSTOM_1772176437230_14",
+          "weight": 1.14,
+          "unlockLevel": 1,
+          "rarity": "epic"
+        },
+        {
+          "skillKey": "CUSTOM_1772176437230_22",
+          "weight": 1.14,
+          "unlockLevel": 1,
+          "rarity": "epic"
+        },
+        {
+          "skillKey": "CUSTOM_1772176437230_10",
+          "weight": 1.14,
+          "unlockLevel": 1,
+          "rarity": "epic"
+        },
+        {
+          "skillKey": "CUSTOM_1772176437230_1",
+          "weight": 1.14,
+          "unlockLevel": 1,
+          "rarity": "epic"
+        },
+        {
+          "skillKey": "CUSTOM_1772176437230_11",
+          "weight": 1.14,
+          "unlockLevel": 1,
+          "rarity": "epic"
+        },
+        {
+          "skillKey": "CUSTOM_1772176437230_8",
+          "weight": 1.14,
+          "unlockLevel": 1,
+          "rarity": "epic"
+        },
+        {
+          "skillKey": "CUSTOM_1772176437230_12",
+          "weight": 1.14,
+          "unlockLevel": 1,
+          "rarity": "epic"
+        }
+      ],
+      "legendary": [
+        {
+          "skillKey": "CUSTOM_1772176437230_24",
+          "weight": 0.5,
+          "unlockLevel": 1,
+          "rarity": "legendary"
+        },
+        {
+          "skillKey": "CUSTOM_1772176437230_19",
+          "weight": 0.5,
+          "unlockLevel": 1,
+          "rarity": "legendary"
+        },
+        {
+          "skillKey": "CUSTOM_1772176437230_2",
+          "weight": 0.5,
+          "unlockLevel": 1,
+          "rarity": "legendary"
+        },
+        {
+          "skillKey": "CUSTOM_1772176437230_23",
+          "weight": 0.5,
+          "unlockLevel": 1,
+          "rarity": "legendary"
+        }
+      ]
+    },
+    "createdAt": "2026-02-27T07:17:22.982Z"
+  }
+]
