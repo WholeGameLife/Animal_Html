@@ -6,74 +6,315 @@
     <title>电子盆栽 - 地下挖掘</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body { background-color: #0f172a; color: #f1f5f9; font-family: 'Inter', sans-serif; }
-        .panel { background: rgba(30, 41, 59, 0.8); border: 1px solid #334155; border-radius: 0.75rem; }
-        .btn { transition: all 0.2s; }
-        .btn:hover { transform: translateY(-2px); }
-        .layer-anim { animation: slideUp 0.5s ease-out; }
-        @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        body { 
+            background: linear-gradient(180deg, #0f172a 0%, #1e1b4b 50%, #312e81 100%);
+            color: #f1f5f9;
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+        }
+        .glass-panel { 
+            background: rgba(30, 41, 59, 0.75);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.4);
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(16, 185, 129, 0.6);
+        }
+        .btn-danger {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);
+        }
+        .btn-danger:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(239, 68, 68, 0.6);
+        }
+        .checkpoint-btn {
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        .checkpoint-btn:before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            transition: width 0.5s, height 0.5s;
+        }
+        .checkpoint-btn:hover:before {
+            width: 200px;
+            height: 200px;
+        }
+        .layer-appear { 
+            animation: slideUpFade 0.5s ease-out;
+        }
+        @keyframes slideUpFade { 
+            from { 
+                transform: translateY(30px);
+                opacity: 0;
+            }
+            to { 
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+        .mining-visual {
+            background: linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.3) 100%);
+            position: relative;
+        }
+        .depth-indicator {
+            font-family: 'Courier New', monospace;
+            text-shadow: 0 0 20px rgba(250, 204, 21, 0.8);
+        }
+        .resource-icon {
+            display: inline-block;
+            animation: float 2s ease-in-out infinite;
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-5px); }
+        }
+        .progress-bar {
+            height: 8px;
+            background: rgba(31, 41, 55, 0.5);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #10b981, #34d399);
+            transition: width 0.3s ease;
+            box-shadow: 0 0 10px rgba(16, 185, 129, 0.6);
+        }
+        .team-member {
+            transition: all 0.3s ease;
+        }
+        .team-member:hover {
+            transform: translateX(5px);
+            background: rgba(59, 130, 246, 0.1);
+        }
+        .loot-notification {
+            animation: lootPop 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+        @keyframes lootPop {
+            0% { transform: scale(0) rotate(-10deg); opacity: 0; }
+            50% { transform: scale(1.2) rotate(5deg); }
+            100% { transform: scale(1) rotate(0deg); opacity: 1; }
+        }
+        ::-webkit-scrollbar { width: 10px; }
+        ::-webkit-scrollbar-track { background: rgba(31, 41, 55, 0.5); border-radius: 5px; }
+        ::-webkit-scrollbar-thumb { 
+            background: linear-gradient(180deg, #6366f1, #8b5cf6);
+            border-radius: 5px;
+        }
+        ::-webkit-scrollbar-thumb:hover { background: linear-gradient(180deg, #8b5cf6, #6366f1); }
+        
+        .stat-card {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(139, 92, 246, 0.1));
+            border: 1px solid rgba(59, 130, 246, 0.3);
+        }
+        .depth-milestone {
+            position: relative;
+        }
+        .depth-milestone:before {
+            content: '🚩';
+            position: absolute;
+            left: -30px;
+            animation: wave 2s ease-in-out infinite;
+        }
+        @keyframes wave {
+            0%, 100% { transform: rotate(-10deg); }
+            50% { transform: rotate(10deg); }
+        }
     </style>
 </head>
-<body class="p-6 min-h-screen flex flex-col">
-    <div class="max-w-5xl mx-auto w-full flex-1 flex flex-col">
-        <div class="flex justify-between items-center mb-6">
-            <h1 class="text-3xl font-bold text-indigo-400">⛏️ 地下挖掘</h1>
-            <button id="btn-return" class="btn bg-gray-600 hover:bg-gray-700 text-white px-6 py-2 rounded-lg font-bold">返回栖息地</button>
+<body class="p-4 md:p-8">
+    <div class="max-w-7xl mx-auto">
+        <!-- 顶部标题栏 -->
+        <div class="glass-panel rounded-2xl p-6 mb-6">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h1 class="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-amber-400 via-orange-400 to-red-500 mb-2">
+                        ⛏️ 地下挖掘系统
+                    </h1>
+                    <p class="text-gray-400 text-sm">组建精英挖掘队,深入地底探索无尽的宝藏与危险</p>
+                </div>
+                <button id="btn-return" class="btn-primary text-white font-bold py-3 px-8 rounded-xl relative overflow-hidden">
+                    <span class="relative z-10">返回栖息地</span>
+                </button>
+            </div>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 flex-1">
-            <!-- Left: Status & Controls -->
-            <div class="panel p-6 flex flex-col gap-4">
-                <div>
-                    <h2 class="text-xl font-bold text-white mb-2">当前状态</h2>
-                    <div class="text-4xl font-mono text-yellow-400 mb-1" id="depth-display">0 层</div>
-                    <div class="text-sm text-gray-400" id="checkpoint-display">下一据点: 25层</div>
-                </div>
-                
-                <div class="border-t border-gray-700 pt-4">
-                    <h3 class="font-bold text-gray-300 mb-2">已解锁据点</h3>
-                    <div id="checkpoint-list" class="flex flex-wrap gap-2">
-                        <!-- Checkpoint buttons -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            <!-- 左侧：状态与控制面板 -->
+            <div class="lg:col-span-3 space-y-6">
+                <!-- 深度指示器 -->
+                <div class="glass-panel rounded-2xl p-6">
+                    <h2 class="text-xl font-bold text-amber-400 mb-4 flex items-center gap-2">
+                        <span class="text-2xl">📍</span> 当前深度
+                    </h2>
+                    <div class="depth-indicator text-6xl font-bold text-yellow-400 mb-3 text-center" id="depth-display">
+                        0<span class="text-2xl ml-1">层</span>
+                    </div>
+                    <div class="text-center text-sm text-gray-400 mb-4" id="checkpoint-display">
+                        下一据点: 25层
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="depth-progress" style="width: 0%"></div>
                     </div>
                 </div>
 
-                <div class="mt-auto">
-                    <button id="btn-start" class="btn w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-lg mb-2 hidden">开始挖掘</button>
-                    <button id="btn-stop" class="btn w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 rounded-lg hidden">撤回队伍</button>
-                    <p class="text-xs text-gray-500 text-center mt-2">每层消耗 1 体力</p>
+                <!-- 统计数据 -->
+                <div class="glass-panel rounded-2xl p-6">
+                    <h2 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                        <span class="text-xl">📊</span> 本次挖掘
+                    </h2>
+                    <div class="space-y-3">
+                        <div class="stat-card p-3 rounded-lg">
+                            <div class="text-xs text-gray-400 mb-1">累计资源</div>
+                            <div class="text-lg font-bold text-emerald-400" id="session-resources">🪨 0 💰 0 💎 0</div>
+                        </div>
+                        <div class="stat-card p-3 rounded-lg">
+                            <div class="text-xs text-gray-400 mb-1">挖掘时长</div>
+                            <div class="text-lg font-mono text-blue-400" id="session-time">00:00</div>
+                        </div>
+                        <div class="stat-card p-3 rounded-lg">
+                            <div class="text-xs text-gray-400 mb-1">发现文物</div>
+                            <div class="text-lg font-bold text-purple-400" id="session-artifacts">0 件</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 据点系统 -->
+                <div class="glass-panel rounded-2xl p-6">
+                    <h3 class="font-bold text-white mb-3 flex items-center gap-2">
+                        <span class="text-xl">🚩</span> 已解锁据点
+                    </h3>
+                    <div id="checkpoint-list" class="grid grid-cols-2 gap-2"></div>
+                    <div class="mt-4 p-3 bg-blue-900/20 border border-blue-700/30 rounded-lg">
+                        <div class="text-xs text-blue-300">💡 据点作用</div>
+                        <div class="text-xs text-gray-400 mt-1">
+                            体力耗尽时会退回最近的据点,保留进度
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 控制按钮 -->
+                <div class="glass-panel rounded-2xl p-6">
+                    <button id="btn-start" class="btn-primary w-full font-bold py-4 rounded-xl mb-3 hidden relative overflow-hidden">
+                        <span class="relative z-10 text-lg">⛏️ 开始挖掘</span>
+                    </button>
+                    <button id="btn-stop" class="btn-danger w-full font-bold py-4 rounded-xl hidden relative overflow-hidden">
+                        <span class="relative z-10 text-lg">🚨 紧急撤回</span>
+                    </button>
+                    <p class="text-xs text-gray-500 text-center mt-2">
+                        <span class="text-yellow-400">⚡ 每层消耗 1 体力</span>
+                    </p>
                 </div>
             </div>
 
-            <!-- Middle: Visualizer -->
-            <div class="panel p-4 relative overflow-hidden flex flex-col items-center justify-center bg-gray-900">
-                <div id="mining-visual" class="w-full h-full flex flex-col items-center justify-end pb-10 space-y-2">
-                    <!-- Dynamic layers -->
-                </div>
-                <div class="absolute top-4 right-4 text-right">
-                    <div class="text-xs text-gray-500">获得资源</div>
-                    <div id="loot-log" class="text-sm space-y-1"></div>
+            <!-- 中间：挖掘可视化 -->
+            <div class="lg:col-span-6">
+                <div class="glass-panel rounded-2xl p-6 h-full mining-visual flex flex-col">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-2xl font-bold text-white flex items-center gap-2">
+                            <span>⛰️</span> 挖掘进度
+                        </h2>
+                        <div class="flex items-center gap-2">
+                            <button id="btn-toggle-view" class="px-3 py-1 bg-gray-700 hover:bg-gray-600 rounded-lg text-sm transition">
+                                <span>🔄</span> 切换视图
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 层级显示区域 -->
+                    <div id="mining-visual" class="flex-1 overflow-y-auto pr-2 space-y-2 min-h-[500px]">
+                        <div class="flex items-center justify-center h-full text-gray-500">
+                            <div class="text-center">
+                                <div class="text-6xl mb-4">⛏️</div>
+                                <p class="text-lg font-bold mb-2">准备开始挖掘</p>
+                                <p class="text-sm">选择队员后点击"开始挖掘"</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 实时掉落日志 -->
+                    <div class="mt-4 glass-panel bg-black/30 p-4 rounded-xl">
+                        <div class="text-xs text-gray-500 mb-2">📦 最近获得</div>
+                        <div id="loot-log" class="flex flex-wrap gap-2 min-h-[40px]"></div>
+                    </div>
                 </div>
             </div>
 
-            <!-- Right: Team -->
-            <div class="panel p-6 flex flex-col">
-                <h2 class="text-xl font-bold text-white mb-4">挖掘队伍</h2>
-                <div id="team-container" class="space-y-3 flex-1 overflow-y-auto">
-                    <!-- Team members -->
+            <!-- 右侧：队伍管理 -->
+            <div class="lg:col-span-3">
+                <div class="glass-panel rounded-2xl p-6 lg:sticky lg:top-6">
+                    <h2 class="text-2xl font-bold text-white mb-4 flex items-center gap-2">
+                        <span>👥</span> 挖掘队伍
+                    </h2>
+                    
+                    <div class="mb-4 p-3 bg-purple-900/20 border border-purple-700/30 rounded-lg">
+                        <div class="text-xs text-purple-300 font-bold mb-1">💡 队伍加成</div>
+                        <div class="text-xs text-gray-400">
+                            • 3人队伍效率最高<br>
+                            • 高等级成员获得更多资源<br>
+                            • 体力共享消耗
+                        </div>
+                    </div>
+
+                    <div id="team-container" class="space-y-3 mb-4 max-h-[400px] overflow-y-auto"></div>
+                    
+                    <button id="btn-select-team" class="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-bold py-3 rounded-xl transition-all transform hover:scale-105">
+                        <span class="text-lg">➕ 选择队员</span>
+                    </button>
+
+                    <!-- 队伍状态摘要 -->
+                    <div id="team-summary" class="mt-4 p-3 bg-gray-800/50 rounded-lg hidden">
+                        <div class="flex justify-between items-center text-sm">
+                            <span class="text-gray-400">队伍规模</span>
+                            <span class="text-white font-bold" id="team-size">0/3</span>
+                        </div>
+                        <div class="flex justify-between items-center text-sm mt-2">
+                            <span class="text-gray-400">平均等级</span>
+                            <span class="text-yellow-400 font-bold" id="team-avg-level">0</span>
+                        </div>
+                        <div class="flex justify-between items-center text-sm mt-2">
+                            <span class="text-gray-400">总体力</span>
+                            <span class="text-green-400 font-bold" id="team-total-stamina">0</span>
+                        </div>
+                    </div>
                 </div>
-                <button id="btn-select-team" class="btn mt-4 bg-indigo-600 hover:bg-indigo-700 text-white py-2 rounded-lg">选择队员</button>
             </div>
         </div>
     </div>
 
-    <!-- Team Selector Modal -->
-    <div id="modal-team" class="fixed inset-0 bg-black/80 hidden flex items-center justify-center z-50">
-        <div class="panel w-full max-w-md p-6 bg-gray-800">
-            <h3 class="text-xl font-bold mb-4">选择队员 (最多3名)</h3>
-            <div id="animal-list" class="max-h-96 overflow-y-auto space-y-2 mb-4"></div>
-            <div class="flex justify-end gap-2">
-                <button id="btn-close-modal" class="px-4 py-2 text-gray-300 hover:text-white">关闭</button>
-                <button id="btn-confirm-team" class="px-4 py-2 bg-blue-600 rounded hover:bg-blue-700 text-white">确定</button>
+    <!-- 队伍选择模态框 -->
+    <div id="modal-team" class="fixed inset-0 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4">
+        <div class="glass-panel w-full max-w-2xl rounded-2xl p-6 max-h-[90vh] flex flex-col">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-2xl font-bold text-white">选择挖掘队员</h3>
+                <button id="btn-close-modal" class="text-gray-400 hover:text-white text-3xl transition">&times;</button>
+            </div>
+            <p class="text-sm text-gray-400 mb-4">最多选择 3 名队员组成挖掘队</p>
+            <div id="animal-list" class="flex-1 overflow-y-auto space-y-3 pr-2 mb-4"></div>
+            <div class="flex justify-end gap-3">
+                <button id="btn-cancel-modal" class="px-6 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition">
+                    取消
+                </button>
+                <button id="btn-confirm-team" class="px-6 py-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-lg font-bold transition">
+                    确定 (<span id="selected-count">0</span>/3)
+                </button>
             </div>
         </div>
     </div>
@@ -82,6 +323,13 @@
         let gameState = {};
         let tempTeam = [];
         let miningInterval = null;
+        let sessionStats = {
+            stone: 0,
+            gold: 0,
+            gems: 0,
+            artifacts: 0,
+            startTime: null
+        };
 
         window.onload = () => {
             loadState();
@@ -94,7 +342,17 @@
         function loadState() {
             const json = localStorage.getItem('gameState');
             if (json) gameState = JSON.parse(json);
-            if (!gameState.mining) gameState.mining = { unlockedCheckpoints: [0], currentRun: { isActive: false, team: [], currentDepth: 0, lastTick: 0 } };
+            if (!gameState.mining) {
+                gameState.mining = { 
+                    unlockedCheckpoints: [0], 
+                    currentRun: { 
+                        isActive: false, 
+                        team: [], 
+                        currentDepth: 0, 
+                        lastTick: 0 
+                    } 
+                };
+            }
         }
 
         function saveState() {
@@ -104,18 +362,32 @@
         function renderUI() {
             const run = gameState.mining.currentRun;
             
-            // Depth
-            document.getElementById('depth-display').textContent = `${run.currentDepth} 层`;
-            const nextCP = [25, 50, 75, 100].find(cp => cp > run.currentDepth) || '无';
-            document.getElementById('checkpoint-display').textContent = `下一据点: ${nextCP}层`;
+            // 深度显示
+            document.getElementById('depth-display').innerHTML = `${run.currentDepth}<span class="text-2xl ml-1">层</span>`;
+            
+            // 计算进度到下一个据点
+            const nextCheckpoint = [25, 50, 75, 100].find(cp => cp > run.currentDepth);
+            const prevCheckpoint = [...[0], ...gameState.mining.unlockedCheckpoints].reverse().find(cp => cp <= run.currentDepth) || 0;
+            
+            if (nextCheckpoint) {
+                document.getElementById('checkpoint-display').textContent = `下一据点: ${nextCheckpoint}层`;
+                const progress = ((run.currentDepth - prevCheckpoint) / (nextCheckpoint - prevCheckpoint)) * 100;
+                document.getElementById('depth-progress').style.width = `${progress}%`;
+            } else {
+                document.getElementById('checkpoint-display').textContent = '已达最深层';
+                document.getElementById('depth-progress').style.width = '100%';
+            }
 
-            // Checkpoints
+            // 据点列表
             const cpList = document.getElementById('checkpoint-list');
             cpList.innerHTML = '';
             gameState.mining.unlockedCheckpoints.forEach(cp => {
                 const btn = document.createElement('button');
-                btn.className = `px-3 py-1 rounded text-sm font-mono ${run.isActive ? 'bg-gray-700 text-gray-500 cursor-not-allowed' : 'bg-blue-900 text-blue-200 hover:bg-blue-800'}`;
-                btn.textContent = `Lv.${cp}`;
+                btn.className = `checkpoint-btn px-3 py-2 rounded-lg text-sm font-mono font-bold transition relative overflow-hidden ${
+                    run.isActive ? 'bg-gray-700 text-gray-500 cursor-not-allowed' : 
+                    'bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700'
+                }`;
+                btn.innerHTML = `<span class="relative z-10">Lv.${cp}</span>`;
                 if (!run.isActive) {
                     btn.onclick = () => {
                         gameState.mining.currentRun.currentDepth = cp;
@@ -126,7 +398,7 @@
                 cpList.appendChild(btn);
             });
 
-            // Buttons
+            // 按钮状态
             const btnStart = document.getElementById('btn-start');
             const btnStop = document.getElementById('btn-stop');
             const btnSelect = document.getElementById('btn-select-team');
@@ -143,30 +415,78 @@
                 btnSelect.classList.remove('opacity-50', 'cursor-not-allowed');
             }
 
-            // Team
+            // 队伍显示
             const teamContainer = document.getElementById('team-container');
             teamContainer.innerHTML = '';
             const teamIds = run.isActive ? run.team : (tempTeam.length ? tempTeam : run.team);
             
             if (teamIds.length === 0) {
-                teamContainer.innerHTML = '<p class="text-gray-500 text-center">未选择队员</p>';
+                teamContainer.innerHTML = `
+                    <div class="text-center py-8 text-gray-500">
+                        <div class="text-4xl mb-2">👥</div>
+                        <p class="text-sm">未选择队员</p>
+                    </div>
+                `;
+                document.getElementById('team-summary').classList.add('hidden');
             } else {
+                let totalLevel = 0;
+                let totalStamina = 0;
+                
                 teamIds.forEach(id => {
                     const animal = gameState.animals.find(a => a.id === id);
                     if (animal) {
+                        totalLevel += animal.level;
+                        totalStamina += animal.stamina;
+                        
+                        const colorHex = '#' + animal.color.toString(16).padStart(6, '0');
                         const div = document.createElement('div');
-                        div.className = 'bg-gray-700 p-2 rounded flex justify-between items-center';
+                        div.className = 'team-member p-3 bg-gray-800/50 rounded-xl border border-gray-700 hover:border-indigo-500 transition';
                         div.innerHTML = `
-                            <span>${animal.name}</span>
-                            <span class="text-xs ${animal.stamina < 10 ? 'text-red-400' : 'text-green-400'}">⚡ ${Math.floor(animal.stamina)}</span>
+                            <div class="flex items-center gap-3">
+                                <div style="background: radial-gradient(circle, ${colorHex}, transparent);" class="w-12 h-12 rounded-full border-2 border-white/20 flex items-center justify-center">
+                                    <div style="background-color: ${colorHex};" class="w-8 h-8 rounded-full"></div>
+                                </div>
+                                <div class="flex-1">
+                                    <div class="font-bold text-white">${animal.name}</div>
+                                    <div class="flex items-center gap-2 text-xs mt-1">
+                                        <span class="text-yellow-400">Lv.${animal.level}</span>
+                                        <span class="${animal.stamina < 10 ? 'text-red-400' : 'text-green-400'}">
+                                            ⚡ ${Math.floor(animal.stamina)}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
                         `;
                         teamContainer.appendChild(div);
                     }
                 });
+
+                // 更新队伍摘要
+                document.getElementById('team-summary').classList.remove('hidden');
+                document.getElementById('team-size').textContent = `${teamIds.length}/3`;
+                document.getElementById('team-avg-level').textContent = Math.floor(totalLevel / teamIds.length);
+                document.getElementById('team-total-stamina').textContent = Math.floor(totalStamina);
+            }
+
+            // 更新统计数据
+            updateSessionStats();
+        }
+
+        function updateSessionStats() {
+            document.getElementById('session-resources').textContent = 
+                `🪨 ${sessionStats.stone} 💰 ${sessionStats.gold} 💎 ${sessionStats.gems}`;
+            document.getElementById('session-artifacts').textContent = `${sessionStats.artifacts} 件`;
+            
+            if (sessionStats.startTime) {
+                const elapsed = Math.floor((Date.now() - sessionStats.startTime) / 1000);
+                const mins = Math.floor(elapsed / 60);
+                const secs = elapsed % 60;
+                document.getElementById('session-time').textContent = 
+                    `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
             }
         }
 
-        // Logic
+        // 事件监听
         document.getElementById('btn-return').onclick = () => {
             saveState();
             window.location.href = '../pages/game3d.html';
@@ -178,29 +498,77 @@
             modal.classList.remove('hidden');
             list.innerHTML = '';
             tempTeam = [...gameState.mining.currentRun.team];
+            updateSelectedCount();
 
-            gameState.animals.filter(a => !a.isPlaced && !a.workingBuildingId && !a.exploringMissionId).forEach(a => {
+            const availableAnimals = gameState.animals.filter(a => 
+                !a.isPlaced && !a.workingBuildingId && !a.exploringMissionId
+            );
+
+            if (availableAnimals.length === 0) {
+                list.innerHTML = `
+                    <div class="text-center py-12 text-gray-400">
+                        <div class="text-6xl mb-4">😔</div>
+                        <p class="text-lg font-bold mb-2">没有可用的动物</p>
+                        <p class="text-sm">所有动物都在工作或探索中</p>
+                    </div>
+                `;
+                return;
+            }
+
+            availableAnimals.forEach(a => {
+                const colorHex = '#' + a.color.toString(16).padStart(6, '0');
                 const div = document.createElement('div');
-                div.className = 'flex items-center justify-between p-2 bg-gray-700 rounded cursor-pointer hover:bg-gray-600';
                 const isSelected = tempTeam.includes(a.id);
-                if (isSelected) div.classList.add('border', 'border-blue-500');
+                div.className = `flex items-center justify-between p-4 rounded-xl border-2 cursor-pointer transition-all ${
+                    isSelected ? 'border-indigo-500 bg-indigo-900/30' : 'border-gray-600 hover:border-gray-400 hover:bg-gray-700/30'
+                }`;
                 
-                div.innerHTML = `<span>${a.name} (Lv.${a.level})</span> <span class="text-xs">⚡${Math.floor(a.stamina)}</span>`;
+                div.innerHTML = `
+                    <div class="flex items-center gap-4">
+                        <div style="background: radial-gradient(circle, ${colorHex}, transparent);" class="w-14 h-14 rounded-full border-2 border-white/20 flex items-center justify-center">
+                            <div style="background-color: ${colorHex};" class="w-10 h-10 rounded-full"></div>
+                        </div>
+                        <div>
+                            <div class="font-bold text-white mb-1">${a.name} <span class="text-yellow-400 text-sm">Lv.${a.level}</span></div>
+                            <div class="flex items-center gap-3 text-xs">
+                                <span class="${a.stamina < 20 ? 'text-red-400' : 'text-green-400'}">⚡ ${Math.floor(a.stamina)}</span>
+                                <span class="text-gray-400">⚔️ ${a.abilities.combat.attack}</span>
+                                <span class="text-gray-400">${a.element}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="text-2xl">${isSelected ? '✓' : '+'}</div>
+                `;
+                
                 div.onclick = () => {
                     if (tempTeam.includes(a.id)) {
                         tempTeam = tempTeam.filter(id => id !== a.id);
-                        div.classList.remove('border', 'border-blue-500');
                     } else {
-                        if (tempTeam.length >= 3) return alert('最多3名队员');
+                        if (tempTeam.length >= 3) {
+                            alert('最多选择3名队员');
+                            return;
+                        }
                         tempTeam.push(a.id);
-                        div.classList.add('border', 'border-blue-500');
                     }
+                    updateSelectedCount();
+                    // 刷新列表显示
+                    document.getElementById('btn-select-team').click();
                 };
                 list.appendChild(div);
             });
         };
 
-        document.getElementById('btn-close-modal').onclick = () => document.getElementById('modal-team').classList.add('hidden');
+        function updateSelectedCount() {
+            document.getElementById('selected-count').textContent = tempTeam.length;
+        }
+
+        document.getElementById('btn-close-modal').onclick = () => {
+            document.getElementById('modal-team').classList.add('hidden');
+        };
+
+        document.getElementById('btn-cancel-modal').onclick = () => {
+            document.getElementById('modal-team').classList.add('hidden');
+        };
         
         document.getElementById('btn-confirm-team').onclick = () => {
             gameState.mining.currentRun.team = [...tempTeam];
@@ -210,23 +578,42 @@
         };
 
         document.getElementById('btn-start').onclick = () => {
-            if (gameState.mining.currentRun.team.length === 0) return alert('请先选择队伍');
-            // Check stamina
+            if (gameState.mining.currentRun.team.length === 0) {
+                return alert('请先选择挖掘队伍');
+            }
+            
+            // 检查体力
             const lowStamina = gameState.mining.currentRun.team.some(id => {
                 const a = gameState.animals.find(an => an.id === id);
                 return a.stamina < 5;
             });
-            if (lowStamina) return alert('队员体力过低');
+            if (lowStamina) {
+                if (!confirm('⚠️ 部分队员体力较低,可能无法挖掘太深。确定要开始吗？')) {
+                    return;
+                }
+            }
+
+            // 重置统计
+            sessionStats = {
+                stone: 0,
+                gold: 0,
+                gems: 0,
+                artifacts: 0,
+                startTime: Date.now()
+            };
 
             gameState.mining.currentRun.isActive = true;
             gameState.mining.currentRun.lastTick = Date.now();
             saveState();
             renderUI();
             startMiningLoop();
+
+            // 清空可视化区域
+            document.getElementById('mining-visual').innerHTML = '';
         };
 
         document.getElementById('btn-stop').onclick = () => {
-            stopMining(true); // Manual stop
+            stopMining(true);
         };
 
         function stopMining(manual) {
@@ -234,14 +621,14 @@
             const run = gameState.mining.currentRun;
             run.isActive = false;
             
-            // Reset to last checkpoint
+            // 退回到最近的据点
             const checkpoints = [0, 25, 50, 75, 100];
             const lastCP = checkpoints.reverse().find(cp => cp <= run.currentDepth) || 0;
             
             if (manual) {
-                alert(`已撤回。进度保存于 ${lastCP} 层。`);
+                alert(`✅ 挖掘队已撤回\n\n进度保存于 ${lastCP} 层\n\n本次收获:\n🪨 石材 +${sessionStats.stone}\n💰 金币 +${sessionStats.gold}\n💎 宝石 +${sessionStats.gems}\n🏺 文物 +${sessionStats.artifacts}`);
             } else {
-                alert(`体力耗尽！被迫撤回至 ${lastCP} 层。`);
+                alert(`⚠️ 体力耗尽！\n\n队伍被迫撤回至 ${lastCP} 层\n\n本次收获:\n🪨 石材 +${sessionStats.stone}\n💰 金币 +${sessionStats.gold}\n💎 宝石 +${sessionStats.gems}\n🏺 文物 +${sessionStats.artifacts}`);
             }
             
             run.currentDepth = lastCP;
@@ -251,14 +638,21 @@
 
         function startMiningLoop() {
             if (miningInterval) clearInterval(miningInterval);
+            
+            // 更新统计显示
+            const statsInterval = setInterval(updateSessionStats, 1000);
+            
             miningInterval = setInterval(() => {
                 const run = gameState.mining.currentRun;
-                if (!run.isActive) return stopMining(false);
+                if (!run.isActive) {
+                    clearInterval(statsInterval);
+                    return stopMining(false);
+                }
 
-                // Logic
+                // 推进深度
                 run.currentDepth++;
                 
-                // Cost
+                // 消耗体力
                 let exhausted = false;
                 run.team.forEach(id => {
                     const a = gameState.animals.find(an => an.id === id);
@@ -268,21 +662,41 @@
                     }
                 });
 
-                // Rewards
+                // 计算奖励 (基于队伍等级)
                 const loot = [];
-                gameState.stone += 1; loot.push('🪨 +1');
-                if (Math.random() < 0.2) { gameState.gold += 1; loot.push('💰 +1'); }
-                if (Math.random() < 0.05) { gameState.gems += 1; loot.push('💎 +1'); }
+                const teamLevel = run.team.reduce((sum, id) => {
+                    const a = gameState.animals.find(an => an.id === id);
+                    return sum + (a ? a.level : 0);
+                }, 0) / run.team.length;
                 
-                // Artifact discovery
+                const baseStone = Math.floor(1 + teamLevel * 0.1);
+                gameState.stone += baseStone;
+                sessionStats.stone += baseStone;
+                loot.push(`🪨 +${baseStone}`);
+                
+                if (Math.random() < 0.2 + teamLevel * 0.01) {
+                    const goldAmount = Math.floor(1 + teamLevel * 0.05);
+                    gameState.gold += goldAmount;
+                    sessionStats.gold += goldAmount;
+                    loot.push(`💰 +${goldAmount}`);
+                }
+                
+                if (Math.random() < 0.05 + teamLevel * 0.005) {
+                    gameState.gems += 1;
+                    sessionStats.gems += 1;
+                    loot.push(`💎 +1`);
+                }
+                
+                // 文物发现
                 if (Math.random() < 0.03) {
                     const artifacts = [
                         { name: '古代陶片', rarity: '普通', icon: '🏺' },
                         { name: '三叶虫化石', rarity: '普通', icon: '🐚' },
-                        { name: '祭祀面具', rarity: '稀有', icon: '👺' }
+                        { name: '祭祀面具', rarity: '稀有', icon: '👺' },
+                        { name: '黄金权杖', rarity: '史诗', icon: '👑' }
                     ];
                     const artifact = artifacts[Math.floor(Math.random() * artifacts.length)];
-                    // Add to gameState artifacts
+                    
                     if (!gameState.artifacts) gameState.artifacts = [];
                     gameState.artifacts.push({
                         id: crypto.randomUUID(),
@@ -291,42 +705,80 @@
                         icon: artifact.icon,
                         foundDate: Date.now()
                     });
-                    loot.push(`${artifact.icon}`);
+                    sessionStats.artifacts += 1;
+                    loot.push(`${artifact.icon} ${artifact.name}`);
                 }
 
-                // Checkpoints
+                // 据点检查
                 if ([25, 50, 75, 100].includes(run.currentDepth)) {
                     if (!gameState.mining.unlockedCheckpoints.includes(run.currentDepth)) {
                         gameState.mining.unlockedCheckpoints.push(run.currentDepth);
                         gameState.mining.unlockedCheckpoints.sort((a,b) => a-b);
-                        loot.push(`🚩 据点解锁!`);
+                        loot.push(`🚩 据点${run.currentDepth}层`);
                     }
                 }
 
-                // Visuals
+                // 更新可视化
                 updateVisuals(run.currentDepth, loot);
-                renderUI(); // Update stamina display
+                renderUI();
                 saveState();
 
-                if (exhausted) stopMining(false);
+                if (exhausted) {
+                    clearInterval(statsInterval);
+                    stopMining(false);
+                }
 
-            }, 3000); // 3 seconds per layer
+            }, 3000);
         }
 
         function updateVisuals(depth, loot) {
             const container = document.getElementById('mining-visual');
-            const div = document.createElement('div');
-            div.className = 'text-center text-gray-400 layer-anim border-b border-gray-800 w-full py-1';
-            div.innerHTML = `Layer ${depth} <span class="text-xs ml-2">${loot.join(' ')}</span>`;
-            container.appendChild(div);
-            if (container.children.length > 6) container.removeChild(container.firstChild);
             
+            // 创建层级卡片
+            const layerCard = document.createElement('div');
+            const isMilestone = [25, 50, 75, 100].includes(depth);
+            
+            layerCard.className = `layer-appear p-4 rounded-xl border-2 transition ${
+                isMilestone ? 
+                'depth-milestone bg-gradient-to-r from-yellow-900/30 to-orange-900/30 border-yellow-500' : 
+                'bg-gray-800/50 border-gray-700'
+            }`;
+            
+            layerCard.innerHTML = `
+                <div class="flex justify-between items-center">
+                    <div>
+                        <span class="font-mono text-lg ${isMilestone ? 'text-yellow-400 font-bold' : 'text-gray-300'}">
+                            ${isMilestone ? '🚩 ' : ''}第 ${depth} 层
+                        </span>
+                    </div>
+                    <div class="flex gap-2 flex-wrap justify-end">
+                        ${loot.map(item => `<span class="loot-notification px-2 py-1 bg-black/40 rounded text-xs">${item}</span>`).join('')}
+                    </div>
+                </div>
+            `;
+            
+            container.appendChild(layerCard);
+            
+            // 只保留最近10层
+            if (container.children.length > 10) {
+                container.removeChild(container.firstChild);
+            }
+            
+            // 滚动到底部
+            container.scrollTop = container.scrollHeight;
+            
+            // 更新掉落日志
             const log = document.getElementById('loot-log');
-            if (loot.length) {
-                const entry = document.createElement('div');
-                entry.textContent = `L${depth}: ${loot.join(' ')}`;
-                log.prepend(entry);
-                if (log.children.length > 5) log.removeChild(log.lastChild);
+            loot.forEach(item => {
+                const badge = document.createElement('span');
+                badge.className = 'loot-notification px-3 py-1 bg-gradient-to-r from-purple-900/50 to-pink-900/50 border border-purple-600/30 rounded-full text-sm';
+                badge.textContent = item;
+                log.insertBefore(badge, log.firstChild);
+            });
+            
+            // 只保留最近8个掉落
+            while (log.children.length > 8) {
+                log.removeChild(log.lastChild);
             }
         }
     </script>

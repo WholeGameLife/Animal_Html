@@ -1,0 +1,757 @@
+[
+  {
+    "key": "ANIMAL_1767603935732",
+    "animalId": "10001",
+    "name": "伊卡",
+    "color": "#0055FF",
+    "element": "water",
+    "rarity": "common",
+    "level": 1,
+    "baseExp": 100,
+    "expGrowth": 1.2,
+    "health": 100,
+    "stamina": 100,
+    "attack": 10,
+    "defense": 5,
+    "agility": 8,
+    "favorability": 50,
+    "growthTypes": {
+      "mediocre": {
+        "health": 10,
+        "stamina": 8,
+        "attack": 2,
+        "defense": 1,
+        "agility": 1,
+        "favorability": 3
+      },
+      "extraordinary": {
+        "health": 15,
+        "stamina": 12,
+        "attack": 3,
+        "defense": 2,
+        "agility": 2,
+        "favorability": 5
+      },
+      "brilliant": {
+        "health": 20,
+        "stamina": 16,
+        "attack": 4,
+        "defense": 3,
+        "agility": 3,
+        "favorability": 7
+      }
+    },
+    "skillPoolKey": "SKILLPOOL_1768549661703",
+    "desc": "",
+    "avatarData": null,
+    "createdAt": "2026-01-05T09:05:35.732Z",
+    "updatedAt": "2026-02-26T02:06:47.014Z"
+  },
+  {
+    "key": "ANIMAL_1767603997508",
+    "animalId": "20001",
+    "name": "伊卡",
+    "color": "#0055FF",
+    "element": "water",
+    "rarity": "shiny",
+    "level": 1,
+    "baseExp": 100,
+    "expGrowth": 1.2,
+    "health": 100,
+    "stamina": 100,
+    "attack": 10,
+    "defense": 5,
+    "agility": 8,
+    "favorability": 50,
+    "growthTypes": {
+      "mediocre": {
+        "health": 10,
+        "stamina": 8,
+        "attack": 2,
+        "defense": 1,
+        "agility": 1,
+        "favorability": 3
+      },
+      "extraordinary": {
+        "health": 15,
+        "stamina": 12,
+        "attack": 3,
+        "defense": 2,
+        "agility": 2,
+        "favorability": 5
+      },
+      "brilliant": {
+        "health": 20,
+        "stamina": 16,
+        "attack": 4,
+        "defense": 3,
+        "agility": 3,
+        "favorability": 7
+      }
+    },
+    "skillPoolKey": "SKILLPOOL_1768549661703",
+    "desc": "",
+    "avatarData": null,
+    "createdAt": "2026-01-05T09:06:37.508Z",
+    "updatedAt": "2026-02-26T02:06:52.414Z"
+  },
+  {
+    "key": "ANIMAL_1767604037212",
+    "animalId": "30001",
+    "name": "伊卡",
+    "color": "#00BFFF",
+    "element": "water",
+    "rarity": "prismatic",
+    "level": 1,
+    "baseExp": 100,
+    "expGrowth": 1.2,
+    "health": 100,
+    "stamina": 100,
+    "attack": 10,
+    "defense": 5,
+    "agility": 8,
+    "favorability": 50,
+    "growthTypes": {
+      "mediocre": {
+        "health": 10,
+        "stamina": 8,
+        "attack": 2,
+        "defense": 1,
+        "agility": 1,
+        "favorability": 3
+      },
+      "extraordinary": {
+        "health": 15,
+        "stamina": 12,
+        "attack": 3,
+        "defense": 2,
+        "agility": 2,
+        "favorability": 5
+      },
+      "brilliant": {
+        "health": 20,
+        "stamina": 16,
+        "attack": 4,
+        "defense": 3,
+        "agility": 3,
+        "favorability": 7
+      }
+    },
+    "skillPoolKey": "SKILLPOOL_1768549661703",
+    "desc": "",
+    "avatarData": null,
+    "createdAt": "2026-01-05T09:07:17.212Z",
+    "updatedAt": "2026-02-26T02:06:58.287Z"
+  },
+  {
+    "key": "ANIMAL_1767604097436",
+    "animalId": "40001",
+    "name": "伊卡",
+    "color": "#2B00FF",
+    "element": "water",
+    "rarity": "stellar",
+    "level": 1,
+    "baseExp": 100,
+    "expGrowth": 1.2,
+    "health": 100,
+    "stamina": 100,
+    "attack": 10,
+    "defense": 5,
+    "agility": 8,
+    "favorability": 50,
+    "growthTypes": {
+      "mediocre": {
+        "health": 10,
+        "stamina": 8,
+        "attack": 2,
+        "defense": 1,
+        "agility": 1,
+        "favorability": 3
+      },
+      "extraordinary": {
+        "health": 15,
+        "stamina": 12,
+        "attack": 3,
+        "defense": 2,
+        "agility": 2,
+        "favorability": 5
+      },
+      "brilliant": {
+        "health": 20,
+        "stamina": 16,
+        "attack": 4,
+        "defense": 3,
+        "agility": 3,
+        "favorability": 7
+      }
+    },
+    "skillPoolKey": "SKILLPOOL_1768549661703",
+    "desc": "",
+    "avatarData": null,
+    "createdAt": "2026-01-05T09:08:17.436Z",
+    "updatedAt": "2026-02-26T02:06:41.190Z"
+  },
+  {
+    "key": "ANIMAL_1767775536506",
+    "animalId": "10002",
+    "name": "海灵",
+    "color": "#00D5FF",
+    "element": "water",
+    "rarity": "common",
+    "level": 1,
+    "baseExp": 100,
+    "expGrowth": 1.2,
+    "health": 100,
+    "stamina": 100,
+    "attack": 20,
+    "defense": 7,
+    "agility": 6,
+    "favorability": 50,
+    "growthTypes": {
+      "mediocre": {
+        "health": 10,
+        "stamina": 8,
+        "attack": 2,
+        "defense": 1,
+        "agility": 1,
+        "favorability": 3
+      },
+      "extraordinary": {
+        "health": 15,
+        "stamina": 12,
+        "attack": 3,
+        "defense": 2,
+        "agility": 2,
+        "favorability": 5
+      },
+      "brilliant": {
+        "health": 20,
+        "stamina": 16,
+        "attack": 4,
+        "defense": 3,
+        "agility": 3,
+        "favorability": 7
+      }
+    },
+    "skillPoolKey": "SKILLPOOL_1768552409915",
+    "desc": "",
+    "avatarData": null,
+    "createdAt": "2026-01-07T08:45:36.506Z",
+    "updatedAt": "2026-02-26T02:07:05.294Z"
+  },
+  {
+    "key": "ANIMAL_1768553905628",
+    "animalId": "10003",
+    "name": "风灵",
+    "color": "#00FF91",
+    "element": "wind",
+    "rarity": "common",
+    "level": 1,
+    "baseExp": 100,
+    "expGrowth": 1.2,
+    "health": 100,
+    "stamina": 100,
+    "attack": 10,
+    "defense": 5,
+    "agility": 8,
+    "favorability": 50,
+    "growthTypes": {
+      "mediocre": {
+        "health": 10,
+        "stamina": 8,
+        "attack": 2,
+        "defense": 1,
+        "agility": 1,
+        "favorability": 3
+      },
+      "extraordinary": {
+        "health": 15,
+        "stamina": 12,
+        "attack": 3,
+        "defense": 2,
+        "agility": 2,
+        "favorability": 5
+      },
+      "brilliant": {
+        "health": 20,
+        "stamina": 16,
+        "attack": 4,
+        "defense": 3,
+        "agility": 3,
+        "favorability": 7
+      }
+    },
+    "skillPoolKey": "SKILLPOOL_1768553887364",
+    "desc": "",
+    "avatarData": null,
+    "createdAt": "2026-01-16T08:58:25.628Z",
+    "updatedAt": "2026-02-26T02:07:12.134Z"
+  },
+  {
+    "key": "ANIMAL_1768979646245",
+    "animalId": "10004",
+    "name": "火灵",
+    "color": "#FF0000",
+    "element": "fire",
+    "rarity": "common",
+    "level": 1,
+    "baseExp": 100,
+    "expGrowth": 1.2,
+    "health": 100,
+    "stamina": 100,
+    "attack": 10,
+    "defense": 5,
+    "agility": 8,
+    "favorability": 50,
+    "growthTypes": {
+      "mediocre": {
+        "health": 10,
+        "stamina": 8,
+        "attack": 2,
+        "defense": 1,
+        "agility": 1,
+        "favorability": 3
+      },
+      "extraordinary": {
+        "health": 15,
+        "stamina": 12,
+        "attack": 3,
+        "defense": 2,
+        "agility": 2,
+        "favorability": 5
+      },
+      "brilliant": {
+        "health": 20,
+        "stamina": 16,
+        "attack": 4,
+        "defense": 3,
+        "agility": 3,
+        "favorability": 7
+      }
+    },
+    "skillPoolKey": "SKILLPOOL_1768979625327",
+    "desc": "",
+    "createdAt": "2026-01-21T07:14:06.245Z"
+  },
+  {
+    "key": "ANIMAL_1768979966742",
+    "animalId": "20004",
+    "name": "火灵",
+    "color": "#FF0000",
+    "element": "fire",
+    "rarity": "shiny",
+    "level": 1,
+    "baseExp": 100,
+    "expGrowth": 1.2,
+    "health": 100,
+    "stamina": 100,
+    "attack": 10,
+    "defense": 5,
+    "agility": 8,
+    "favorability": 50,
+    "growthTypes": {
+      "mediocre": {
+        "health": 10,
+        "stamina": 8,
+        "attack": 2,
+        "defense": 1,
+        "agility": 1,
+        "favorability": 3
+      },
+      "extraordinary": {
+        "health": 15,
+        "stamina": 12,
+        "attack": 3,
+        "defense": 2,
+        "agility": 2,
+        "favorability": 5
+      },
+      "brilliant": {
+        "health": 20,
+        "stamina": 16,
+        "attack": 4,
+        "defense": 3,
+        "agility": 3,
+        "favorability": 7
+      }
+    },
+    "skillPoolKey": "SKILLPOOL_1768979625327",
+    "desc": "",
+    "createdAt": "2026-01-21T07:19:26.742Z"
+  },
+  {
+    "key": "ANIMAL_1768979995959",
+    "animalId": "30004",
+    "name": "火灵",
+    "color": "#FF0000",
+    "element": "fire",
+    "rarity": "prismatic",
+    "level": 1,
+    "baseExp": 100,
+    "expGrowth": 1.2,
+    "health": 100,
+    "stamina": 100,
+    "attack": 10,
+    "defense": 5,
+    "agility": 8,
+    "favorability": 50,
+    "growthTypes": {
+      "mediocre": {
+        "health": 10,
+        "stamina": 8,
+        "attack": 2,
+        "defense": 1,
+        "agility": 1,
+        "favorability": 3
+      },
+      "extraordinary": {
+        "health": 15,
+        "stamina": 12,
+        "attack": 3,
+        "defense": 2,
+        "agility": 2,
+        "favorability": 5
+      },
+      "brilliant": {
+        "health": 20,
+        "stamina": 16,
+        "attack": 4,
+        "defense": 3,
+        "agility": 3,
+        "favorability": 7
+      }
+    },
+    "skillPoolKey": "SKILLPOOL_1768979625327",
+    "desc": "",
+    "createdAt": "2026-01-21T07:19:55.959Z"
+  },
+  {
+    "key": "ANIMAL_1768980025359",
+    "animalId": "40004",
+    "name": "火灵",
+    "color": "#FF0000",
+    "element": "fire",
+    "rarity": "stellar",
+    "level": 1,
+    "baseExp": 100,
+    "expGrowth": 1.2,
+    "health": 100,
+    "stamina": 100,
+    "attack": 10,
+    "defense": 5,
+    "agility": 8,
+    "favorability": 50,
+    "growthTypes": {
+      "mediocre": {
+        "health": 10,
+        "stamina": 8,
+        "attack": 2,
+        "defense": 1,
+        "agility": 1,
+        "favorability": 3
+      },
+      "extraordinary": {
+        "health": 15,
+        "stamina": 12,
+        "attack": 3,
+        "defense": 2,
+        "agility": 2,
+        "favorability": 5
+      },
+      "brilliant": {
+        "health": 20,
+        "stamina": 16,
+        "attack": 4,
+        "defense": 3,
+        "agility": 3,
+        "favorability": 7
+      }
+    },
+    "skillPoolKey": "SKILLPOOL_1768979625327",
+    "desc": "",
+    "createdAt": "2026-01-21T07:20:25.359Z",
+    "updatedAt": "2026-02-26T02:07:24.584Z"
+  },
+  {
+    "key": "ANIMAL_1772091294469",
+    "animalId": "10005",
+    "name": "土灵",
+    "color": "#FFFFFF",
+    "element": "earth",
+    "rarity": "common",
+    "level": 1,
+    "baseExp": 100,
+    "expGrowth": 1.2,
+    "health": 100,
+    "stamina": 100,
+    "attack": 10,
+    "defense": 5,
+    "agility": 8,
+    "favorability": 50,
+    "growthTypes": {
+      "mediocre": {
+        "health": 10,
+        "stamina": 8,
+        "attack": 2,
+        "defense": 1,
+        "agility": 1,
+        "favorability": 3
+      },
+      "extraordinary": {
+        "health": 15,
+        "stamina": 12,
+        "attack": 3,
+        "defense": 2,
+        "agility": 2,
+        "favorability": 5
+      },
+      "brilliant": {
+        "health": 20,
+        "stamina": 16,
+        "attack": 4,
+        "defense": 3,
+        "agility": 3,
+        "favorability": 7
+      }
+    },
+    "skillPoolKey": null,
+    "desc": "",
+    "avatarData": null,
+    "createdAt": "2026-02-26T07:34:54.469Z"
+  },
+  {
+    "key": "ANIMAL_1772091796525",
+    "animalId": "20005",
+    "name": "土灵",
+    "color": "#FFFFFF",
+    "element": "earth",
+    "rarity": "shiny",
+    "level": 1,
+    "baseExp": 100,
+    "expGrowth": 1.2,
+    "health": 100,
+    "stamina": 100,
+    "attack": 10,
+    "defense": 5,
+    "agility": 8,
+    "favorability": 50,
+    "growthTypes": {
+      "mediocre": {
+        "health": 10,
+        "stamina": 8,
+        "attack": 2,
+        "defense": 1,
+        "agility": 1,
+        "favorability": 3
+      },
+      "extraordinary": {
+        "health": 15,
+        "stamina": 12,
+        "attack": 3,
+        "defense": 2,
+        "agility": 2,
+        "favorability": 5
+      },
+      "brilliant": {
+        "health": 20,
+        "stamina": 16,
+        "attack": 4,
+        "defense": 3,
+        "agility": 3,
+        "favorability": 7
+      }
+    },
+    "skillPoolKey": null,
+    "desc": "",
+    "avatarData": null,
+    "createdAt": "2026-02-26T07:43:16.525Z"
+  },
+  {
+    "key": "ANIMAL_1772091815968",
+    "animalId": "30005",
+    "name": "土灵",
+    "color": "#FFFFFF",
+    "element": "earth",
+    "rarity": "prismatic",
+    "level": 1,
+    "baseExp": 100,
+    "expGrowth": 1.2,
+    "health": 100,
+    "stamina": 100,
+    "attack": 10,
+    "defense": 5,
+    "agility": 8,
+    "favorability": 50,
+    "growthTypes": {
+      "mediocre": {
+        "health": 10,
+        "stamina": 8,
+        "attack": 2,
+        "defense": 1,
+        "agility": 1,
+        "favorability": 3
+      },
+      "extraordinary": {
+        "health": 15,
+        "stamina": 12,
+        "attack": 3,
+        "defense": 2,
+        "agility": 2,
+        "favorability": 5
+      },
+      "brilliant": {
+        "health": 20,
+        "stamina": 16,
+        "attack": 4,
+        "defense": 3,
+        "agility": 3,
+        "favorability": 7
+      }
+    },
+    "skillPoolKey": null,
+    "desc": "",
+    "avatarData": null,
+    "createdAt": "2026-02-26T07:43:35.968Z"
+  },
+  {
+    "key": "ANIMAL_1772091833429",
+    "animalId": "40005",
+    "name": "土灵",
+    "color": "#FFFFFF",
+    "element": "earth",
+    "rarity": "stellar",
+    "level": 1,
+    "baseExp": 100,
+    "expGrowth": 1.2,
+    "health": 100,
+    "stamina": 100,
+    "attack": 10,
+    "defense": 5,
+    "agility": 8,
+    "favorability": 50,
+    "growthTypes": {
+      "mediocre": {
+        "health": 10,
+        "stamina": 8,
+        "attack": 2,
+        "defense": 1,
+        "agility": 1,
+        "favorability": 3
+      },
+      "extraordinary": {
+        "health": 15,
+        "stamina": 12,
+        "attack": 3,
+        "defense": 2,
+        "agility": 2,
+        "favorability": 5
+      },
+      "brilliant": {
+        "health": 20,
+        "stamina": 16,
+        "attack": 4,
+        "defense": 3,
+        "agility": 3,
+        "favorability": 7
+      }
+    },
+    "skillPoolKey": null,
+    "desc": "",
+    "avatarData": null,
+    "createdAt": "2026-02-26T07:43:53.429Z"
+  },
+  {
+    "key": "ANIMAL_1772157517340",
+    "animalId": "10006",
+    "name": "萌芽团",
+    "color": "#FFFFFF",
+    "element": "grass",
+    "rarity": "common",
+    "level": 1,
+    "baseExp": 100,
+    "expGrowth": 1.2,
+    "health": 100,
+    "stamina": 100,
+    "attack": 10,
+    "defense": 5,
+    "agility": 8,
+    "favorability": 50,
+    "growthTypes": {
+      "mediocre": {
+        "health": 10,
+        "stamina": 8,
+        "attack": 2,
+        "defense": 1,
+        "agility": 1,
+        "favorability": 3
+      },
+      "extraordinary": {
+        "health": 15,
+        "stamina": 12,
+        "attack": 3,
+        "defense": 2,
+        "agility": 2,
+        "favorability": 5
+      },
+      "brilliant": {
+        "health": 20,
+        "stamina": 16,
+        "attack": 4,
+        "defense": 3,
+        "agility": 3,
+        "favorability": 7
+      }
+    },
+    "skillPoolKey": null,
+    "desc": "",
+    "avatarData": null,
+    "createdAt": "2026-02-27T01:58:37.340Z"
+  },
+  {
+    "key": "ANIMAL_1772157615597",
+    "animalId": "10007",
+    "name": "旋风崽",
+    "color": "#FFFFFF",
+    "element": "wind",
+    "rarity": "common",
+    "level": 1,
+    "baseExp": 100,
+    "expGrowth": 1.2,
+    "health": 100,
+    "stamina": 100,
+    "attack": 10,
+    "defense": 5,
+    "agility": 8,
+    "favorability": 50,
+    "growthTypes": {
+      "mediocre": {
+        "health": 10,
+        "stamina": 8,
+        "attack": 2,
+        "defense": 1,
+        "agility": 1,
+        "favorability": 3
+      },
+      "extraordinary": {
+        "health": 15,
+        "stamina": 12,
+        "attack": 3,
+        "defense": 2,
+        "agility": 2,
+        "favorability": 5
+      },
+      "brilliant": {
+        "health": 20,
+        "stamina": 16,
+        "attack": 4,
+        "defense": 3,
+        "agility": 3,
+        "favorability": 7
+      }
+    },
+    "skillPoolKey": null,
+    "desc": "",
+    "avatarData": null,
+    "createdAt": "2026-02-27T02:00:15.597Z"
+  }
+]

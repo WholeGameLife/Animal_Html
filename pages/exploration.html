@@ -7,188 +7,357 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body {
-            background-color: #111827;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: #f3f4f6;
             font-family: 'Inter', sans-serif;
+            min-height: 100vh;
         }
-        .control-panel {
-            background: rgba(17, 24, 39, 0.9);
-            backdrop-filter: blur(5px);
-            border: 1px solid #374151;
-            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.5);
+        .glass-panel {
+            background: rgba(17, 24, 39, 0.75);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
         }
         .action-button {
-            transition: all 0.15s ease-in-out;
-            box-shadow: 0 4px #047857;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+        .action-button:before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+        .action-button:hover:before {
+            width: 300px;
+            height: 300px;
         }
         .action-button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px #047857;
-        }
-        .action-button:active {
-            transform: translateY(2px);
-            box-shadow: 0 2px #065f46;
-        }
-        .action-button:disabled {
-            background-color: #374151;
-            box-shadow: none;
-            cursor: not-allowed;
-            transform: none;
-            color: #9ca3af;
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
         }
         .mission-card {
-            transition: all 0.2s;
-            border: 1px solid #374151;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+            position: relative;
+            overflow: hidden;
+        }
+        .mission-card:before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+            transition: left 0.5s;
+        }
+        .mission-card:hover:before {
+            left: 100%;
         }
         .mission-card:hover {
             border-color: #60a5fa;
-            background-color: rgba(31, 41, 55, 0.8);
+            transform: translateX(5px) scale(1.02);
+            box-shadow: 0 10px 30px rgba(96, 165, 250, 0.3);
+        }
+        .mission-card.selected {
+            border-color: #3b82f6;
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(147, 51, 234, 0.2));
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.5);
         }
         .selected-animal {
-            background-color: #1e3a8a !important;
+            background: linear-gradient(135deg, #1e3a8a, #7c3aed) !important;
             border: 2px solid #60a5fa;
+            box-shadow: 0 0 15px rgba(96, 165, 250, 0.5);
         }
-        /* 滚动条样式 */
+        .progress-ring {
+            transform: rotate(-90deg);
+        }
+        .progress-ring-circle {
+            transition: stroke-dashoffset 0.35s;
+        }
+        /* 自定义滚动条 */
         ::-webkit-scrollbar {
-            width: 8px;
+            width: 10px;
         }
         ::-webkit-scrollbar-track {
-            background: #1f2937; 
+            background: rgba(31, 41, 55, 0.5);
+            border-radius: 5px;
         }
         ::-webkit-scrollbar-thumb {
-            background: #4b5563; 
-            border-radius: 4px;
+            background: linear-gradient(180deg, #667eea, #764ba2);
+            border-radius: 5px;
         }
         ::-webkit-scrollbar-thumb:hover {
-            background: #6b7280; 
+            background: linear-gradient(180deg, #764ba2, #667eea);
+        }
+        .difficulty-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: bold;
+        }
+        .difficulty-easy { background: #10b981; color: white; }
+        .difficulty-normal { background: #f59e0b; color: white; }
+        .difficulty-hard { background: #ef4444; color: white; }
+        .difficulty-extreme { background: #7c3aed; color: white; }
+        
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 5px rgba(96, 165, 250, 0.5); }
+            50% { box-shadow: 0 0 20px rgba(96, 165, 250, 0.8); }
+        }
+        .reward-item {
+            animation: reward-appear 0.5s ease-out;
+        }
+        @keyframes reward-appear {
+            from {
+                opacity: 0;
+                transform: scale(0.8) translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+        .team-slot {
+            transition: all 0.3s ease;
+        }
+        .team-slot:hover {
+            transform: scale(1.05);
+        }
+        .stat-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            margin-right: 4px;
         }
     </style>
 </head>
 <body class="p-4 md:p-8">
 
-    <div class="max-w-6xl mx-auto">
-        <!-- 标题和返回 -->
-        <div class="flex justify-between items-center mb-6">
-            <h1 class="text-3xl font-bold text-purple-400">探索中心</h1>
-            <button id="btn-return" class="action-button bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg">
-                返回栖息地
-            </button>
+    <div class="max-w-7xl mx-auto">
+        <!-- 顶部标题栏 -->
+        <div class="glass-panel rounded-2xl p-6 mb-6">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h1 class="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-purple-400 mb-2">
+                        🗺️ 探索中心
+                    </h1>
+                    <p class="text-gray-400 text-sm">派遣你的动物勇士踏上冒险之旅，收集珍贵的资源与宝藏</p>
+                </div>
+                <button id="btn-return" class="action-button bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-bold py-3 px-8 rounded-xl shadow-lg">
+                    <span class="relative z-10">返回栖息地</span>
+                </button>
+            </div>
         </div>
 
-        <div class="flex flex-col md:flex-row gap-6 h-[calc(100vh-120px)]">
-            <!-- 左侧：探索任务列表 -->
-            <div class="flex-1 control-panel p-4 rounded-lg overflow-hidden flex flex-col">
-                <div class="flex border-b border-gray-700 mb-4">
-                    <button data-tab="missions" class="tab-button flex-1 text-sm py-2 text-center text-white border-b-2 border-cyan-500">常规探索</button>
-                    <button data-tab="bounties" class="tab-button flex-1 text-sm py-2 text-center text-gray-400 border-b-2 border-transparent">悬赏通缉</button>
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- 左侧：任务列表区 (2/3宽度) -->
+            <div class="lg:col-span-2 glass-panel rounded-2xl p-6">
+                <!-- 标签页切换 -->
+                <div class="flex border-b-2 border-gray-700 mb-6">
+                    <button data-tab="missions" class="tab-button flex-1 text-center py-3 px-4 font-bold transition-all duration-300 border-b-4 border-cyan-500 text-cyan-400">
+                        <span class="text-lg">⚔️</span> 常规探索
+                    </button>
+                    <button data-tab="bounties" class="tab-button flex-1 text-center py-3 px-4 font-bold transition-all duration-300 border-b-4 border-transparent text-gray-400 hover:text-white">
+                        <span class="text-lg">🎯</span> 悬赏通缉
+                    </button>
+                    <button data-tab="expeditions" class="tab-button flex-1 text-center py-3 px-4 font-bold transition-all duration-300 border-b-4 border-transparent text-gray-400 hover:text-white">
+                        <span class="text-lg">🏔️</span> 远征挑战
+                    </button>
                 </div>
-                <div id="tab-content-missions" class="tab-content flex-1 overflow-hidden flex flex-col">
-                    <h3 class="text-lg font-bold mb-2 text-cyan-400 flex justify-between">
-                        <span>可选任务</span>
-                        <span class="text-sm font-normal text-gray-400 self-end" id="active-count">进行中: 0/3</span>
-                    </h3>
-                    <div id="mission-list" class="flex-1 overflow-y-auto space-y-3 pr-2"></div>
+
+                <!-- 常规探索内容 -->
+                <div id="tab-content-missions" class="tab-content">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-2xl font-bold text-white">可选任务</h3>
+                        <div class="flex items-center gap-4">
+                            <span id="active-count" class="text-sm text-gray-400">进行中: 0/3</span>
+                            <button id="btn-filter" class="text-sm px-3 py-1 rounded-lg bg-gray-700 hover:bg-gray-600 transition">
+                                <span class="text-lg">🔍</span> 筛选
+                            </button>
+                        </div>
+                    </div>
+                    <div id="mission-list" class="grid gap-4 max-h-[600px] overflow-y-auto pr-2"></div>
                 </div>
-                <div id="tab-content-bounties" class="tab-content hidden flex-1 overflow-y-auto space-y-3 pr-2">
-                    <!-- 通缉令将通过 JS 生成 -->
+
+                <!-- 悬赏通缉内容 -->
+                <div id="tab-content-bounties" class="tab-content hidden">
+                    <div class="mb-4">
+                        <h3 class="text-2xl font-bold text-white mb-2">今日通缉</h3>
+                        <p class="text-sm text-gray-400">每日刷新 • 击败悬赏目标获得丰厚奖励</p>
+                    </div>
+                    <div id="bounty-list" class="grid gap-4 max-h-[600px] overflow-y-auto pr-2"></div>
+                </div>
+
+                <!-- 远征挑战内容 -->
+                <div id="tab-content-expeditions" class="tab-content hidden">
+                    <div class="mb-4">
+                        <h3 class="text-2xl font-bold text-white mb-2">远征挑战</h3>
+                        <p class="text-sm text-gray-400">高风险高回报的长途探险 • 需要精心准备</p>
+                    </div>
+                    <div id="expedition-list" class="grid gap-4 max-h-[600px] overflow-y-auto pr-2">
+                        <div class="text-center py-12 text-gray-500">
+                            <div class="text-6xl mb-4">🚧</div>
+                            <p class="text-lg font-bold mb-2">即将推出</p>
+                            <p class="text-sm">更多精彩的远征内容正在开发中...</p>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <!-- 右侧：详情与队伍选择 -->
-            <div class="w-full md:w-96 control-panel p-4 rounded-lg flex flex-col">
+            <!-- 右侧：任务详情与队伍配置 (1/3宽度) -->
+            <div class="glass-panel rounded-2xl p-6 lg:sticky lg:top-6 lg:max-h-[calc(100vh-200px)] flex flex-col">
+                <!-- 空状态 -->
+                <div id="empty-detail-state" class="flex-1 flex flex-col items-center justify-center text-gray-400">
+                    <div class="text-7xl mb-4 opacity-50">👈</div>
+                    <p class="text-lg font-bold mb-2">选择一个任务</p>
+                    <p class="text-sm text-center">点击左侧的任务卡片<br>查看详细信息</p>
+                </div>
+
+                <!-- 任务详情面板 -->
                 <div id="mission-detail-panel" class="hidden flex flex-col h-full">
-                    <h3 id="detail-title" class="text-xl font-bold text-yellow-400 mb-2">任务详情</h3>
-                    <p id="detail-desc" class="text-sm text-gray-400 mb-4 h-10">选择一个任务以查看详情。</p>
+                    <div class="mb-4">
+                        <h3 id="detail-title" class="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-yellow-400 to-orange-400 mb-2">
+                            任务名称
+                        </h3>
+                        <p id="detail-desc" class="text-sm text-gray-300 leading-relaxed"></p>
+                    </div>
                     
-                    <div class="bg-gray-800 p-3 rounded-lg mb-4 space-y-2 text-sm">
-                        <div class="flex justify-between">
-                            <span class="text-gray-400">⏱️ 时长:</span>
-                            <span id="detail-duration" class="text-white font-mono"></span>
+                    <!-- 任务信息卡片 -->
+                    <div class="glass-panel bg-gray-800/50 p-4 rounded-xl mb-4 space-y-3">
+                        <div class="flex items-center justify-between">
+                            <span class="text-gray-400 flex items-center">
+                                <span class="stat-icon">⏱️</span> 时长
+                            </span>
+                            <span id="detail-duration" class="font-bold text-white"></span>
                         </div>
-                        <div class="flex justify-between">
-                            <span class="text-gray-400">⚠️ 要求:</span>
-                            <span id="detail-req" class="text-red-300"></span>
+                        <div class="flex items-center justify-between">
+                            <span class="text-gray-400 flex items-center">
+                                <span class="stat-icon">⚠️</span> 要求
+                            </span>
+                            <span id="detail-req" class="font-mono text-sm text-yellow-300"></span>
                         </div>
-                        <div>
-                            <span class="text-gray-400 block mb-1">🎁 预计奖励:</span>
+                        <div class="border-t border-gray-700 pt-3">
+                            <span class="text-gray-400 block mb-2 flex items-center">
+                                <span class="stat-icon">🎁</span> 预计奖励
+                            </span>
                             <div id="detail-rewards" class="flex gap-2 flex-wrap"></div>
                         </div>
                     </div>
 
-                    <h4 class="font-bold text-indigo-300 mb-2 flex justify-between">
-                        <span>探索队伍</span>
-                        <span id="team-power-display" class="text-sm font-normal text-gray-400"></span>
-                    </h4>
-                    <div id="team-slots" class="grid grid-cols-3 gap-2 mb-4">
-                        <!-- 队伍槽位 -->
+                    <!-- 队伍配置 -->
+                    <div class="mb-4 flex-1 overflow-hidden flex flex-col">
+                        <div class="flex justify-between items-center mb-3">
+                            <h4 class="font-bold text-indigo-300 text-lg">探索队伍</h4>
+                            <span id="team-power-display" class="text-sm font-mono text-gray-400"></span>
+                        </div>
+                        <div id="team-slots" class="grid grid-cols-3 gap-3"></div>
                     </div>
 
+                    <!-- 操作按钮 -->
                     <div class="mt-auto">
-                        <button id="btn-action-mission" class="action-button w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg">
-                            开始探索
+                        <button id="btn-action-mission" class="action-button w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-bold py-4 rounded-xl shadow-xl">
+                            <span class="relative z-10 text-lg">🚀 开始探索</span>
                         </button>
-                        <p id="action-message" class="text-xs text-center mt-2 text-red-400 h-4"></p>
+                        <p id="action-message" class="text-xs text-center mt-3 text-red-400 font-bold min-h-[20px]"></p>
                     </div>
-                </div>
-                
-                <div id="empty-detail-state" class="h-full flex items-center justify-center text-gray-500">
-                    <p>👈 请从左侧选择一个任务</p>
                 </div>
             </div>
         </div>
     </div>
 
     <!-- 动物选择模态框 -->
-    <div id="animal-selector-modal" class="fixed inset-0 bg-black bg-opacity-70 hidden z-50 flex items-center justify-center">
-        <div class="control-panel w-full max-w-md p-6 rounded-xl m-4">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="text-xl font-bold text-white">选择队员</h3>
-                <button id="btn-close-selector" class="text-gray-400 hover:text-white text-2xl">&times;</button>
+    <div id="animal-selector-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4">
+        <div class="glass-panel w-full max-w-2xl rounded-2xl p-6 max-h-[90vh] flex flex-col">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-2xl font-bold text-white">选择队员</h3>
+                <button id="btn-close-selector" class="text-gray-400 hover:text-white text-3xl transition">&times;</button>
             </div>
-            <div id="selector-list" class="max-h-96 overflow-y-auto space-y-2 pr-2">
-                <!-- 动物列表 -->
-            </div>
+            <div id="selector-list" class="flex-1 overflow-y-auto space-y-3 pr-2"></div>
         </div>
     </div>
 
     <script>
-        // --- 配置数据 ---
+        // === 配置数据 ===
         const MISSIONS = [
             { 
                 id: 'forest_gathering', 
                 name: '迷雾森林采集', 
-                desc: '在森林边缘收集基础资源，风险较低。',
-                duration: 60, // 秒
-                rewards: { food: [30, 50], wood: [10, 20] },
+                desc: '在神秘的迷雾森林边缘收集基础资源。这里危险较低,适合新手探险家练手。偶尔能发现稀有的草药。',
+                duration: 60,
+                rewards: { food: [30, 50], wood: [10, 20], expGrass: [0, 2] },
                 req: { minLevel: 1 },
-                slots: 1
+                slots: 1,
+                difficulty: 'easy',
+                icon: '🌲'
             },
             { 
                 id: 'cave_mining', 
                 name: '深邃矿洞挖掘', 
-                desc: '深入地下寻找矿石，需要一定的体力。',
+                desc: '深入幽暗的地下矿洞,寻找珍贵的矿石和宝石。需要足够的体力支撑长时间的挖掘工作。',
                 duration: 300, 
-                rewards: { stone: [20, 40], gold: [5, 15] },
+                rewards: { stone: [20, 40], gold: [5, 15], gems: [0, 1] },
                 req: { minStamina: 30 },
-                slots: 2
+                slots: 2,
+                difficulty: 'normal',
+                icon: '⛏️'
             },
             { 
                 id: 'ruins_adventure', 
                 name: '古代遗迹探险', 
-                desc: '探索危险的古代遗迹，可能发现珍贵宝藏。',
+                desc: '探索充满危险的古代遗迹,解开远古文明的秘密。强大的守护者和复杂的机关等待着勇敢的探险家。',
                 duration: 600, 
-                rewards: { gold: [50, 100], gems: [1, 3] },
+                rewards: { gold: [50, 100], gems: [1, 3], moonFlower: [1, 3] },
                 req: { minLevel: 5, minCombat: 20 },
-                slots: 3
+                slots: 3,
+                difficulty: 'hard',
+                icon: '🏛️'
             },
             { 
                 id: 'elemental_rift', 
                 name: '元素裂隙', 
-                desc: '不稳定的元素位面，只有特定属性的动物能生存。',
+                desc: '不稳定的元素位面,只有火系动物能在这种极端环境中生存。蕴含着纯粹的元素能量和稀有资源。',
                 duration: 1800, 
-                rewards: { gems: [5, 10], food: [200, 300] },
+                rewards: { gems: [5, 10], food: [200, 300], mutationCrystal: [1, 2] },
                 req: { element: '火', minLevel: 10 },
-                slots: 2
+                slots: 2,
+                difficulty: 'extreme',
+                icon: '🔥'
+            },
+            { 
+                id: 'crystal_cavern', 
+                name: '水晶洞穴', 
+                desc: '闪烁着神秘光芒的水晶洞穴,蕴藏着大量的宝石和变异晶体。但要小心洞穴中的水晶守卫。',
+                duration: 900, 
+                rewards: { gems: [10, 20], mutationCrystal: [2, 4], stone: [50, 80] },
+                req: { minLevel: 8, minCombat: 35 },
+                slots: 3,
+                difficulty: 'hard',
+                icon: '💎'
+            },
+            { 
+                id: 'moonlight_garden', 
+                name: '月光花园', 
+                desc: '只在月圆之夜开放的神秘花园,生长着传说中的月光花。这些珍贵的植物拥有不可思议的魔力。',
+                duration: 1200, 
+                rewards: { moonFlower: [5, 10], expGrass: [3, 5], food: [100, 150] },
+                req: { minLevel: 7 },
+                slots: 2,
+                difficulty: 'normal',
+                icon: '🌙'
             }
         ];
 
@@ -197,49 +366,67 @@
                 templateId: 'bounty_boar',
                 name: '暴躁的野猪王',
                 difficulty: '简单',
-                baseRewards: { gold: 200, food: 100 },
+                baseRewards: { gold: 200, food: 100, gems: 1 },
                 reqCombat: 50,
+                icon: '🐗',
+                desc: '一只凶猛的野猪王霸占了森林通道,阻碍了探险队的行进。需要将其驱逐。',
                 opponent: { name: '暴躁的野猪王', level: 8, element: '土', stamina: 120, color: 0x8B4513, abilities: { combat: { attack: 25, defense: 15, agility: 10 } } }
             },
             {
                 templateId: 'bounty_wolf',
                 name: '暗夜幽狼',
                 difficulty: '普通',
-                baseRewards: { gold: 500, food: 200 },
+                baseRewards: { gold: 500, food: 200, gems: 3 },
                 reqCombat: 100,
+                icon: '🐺',
+                desc: '一头神出鬼没的暗夜幽狼袭击了多支探险队。它的速度极快,需要有经验的战士应对。',
                 opponent: { name: '暗夜幽狼', level: 15, element: '暗', stamina: 200, color: 0x4B0082, abilities: { combat: { attack: 40, defense: 20, agility: 30 } } }
             },
             {
                 templateId: 'bounty_griffin',
                 name: '风暴狮鹫',
                 difficulty: '困难',
-                baseRewards: { gold: 1000, gems: 5 },
+                baseRewards: { gold: 1000, gems: 5, mutationCrystal: 2 },
                 reqCombat: 150,
+                icon: '🦅',
+                desc: '盘踞在山巅的风暴狮鹫掌控着天空的力量。只有最强大的战士才能挑战它。',
                 opponent: { name: '风暴狮鹫', level: 25, element: '风', stamina: 300, color: 0x87CEEB, abilities: { combat: { attack: 60, defense: 30, agility: 50 } } }
             },
             {
                 templateId: 'bounty_dragon',
                 name: '熔岩幼龙',
                 difficulty: '极难',
-                baseRewards: { gold: 2000, gems: 10 },
+                baseRewards: { gold: 2000, gems: 10, mutationCrystal: 5 },
                 reqCombat: 300,
+                icon: '🐉',
+                desc: '传说中的龙族幼崽,即使是幼年期也拥有惊人的破坏力。击败它将获得史诗级的奖励。',
                 opponent: { name: '熔岩幼龙', level: 40, element: '火', stamina: 500, color: 0xFF4500, abilities: { combat: { attack: 100, defense: 60, agility: 40 } } }
             }
         ];
 
-        const ELEMENT_ICONS = { '水': '💧', '火': '🔥', '土': '🌍', '风': '💨', '雷': '⚡️', '木': '🌳', '光': '☀️', '暗': '🌙' };
+        const ELEMENT_ICONS = { 
+            '水': '💧', '火': '🔥', '土': '🌍', '风': '💨', 
+            '雷': '⚡️', '木': '🌳', '光': '☀️', '暗': '🌙',
+            '草': '🌿', '电': '⚡'
+        };
 
-        // --- 全局状态 ---
+        const REWARD_ICONS = {
+            food: '🍎', wood: '🪵', stone: '🪨', gold: '💰', gems: '💎',
+            expGrass: '🌿', moonFlower: '🌙', mutationCrystal: '💠', voidEssence: '🌌'
+        };
+
+        // === 全局状态 ===
         let gameState = {};
         let selectedMissionId = null;
-        let currentTeam = []; // 当前选中任务的临时队伍 [animalId, null, ...]
+        let selectedTab = 'missions';
+        let currentTeam = [];
         let activeTimerInterval = null;
 
-        // --- 初始化 ---
+        // === 初始化 ===
         window.onload = function() {
             loadGameState();
             processBountyReturn();
-            switchTab('missions'); // 默认显示常规任务
+            switchTab('missions');
             setupEventListeners();
             startGlobalTimer();
         };
@@ -250,20 +437,18 @@
                 gameState = JSON.parse(stateJSON);
                 gameState.activeExplorations = gameState.activeExplorations || [];
                 gameState.completedBounties = gameState.completedBounties || [];
-                // 确保 gems 存在
                 if (typeof gameState.gems === 'undefined') gameState.gems = 0;
 
-                // --- 每日通缉刷新逻辑 ---
+                // 每日通缉刷新
                 const today = new Date().toDateString();
                 if (gameState.lastBountyRefreshDate !== today) {
                     refreshDailyBounties(today);
                 }
-                // 确保 dailyBounties 存在
                 if (!gameState.dailyBounties || gameState.dailyBounties.length === 0) {
                     refreshDailyBounties(today);
                 }
             } else {
-                alert("数据加载失败，返回主页。");
+                alert("数据加载失败,返回主页。");
                 window.location.href = '../pages/game3d.html';
             }
         }
@@ -275,14 +460,13 @@
         function refreshDailyBounties(dateString) {
             gameState.dailyBounties = generateDailyBounties();
             gameState.lastBountyRefreshDate = dateString;
-            gameState.completedBounties = []; // 重置完成状态
+            gameState.completedBounties = [];
             saveGameState();
         }
 
         function generateDailyBounties() {
-            // 随机选取 2 个不同的通缉目标
             const shuffled = [...BOUNTY_TEMPLATES].sort(() => 0.5 - Math.random());
-            return shuffled.slice(0, 2).map(t => ({
+            return shuffled.slice(0, 3).map(t => ({
                 id: t.templateId,
                 name: t.name,
                 difficulty: t.difficulty,
@@ -290,7 +474,9 @@
                 rewards: t.baseRewards,
                 req: { minCombatPower: t.reqCombat },
                 slots: 1,
-                opponent: t.opponent
+                opponent: t.opponent,
+                icon: t.icon,
+                desc: t.desc
             }));
         }
 
@@ -309,23 +495,28 @@
         }
 
         function switchTab(tabName) {
+            selectedTab = tabName;
+            
+            // 切换标签样式
             document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
             document.querySelectorAll('.tab-button').forEach(el => {
-                el.classList.remove('text-white', 'border-cyan-500');
+                el.classList.remove('text-cyan-400', 'border-cyan-500');
                 el.classList.add('text-gray-400', 'border-transparent');
             });
 
             document.getElementById(`tab-content-${tabName}`).classList.remove('hidden');
             const button = document.querySelector(`.tab-button[data-tab="${tabName}"]`);
-            button.classList.add('text-white', 'border-cyan-500');
+            button.classList.add('text-cyan-400', 'border-cyan-500');
             button.classList.remove('text-gray-400', 'border-transparent');
 
+            // 渲染内容
             if (tabName === 'missions') {
                 renderMissionList();
             } else if (tabName === 'bounties') {
                 renderBountyList();
             }
-            // 清空详情页
+            
+            // 清空详情
             selectedMissionId = null;
             document.getElementById('empty-detail-state').classList.remove('hidden');
             document.getElementById('mission-detail-panel').classList.add('hidden');
@@ -339,11 +530,10 @@
                 const bounty = gameState.dailyBounties.find(b => b.id === bountyId);
                 if (bounty && !gameState.completedBounties.includes(bountyId)) {
                     gameState.completedBounties.push(bountyId);
-                    // 发放奖励
                     Object.keys(bounty.rewards).forEach(key => {
                         gameState[key] = (gameState[key] || 0) + bounty.rewards[key];
                     });
-                    alert(`悬赏完成！你击败了 ${bounty.name}，获得了奖励！`);
+                    alert(`🎉 悬赏完成！你击败了 ${bounty.name},获得了丰厚的奖励！`);
                     saveGameState();
                 }
             }
@@ -351,7 +541,7 @@
             localStorage.removeItem('activeBountyId');
         }
 
-        // --- 渲染逻辑 ---
+        // === 渲染逻辑 ===
         function renderMissionList() {
             const listEl = document.getElementById('mission-list');
             listEl.innerHTML = '';
@@ -364,26 +554,45 @@
                 const isSelected = selectedMissionId === mission.id;
                 
                 const card = document.createElement('div');
-                card.className = `mission-card p-3 rounded-lg cursor-pointer ${isSelected ? 'border-blue-500 bg-gray-800' : 'bg-gray-900 border-gray-700'}`;
+                card.className = `mission-card p-5 rounded-xl cursor-pointer transition-all ${isSelected ? 'selected' : 'bg-gray-800/50 hover:bg-gray-800/70'}`;
                 
                 let statusHtml = '';
+                let statusClass = '';
                 if (activeMission) {
                     if (Date.now() >= activeMission.endTime) {
-                        statusHtml = '<span class="text-green-400 font-bold text-sm">✅ 可领取</span>';
+                        statusHtml = '<span class="px-3 py-1 bg-green-500 rounded-full text-white font-bold text-sm">✅ 可领取</span>';
+                        statusClass = 'animate-pulse';
                     } else {
                         const timeLeft = Math.max(0, Math.ceil((activeMission.endTime - Date.now()) / 1000));
-                        statusHtml = `<span class="text-yellow-400 font-mono text-sm">⏳ ${formatTime(timeLeft)}</span>`;
+                        statusHtml = `<span class="px-3 py-1 bg-yellow-500/20 border border-yellow-500 rounded-full text-yellow-300 font-mono text-sm">⏳ ${formatTime(timeLeft)}</span>`;
                     }
                 } else {
-                    statusHtml = `<span class="text-gray-500 text-sm">${formatTime(mission.duration)}</span>`;
+                    statusHtml = `<span class="text-gray-400 text-sm">${formatTime(mission.duration)}</span>`;
                 }
 
+                const difficultyClass = `difficulty-${mission.difficulty}`;
+                
                 card.innerHTML = `
-                    <div class="flex justify-between items-center">
-                        <h4 class="font-bold ${isSelected ? 'text-white' : 'text-gray-300'}">${mission.name}</h4>
-                        ${statusHtml}
+                    <div class="flex justify-between items-start mb-3">
+                        <div class="flex items-center gap-3">
+                            <div class="text-4xl">${mission.icon}</div>
+                            <div>
+                                <h4 class="font-bold text-lg ${isSelected ? 'text-white' : 'text-gray-200'}">${mission.name}</h4>
+                                <span class="difficulty-badge ${difficultyClass}">
+                                    ${mission.difficulty === 'easy' ? '简单' : mission.difficulty === 'normal' ? '普通' : mission.difficulty === 'hard' ? '困难' : '极难'}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="${statusClass}">${statusHtml}</div>
                     </div>
-                    <div class="text-xs text-gray-500 mt-1 truncate">${mission.desc}</div>
+                    <p class="text-xs text-gray-400 mb-3 line-clamp-2">${mission.desc}</p>
+                    <div class="flex gap-2 flex-wrap">
+                        ${Object.entries(mission.rewards).map(([key, val]) => 
+                            `<span class="px-2 py-1 bg-gray-700/50 rounded-lg text-xs text-gray-300">
+                                ${REWARD_ICONS[key] || key} ${val[0]}-${val[1]}
+                            </span>`
+                        ).join('')}
+                    </div>
                 `;
                 
                 card.addEventListener('click', () => selectMission(mission.id));
@@ -392,7 +601,7 @@
         }
 
         function renderBountyList() {
-            const listEl = document.getElementById('tab-content-bounties');
+            const listEl = document.getElementById('bounty-list');
             listEl.innerHTML = '';
 
             gameState.dailyBounties.forEach(bounty => {
@@ -400,23 +609,44 @@
                 const isSelected = selectedMissionId === bounty.id;
 
                 const card = document.createElement('div');
-                card.className = `mission-card p-3 rounded-lg cursor-pointer ${isSelected ? 'border-blue-500 bg-gray-800' : 'bg-gray-900 border-gray-700'}`;
+                card.className = `mission-card p-5 rounded-xl cursor-pointer transition-all ${isSelected ? 'selected' : 'bg-gray-800/50 hover:bg-gray-800/70'} ${isCompleted ? 'opacity-60' : ''}`;
 
-                let statusHtml = '';
-                if (isCompleted) {
-                    statusHtml = '<span class="text-green-400 font-bold text-sm">✅ 已完成</span>';
-                } else {
-                    statusHtml = `<span class="text-yellow-400 text-sm">${bounty.difficulty}</span>`;
-                }
+                const difficultyColors = {
+                    '简单': 'bg-green-500',
+                    '普通': 'bg-yellow-500',
+                    '困难': 'bg-orange-500',
+                    '极难': 'bg-red-500'
+                };
 
                 card.innerHTML = `
-                    <div class="flex justify-between items-center">
-                        <h4 class="font-bold ${isSelected ? 'text-white' : 'text-gray-300'}">${bounty.name}</h4>
-                        ${statusHtml}
+                    <div class="flex justify-between items-start mb-3">
+                        <div class="flex items-center gap-3">
+                            <div class="text-4xl">${bounty.icon}</div>
+                            <div>
+                                <h4 class="font-bold text-lg ${isSelected ? 'text-white' : 'text-gray-200'}">${bounty.name}</h4>
+                                <span class="px-3 py-1 ${difficultyColors[bounty.difficulty]} rounded-full text-white font-bold text-xs">
+                                    ${bounty.difficulty}
+                                </span>
+                            </div>
+                        </div>
+                        ${isCompleted ? 
+                            '<span class="px-3 py-1 bg-green-500/20 border border-green-500 rounded-full text-green-300 font-bold text-sm">✅ 已完成</span>' : 
+                            `<span class="text-yellow-300 text-sm font-bold">战力: ${bounty.req.minCombatPower}</span>`
+                        }
                     </div>
-                    <div class="text-xs text-gray-500 mt-1 truncate">要求战斗力: ${bounty.req.minCombatPower}</div>
+                    <p class="text-xs text-gray-400 mb-3">${bounty.desc}</p>
+                    <div class="flex gap-2 flex-wrap">
+                        ${Object.entries(bounty.rewards).map(([key, val]) => 
+                            `<span class="reward-item px-2 py-1 bg-gradient-to-r from-yellow-900/50 to-orange-900/50 border border-yellow-600/30 rounded-lg text-xs text-yellow-200 font-bold">
+                                ${REWARD_ICONS[key] || key} ${val}
+                            </span>`
+                        ).join('')}
+                    </div>
                 `;
-                card.addEventListener('click', () => selectBounty(bounty.id));
+                
+                if (!isCompleted) {
+                    card.addEventListener('click', () => selectBounty(bounty.id));
+                }
                 listEl.appendChild(card);
             });
         }
@@ -425,46 +655,75 @@
             selectedMissionId = missionId;
             const mission = MISSIONS.find(m => m.id === missionId);
 
-            // UI 切换
             document.getElementById('empty-detail-state').classList.add('hidden');
             document.getElementById('mission-detail-panel').classList.remove('hidden');
-            renderMissionList(); // 更新选中高亮
+            renderMissionList();
 
             // 填充详情
             document.getElementById('detail-title').textContent = mission.name;
             document.getElementById('detail-desc').textContent = mission.desc;
-            document.getElementById('team-power-display').textContent = ''; // 常规任务不显示战力
+            document.getElementById('team-power-display').textContent = '';
             document.getElementById('detail-duration').textContent = formatTime(mission.duration);
             
             // 渲染要求
             let reqText = [];
-            if (mission.req.minLevel) reqText.push(`等级 ≥ ${mission.req.minLevel}`);
+            if (mission.req.minLevel) reqText.push(`Lv ≥ ${mission.req.minLevel}`);
             if (mission.req.minStamina) reqText.push(`体力 ≥ ${mission.req.minStamina}`);
             if (mission.req.minCombat) reqText.push(`攻击 ≥ ${mission.req.minCombat}`);
-            if (mission.req.element) reqText.push(`属性: ${mission.req.element}`);
-            document.getElementById('detail-req').textContent = reqText.join(', ') || '无特殊要求';
+            if (mission.req.element) reqText.push(`${ELEMENT_ICONS[mission.req.element]} ${mission.req.element}系`);
+            document.getElementById('detail-req').textContent = reqText.join(' • ') || '无特殊要求';
 
-            // 渲染奖励预览
+            // 渲染奖励
             const rewardsContainer = document.getElementById('detail-rewards');
             rewardsContainer.innerHTML = '';
             for (const [key, val] of Object.entries(mission.rewards)) {
                 const badge = document.createElement('span');
-                badge.className = 'px-2 py-1 bg-gray-700 rounded text-xs text-gray-300';
-                const iconMap = { food: '🍎', wood: '🪵', stone: '🪨', gold: '💰', gems: '💎' };
-                badge.textContent = `${iconMap[key] || key} ${val[0]}-${val[1]}`;
+                badge.className = 'reward-item px-3 py-2 bg-gradient-to-br from-yellow-900/40 to-orange-900/40 border border-yellow-600/40 rounded-lg text-sm text-yellow-100 font-bold';
+                badge.textContent = `${REWARD_ICONS[key] || key} ${val[0]}-${val[1]}`;
                 rewardsContainer.appendChild(badge);
             }
 
-            // 渲染队伍槽位
+            renderTeamSlots(mission);
+            updateActionButton(mission);
+        }
+
+        function selectBounty(bountyId) {
+            selectedMissionId = bountyId;
+            const bounty = gameState.dailyBounties.find(b => b.id === bountyId);
+
+            document.getElementById('empty-detail-state').classList.add('hidden');
+            document.getElementById('mission-detail-panel').classList.remove('hidden');
+            renderBountyList();
+
+            document.getElementById('detail-title').textContent = bounty.name;
+            document.getElementById('detail-desc').textContent = bounty.desc;
+            document.getElementById('team-power-display').textContent = `推荐战力: ${bounty.req.minCombatPower}`;
+            document.getElementById('detail-duration').textContent = "即时战斗";
+            document.getElementById('detail-req').textContent = `战力 ≥ ${bounty.req.minCombatPower}`;
+
+            // 渲染奖励
+            const rewardsContainer = document.getElementById('detail-rewards');
+            rewardsContainer.innerHTML = '';
+            for (const [key, val] of Object.entries(bounty.rewards)) {
+                const badge = document.createElement('span');
+                badge.className = 'reward-item px-3 py-2 bg-gradient-to-br from-purple-900/40 to-pink-900/40 border border-purple-600/40 rounded-lg text-sm text-purple-100 font-bold';
+                badge.textContent = `${REWARD_ICONS[key] || key} ${val}`;
+                rewardsContainer.appendChild(badge);
+            }
+
+            renderTeamSlots(bounty);
+            updateActionButton(bounty);
+        }
+
+        function renderTeamSlots(mission) {
             const slotsContainer = document.getElementById('team-slots');
             slotsContainer.innerHTML = '';
-            const activeMission = gameState.activeExplorations.find(e => e.missionId === missionId);
             
-            // 如果任务正在进行或已完成，显示实际队伍
+            const activeMission = gameState.activeExplorations.find(e => e.missionId === mission.id);
+            
             if (activeMission) {
                 currentTeam = activeMission.animalIds;
             } else if (currentTeam.length !== mission.slots) {
-                // 重置选择
                 currentTeam = new Array(mission.slots).fill(null);
             }
 
@@ -473,120 +732,70 @@
                 const animalId = currentTeam[i];
                 const animal = animalId ? gameState.animals.find(a => a.id === animalId) : null;
 
-                slot.className = `h-20 border-2 border-dashed rounded-lg flex flex-col items-center justify-center cursor-pointer transition-colors ${animal ? 'border-indigo-500 bg-indigo-900/30' : 'border-gray-600 hover:border-gray-400 hover:bg-gray-800'}`;
+                slot.className = `team-slot h-24 border-2 border-dashed rounded-xl flex flex-col items-center justify-center cursor-pointer transition-all ${
+                    animal ? 'border-indigo-400 bg-gradient-to-br from-indigo-900/50 to-purple-900/50' : 'border-gray-600 hover:border-gray-400 hover:bg-gray-800/50'
+                }`;
                 
                 if (animal) {
                     const colorHex = '#' + animal.color.toString(16).padStart(6, '0');
                     slot.innerHTML = `
-                        <div style="background-color: ${colorHex};" class="w-6 h-6 rounded-full border border-gray-300 mb-1"></div>
+                        <div style="background: radial-gradient(circle, ${colorHex}, transparent);" class="w-12 h-12 rounded-full border-2 border-white/30 mb-1 flex items-center justify-center">
+                            <div style="background-color: ${colorHex};" class="w-8 h-8 rounded-full"></div>
+                        </div>
                         <span class="text-xs font-bold text-white truncate w-full text-center px-1">${animal.name}</span>
-                        <span class="text-[10px] text-yellow-300">Lv.${animal.level}</span>
+                        <div class="flex items-center gap-1 text-[10px]">
+                            <span class="text-yellow-300">Lv.${animal.level}</span>
+                            <span class="text-green-300">⚡${Math.floor(animal.stamina)}</span>
+                        </div>
                     `;
-                    // 如果任务未开始，点击可移除
                     if (!activeMission) {
-                        slot.onclick = () => { currentTeam[i] = null; selectMission(missionId); };
+                        slot.onclick = () => { currentTeam[i] = null; selectMission(mission.id); };
                     }
                 } else {
-                    slot.innerHTML = `<span class="text-2xl text-gray-500">+</span><span class="text-xs text-gray-500">选择队员</span>`;
+                    slot.innerHTML = `
+                        <span class="text-3xl text-gray-500 mb-1">+</span>
+                        <span class="text-xs text-gray-400">选择队员</span>
+                    `;
                     if (!activeMission) {
                         slot.onclick = () => openAnimalSelector(i, mission);
                     }
                 }
                 slotsContainer.appendChild(slot);
             }
+        }
 
-            // 更新按钮状态
+        function updateActionButton(mission) {
             const btn = document.getElementById('btn-action-mission');
             const msg = document.getElementById('action-message');
             msg.textContent = '';
+
+            const activeMission = gameState.activeExplorations.find(e => e.missionId === mission.id);
+            const isBounty = gameState.dailyBounties.some(b => b.id === mission.id);
+            const isCompleted = gameState.completedBounties.includes(mission.id);
 
             if (activeMission) {
                 if (Date.now() >= activeMission.endTime) {
-                    btn.textContent = '领取奖励';
-                    btn.className = 'action-button w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-lg';
+                    btn.innerHTML = '<span class="relative z-10 text-lg">🎁 领取奖励</span>';
+                    btn.className = 'action-button w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-bold py-4 rounded-xl shadow-xl';
                     btn.disabled = false;
                 } else {
-                    btn.textContent = '探索进行中...';
-                    btn.className = 'action-button w-full bg-gray-600 text-gray-300 font-bold py-3 px-4 rounded-lg cursor-not-allowed';
+                    btn.innerHTML = '<span class="relative z-10 text-lg">⏳ 探索进行中...</span>';
+                    btn.className = 'action-button w-full bg-gray-600 text-gray-300 font-bold py-4 rounded-xl cursor-not-allowed';
                     btn.disabled = true;
                 }
-            } else {
-                btn.textContent = '开始探索';
-                btn.className = 'action-button w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg';
-                btn.disabled = false;
-            }
-        }
-
-        function selectBounty(bountyId) {
-            selectedMissionId = bountyId;
-            const bounty = gameState.dailyBounties.find(b => b.id === bountyId);
-
-            // UI 切换
-            document.getElementById('empty-detail-state').classList.add('hidden');
-            document.getElementById('mission-detail-panel').classList.remove('hidden');
-            renderBountyList(); // 更新选中高亮
-
-            // 填充详情
-            document.getElementById('detail-title').textContent = bounty.name;
-            document.getElementById('detail-desc').textContent = `击败 ${bounty.name} 以获得悬赏奖励。`;
-            document.getElementById('team-power-display').textContent = `推荐战力: ${bounty.req.minCombatPower}`;
-            document.getElementById('detail-duration').textContent = "即时战斗";
-            document.getElementById('detail-req').textContent = `战力 ≥ ${bounty.req.minCombatPower}`;
-
-            // 渲染奖励预览
-            const rewardsContainer = document.getElementById('detail-rewards');
-            rewardsContainer.innerHTML = '';
-            for (const [key, val] of Object.entries(bounty.rewards)) {
-                const badge = document.createElement('span');
-                badge.className = 'px-2 py-1 bg-gray-700 rounded text-xs text-gray-300';
-                const iconMap = { food: '🍎', wood: '🪵', stone: '🪨', gold: '💰', gems: '💎' };
-                badge.textContent = `${iconMap[key] || key} ${val}`;
-                rewardsContainer.appendChild(badge);
-            }
-
-            // 渲染队伍槽位 (通缉任务通常只有1个槽位)
-            const slotsContainer = document.getElementById('team-slots');
-            slotsContainer.innerHTML = '';
-            
-            if (currentTeam.length !== bounty.slots) {
-                currentTeam = new Array(bounty.slots).fill(null);
-            }
-
-            for (let i = 0; i < bounty.slots; i++) {
-                const slot = document.createElement('div');
-                const animalId = currentTeam[i];
-                const animal = animalId ? gameState.animals.find(a => a.id === animalId) : null;
-
-                slot.className = `h-20 border-2 border-dashed rounded-lg flex flex-col items-center justify-center cursor-pointer transition-colors ${animal ? 'border-indigo-500 bg-indigo-900/30' : 'border-gray-600 hover:border-gray-400 hover:bg-gray-800'}`;
-                
-                if (animal) {
-                    const colorHex = '#' + animal.color.toString(16).padStart(6, '0');
-                    slot.innerHTML = `
-                        <div style="background-color: ${colorHex};" class="w-6 h-6 rounded-full border border-gray-300 mb-1"></div>
-                        <span class="text-xs font-bold text-white truncate w-full text-center px-1">${animal.name}</span>
-                        <span class="text-[10px] text-yellow-300">Lv.${animal.level}</span>
-                    `;
-                    slot.onclick = () => { currentTeam[i] = null; selectBounty(bountyId); };
+            } else if (isBounty) {
+                if (isCompleted) {
+                    btn.innerHTML = '<span class="relative z-10 text-lg">✅ 已完成</span>';
+                    btn.className = 'action-button w-full bg-gray-600 text-gray-300 font-bold py-4 rounded-xl cursor-not-allowed';
+                    btn.disabled = true;
                 } else {
-                    slot.innerHTML = `<span class="text-2xl text-gray-500">+</span><span class="text-xs text-gray-500">选择队员</span>`;
-                    slot.onclick = () => openAnimalSelector(i, bounty);
+                    btn.innerHTML = '<span class="relative z-10 text-lg">⚔️ 开始讨伐</span>';
+                    btn.className = 'action-button w-full bg-gradient-to-r from-red-500 to-orange-600 hover:from-red-600 hover:to-orange-700 text-white font-bold py-4 rounded-xl shadow-xl';
+                    btn.disabled = false;
                 }
-                slotsContainer.appendChild(slot);
-            }
-
-            // 更新按钮状态
-            const btn = document.getElementById('btn-action-mission');
-            const isCompleted = gameState.completedBounties.includes(bounty.id);
-            const msg = document.getElementById('action-message');
-            msg.textContent = '';
-
-            if (isCompleted) {
-                btn.textContent = '已完成';
-                btn.className = 'action-button w-full bg-gray-600 text-gray-300 font-bold py-3 px-4 rounded-lg cursor-not-allowed';
-                btn.disabled = true;
             } else {
-                btn.textContent = '开始讨伐';
-                btn.className = 'action-button w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-4 rounded-lg';
+                btn.innerHTML = '<span class="relative z-10 text-lg">🚀 开始探索</span>';
+                btn.className = 'action-button w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-bold py-4 rounded-xl shadow-xl';
                 btn.disabled = false;
             }
         }
@@ -597,46 +806,73 @@
             list.innerHTML = '';
             modal.classList.remove('hidden');
 
-            // 筛选可用动物：未忙碌、未受伤、未在当前队伍中
             const isBounty = gameState.dailyBounties.some(b => b.id === mission.id);
             const availableAnimals = gameState.animals.filter(a => {
-                const isBusy = a.workingBuildingId || a.exploringMissionId || a.isPlaced; // For both, animal must be idle and at home
+                const isBusy = a.workingBuildingId || a.exploringMissionId || a.isPlaced;
                 const isInjured = a.isInjured;
                 const isInTeam = currentTeam.includes(a.id);
                 return !isBusy && !isInjured && !isInTeam;
             });
 
-
             if (availableAnimals.length === 0) {
-                list.innerHTML = '<p class="text-gray-500 text-center py-4">没有符合条件的空闲动物。<br>请检查动物是否在工作、受伤或已放置。</p>';
+                list.innerHTML = `
+                    <div class="text-center py-12 text-gray-400">
+                        <div class="text-6xl mb-4">😔</div>
+                        <p class="text-lg font-bold mb-2">没有可用的动物</p>
+                        <p class="text-sm">请确保动物未在工作、受伤或已放置</p>
+                    </div>
+                `;
                 return;
             }
 
             availableAnimals.forEach(animal => {
-                // 检查是否满足任务硬性要求
                 let meetsReq = true;
-                let failReason = '';
-                if (!isBounty) { // Individual requirements only for regular missions
-                    if (mission.req.minLevel && animal.level < mission.req.minLevel) { meetsReq = false; failReason = `等级<${mission.req.minLevel}`; }
-                    if (mission.req.minStamina && animal.stamina < mission.req.minStamina) { meetsReq = false; failReason = `体力<${mission.req.minStamina}`; }
-                    if (mission.req.element && animal.element !== mission.req.element) { meetsReq = false; failReason = `非${mission.req.element}系`; }
-                    if (mission.req.minCombat && animal.abilities.combat.attack < mission.req.minCombat) { meetsReq = false; failReason = `攻击不足`; }
+                let failReasons = [];
+                
+                if (!isBounty) {
+                    if (mission.req.minLevel && animal.level < mission.req.minLevel) {
+                        meetsReq = false;
+                        failReasons.push(`等级不足(需要${mission.req.minLevel})`);
+                    }
+                    if (mission.req.minStamina && animal.stamina < mission.req.minStamina) {
+                        meetsReq = false;
+                        failReasons.push(`体力不足(需要${mission.req.minStamina})`);
+                    }
+                    if (mission.req.element && animal.element !== mission.req.element) {
+                        meetsReq = false;
+                        failReasons.push(`非${mission.req.element}系`);
+                    }
+                    if (mission.req.minCombat && animal.abilities.combat.attack < mission.req.minCombat) {
+                        meetsReq = false;
+                        failReasons.push(`攻击力不足`);
+                    }
                 }
 
                 const item = document.createElement('div');
-                item.className = `flex justify-between items-center p-2 rounded border ${meetsReq ? 'border-gray-600 hover:bg-gray-700 cursor-pointer' : 'border-red-900 bg-red-900/20 opacity-60'}`;
+                item.className = `flex justify-between items-center p-4 rounded-xl border-2 transition-all ${
+                    meetsReq ? 'border-gray-600 hover:border-indigo-500 hover:bg-gray-700/50 cursor-pointer' : 'border-red-900/50 bg-red-900/10 opacity-60 cursor-not-allowed'
+                }`;
                 
                 const colorHex = '#' + animal.color.toString(16).padStart(6, '0');
                 item.innerHTML = `
-                    <div class="flex items-center gap-3">
-                        <div style="background-color: ${colorHex};" class="w-8 h-8 rounded-full border border-gray-400"></div>
+                    <div class="flex items-center gap-4">
+                        <div style="background: radial-gradient(circle, ${colorHex}, transparent);" class="w-12 h-12 rounded-full border-2 border-white/20 flex items-center justify-center">
+                            <div style="background-color: ${colorHex};" class="w-8 h-8 rounded-full"></div>
+                        </div>
                         <div>
-                            <div class="font-bold text-sm text-indigo-200">${animal.name} <span class="text-yellow-500 text-xs">Lv.${animal.level}</span></div>
-                            <div class="text-xs text-gray-400">体力: ${Math.floor(animal.stamina)} | 战力: ${animal.abilities.combat.attack} | ${ELEMENT_ICONS[animal.element] || animal.element}</div>
+                            <div class="font-bold text-white mb-1">${animal.name} <span class="text-yellow-400 text-sm">Lv.${animal.level}</span></div>
+                            <div class="text-xs text-gray-400 flex items-center gap-2">
+                                <span>⚡ ${Math.floor(animal.stamina)}</span>
+                                <span>⚔️ ${animal.abilities.combat.attack}</span>
+                                <span>${ELEMENT_ICONS[animal.element] || ''} ${animal.element}</span>
+                            </div>
                         </div>
                     </div>
-                    <div class="text-xs text-right">
-                        ${meetsReq ? '<span class="text-green-400">可选</span>' : `<span class="text-red-400">${failReason}</span>`}
+                    <div class="text-sm text-right">
+                        ${meetsReq ? 
+                            '<span class="px-3 py-1 bg-green-500/20 border border-green-500 rounded-full text-green-300 font-bold">✓ 可选</span>' : 
+                            `<span class="px-3 py-1 bg-red-500/20 border border-red-500 rounded-full text-red-300 text-xs">${failReasons.join('<br>')}</span>`
+                        }
                     </div>
                 `;
 
@@ -666,7 +902,6 @@
                 return;
             }
 
-            // If not an active mission, it's either a new regular mission or a bounty
             const bounty = gameState.dailyBounties.find(b => b.id === selectedMissionId);
             if (bounty) {
                 startBountyHunt(bounty);
@@ -681,17 +916,14 @@
         }
 
         function startMission(mission) {
-            // 验证队伍
             if (currentTeam.some(id => id === null)) {
                 document.getElementById('action-message').textContent = '❌ 队伍人数不足';
                 return;
             }
             
-            // 扣除体力并标记状态
             const animals = currentTeam.map(id => gameState.animals.find(a => a.id === id));
-            const staminaCost = mission.req.minStamina || 10; // 默认消耗10体力
+            const staminaCost = mission.req.minStamina || 10;
 
-            // 再次检查体力（防止边界情况）
             for (let animal of animals) {
                 if (animal.stamina < staminaCost) {
                     document.getElementById('action-message').textContent = `❌ ${animal.name} 体力不足`;
@@ -699,7 +931,6 @@
                 }
             }
 
-            // 执行开始
             animals.forEach(animal => {
                 animal.stamina -= staminaCost;
                 animal.exploringMissionId = mission.id;
@@ -715,7 +946,7 @@
 
             gameState.activeExplorations.push(newExploration);
             saveGameState();
-            selectMission(mission.id); // 刷新
+            selectMission(mission.id);
         }
 
         function startBountyHunt(bounty) {
@@ -726,14 +957,12 @@
             }
             const animal = gameState.animals.find(a => a.id === animalId);
             
-            // 检查战力
             if (animal.abilities.combat.attack < bounty.req.minCombatPower) {
-                 if (!confirm(`⚠️ 警告：${animal.name} 的攻击力低于推荐值 (${bounty.req.minCombatPower})，可能会失败。确定要继续吗？`)) {
-                     return;
-                 }
+                if (!confirm(`⚠️ 警告：${animal.name} 的攻击力(${animal.abilities.combat.attack})低于推荐值(${bounty.req.minCombatPower}),可能会失败。确定要继续吗？`)) {
+                    return;
+                }
             }
 
-            // 准备战斗数据 (移除 mesh)
             const serializableAnimal = { ...animal };
             delete serializableAnimal.mesh;
             
@@ -747,25 +976,20 @@
         }
 
         function claimRewards(activeMission, mission) {
-            // 计算奖励
             let rewardMsg = [];
             for (const [key, range] of Object.entries(mission.rewards)) {
                 const amount = Math.floor(Math.random() * (range[1] - range[0] + 1)) + range[0];
                 gameState[key] = (gameState[key] || 0) + amount;
-                const iconMap = { food: '🍎', wood: '🪵', stone: '🪨', gold: '💰', gems: '💎' };
-                rewardMsg.push(`${iconMap[key] || key} +${amount}`);
+                rewardMsg.push(`${REWARD_ICONS[key] || key} +${amount}`);
             }
 
-            // 增加动物经验
-            const expGain = mission.duration * 0.5; // 经验公式
+            const expGain = mission.duration * 0.5;
             activeMission.animalIds.forEach(id => {
                 const animal = gameState.animals.find(a => a.id === id);
                 if (animal) {
                     animal.experience += expGain;
-                    animal.exploringMissionId = null; // 解除状态
-                    // 简单的升级检查 (完整逻辑在 game3d 中，这里做简化处理或仅加经验)
+                    animal.exploringMissionId = null;
                     if (animal.experience >= animal.experienceToNextLevel) {
-                        // 留给 game3d 处理升级，或者简单处理
                         animal.level++;
                         animal.experience -= animal.experienceToNextLevel;
                         animal.experienceToNextLevel = Math.floor(animal.experienceToNextLevel * 1.5);
@@ -773,13 +997,12 @@
                 }
             });
 
-            // 移除任务
             gameState.activeExplorations = gameState.activeExplorations.filter(e => e !== activeMission);
             saveGameState();
             
-            alert(`探索完成！获得: ${rewardMsg.join(', ')}`);
-            currentTeam = new Array(mission.slots).fill(null); // 重置队伍选择
-            selectMission(mission.id); // 刷新
+            alert(`🎉 探索完成！获得：\n${rewardMsg.join('\n')}`);
+            currentTeam = new Array(mission.slots).fill(null);
+            selectMission(mission.id);
         }
 
         function formatTime(seconds) {
@@ -787,18 +1010,20 @@
             const mins = Math.floor(seconds / 60);
             if (mins < 60) return `${mins}分钟`;
             const hours = Math.floor(mins / 60);
-            return `${hours}小时${mins % 60}分`;
+            const remainMins = mins % 60;
+            return remainMins > 0 ? `${hours}小时${remainMins}分` : `${hours}小时`;
         }
 
         function startGlobalTimer() {
             if (activeTimerInterval) clearInterval(activeTimerInterval);
             activeTimerInterval = setInterval(() => {
-                renderMissionList(); // 更新列表倒计时
+                if (selectedTab === 'missions') {
+                    renderMissionList();
+                }
                 if (selectedMissionId) {
-                    // 如果当前选中的任务正在进行，刷新按钮状态
                     const active = gameState.activeExplorations.find(e => e.missionId === selectedMissionId);
                     if (active && Date.now() >= active.endTime) {
-                        selectMission(selectedMissionId); // 触发刷新以显示“领取”
+                        selectMission(selectedMissionId);
                     }
                 }
             }, 1000);
