@@ -168,22 +168,39 @@ class ImageLibrary {
         return null;
     }
     
-    // 获取图片URL（优先本地文件，然后localStorage）
-    // 返回值：图片路径或base64数据，如果都没有则返回null
+    // 获取图片URL（优先localStorage，然后本地文件）
+    // 返回值：base64数据或图片路径，如果都没有则返回null
     getImageUrl(key) {
         if (!key) return null;
         
-        // 1. 优先返回本地文件路径（让浏览器尝试加载）
-        // 即使文件不存在，浏览器也会显示默认图标或触发onerror
-        const localPath = this.getLocalImagePath(key);
-        if (localPath) {
-            return localPath;
-        }
-        
-        // 2. 从localStorage获取base64数据
+        // 1. 优先从localStorage获取base64数据（用于动物实例ID）
         const storedImage = this.getImage(key);
         if (storedImage) {
             return storedImage;
+        }
+        
+        // 2. 处理特殊情况:如果key是ANIMAL_开头但后面是纯数字,尝试提取数字部分
+        const keyStr = String(key);
+        if (keyStr.startsWith('ANIMAL_')) {
+            // 尝试从ANIMAL_xxx中提取数字部分
+            const numberMatch = keyStr.match(/ANIMAL_(\d+)$/);
+            if (numberMatch) {
+                // 递归调用,用提取的数字部分查找
+                return this.getImageUrl(numberMatch[1]);
+            }
+        }
+        
+        // 3. 返回本地文件路径（用于模板图片编号或模板key）
+        // 排除UUID格式和ai_animal_格式的key
+        // 允许纯数字格式(如10001)、字母格式(如fire_cat)和ANIMAL_数字格式的key
+        const isUUID = keyStr.includes('-') && keyStr.length > 20 && !keyStr.startsWith('ANIMAL_');
+        const isAIAnimalId = keyStr.startsWith('ai_animal_');
+        
+        if (!isUUID && !isAIAnimalId) {
+            const localPath = this.getLocalImagePath(key);
+            if (localPath) {
+                return localPath;
+            }
         }
         
         return null;
@@ -203,14 +220,14 @@ class ImageLibrary {
         } else {
             // 如果传入的是动物对象，按优先级尝试多个key
             const animal = animalOrKey;
-            // 1. 优先使用animalId（新的索引方式）
-            if (animal.animalId) keysToTry.push(animal.animalId);
-            // 2. 尝试使用key（兼容旧数据）
-            if (animal.key) keysToTry.push(animal.key);
-            // 3. 尝试使用templateKey（备选）
-            if (animal.templateKey) keysToTry.push(animal.templateKey);
-            // 4. 最后尝试使用id
+            // 1. 优先使用id（用户存储图片的索引方式）
             if (animal.id) keysToTry.push(animal.id);
+            // 2. 尝试使用animalId
+            if (animal.animalId) keysToTry.push(animal.animalId);
+            // 3. 尝试使用key
+            if (animal.key) keysToTry.push(animal.key);
+            // 4. 尝试使用templateKey（AI动物的备选）
+            if (animal.templateKey) keysToTry.push(animal.templateKey);
         }
         
         // 依次尝试每个key

@@ -375,11 +375,27 @@ class LeagueSystem {
             if (animalPool.length > 0) {
                 const template = animalPool[Math.floor(Math.random() * animalPool.length)];
                 
+                // 处理animalId: 如果是纯数字格式(如10001)则使用,否则使用key
+                let imageId = template.animalId;
+                // 如果animalId是ANIMAL_开头的格式,则尝试使用key
+                if (!imageId || imageId.toString().startsWith('ANIMAL_')) {
+                    imageId = template.key;
+                }
+                // 如果key也是ANIMAL_开头,则从中提取数字部分
+                if (imageId && imageId.toString().startsWith('ANIMAL_')) {
+                    // 尝试从ANIMAL_xxx中提取数字
+                    const match = imageId.toString().match(/\d+/);
+                    if (match) {
+                        imageId = match[0];
+                    }
+                }
+                
                 animal = {
                     id: `ai_animal_${Date.now()}_${i}_${Math.random().toString(36).substr(2, 9)}`,
                     name: template.name || `AI动物${i + 1}`,
                     templateKey: template.key,
-                    animalId: template.key,
+                    animalId: imageId || template.animalId || template.key,
+                    key: template.key,
                     hp: template.stamina || (Math.random() * 200 + 300),
                     attack: template.attack || (Math.random() * 50 + 50),
                     defense: template.defense || (Math.random() * 50 + 50),
