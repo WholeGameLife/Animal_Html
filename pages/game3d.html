@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+sh<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
@@ -14,6 +14,8 @@
     <script src="../scripts/image_library.js"></script>
     <!-- 引入时间系统 -->
     <script src="../scripts/game_time_system.js"></script>
+    <!-- 引入新手引导系统 -->
+    <script src="../scripts/tutorial_system.js"></script>
     <style>
         /* 2D地图样式 */
         body { margin: 0; overflow: hidden; font-family: 'Inter', sans-serif; background-color: #0a1120; }
@@ -348,7 +350,7 @@
             </div>
 
             <!-- 2. Production Output -->
-            <div class="bg-gradient-to-br from-gray-800/80 to-gray-900/80 p-4 rounded-xl mb-4 border border-gray-700">
+            <div id="current-effect-section" class="bg-gradient-to-br from-gray-800/80 to-gray-900/80 p-4 rounded-xl mb-4 border border-gray-700">
                 <h4 class="text-xs font-bold text-gray-400 mb-2 uppercase tracking-wider flex items-center">
                     <span class="mr-2">📊</span> 当前效果
                 </h4>
@@ -1036,6 +1038,11 @@
                 <button id="btn-open-debug" class="action-button bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-4 rounded-lg text-center">
                     🛠️ 调试器<br><span class="text-xs"> (资源/时间)</span>
                 </button>
+                
+                <!-- 新增：重启教程按钮 -->
+                <button id="btn-restart-tutorial" class="action-button bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-lg text-center">
+                    📚 新手教程<br><span class="text-xs"> (重新学习)</span>
+                </button>
             </div>
         </div>
 
@@ -1649,6 +1656,7 @@
             ui.btnOpenShop.addEventListener('click', openShopPanel, false);
             ui.btnOpenInventory.addEventListener('click', openInventoryPanel, false); // 新增
             document.getElementById('btn-open-debug').addEventListener('click', openDebugPanel, false); // 新增
+            document.getElementById('btn-restart-tutorial').addEventListener('click', restartTutorial, false); // 新增
 
             ui.btnCloseStandaloneDetails.addEventListener('click', closeStandaloneAnimalDetails, false);
             ui.btnCloseBattleSetupPanel.addEventListener('click', closeBattleSetupPanel, false);
@@ -1828,6 +1836,11 @@
             closeAllDetailPanels();
             if (previewElement) previewElement.remove();
             
+            // 暂停教程
+            if (window.tutorialInstance && window.tutorialInstance.isActive) {
+                window.tutorialInstance.pause();
+            }
+            
             gameState.buildingToPlace = buildingType;
             gameState.isBuildingMode = true;
             ui.btnOpenBuild.classList.add('build-mode-active');
@@ -1864,6 +1877,8 @@
                 previewElement.remove();
                 previewElement = null;
             }
+            
+            // 不在这里恢复教程，让place2DBuilding处理
         }
         
         // 检查2D放置位置是否有效
@@ -1958,6 +1973,19 @@
             showStatus(`✅ 成功放置 ${config.name_cn}!`, 3000);
             exit2DBuildMode();
             updateUI();
+            
+            // 通知教程系统：建筑已放置
+            if (window.tutorialInstance && window.tutorialInstance.isActive && window.tutorialInstance.isPaused) {
+                // 保存最后放置的建筑ID，供教程使用
+                window.lastPlacedBuildingSelector = `#building-${buildingId}`;
+                // 延迟推进到下一步，让玩家看到建筑
+                setTimeout(() => {
+                    const currentStep = window.tutorialInstance.steps[window.tutorialInstance.currentStep];
+                    if (currentStep?.waitForAction === 'buildingPlaced') {
+                        window.tutorialInstance.nextStep();
+                    }
+                }, 500);
+            }
         }
         
         // 收集2D资源
@@ -2362,9 +2390,14 @@
 
             // 可收集物品的动画
             gameState.collectibles.forEach(collectible => {
-                const collectibleMesh = collectible.mesh;
-                collectibleMesh.rotation.y += 0.02;
-                collectibleMesh.position.y = collectible.baseY + Math.sin(time * 3 + collectible.id.charCodeAt(0)) * 0.2;
+                // 检查mesh和position是否存在（2D模式下mesh可能不存在）
+                if (collectible.mesh && collectible.mesh.rotation && collectible.mesh.position) {
+                    const collectibleMesh = collectible.mesh;
+                    collectibleMesh.rotation.y += 0.02;
+                    if (collectible.baseY !== undefined) {
+                        collectibleMesh.position.y = collectible.baseY + Math.sin(time * 3 + collectible.id.charCodeAt(0)) * 0.2;
+                    }
+                }
             });
 
 
@@ -3201,6 +3234,16 @@
 
             ui.modalOverlay.classList.remove('hidden');
             ui.detailPanel.classList.remove('hidden');
+            
+            // 通知教程系统：建筑详情已打开
+            if (window.tutorialInstance && window.tutorialInstance.isActive) {
+                const currentStep = window.tutorialInstance.steps[window.tutorialInstance.currentStep];
+                if (currentStep?.waitForAction === 'buildingDetailsOpened') {
+                    setTimeout(() => {
+                        window.tutorialInstance.nextStep();
+                    }, 300);
+                }
+            }
         }
 
         // 新增：打开工人选择界面（复用动物名册）
@@ -3274,6 +3317,16 @@
             selectedBuilding = null;
             ui.detailPanel.classList.add('hidden');
             closeWorkerSelection(); // 确保关闭时清除分配状态
+            
+            // 通知教程系统：建筑详情已关闭
+            if (window.tutorialInstance && window.tutorialInstance.isActive) {
+                const currentStep = window.tutorialInstance.steps[window.tutorialInstance.currentStep];
+                if (currentStep?.waitForAction === 'buildingDetailsClosed') {
+                    setTimeout(() => {
+                        window.tutorialInstance.nextStep();
+                    }, 300);
+                }
+            }
         }
 
         // 升级建筑逻辑 (略)
@@ -4646,6 +4699,20 @@
             
             showStatus('🔄 时间已重置', 2000);
         };
+        
+        // 新增：重启教程函数
+        function restartTutorial() {
+            if (window.tutorialInstance) {
+                if (confirm('确定要重新开始新手教程吗？')) {
+                    window.tutorialInstance.reset();
+                    window.tutorialInstance.completed = false;
+                    window.tutorialInstance.start();
+                    closeAllDetailPanels();
+                }
+            } else {
+                showStatus('❌ 教程系统未加载', 2000);
+            }
+        }
 
         function loadGameStateFromStorage() {
             const storedStateJSON = localStorage.getItem('gameState');
@@ -5132,6 +5199,20 @@
             startGameStateUpdateLoop();
             animate(); // 启动动画循环（包含WASD移动更新）
             updateUI();
+            
+            // 初始化并启动新手引导系统
+            if (window.TutorialSystem) {
+                const tutorial = new TutorialSystem();
+                if (tutorial.shouldShow()) {
+                    // 延迟1秒后显示，让玩家先看到游戏界面
+                    setTimeout(() => {
+                        tutorial.start();
+                    }, 1000);
+                }
+                // 将教程实例保存到全局，方便调试和重置
+                window.tutorialInstance = tutorial;
+            }
+            
             showStatus("欢迎来到电子盆栽！使用 WASD 键移动视角，点击🐾动物系统进行繁殖和查看名册。", 5000);
         };
         

@@ -504,8 +504,11 @@ class LeagueSystem {
     
     /**
      * 进行一轮比赛
+     * @param {string} region - 地区
+     * @param {string} leagueName - 联赛名称
+     * @param {boolean} forcePlayerWin - 是否强制玩家获胜（调试用）
      */
-    playRound(region, leagueName) {
+    playRound(region, leagueName, forcePlayerWin = false) {
         if (!this.leagues[region]) {
             return { error: '地区数据不存在' };
         }
@@ -541,7 +544,7 @@ class LeagueSystem {
         const results = [];
         
         roundFixtures.forEach(fixture => {
-            const result = this.simulateMatch(fixture.home, fixture.away);
+            const result = this.simulateMatch(fixture.home, fixture.away, forcePlayerWin);
             fixture.result = result;
             results.push(result);
             
@@ -581,17 +584,25 @@ class LeagueSystem {
      * 每场比赛双方各选5个动物进行1v1对战，每场限时1分钟
      * 血量为0或倒计时结束前造成伤害高者记为1次胜利
      * 总计5场，统计总胜场决定胜者
+     * @param {object} homeTeam - 主队
+     * @param {object} awayTeam - 客队
+     * @param {boolean} forcePlayerWin - 是否强制玩家获胜（调试用）
      */
-    simulateMatch(homeTeam, awayTeam) {
+    simulateMatch(homeTeam, awayTeam, forcePlayerWin = false) {
         let homeWins = 0;
         let awayWins = 0;
         const battles = [];
+        
+        // 如果启用强制玩家获胜模式
+        const isPlayerHome = homeTeam.isPlayer;
+        const isPlayerAway = awayTeam.isPlayer;
+        const needForceWin = forcePlayerWin && (isPlayerHome || isPlayerAway);
         
         for (let i = 0; i < 5; i++) {
             const homeAnimal = this.selectAnimalForBattle(homeTeam, i);
             const awayAnimal = this.selectAnimalForBattle(awayTeam, i);
             
-            const battleResult = this.simulateBattle(homeAnimal, awayAnimal);
+            const battleResult = this.simulateBattle(homeAnimal, awayAnimal, needForceWin ? (isPlayerHome ? 'home' : 'away') : null);
             battles.push(battleResult);
             
             if (battleResult.winner === 'home') {
@@ -688,8 +699,11 @@ class LeagueSystem {
     /**
      * 模拟1v1战斗（限时1分钟）
      * 当对方血量为0或者倒计时结束前造成伤害高者记为胜利
+     * @param {object} animal1 - 动物1
+     * @param {object} animal2 - 动物2
+     * @param {string} forceWinner - 强制获胜方：'home', 'away', 或 null（正常模拟）
      */
-    simulateBattle(animal1, animal2) {
+    simulateBattle(animal1, animal2, forceWinner = null) {
         const damage1 = (animal1.attack || 50) * (1 + Math.random() * 0.5);
         const damage2 = (animal2.attack || 50) * (1 + Math.random() * 0.5);
         
@@ -697,18 +711,24 @@ class LeagueSystem {
         const hp2 = (animal2.hp || 300) - damage1;
         
         let winner = null;
-        // 血量为0者失败；如果都没降到0，伤害高者获胜
-        if (hp2 <= 0 && hp1 > 0) {
-            winner = 'home';
-        } else if (hp1 <= 0 && hp2 > 0) {
-            winner = 'away';
-        } else if (damage1 > damage2) {
-            winner = 'home';
-        } else if (damage2 > damage1) {
-            winner = 'away';
+        
+        // 如果指定了强制获胜方，直接返回
+        if (forceWinner === 'home' || forceWinner === 'away') {
+            winner = forceWinner;
         } else {
-            // 完全相同伤害时随机判定
-            winner = Math.random() > 0.5 ? 'home' : 'away';
+            // 正常模拟：血量为0者失败；如果都没降到0，伤害高者获胜
+            if (hp2 <= 0 && hp1 > 0) {
+                winner = 'home';
+            } else if (hp1 <= 0 && hp2 > 0) {
+                winner = 'away';
+            } else if (damage1 > damage2) {
+                winner = 'home';
+            } else if (damage2 > damage1) {
+                winner = 'away';
+            } else {
+                // 完全相同伤害时随机判定
+                winner = Math.random() > 0.5 ? 'home' : 'away';
+            }
         }
         
         return {
@@ -1171,8 +1191,11 @@ class LeagueSystem {
      * 进行大陆赛事小组赛
      * 新规则：每周六只进行1场比赛（按轮次进行）
      * 如果某人已经打完了所有比赛，但其他两人还有比赛，则这周该选手就没有比赛
+     * @param {string} season - 赛季
+     * @param {string} tournamentName - 赛事名称
+     * @param {boolean} forcePlayerWin - 是否强制玩家获胜（调试用）
      */
-    playTournamentGroupStage(season, tournamentName) {
+    playTournamentGroupStage(season, tournamentName, forcePlayerWin = false) {
         const tournament = this.tournaments[season][tournamentName];
         if (!tournament) {
             return { error: '赛事尚未生成' };
@@ -1208,11 +1231,11 @@ class LeagueSystem {
             // 当前轮次没有比赛，检查是否已完成小组赛
             const allCompleted = tournament.groupFixtures.every(f => f.result);
             
-            if (allCompleted || currentRound >= 6) {
+            if (allCompleted || currentRound > 6) {
                 // 小组赛已全部完成（6轮）
                 tournament.groupFixtures.forEach(fixture => {
                     if (!fixture.result) {
-                        fixture.result = this.simulateMatch(fixture.home, fixture.away);
+                        fixture.result = this.simulateMatch(fixture.home, fixture.away, forcePlayerWin);
                     }
                 });
                 
@@ -1266,7 +1289,7 @@ class LeagueSystem {
             // 模拟所有组的本轮比赛（包括玩家组）
             roundFixtures.forEach(fixture => {
                 if (!fixture.result) {
-                    fixture.result = this.simulateMatch(fixture.home, fixture.away);
+                    fixture.result = this.simulateMatch(fixture.home, fixture.away, forcePlayerWin);
                 }
             });
             
@@ -1290,7 +1313,7 @@ class LeagueSystem {
         }
         
         // 进行玩家的本轮比赛
-        const result = this.simulateMatch(playerFixture.home, playerFixture.away);
+        const result = this.simulateMatch(playerFixture.home, playerFixture.away, forcePlayerWin);
         playerFixture.result = result;
         
         
@@ -1300,7 +1323,7 @@ class LeagueSystem {
         // 模拟所有组（包括玩家所在组）的本轮其他比赛
         roundFixtures.forEach(fixture => {
             if (fixture !== playerFixture && !fixture.result) {
-                fixture.result = this.simulateMatch(fixture.home, fixture.away);
+                fixture.result = this.simulateMatch(fixture.home, fixture.away, false);
             }
         });
         
@@ -1333,8 +1356,8 @@ class LeagueSystem {
             };
         }
         
-        // 只有在未完成时才推进到下一轮，且不超过6轮
-        if (tournament.currentGroupRound < 6) {
+        // 只有在未完成时才推进到下一轮，且不能从第6轮推进到第7轮
+        if (tournament.currentGroupRound < 6 && !tournament.groupStageCompleted) {
             tournament.currentGroupRound++;
         }
         
@@ -1539,8 +1562,10 @@ class LeagueSystem {
      * - 打完第1场后,team1Wins和team2Wins分别为0或1
      * - 打完第2场后,可能是2:0,也可能是1:1
      * - 如果1:1,打第3场决胜负,最终2:1
+     * @param {object} fixture - 对阵信息
+     * @param {boolean} forcePlayerWin - 是否强制玩家获胜（调试用）
      */
-    simulateTournamentKnockoutMatch(fixture) {
+    simulateTournamentKnockoutMatch(fixture, forcePlayerWin = false) {
         // 初始化matches数组
         if (!fixture.matches) {
             fixture.matches = [];
@@ -1557,7 +1582,8 @@ class LeagueSystem {
         // 进行本周的比赛
         const match = this.simulateMatch(
             fixture.matches.length % 2 === 0 ? fixture.team1 : fixture.team2,
-            fixture.matches.length % 2 === 0 ? fixture.team2 : fixture.team1
+            fixture.matches.length % 2 === 0 ? fixture.team2 : fixture.team1,
+            forcePlayerWin
         );
         fixture.matches.push(match);
         

@@ -2061,8 +2061,9 @@
                 const qualification = previousQualification;
                 
                 // 如果有上赛季的大陆赛事资格，自动生成大陆赛事
+                // 修复：使用上赛季的联赛类型来确定大陆赛事的season，而不是当前选择的新联赛类型
                 if (qualification) {
-                    const season = currentLeague === '夏季联赛' ? 'summer' : 'winter';
+                    const season = previousLeague === '夏季联赛' ? 'summer' : 'winter';
                     const existingTournament = leagueSystem.getTournamentInfo(season, qualification);
                     
                     if (!existingTournament) {
@@ -4677,8 +4678,8 @@
                         return;
                     }
                     
-                    // 直接调用playRound模拟一轮
-                    const mockResult = leagueSystem.playRound(playerTeam.region, playerTeam.league);
+                    // 直接调用playRound模拟一轮，强制玩家获胜
+                    const mockResult = leagueSystem.playRound(playerTeam.region, playerTeam.league, true);
                     
                     if (mockResult.error) {
                         await showMessage(mockResult.error, '❌', 'error');
@@ -4818,8 +4819,8 @@
                     const tournament = leagueSystem.getTournamentInfo(season, tournamentName);
                     
                     if (tournament && !tournament.groupStageCompleted) {
-                        // 只调用一次，模拟当前轮（玩家休息）
-                        const result = leagueSystem.playTournamentGroupStage(season, tournamentName);
+                        // 只调用一次，模拟当前轮（玩家休息），强制玩家获胜
+                        const result = leagueSystem.playTournamentGroupStage(season, tournamentName, true);
                         
                         // 保存数据
                         await saveData();
@@ -4896,8 +4897,9 @@
                 let autoSimulatedCount = 0;
                 stageFixtures.forEach(fixture => {
                     // 继续进行比赛直到决出胜负
+                    // 注意：这里是其他组的比赛，不强制玩家获胜
                     while (!fixture.winner) {
-                        leagueSystem.simulateTournamentKnockoutMatch(fixture);
+                        leagueSystem.simulateTournamentKnockoutMatch(fixture, false);
                         autoSimulatedCount++;
                     }
                 });
@@ -4949,8 +4951,8 @@
             }
             
             if (!tournament.groupStageCompleted) {
-                // 小组赛：进行玩家的下一场比赛（每周只进行1场）
-                const result = leagueSystem.playTournamentGroupStage(season, tournamentName);
+                // 小组赛：进行玩家的下一场比赛（每周只进行1场），强制玩家获胜
+                const result = leagueSystem.playTournamentGroupStage(season, tournamentName, true);
                 await saveData();
                 
                 if (result.error) {
@@ -5010,8 +5012,8 @@
                     const currentStage = playerFixtures[0].stage;
                     const playerFixture = playerFixtures[0];
                     
-                    // 进行玩家的本场比赛
-                    leagueSystem.simulateTournamentKnockoutMatch(playerFixture);
+                    // 进行玩家的本场比赛，强制玩家获胜
+                    leagueSystem.simulateTournamentKnockoutMatch(playerFixture, true);
                     
                     // 同步进行所有其他组的本周比赛
                     const otherFixtures = tournament.knockoutFixtures.filter(f =>
@@ -5023,7 +5025,7 @@
                     
                     otherFixtures.forEach(fixture => {
                         // 每周六只进行1场比赛
-                        leagueSystem.simulateTournamentKnockoutMatch(fixture);
+                        leagueSystem.simulateTournamentKnockoutMatch(fixture, false);
                     });
                     
                     // 检查玩家是否已决出胜负
@@ -5046,7 +5048,7 @@
                         if (tiedFixtures.length > 0) {
                             // 自动模拟这些组的决胜局
                             tiedFixtures.forEach(fixture => {
-                                leagueSystem.simulateTournamentKnockoutMatch(fixture);
+                                leagueSystem.simulateTournamentKnockoutMatch(fixture, false);
                             });
                         }
                     }
@@ -5116,7 +5118,7 @@
                         
                         // 每周六只进行1场比赛
                         unfinishedFixtures.forEach(fixture => {
-                            leagueSystem.simulateTournamentKnockoutMatch(fixture);
+                            leagueSystem.simulateTournamentKnockoutMatch(fixture, false);
                         });
                         
                         // 检查本阶段是否全部完成
@@ -5180,9 +5182,9 @@
                 let roundsCompleted = 0;
                 const startRound = league.currentRound;
                 
-                // 模拟完成所有剩余轮次
+                // 模拟完成所有剩余轮次，强制玩家全胜
                 while (!league.completed) {
-                    const mockResult = leagueSystem.playRound(playerTeam.region, playerTeam.league);
+                    const mockResult = leagueSystem.playRound(playerTeam.region, playerTeam.league, true);
                     
                     if (mockResult.error) {
                         await showMessage(`完成到第${roundsCompleted}轮时出错: ${mockResult.error}`, '✅', 'success');
