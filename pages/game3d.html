@@ -795,28 +795,10 @@ sh<!DOCTYPE html>
             <div id="build-main-menu" class="control-panel hidden w-full md:w-72 p-4 rounded-lg text-white">
                 <h3 class="text-lg font-bold mb-3 text-yellow-400 border-b border-gray-700 pb-2">选择建筑类型</h3>
                 <button data-category="landmarks" class="category-button bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-2 px-4 rounded-lg w-full mb-2">🏛️ 地标</button>
-                <button data-category="exchange" class="category-button bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg w-full mb-2">🔄 交易所</button>
-                <button data-category="shrines" class="category-button bg-fuchsia-600 hover:bg-fuchsia-700 text-white font-bold py-2 px-4 rounded-lg w-full mb-2">⛩️ 动物神社</button>
-                <button data-category="materials" class="category-button bg-orange-600 hover:bg-orange-700 text-white font-bold py-2 px-4 rounded-lg w-full">🏗️ 基础建筑</button>
-                <button data-category="advanced" class="category-button bg-rose-600 hover:bg-rose-700 text-white font-bold py-2 px-4 rounded-lg w-full mt-2">✨ 进阶建筑</button>
+                <button data-category="materials" class="category-button bg-orange-600 hover:bg-orange-700 text-white font-bold py-2 px-4 rounded-lg w-full mb-2">🏗️ 基础建筑</button>
+                <button data-category="advanced" class="category-button bg-rose-600 hover:bg-rose-700 text-white font-bold py-2 px-4 rounded-lg w-full">✨ 进阶建筑</button>
             </div>
-            <!-- 交易所子菜单 -->
-            <div id="build-exchange-menu" class="control-panel hidden w-full md:w-72 p-4 rounded-lg text-white">
-                <h3 class="text-lg font-bold mb-3 text-yellow-400 border-b border-gray-700 pb-2 flex justify-between items-center">
-                    <span>交易所</span>
-                    <button class="back-to-main-build-menu text-xs text-gray-400 hover:text-white">返回</button>
-                </h3>
-                <div data-building="Exchange" class="build-button bg-gray-800 hover:bg-gray-700 p-3 rounded-lg w-full mb-2 cursor-pointer transition-colors">
-                    <div class="flex justify-between items-center">
-                        <div class="flex items-center space-x-3">
-                            <span class="text-2xl">🔄</span>
-                            <p class="font-bold text-green-300">交易所</p>
-                        </div>
-                        <p class="text-sm font-mono text-yellow-300">500 💰</p>
-                    </div>
-                    <p class="text-xs text-gray-400 mt-1 pl-10">进行动物的买卖和拍卖</p>
-                </div>
-            </div>
+
             <!-- 地标建筑子菜单 -->
             <div id="build-landmarks-menu" class="control-panel hidden w-full md:w-72 p-4 rounded-lg text-white">
                 <h3 class="text-lg font-bold mb-3 text-yellow-400 border-b border-gray-700 pb-2 flex justify-between items-center">
@@ -1869,7 +1851,6 @@ sh<!DOCTYPE html>
             gameState.buildingToPlace = null;
             ui.buildMainMenu.classList.add('hidden');
             ui.buildMaterialMenu.classList.add('hidden');
-            ui.buildExchangeMenu.classList.add('hidden');
             ui.buildLandmarksMenu.classList.add('hidden');
             ui.buildAdvancedMenu.classList.add('hidden');
             ui.btnOpenBuild.classList.remove('build-mode-active');
@@ -5013,7 +4994,6 @@ sh<!DOCTYPE html>
             button.addEventListener('click', () => {
                 ui.buildMaterialMenu.classList.add('hidden');
                 ui.buildLandmarksMenu.classList.add('hidden');
-                ui.buildExchangeMenu.classList.add('hidden');
                 ui.buildAdvancedMenu.classList.add('hidden');
                 ui.buildMainMenu.classList.remove('hidden');
             });
@@ -5156,15 +5136,11 @@ sh<!DOCTYPE html>
                     ui.buildLandmarksMenu.classList.remove('hidden');
                     showStatus("请选择要放置的地标建筑。");
                     break;
-                case 'exchange':
-                    ui.buildExchangeMenu.classList.remove('hidden');
-                    showStatus("请选择要放置的交易所。");
-                    break;
                 case 'advanced':
                     ui.buildAdvancedMenu.classList.remove('hidden');
                     showStatus("请选择要放置的进阶建筑。");
                     break;
-                case 'shrines':
+                default:
                     showStatus(`此建筑类型 "${category}" 暂未开放。`, 2000);
                     ui.buildMainMenu.classList.remove('hidden'); // 返回主菜单
                     break;

@@ -1,0 +1,1098 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>建筑设计器 V1.0 - 电子盆栽</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background: linear-gradient(135deg, #1e3a8a 0%, #312e81 100%);
+            min-height: 100vh;
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .building-card {
+            transition: all 0.3s ease;
+        }
+        
+        .building-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+        
+        .category-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: bold;
+        }
+        
+        /* 建筑类型颜色 */
+        .type-landmark { background: linear-gradient(135deg, #a78bfa, #8b5cf6); }
+        .type-basic { background: linear-gradient(135deg, #22c55e, #16a34a); }
+        .type-advanced { background: linear-gradient(135deg, #ef4444, #dc2626); }
+        
+        .emoji-picker {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            gap: 0.5rem;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        
+        .emoji-btn {
+            padding: 0.5rem;
+            font-size: 1.5rem;
+            cursor: pointer;
+            border-radius: 0.5rem;
+            transition: all 0.2s;
+        }
+        
+        .emoji-btn:hover {
+            background: rgba(59, 130, 246, 0.2);
+            transform: scale(1.2);
+        }
+
+        .resource-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem;
+            background: rgba(55, 65, 81, 0.5);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+    </style>
+</head>
+<body class="p-6">
+    <div class="max-w-7xl mx-auto">
+        <!-- 标题 -->
+        <div class="text-center mb-8">
+            <h1 class="text-4xl font-bold text-white mb-2">🏗️ 建筑设计器 V1.0 🏗️</h1>
+            <p class="text-blue-200 mb-3">设置建筑的产出、放置成本、升级成本等参数</p>
+            <div class="flex justify-center gap-3">
+                <button onclick="window.history.back()"
+                        class="inline-flex items-center gap-2 bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-6 rounded-lg transition-colors">
+                    <span>←</span>
+                    <span>返回</span>
+                </button>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- 左侧：建筑设计表单 -->
+            <div class="lg:col-span-2 bg-gray-900/80 backdrop-blur-lg rounded-xl p-6 border border-gray-700">
+                <h2 class="text-2xl font-bold text-white mb-6">🎨 创建新建筑</h2>
+                
+                <form id="building-form" class="space-y-4">
+                    <!-- 基础信息 -->
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">建筑名称 *</label>
+                            <input type="text" id="building-name" required
+                                class="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">建筑图标 *</label>
+                            <div class="flex gap-2">
+                                <input type="text" id="building-icon" required maxlength="2"
+                                    class="flex-1 bg-gray-800 border border-gray-600 rounded-lg px-4 py-2 text-white text-center text-2xl focus:outline-none focus:border-blue-500">
+                                <button type="button" id="emoji-picker-btn"
+                                    class="bg-blue-600 hover:bg-blue-700 text-white px-4 rounded-lg">
+                                    选择
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 建筑描述 -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-2">建筑描述</label>
+                        <textarea id="building-description" rows="2" placeholder="描述这个建筑的特点..."
+                            class="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500 resize-none"></textarea>
+                    </div>
+
+                    <!-- 建筑类型 -->
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">建筑类型 *</label>
+                            <select id="building-type" required
+                                class="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500">
+                                <option value="">选择类型</option>
+                                <option value="landmark">🏛️ 地标</option>
+                                <option value="basic">🏠 基础建筑</option>
+                                <option value="advanced">🏰 进阶建筑</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">建筑等级 *</label>
+                            <input type="number" id="building-level" min="1" value="1" required
+                                class="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500">
+                        </div>
+                    </div>
+
+                    <!-- 建筑尺寸 -->
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">占地宽度</label>
+                            <input type="number" id="building-width" min="1" value="1"
+                                class="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">占地高度</label>
+                            <input type="number" id="building-height" min="1" value="1"
+                                class="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500">
+                        </div>
+                    </div>
+
+                    <!-- 放置成本 -->
+                    <div class="bg-gray-800/50 rounded-lg p-4 border border-gray-600">
+                        <h3 class="text-sm font-bold text-yellow-300 mb-3">💰 放置成本</h3>
+                        <div id="placement-costs" class="space-y-2">
+                            <!-- 动态添加的资源 -->
+                        </div>
+                        <button type="button" id="add-placement-cost-btn"
+                            class="mt-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold py-2 px-4 rounded-lg transition-colors">
+                            + 添加资源
+                        </button>
+                    </div>
+
+                    <!-- 升级成本 -->
+                    <div class="bg-gray-800/50 rounded-lg p-4 border border-gray-600">
+                        <h3 class="text-sm font-bold text-orange-300 mb-3">⬆️ 升级成本</h3>
+                        <p class="text-xs text-gray-400 mb-3">为每个等级设置升级所需资源</p>
+                        <div id="upgrade-levels" class="space-y-3">
+                            <!-- 动态添加的等级升级配置 -->
+                        </div>
+                        <button type="button" id="add-upgrade-level-btn"
+                            class="mt-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold py-2 px-4 rounded-lg transition-colors">
+                            + 添加等级配置
+                        </button>
+                    </div>
+
+                    <!-- 建筑产出 -->
+                    <div class="bg-gray-800/50 rounded-lg p-4 border border-gray-600">
+                        <h3 class="text-sm font-bold text-green-300 mb-3">📦 建筑产出</h3>
+                        <div class="grid grid-cols-2 gap-4 mb-3">
+                            <div>
+                                <label class="block text-xs font-medium text-gray-400 mb-1">产出周期(秒)</label>
+                                <input type="number" id="production-interval" min="0" value="0"
+                                    class="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white text-sm focus:outline-none focus:border-blue-500">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-400 mb-1">存储上限</label>
+                                <input type="number" id="storage-capacity" min="0" value="100"
+                                    class="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white text-sm focus:outline-none focus:border-blue-500">
+                            </div>
+                        </div>
+                        <div id="production-outputs" class="space-y-2">
+                            <!-- 动态添加的产出资源 -->
+                        </div>
+                        <button type="button" id="add-production-output-btn"
+                            class="mt-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold py-2 px-4 rounded-lg transition-colors">
+                            + 添加产出
+                        </button>
+                    </div>
+
+                    <!-- 特殊属性 -->
+                    <div class="bg-gray-800/50 rounded-lg p-4 border border-gray-600">
+                        <h3 class="text-sm font-bold text-purple-300 mb-3">✨ 特殊属性</h3>
+                        <div class="grid grid-cols-1 gap-4">
+                            <div>
+                                <label class="block text-xs font-medium text-gray-400 mb-1">建造时间(秒)</label>
+                                <input type="number" id="build-time" min="0" value="10"
+                                    class="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white text-sm focus:outline-none focus:border-blue-500">
+                            </div>
+                        </div>
+                        <div class="mt-3">
+                            <label class="flex items-center gap-2 text-gray-300 cursor-pointer">
+                                <input type="checkbox" id="is-unique"
+                                    class="w-4 h-4 bg-gray-700 border-gray-600 rounded">
+                                <span>唯一建筑（每个玩家只能建造一个）</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- 按钮 -->
+                    <div class="flex gap-4 pt-4">
+                        <button type="submit" id="submit-btn"
+                            class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition-colors">
+                            <span id="submit-text">✨ 创建建筑</span>
+                        </button>
+                        <button type="button" id="cancel-edit-btn" class="hidden bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-3 px-6 rounded-lg transition-colors">
+                            ❌ 取消编辑
+                        </button>
+                        <button type="button" id="clear-btn"
+                            class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-3 px-6 rounded-lg transition-colors">
+                            🔄 清空
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- 右侧：建筑预览和列表 -->
+            <div class="space-y-6">
+                <!-- 建筑预览 -->
+                <div class="bg-gray-900/80 backdrop-blur-lg rounded-xl p-6 border border-gray-700">
+                    <h3 class="text-xl font-bold text-white mb-4">👁️ 建筑预览</h3>
+                    <div id="building-preview" class="building-card bg-gray-800 rounded-lg p-4 border-2 border-gray-600">
+                        <div class="text-center text-gray-500">
+                            <div class="text-4xl mb-2">❓</div>
+                            <div class="text-sm">填写表单查看预览</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 已创建建筑列表 -->
+                <div class="bg-gray-900/80 backdrop-blur-lg rounded-xl p-6 border border-gray-700">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-xl font-bold text-white">📋 建筑列表 (<span id="building-count">0</span>)</h3>
+                        <div class="flex gap-2">
+                            <button id="import-btn"
+                                class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold py-2 px-4 rounded-lg transition-colors">
+                                📤 导入
+                            </button>
+                            <button id="export-btn"
+                                class="bg-green-600 hover:bg-green-700 text-white text-sm font-bold py-2 px-4 rounded-lg transition-colors">
+                                📥 导出JSON
+                            </button>
+                            <button id="export-csv-btn"
+                                class="bg-teal-600 hover:bg-teal-700 text-white text-sm font-bold py-2 px-4 rounded-lg transition-colors">
+                                📊 导出CSV
+                            </button>
+                        </div>
+                    </div>
+                    <div id="buildings-list" class="space-y-3 max-h-96 overflow-y-auto">
+                        <div class="text-center text-gray-500 text-sm py-8">
+                            暂无建筑
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Emoji选择器模态框 -->
+        <div id="emoji-modal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+            <div class="bg-gray-900 rounded-xl p-6 max-w-md w-full mx-4 border border-gray-700">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-xl font-bold text-white">选择图标</h3>
+                    <button id="close-emoji-modal" class="text-gray-400 hover:text-white text-2xl">×</button>
+                </div>
+                <div id="emoji-grid" class="emoji-picker bg-gray-800 rounded-lg p-4">
+                    <!-- Emoji列表 -->
+                </div>
+            </div>
+        </div>
+
+        <!-- 导入建筑模态框 -->
+        <div id="import-modal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+            <div class="bg-gray-900 rounded-xl p-6 max-w-md w-full mx-4 border border-gray-700">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-xl font-bold text-white">📤 导入建筑</h3>
+                    <button id="close-import-modal" class="text-gray-400 hover:text-white text-2xl">×</button>
+                </div>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-2">选择文件</label>
+                        <input type="file" id="import-file-input" accept=".json"
+                            class="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-2 text-white file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-blue-600 file:text-white hover:file:bg-blue-700">
+                    </div>
+                    <div class="flex gap-3">
+                        <button id="confirm-import-btn"
+                            class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition-colors">
+                            确认导入
+                        </button>
+                        <button id="cancel-import-btn"
+                            class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-3 px-6 rounded-lg transition-colors">
+                            取消
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 常用建筑Emoji列表
+        const EMOJIS = [
+            '🏠', '🏡', '🏢', '🏣', '🏤', '🏥', '🏦', '🏨',
+            '🏩', '🏪', '🏫', '🏬', '🏭', '🏯', '🏰', '🗼',
+            '🗿', '⛩️', '🕌', '🕍', '⛪', '💒', '🛕', '🕋',
+            '⛺', '🏕️', '🌾', '🌿', '🌳', '🌲', '🎋', '🎍',
+            '⚔️', '🗡️', '🛡️', '🏹', '💣', '🧨', '🔫', '🔪',
+            '⚡', '🔥', '💧', '💎', '💠', '🔮', '🌟', '✨',
+            '🎯', '🎪', '🎡', '🎢', '🎠', '⛲', '🌉', '🌁',
+            '⛽', '🚧', '🏗️', '🏘️', '🏙️', '🌃', '🌆', '🌇',
+            '🗺️', '🧭', '📍', '📌', '🚩', '⛳', '🏴', '🏳️'
+        ];
+
+        // 常用资源类型
+        const RESOURCE_TYPES = [
+            { key: 'gold', name: '金币', icon: '💰' },
+            { key: 'wood', name: '木材', icon: '🪵' },
+            { key: 'stone', name: '石头', icon: '🪨' },
+            { key: 'iron', name: '铁矿', icon: '⛏️' },
+            { key: 'food', name: '食物', icon: '🌾' },
+            { key: 'crystal', name: '水晶', icon: '💎' },
+            { key: 'gem', name: '宝石', icon: '💠' },
+            { key: 'energy', name: '能源', icon: '⚡' }
+        ];
+
+        // 建筑池存储
+        let buildings = JSON.parse(localStorage.getItem('BUILDING_POOL') || '[]');
+        let editingIndex = -1;
+
+        // DOM元素
+        const form = document.getElementById('building-form');
+        const preview = document.getElementById('building-preview');
+        const buildingsList = document.getElementById('buildings-list');
+        const buildingCount = document.getElementById('building-count');
+        const emojiModal = document.getElementById('emoji-modal');
+        const emojiGrid = document.getElementById('emoji-grid');
+
+        // 初始化
+        function init() {
+            renderBuildingsList();
+            setupEmojiPicker();
+            setupFormListeners();
+            updateBuildingCount();
+        }
+
+        // 更新建筑数量
+        function updateBuildingCount() {
+            buildingCount.textContent = buildings.length;
+        }
+
+        // 设置Emoji选择器
+        function setupEmojiPicker() {
+            emojiGrid.innerHTML = '';
+            EMOJIS.forEach(emoji => {
+                const btn = document.createElement('button');
+                btn.className = 'emoji-btn';
+                btn.textContent = emoji;
+                btn.type = 'button';
+                btn.onclick = () => {
+                    document.getElementById('building-icon').value = emoji;
+                    emojiModal.classList.add('hidden');
+                    updatePreview();
+                };
+                emojiGrid.appendChild(btn);
+            });
+
+            document.getElementById('emoji-picker-btn').onclick = () => emojiModal.classList.remove('hidden');
+            document.getElementById('close-emoji-modal').onclick = () => emojiModal.classList.add('hidden');
+            emojiModal.onclick = (e) => {
+                if (e.target === emojiModal) emojiModal.classList.add('hidden');
+            };
+        }
+
+        // 设置表单监听器
+        function setupFormListeners() {
+            form.querySelectorAll('input, select, textarea').forEach(input => {
+                input.addEventListener('input', updatePreview);
+            });
+
+            form.onsubmit = (e) => {
+                e.preventDefault();
+                if (editingIndex >= 0) {
+                    updateBuilding();
+                } else {
+                    createBuilding();
+                }
+            };
+
+            document.getElementById('clear-btn').onclick = () => {
+                form.reset();
+                cancelEdit();
+                clearDynamicResources();
+                updatePreview();
+            };
+
+            document.getElementById('cancel-edit-btn').onclick = () => {
+                form.reset();
+                cancelEdit();
+                clearDynamicResources();
+                updatePreview();
+            };
+
+            document.getElementById('add-placement-cost-btn').onclick = () => addResourceItem('placement');
+            document.getElementById('add-upgrade-level-btn').onclick = addUpgradeLevel;
+            document.getElementById('add-production-output-btn').onclick = () => addResourceItem('production');
+            
+            document.getElementById('export-btn').onclick = exportBuildings;
+            document.getElementById('export-csv-btn').onclick = exportBuildingsToCSV;
+            document.getElementById('import-btn').onclick = openImportModal;
+        }
+
+        // 清空动态资源
+        function clearDynamicResources() {
+            document.getElementById('placement-costs').innerHTML = '';
+            document.getElementById('upgrade-levels').innerHTML = '';
+            document.getElementById('production-outputs').innerHTML = '';
+        }
+
+        // 添加升级等级配置
+        function addUpgradeLevel() {
+            const container = document.getElementById('upgrade-levels');
+            const levelCount = container.children.length + 2; // 从2级开始
+            
+            const div = document.createElement('div');
+            div.className = 'border border-gray-600 rounded-lg p-3 bg-gray-700/30';
+            div.innerHTML = `
+                <div class="flex justify-between items-center mb-2">
+                    <div class="flex items-center gap-2">
+                        <span class="text-sm font-bold text-blue-300">升级到等级</span>
+                        <input type="number" class="upgrade-target-level bg-gray-700 border border-gray-600 rounded px-2 py-1 text-white text-sm w-20" min="2" value="${levelCount}">
+                    </div>
+                    <button type="button" onclick="this.closest('.border').remove(); updatePreview();"
+                        class="text-red-400 hover:text-red-300 text-xl">×</button>
+                </div>
+                <div class="upgrade-resources space-y-2">
+                    <!-- 此等级的资源 -->
+                </div>
+                <button type="button" onclick="addResourceToUpgradeLevel(this)" 
+                    class="mt-2 bg-green-600 hover:bg-green-700 text-white text-xs font-bold py-1 px-3 rounded transition-colors">
+                    + 添加资源
+                </button>
+            `;
+            container.appendChild(div);
+            
+            // 为等级输入框添加监听器
+            div.querySelector('.upgrade-target-level').addEventListener('input', updatePreview);
+            
+            // 默认添加一个资源项
+            addResourceToUpgradeLevel(div.querySelector('button'));
+            
+            updatePreview();
+        }
+
+        // 为升级等级添加资源
+        function addResourceToUpgradeLevel(btn) {
+            const levelDiv = btn.closest('.border');
+            const resourcesContainer = levelDiv.querySelector('.upgrade-resources');
+            
+            const div = document.createElement('div');
+            div.className = 'resource-item';
+            div.innerHTML = `
+                <select class="resource-type bg-gray-700 border border-gray-600 rounded px-2 py-1 text-white text-sm flex-1">
+                    ${RESOURCE_TYPES.map(r => `<option value="${r.key}">${r.icon} ${r.name}</option>`).join('')}
+                </select>
+                <input type="number" class="resource-amount bg-gray-700 border border-gray-600 rounded px-2 py-1 text-white text-sm w-24" min="1" value="10" placeholder="数量">
+                <button type="button" onclick="this.parentElement.remove(); updatePreview();"
+                    class="text-red-400 hover:text-red-300 text-xl">×</button>
+            `;
+            resourcesContainer.appendChild(div);
+            
+            // 为新添加的输入框添加监听器
+            div.querySelectorAll('select, input').forEach(el => {
+                el.addEventListener('input', updatePreview);
+            });
+            
+            updatePreview();
+        }
+
+        // 添加资源项
+        function addResourceItem(type) {
+            const container = document.getElementById(
+                type === 'placement' ? 'placement-costs' :
+                type === 'upgrade' ? 'upgrade-costs' : 'production-outputs'
+            );
+            
+            const id = `${type}-${Date.now()}-${Math.random()}`;
+            const div = document.createElement('div');
+            div.className = 'resource-item';
+            div.innerHTML = `
+                <select class="resource-type bg-gray-700 border border-gray-600 rounded px-2 py-1 text-white text-sm flex-1">
+                    ${RESOURCE_TYPES.map(r => `<option value="${r.key}">${r.icon} ${r.name}</option>`).join('')}
+                </select>
+                <input type="number" class="resource-amount bg-gray-700 border border-gray-600 rounded px-2 py-1 text-white text-sm w-24" min="1" value="10" placeholder="数量">
+                <button type="button" onclick="this.parentElement.remove(); updatePreview();"
+                    class="text-red-400 hover:text-red-300 text-xl">×</button>
+            `;
+            container.appendChild(div);
+            
+            // 为新添加的输入框添加监听器
+            div.querySelectorAll('select, input').forEach(el => {
+                el.addEventListener('input', updatePreview);
+            });
+            
+            updatePreview();
+        }
+
+        // 获取资源列表
+        function getResourceList(containerId) {
+            const container = document.getElementById(containerId);
+            const items = container.querySelectorAll('.resource-item');
+            const resources = [];
+            
+            items.forEach(item => {
+                const typeSelect = item.querySelector('.resource-type');
+                const amountInput = item.querySelector('.resource-amount');
+                if (typeSelect && amountInput) {
+                    resources.push({
+                        type: typeSelect.value,
+                        amount: parseInt(amountInput.value) || 0
+                    });
+                }
+            });
+            
+            return resources;
+        }
+
+        // 获取升级等级配置
+        function getUpgradeLevels() {
+            const container = document.getElementById('upgrade-levels');
+            const levelDivs = container.querySelectorAll('.border');
+            const upgradeLevels = [];
+            
+            levelDivs.forEach(levelDiv => {
+                const targetLevel = parseInt(levelDiv.querySelector('.upgrade-target-level').value);
+                const resources = [];
+                
+                levelDiv.querySelectorAll('.resource-item').forEach(item => {
+                    const typeSelect = item.querySelector('.resource-type');
+                    const amountInput = item.querySelector('.resource-amount');
+                    if (typeSelect && amountInput) {
+                        resources.push({
+                            type: typeSelect.value,
+                            amount: parseInt(amountInput.value) || 0
+                        });
+                    }
+                });
+                
+                if (resources.length > 0) {
+                    upgradeLevels.push({
+                        targetLevel: targetLevel,
+                        resources: resources
+                    });
+                }
+            });
+            
+            // 按等级排序
+            upgradeLevels.sort((a, b) => a.targetLevel - b.targetLevel);
+            
+            return upgradeLevels;
+        }
+
+        // 更新预览
+        function updatePreview() {
+            const name = document.getElementById('building-name').value;
+            const icon = document.getElementById('building-icon').value;
+            const type = document.getElementById('building-type').value;
+            const level = document.getElementById('building-level').value;
+            const description = document.getElementById('building-description').value;
+
+            if (!name) {
+                preview.innerHTML = `<div class="text-center text-gray-500">
+                    <div class="text-4xl mb-2">❓</div>
+                    <div class="text-sm">填写表单查看预览</div></div>`;
+                return;
+            }
+
+            const placementCosts = getResourceList('placement-costs');
+            const upgradeLevels = getUpgradeLevels();
+            const productionOutputs = getResourceList('production-outputs');
+            const productionInterval = document.getElementById('production-interval').value;
+            const storageCapacity = document.getElementById('storage-capacity').value;
+            const buildTime = document.getElementById('build-time').value;
+            const isUnique = document.getElementById('is-unique').checked;
+
+            let infoHtml = '';
+            
+            // 放置成本
+            if (placementCosts.length > 0) {
+                const costsHtml = placementCosts.map(r => {
+                    const resource = RESOURCE_TYPES.find(rt => rt.key === r.type);
+                    return `<span class="bg-yellow-600/30 text-yellow-300 px-2 py-1 rounded text-xs">${resource.icon} ${r.amount}</span>`;
+                }).join(' ');
+                infoHtml += `<div class="mb-2"><span class="text-xs text-gray-400">放置成本:</span> ${costsHtml}</div>`;
+            }
+
+            // 升级配置
+            if (upgradeLevels.length > 0) {
+                const upgradesHtml = upgradeLevels.map(ul => {
+                    const costsHtml = ul.resources.map(r => {
+                        const resource = RESOURCE_TYPES.find(rt => rt.key === r.type);
+                        return `${resource.icon}${r.amount}`;
+                    }).join(' ');
+                    return `<span class="bg-orange-600/30 text-orange-300 px-2 py-1 rounded text-xs">→Lv.${ul.targetLevel}: ${costsHtml}</span>`;
+                }).join(' ');
+                infoHtml += `<div class="mb-2"><span class="text-xs text-gray-400">升级:</span> <div class="flex flex-wrap gap-1 mt-1">${upgradesHtml}</div></div>`;
+            }
+
+            // 建筑产出
+            if (productionOutputs.length > 0 && productionInterval > 0) {
+                const outputsHtml = productionOutputs.map(r => {
+                    const resource = RESOURCE_TYPES.find(rt => rt.key === r.type);
+                    return `<span class="bg-green-600/30 text-green-300 px-2 py-1 rounded text-xs">${resource.icon} ${r.amount}/${productionInterval}秒</span>`;
+                }).join(' ');
+                infoHtml += `<div class="mb-2"><span class="text-xs text-gray-400">产出:</span> ${outputsHtml}</div>`;
+                infoHtml += `<div class="mb-2"><span class="text-xs text-gray-400">存储:</span> <span class="bg-blue-600/30 text-blue-300 px-2 py-1 rounded text-xs">上限 ${storageCapacity}</span></div>`;
+            }
+
+            // 特殊属性
+            const specialAttrs = [];
+            if (buildTime > 0) specialAttrs.push(`⏱️ 建造${buildTime}秒`);
+            if (isUnique) specialAttrs.push(`⭐ 唯一`);
+            
+            if (specialAttrs.length > 0) {
+                infoHtml += `<div class="flex flex-wrap gap-1">${specialAttrs.map(a => 
+                    `<span class="bg-purple-600/30 text-purple-300 px-2 py-1 rounded text-xs">${a}</span>`
+                ).join('')}</div>`;
+            }
+
+            preview.innerHTML = `
+                <div class="flex items-start gap-3">
+                    <div class="text-4xl">${icon || '❓'}</div>
+                    <div class="flex-1">
+                        <div class="flex items-center gap-2 mb-2 flex-wrap">
+                            <h4 class="text-lg font-bold text-white">${name}</h4>
+                            <span class="category-badge type-${type}">${getTypeName(type)}</span>
+                            <span class="bg-gray-700 text-gray-300 px-2 py-0.5 rounded text-xs">Lv.${level}</span>
+                        </div>
+                        ${description ? `<p class="text-xs text-gray-400 italic mb-2">${description}</p>` : ''}
+                        ${infoHtml}
+                    </div>
+                </div>`;
+        }
+
+        // 获取表单数据
+        function getFormData() {
+            return {
+                name: document.getElementById('building-name').value,
+                icon: document.getElementById('building-icon').value,
+                description: document.getElementById('building-description').value,
+                type: document.getElementById('building-type').value,
+                level: parseInt(document.getElementById('building-level').value) || 1,
+                width: parseInt(document.getElementById('building-width').value) || 1,
+                height: parseInt(document.getElementById('building-height').value) || 1,
+                placementCosts: getResourceList('placement-costs'),
+                upgradeLevels: getUpgradeLevels(),
+                production: {
+                    interval: parseInt(document.getElementById('production-interval').value) || 0,
+                    storageCapacity: parseInt(document.getElementById('storage-capacity').value) || 100,
+                    outputs: getResourceList('production-outputs')
+                },
+                buildTime: parseInt(document.getElementById('build-time').value) || 0,
+                isUnique: document.getElementById('is-unique').checked
+            };
+        }
+
+        // 创建建筑
+        function createBuilding() {
+            const data = getFormData();
+            const buildingKey = `BUILDING_${Date.now()}`;
+            
+            const building = {
+                key: buildingKey,
+                ...data,
+                createdAt: new Date().toISOString()
+            };
+
+            buildings.push(building);
+            saveBuildingPool();
+            
+            renderBuildingsList();
+            updateBuildingCount();
+            form.reset();
+            clearDynamicResources();
+            updatePreview();
+            
+            alert(`✅ 建筑 "${data.name}" 已创建！`);
+        }
+
+        // 更新建筑
+        function updateBuilding() {
+            const data = getFormData();
+            
+            const building = {
+                key: buildings[editingIndex].key,
+                ...data,
+                createdAt: buildings[editingIndex].createdAt,
+                updatedAt: new Date().toISOString()
+            };
+
+            buildings[editingIndex] = building;
+            saveBuildingPool();
+            
+            renderBuildingsList();
+            form.reset();
+            cancelEdit();
+            clearDynamicResources();
+            updatePreview();
+            
+            alert(`✅ 建筑 "${data.name}" 已更新！`);
+        }
+
+        // 取消编辑
+        function cancelEdit() {
+            editingIndex = -1;
+            document.getElementById('submit-text').textContent = '✨ 创建建筑';
+            document.getElementById('submit-btn').classList.remove('bg-green-600', 'hover:bg-green-700');
+            document.getElementById('submit-btn').classList.add('bg-blue-600', 'hover:bg-blue-700');
+            document.getElementById('cancel-edit-btn').classList.add('hidden');
+        }
+        
+        // 保存建筑池
+        function saveBuildingPool() {
+            localStorage.setItem('BUILDING_POOL', JSON.stringify(buildings));
+        }
+
+        // 渲染建筑列表
+        function renderBuildingsList() {
+            if (buildings.length === 0) {
+                buildingsList.innerHTML = `<div class="text-center text-gray-500 text-sm py-8">暂无建筑</div>`;
+                return;
+            }
+
+            buildingsList.innerHTML = buildings.map((building, index) => {
+                const costs = building.placementCosts || [];
+                const costsHtml = costs.length > 0 ? costs.map(r => {
+                    const resource = RESOURCE_TYPES.find(rt => rt.key === r.type);
+                    return `<span class="bg-yellow-600/30 text-yellow-300 px-1.5 py-0.5 rounded text-xs">${resource.icon} ${r.amount}</span>`;
+                }).join(' ') : '<span class="text-xs text-gray-500">无需资源</span>';
+                
+                const upgradeLevels = building.upgradeLevels || [];
+                const upgradesHtml = upgradeLevels.length > 0 ? `${upgradeLevels.length}个等级` : '未设置';
+                
+                const outputs = building.production?.outputs || [];
+                const outputsHtml = outputs.length > 0 ? outputs.map(r => {
+                    const resource = RESOURCE_TYPES.find(rt => rt.key === r.type);
+                    return `<span class="bg-green-600/30 text-green-300 px-1.5 py-0.5 rounded text-xs">${resource.icon} ${r.amount}</span>`;
+                }).join(' ') : '<span class="text-xs text-gray-500">无产出</span>';
+                
+                return `
+                    <div class="building-card bg-gray-800 rounded-lg p-3 border border-gray-600">
+                        <div class="flex items-start gap-2">
+                            <div class="text-2xl">${building.icon}</div>
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-center gap-2 mb-1 flex-wrap">
+                                    <h5 class="text-sm font-bold text-white truncate">${building.name}</h5>
+                                    <span class="category-badge type-${building.type} text-xs">${getTypeName(building.type)}</span>
+                                    <span class="bg-gray-700 text-gray-300 px-2 py-0.5 rounded text-xs">Lv.${building.level}</span>
+                                </div>
+                                 ${building.description ? `<p class="text-xs text-gray-500 italic mb-1">${building.description}</p>` : ''}
+                                <div class="text-xs text-gray-400 mb-1">放置: ${costsHtml}</div>
+                                <div class="text-xs text-gray-400 mb-1">升级: <span class="text-orange-300">${upgradesHtml}</span></div>
+                                <div class="text-xs text-gray-400">产出: ${outputsHtml}</div>
+                            </div>
+                            <div class="flex gap-1 flex-shrink-0">
+                                <button onclick="editBuilding(${index})"
+                                    class="text-blue-400 hover:text-blue-300 text-lg px-2" title="编辑">✏️</button>
+                                <button onclick="deleteBuilding(${index})"
+                                    class="text-red-400 hover:text-red-300 text-xl" title="删除">×</button>
+                            </div>
+                        </div>
+                    </div>`;
+            }).join('');
+        }
+
+        // 编辑建筑
+        function editBuilding(index) {
+            const building = buildings[index];
+            editingIndex = index;
+            
+            // 填充基础信息
+            document.getElementById('building-name').value = building.name;
+            document.getElementById('building-icon').value = building.icon;
+            document.getElementById('building-description').value = building.description || '';
+            document.getElementById('building-type').value = building.type;
+            document.getElementById('building-level').value = building.level || 1;
+            document.getElementById('building-width').value = building.width || 1;
+            document.getElementById('building-height').value = building.height || 1;
+            
+            // 填充产出参数
+            document.getElementById('production-interval').value = building.production?.interval || 0;
+            document.getElementById('storage-capacity').value = building.production?.storageCapacity || 100;
+            
+            // 填充特殊属性
+            document.getElementById('build-time').value = building.buildTime || 0;
+            document.getElementById('is-unique').checked = building.isUnique || false;
+            
+            // 清空并重新填充资源列表
+            clearDynamicResources();
+            
+            // 填充放置成本
+            (building.placementCosts || []).forEach(resource => {
+                const container = document.getElementById('placement-costs');
+                const div = document.createElement('div');
+                div.className = 'resource-item';
+                div.innerHTML = `
+                    <select class="resource-type bg-gray-700 border border-gray-600 rounded px-2 py-1 text-white text-sm flex-1">
+                        ${RESOURCE_TYPES.map(r => `<option value="${r.key}" ${r.key === resource.type ? 'selected' : ''}>${r.icon} ${r.name}</option>`).join('')}
+                    </select>
+                    <input type="number" class="resource-amount bg-gray-700 border border-gray-600 rounded px-2 py-1 text-white text-sm w-24" min="1" value="${resource.amount}">
+                    <button type="button" onclick="this.parentElement.remove(); updatePreview();"
+                        class="text-red-400 hover:text-red-300 text-xl">×</button>
+                `;
+                container.appendChild(div);
+                div.querySelectorAll('select, input').forEach(el => {
+                    el.addEventListener('input', updatePreview);
+                });
+            });
+            
+            // 填充升级等级配置
+            (building.upgradeLevels || []).forEach(upgradeLevel => {
+                const container = document.getElementById('upgrade-levels');
+                const levelDiv = document.createElement('div');
+                levelDiv.className = 'border border-gray-600 rounded-lg p-3 bg-gray-700/30';
+                levelDiv.innerHTML = `
+                    <div class="flex justify-between items-center mb-2">
+                        <div class="flex items-center gap-2">
+                            <span class="text-sm font-bold text-blue-300">升级到等级</span>
+                            <input type="number" class="upgrade-target-level bg-gray-700 border border-gray-600 rounded px-2 py-1 text-white text-sm w-20" min="2" value="${upgradeLevel.targetLevel}">
+                        </div>
+                        <button type="button" onclick="this.closest('.border').remove(); updatePreview();"
+                            class="text-red-400 hover:text-red-300 text-xl">×</button>
+                    </div>
+                    <div class="upgrade-resources space-y-2">
+                        <!-- 此等级的资源 -->
+                    </div>
+                    <button type="button" onclick="addResourceToUpgradeLevel(this)" 
+                        class="mt-2 bg-green-600 hover:bg-green-700 text-white text-xs font-bold py-1 px-3 rounded transition-colors">
+                        + 添加资源
+                    </button>
+                `;
+                container.appendChild(levelDiv);
+                
+                // 添加等级输入监听器
+                levelDiv.querySelector('.upgrade-target-level').addEventListener('input', updatePreview);
+                
+                // 填充该等级的资源
+                const resourcesContainer = levelDiv.querySelector('.upgrade-resources');
+                upgradeLevel.resources.forEach(resource => {
+                    const resDiv = document.createElement('div');
+                    resDiv.className = 'resource-item';
+                    resDiv.innerHTML = `
+                        <select class="resource-type bg-gray-700 border border-gray-600 rounded px-2 py-1 text-white text-sm flex-1">
+                            ${RESOURCE_TYPES.map(r => `<option value="${r.key}" ${r.key === resource.type ? 'selected' : ''}>${r.icon} ${r.name}</option>`).join('')}
+                        </select>
+                        <input type="number" class="resource-amount bg-gray-700 border border-gray-600 rounded px-2 py-1 text-white text-sm w-24" min="1" value="${resource.amount}">
+                        <button type="button" onclick="this.parentElement.remove(); updatePreview();"
+                            class="text-red-400 hover:text-red-300 text-xl">×</button>
+                    `;
+                    resourcesContainer.appendChild(resDiv);
+                    resDiv.querySelectorAll('select, input').forEach(el => {
+                        el.addEventListener('input', updatePreview);
+                    });
+                });
+            });
+            
+            // 填充产出资源
+            (building.production?.outputs || []).forEach(resource => {
+                const container = document.getElementById('production-outputs');
+                const div = document.createElement('div');
+                div.className = 'resource-item';
+                div.innerHTML = `
+                    <select class="resource-type bg-gray-700 border border-gray-600 rounded px-2 py-1 text-white text-sm flex-1">
+                        ${RESOURCE_TYPES.map(r => `<option value="${r.key}" ${r.key === resource.type ? 'selected' : ''}>${r.icon} ${r.name}</option>`).join('')}
+                    </select>
+                    <input type="number" class="resource-amount bg-gray-700 border border-gray-600 rounded px-2 py-1 text-white text-sm w-24" min="1" value="${resource.amount}">
+                    <button type="button" onclick="this.parentElement.remove(); updatePreview();"
+                        class="text-red-400 hover:text-red-300 text-xl">×</button>
+                `;
+                container.appendChild(div);
+                div.querySelectorAll('select, input').forEach(el => {
+                    el.addEventListener('input', updatePreview);
+                });
+            });
+            
+            // 更新UI
+            document.getElementById('submit-text').textContent = '💾 保存修改';
+            document.getElementById('submit-btn').classList.remove('bg-blue-600', 'hover:bg-blue-700');
+            document.getElementById('submit-btn').classList.add('bg-green-600', 'hover:bg-green-700');
+            document.getElementById('cancel-edit-btn').classList.remove('hidden');
+            
+            updatePreview();
+            
+            // 滚动到表单顶部
+            document.getElementById('building-form').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+        
+        // 删除建筑
+        function deleteBuilding(index) {
+            if (confirm('确定要删除这个建筑吗？')) {
+                buildings.splice(index, 1);
+                saveBuildingPool();
+                renderBuildingsList();
+                updateBuildingCount();
+            }
+        }
+
+        // 导出建筑池（JSON格式）
+        function exportBuildings() {
+            if (buildings.length === 0) {
+                alert('建筑池为空！');
+                return;
+            }
+
+            const dataStr = JSON.stringify(buildings, null, 2);
+            const blob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `building_pool_${Date.now()}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        // 导出建筑池（CSV格式）
+        function exportBuildingsToCSV() {
+            if (buildings.length === 0) {
+                alert('建筑池为空！');
+                return;
+            }
+
+            // 转义 CSV 字段
+            const escapeCSV = (value) => {
+                if (value === null || value === undefined) return '';
+                const str = String(value);
+                if (str.includes(',') || str.includes('"') || str.includes('\n')) {
+                    return `"${str.replace(/"/g, '""')}"`;
+                }
+                return str;
+            };
+
+            // 格式化资源列表
+            const formatResources = (resources) => {
+                if (!resources || resources.length === 0) return '';
+                return resources.map(r => {
+                    const resource = RESOURCE_TYPES.find(rt => rt.key === r.type);
+                    return `${resource.name}:${r.amount}`;
+                }).join('; ');
+            };
+
+            // 格式化升级等级配置
+            const formatUpgradeLevels = (upgradeLevels) => {
+                if (!upgradeLevels || upgradeLevels.length === 0) return '';
+                return upgradeLevels.map(ul => {
+                    const resources = ul.resources.map(r => {
+                        const resource = RESOURCE_TYPES.find(rt => rt.key === r.type);
+                        return `${resource.name}${r.amount}`;
+                    }).join('+');
+                    return `Lv.${ul.targetLevel}[${resources}]`;
+                }).join(' | ');
+            };
+
+            // 基础表头
+            const headers = [
+                '建筑ID', '建筑名称', '图标', '建筑描述', '建筑类型', '建筑等级',
+                '占地宽度', '占地高度', '放置成本', '升级配置',
+                '产出周期(秒)', '存储上限', '产出资源',
+                '建造时间(秒)', '是否唯一', '创建时间', '更新时间'
+            ];
+
+            // 构建CSV内容
+            let csvContent = headers.join(',') + '\n';
+
+            buildings.forEach(building => {
+                const row = [
+                    escapeCSV(building.key),
+                    escapeCSV(building.name),
+                    escapeCSV(building.icon),
+                    escapeCSV(building.description || ''),
+                    escapeCSV(getTypeName(building.type)),
+                    escapeCSV(building.level || 1),
+                    escapeCSV(building.width || 1),
+                    escapeCSV(building.height || 1),
+                    escapeCSV(formatResources(building.placementCosts)),
+                    escapeCSV(formatUpgradeLevels(building.upgradeLevels)),
+                    escapeCSV(building.production?.interval || 0),
+                    escapeCSV(building.production?.storageCapacity || 100),
+                    escapeCSV(formatResources(building.production?.outputs)),
+                    escapeCSV(building.buildTime || 0),
+                    escapeCSV(building.isUnique ? '是' : '否'),
+                    escapeCSV(building.createdAt ? new Date(building.createdAt).toLocaleString('zh-CN') : ''),
+                    escapeCSV(building.updatedAt ? new Date(building.updatedAt).toLocaleString('zh-CN') : '')
+                ];
+                
+                csvContent += row.join(',') + '\n';
+            });
+
+            // 添加 BOM 以支持 Excel 正确显示中文
+            const BOM = '\uFEFF';
+            const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `建筑配置表_${Date.now()}.csv`;
+            a.click();
+            URL.revokeObjectURL(url);
+            
+            alert(`✅ 已导出 ${buildings.length} 个建筑到配置表（CSV格式）！`);
+        }
+
+        // 打开导入模态框
+        function openImportModal() {
+            document.getElementById('import-modal').classList.remove('hidden');
+            document.getElementById('import-file-input').value = '';
+        }
+
+        // 关闭导入模态框
+        function closeImportModal() {
+            document.getElementById('import-modal').classList.add('hidden');
+        }
+
+        // 导入建筑
+        function importBuildings() {
+            const fileInput = document.getElementById('import-file-input');
+            const file = fileInput.files[0];
+            
+            if (!file) {
+                alert('❌ 请选择要导入的文件！');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                try {
+                    const importedBuildings = JSON.parse(event.target.result);
+                    
+                    if (!Array.isArray(importedBuildings)) {
+                        alert('❌ 无效的JSON格式！');
+                        return;
+                    }
+
+                    const existingKeys = new Set(buildings.map(b => b.key));
+                    const newBuildings = importedBuildings.filter(b => !existingKeys.has(b.key));
+                    
+                    buildings = [...buildings, ...newBuildings];
+                    saveBuildingPool();
+                    
+                    renderBuildingsList();
+                    updateBuildingCount();
+                    closeImportModal();
+                    
+                    alert(`✅ 成功导入 ${newBuildings.length} 个新建筑！`);
+                } catch (error) {
+                    alert('❌ 导入失败：' + error.message);
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        // 辅助函数
+        function getTypeName(type) {
+            const names = {
+                'landmark': '地标',
+                'basic': '基础建筑',
+                'advanced': '进阶建筑'
+            };
+            return names[type] || '未知';
+        }
+
+        // 初始化应用
+        init();
+        
+        // 设置导入模态框事件监听器
+        document.getElementById('close-import-modal').onclick = closeImportModal;
+        document.getElementById('cancel-import-btn').onclick = closeImportModal;
+        document.getElementById('confirm-import-btn').onclick = importBuildings;
+        document.getElementById('import-modal').onclick = (e) => {
+            if (e.target.id === 'import-modal') closeImportModal();
+        };
+    </script>
+</body>
+</html>
