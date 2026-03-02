@@ -36,6 +36,18 @@ class GameTimeSystem {
         this.currentHour = 6;              // 当前小时（0-23，默认早上6点）
         this.currentMinute = 0;            // 当前分钟（0-59）
         this.currentSeason = '春季';       // 当前季节
+        this.currentWeather = '晴';        // 当前天气
+        
+        // 天气系统配置
+        this.weatherTypes = [
+            { name: '晴', icon: '☀️', probability: 0.40 },
+            { name: '阴', icon: '☁️', probability: 0.25 },
+            { name: '小雨', icon: '🌦️', probability: 0.15 },
+            { name: '中雨', icon: '🌧️', probability: 0.10 },
+            { name: '暴雨', icon: '⛈️', probability: 0.06 },
+            { name: '台风', icon: '🌀', probability: 0.03 },
+            { name: '雷暴', icon: '⚡', probability: 0.01 }
+        ];
         
         // 自动推进相关
         this.autoAdvanceEnabled = true;    // 是否启用自动推进
@@ -242,6 +254,10 @@ class GameTimeSystem {
             matchDayText = ' 🏆 大陆赛日';
         }
         
+        // 获取天气信息
+        const weatherInfo = this.weatherTypes.find(w => w.name === this.currentWeather);
+        const weatherIcon = weatherInfo ? weatherInfo.icon : '☀️';
+        
         // 格式化时间字符串
         const hourStr = this.currentHour.toString().padStart(2, '0');
         const minuteStr = this.currentMinute.toString().padStart(2, '0');
@@ -254,15 +270,35 @@ class GameTimeSystem {
             hour: this.currentHour,
             minute: this.currentMinute,
             season: this.currentSeason,
+            weather: this.currentWeather,
+            weatherIcon: weatherIcon,
             dayName: dayName,
             timeString: timeStr,
             isLeagueMatchDay: isLeagueMatchDay,
             isTournamentMatchDay: isTournamentMatchDay,
             displayText: `第${this.currentYear}年 ${this.currentSeason} 第${this.currentWeek}周`,
             dayDisplayText: `星期${dayName}${matchDayText}`,
-            fullDisplayText: `第${this.currentYear}年 ${this.currentSeason} 第${this.currentWeek}周 星期${dayName} ${timeStr}`,
+            weatherDisplay: `${weatherIcon} ${this.currentWeather}`,
+            fullDisplayText: `第${this.currentYear}年 ${this.currentSeason} 第${this.currentWeek}周 星期${dayName} ${timeStr} ${weatherIcon}`,
             isPaused: this.isPaused
         };
+    }
+    
+    /**
+     * 生成随机天气
+     */
+    generateRandomWeather() {
+        const rand = Math.random();
+        let cumulative = 0;
+        
+        for (const weather of this.weatherTypes) {
+            cumulative += weather.probability;
+            if (rand <= cumulative) {
+                return weather.name;
+            }
+        }
+        
+        return '晴'; // 默认晴天
     }
 
     /**
@@ -471,6 +507,7 @@ class GameTimeSystem {
         }
 
         const oldDay = this.currentDay;
+        const oldWeather = this.currentWeather;
         this.currentDay++;
 
         // 检查是否到下一周
@@ -478,8 +515,12 @@ class GameTimeSystem {
             this.currentDay = 1;
             return this.advanceWeek();
         }
+        
+        // 生成新一天的天气
+        this.currentWeather = this.generateRandomWeather();
 
-        const dayName = GameTimeSystem.DAY_NAMES[this.currentDay];
+        const dayIndex = this.currentDay === 7 ? 0 : this.currentDay;
+        const dayName = GameTimeSystem.DAY_NAMES[dayIndex];
         const isLeagueMatchDay = GameTimeSystem.LEAGUE_MATCH_DAYS.includes(this.currentDay);
         const isTournamentMatchDay = this.currentDay === GameTimeSystem.TOURNAMENT_MATCH_DAY;
         const isMatchDay = isLeagueMatchDay || isTournamentMatchDay;
@@ -488,6 +529,8 @@ class GameTimeSystem {
             oldDay,
             newDay: this.currentDay,
             dayName,
+            oldWeather,
+            newWeather: this.currentWeather,
             isMatchDay,
             isLeagueMatchDay,
             isTournamentMatchDay,
@@ -495,7 +538,8 @@ class GameTimeSystem {
             week: this.currentWeek
         });
 
-        console.log(`📅 时间推进：第${this.currentYear}年第${this.currentWeek}周 星期${dayName}${isMatchDay ? ' 🏟️' : ''}`);
+        const weatherInfo = this.weatherTypes.find(w => w.name === this.currentWeather);
+        console.log(`📅 时间推进：第${this.currentYear}年第${this.currentWeek}周 星期${dayName}${isMatchDay ? ' 🏟️' : ''} ${weatherInfo.icon}`);
 
         return {
             success: true,
@@ -503,6 +547,7 @@ class GameTimeSystem {
             week: this.currentWeek,
             day: this.currentDay,
             dayName,
+            weather: this.currentWeather,
             isMatchDay,
             isLeagueMatchDay,
             isTournamentMatchDay
@@ -832,6 +877,7 @@ class GameTimeSystem {
         this.currentDay = 1;
         this.currentHour = 6;
         this.currentMinute = 0;
+        this.currentWeather = '晴';
         this.isPaused = false;
         this.lastAdvanceTime = Date.now(); // 重置自动推进计时器
         
@@ -884,6 +930,7 @@ class GameTimeSystem {
                 currentHour: this.currentHour,
                 currentMinute: this.currentMinute,
                 currentSeason: this.currentSeason,
+                currentWeather: this.currentWeather,
                 activeLeagues: this.activeLeagues,
                 isPaused: this.isPaused,
                 autoAdvanceEnabled: this.autoAdvanceEnabled,
@@ -927,6 +974,7 @@ class GameTimeSystem {
                         this.currentHour = data.currentHour || 6;
                         this.currentMinute = data.currentMinute || 0;
                         this.currentSeason = data.currentSeason || '春季';
+                        this.currentWeather = data.currentWeather || '晴';
                         this.activeLeagues = data.activeLeagues || this.activeLeagues;
                         this.isPaused = data.isPaused || false;
                         this.autoAdvanceEnabled = data.autoAdvanceEnabled !== undefined ? data.autoAdvanceEnabled : true;
@@ -942,6 +990,8 @@ class GameTimeSystem {
                         resolve(true);
                     } else {
                         console.log('ℹ️ 没有保存的时间数据，使用初始值');
+                        // 生成初始天气
+                        this.currentWeather = this.generateRandomWeather();
                         resolve(false);
                     }
                 };
@@ -983,13 +1033,14 @@ class GameTimeSystem {
      */
     exportToJSON() {
         return {
-            version: '1.2',
+            version: '1.3',
             currentYear: this.currentYear,
             currentWeek: this.currentWeek,
             currentDay: this.currentDay,
             currentHour: this.currentHour,
             currentMinute: this.currentMinute,
             currentSeason: this.currentSeason,
+            currentWeather: this.currentWeather,
             activeLeagues: this.activeLeagues,
             isPaused: this.isPaused,
             autoAdvanceEnabled: this.autoAdvanceEnabled,
@@ -1009,6 +1060,7 @@ class GameTimeSystem {
             this.currentHour = jsonData.currentHour || 6;
             this.currentMinute = jsonData.currentMinute || 0;
             this.currentSeason = jsonData.currentSeason || '春季';
+            this.currentWeather = jsonData.currentWeather || this.generateRandomWeather();
             this.activeLeagues = jsonData.activeLeagues || this.activeLeagues;
             this.isPaused = jsonData.isPaused || false;
             this.autoAdvanceEnabled = jsonData.autoAdvanceEnabled !== undefined ? jsonData.autoAdvanceEnabled : true;

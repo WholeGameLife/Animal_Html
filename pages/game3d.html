@@ -780,7 +780,8 @@ sh<!DOCTYPE html>
                     </div>
                 </div>
                 <div class="grid grid-cols-2 gap-2">
-                    <button onclick="debugAdvanceWeek()" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded">⏩ 推进1周</button>
+                    <button onclick="debugAdvanceDay()" class="bg-teal-600 hover:bg-teal-700 text-white font-bold py-2 px-4 rounded">⏩ 推进1天</button>
+                    <button onclick="debugAdvanceWeek()" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded">⏩⏩ 推进1周</button>
                     <button onclick="debugAdvanceToSeason('夏季')" class="bg-orange-600 hover:bg-orange-700 text-white font-bold py-2 px-4 rounded">☀️ 跳到夏季</button>
                     <button onclick="debugAdvanceToSeason('冬季')" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">❄️ 跳到冬季</button>
                     <button onclick="debugResetTime()" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">🔄 重置时间</button>
@@ -866,7 +867,10 @@ sh<!DOCTYPE html>
                 </div>
                 <div class="text-center">
                     <div id="time-display-text" class="font-mono text-cyan-300 text-sm mb-1">第1年 春季 第1周</div>
-                    <div id="day-display-text" class="font-mono text-purple-300 text-sm">星期一</div>
+                    <div class="flex items-center justify-center gap-2">
+                        <div id="day-display-text" class="font-mono text-purple-300 text-sm">星期一</div>
+                        <div id="weather-display" class="font-mono text-blue-300 text-sm">☀️ 晴</div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -5009,6 +5013,26 @@ sh<!DOCTYPE html>
             showStatus(`✅ 所有资源 +${amount}`, 2000);
         };
         
+        window.debugAdvanceDay = async function() {
+            if (!gameTimeSystem) {
+                showStatus('❌ 时间系统未初始化', 2000);
+                return;
+            }
+            const result = gameTimeSystem.advanceDay();
+            if (result.success) {
+                await gameTimeSystem.saveData();
+                updateGameTimeDisplay();
+                // 更新调试面板显示
+                const timeInfo = gameTimeSystem.getCurrentTime();
+                document.getElementById('debug-year').textContent = timeInfo.year;
+                document.getElementById('debug-season').textContent = timeInfo.season;
+                document.getElementById('debug-week').textContent = timeInfo.week;
+                showStatus(`✅ 时间推进1天 - 星期${result.dayName} ${timeInfo.weatherDisplay}`, 2500);
+            } else {
+                showStatus(`❌ ${result.reason}`, 2000);
+            }
+        };
+        
         window.debugAdvanceWeek = async function() {
             if (!gameTimeSystem) {
                 showStatus('❌ 时间系统未初始化', 2000);
@@ -5647,6 +5671,7 @@ sh<!DOCTYPE html>
             const timeInfo = gameTimeSystem.getCurrentTime();
             const timeDisplayText = document.getElementById('time-display-text');
             const dayDisplayText = document.getElementById('day-display-text');
+            const weatherDisplay = document.getElementById('weather-display');
             const gameClock = document.getElementById('game-clock');
             
             if (timeDisplayText) {
@@ -5654,6 +5679,9 @@ sh<!DOCTYPE html>
             }
             if (dayDisplayText) {
                 dayDisplayText.textContent = timeInfo.dayDisplayText;
+            }
+            if (weatherDisplay && timeInfo.weatherDisplay) {
+                weatherDisplay.textContent = timeInfo.weatherDisplay;
             }
             if (gameClock && timeInfo.timeString) {
                 gameClock.textContent = timeInfo.timeString;
