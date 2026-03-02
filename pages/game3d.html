@@ -16,6 +16,8 @@ sh<!DOCTYPE html>
     <script src="../scripts/game_time_system.js"></script>
     <!-- 引入新手引导系统 -->
     <script src="../scripts/tutorial_system.js"></script>
+    <!-- 引入农场格子系统 -->
+    <script src="../scripts/farm_grid.js"></script>
     <style>
         /* 2D地图样式 */
         body { margin: 0; overflow: hidden; font-family: 'Inter', sans-serif; background-color: #0a1120; }
@@ -77,7 +79,45 @@ sh<!DOCTYPE html>
             border-radius: 8px;
             box-shadow: 0 4px 8px rgba(0,0,0,0.3);
             border: 2px solid rgba(255,255,255,0.2);
-            font-size: 56px;
+            font-size: 36px;
+            padding-top: -50px;
+            justify-content: flex-start;
+        }
+        
+        /* 农场格子样式 - 4个格子分布在上下左右，大小与农场建筑一致 */
+        .farm-cell {
+            position: absolute;
+            width: 100px;
+            height: 100px;
+            background: rgba(101, 67, 33, 0.95);
+            border: none;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 52px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.4);
+            z-index: 4;
+            pointer-events: auto;
+        }
+        
+        .farm-cell:hover {
+            background: rgba(139, 69, 19, 1);
+            border-color: rgba(251, 191, 36, 1);
+            box-shadow: 0 6px 12px rgba(251, 191, 36, 0.5);
+            z-index: 10;
+            filter: brightness(1.2);
+        }
+        
+        .farm-cell-harvestable {
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { filter: brightness(1); box-shadow: 0 3px 6px rgba(0,0,0,0.4); }
+            50% { filter: brightness(1.3); box-shadow: 0 6px 12px rgba(34, 197, 94, 0.6); }
         }
         
         /* 动物样式 */
@@ -122,14 +162,14 @@ sh<!DOCTYPE html>
         /* 实体标签 */
         .entity-label {
             position: absolute;
-            bottom: -25px;
+            bottom: 5px;
             left: 50%;
             transform: translateX(-50%);
             background: rgba(0, 0, 0, 0.8);
             color: white;
-            padding: 2px 8px;
+            padding: 2px 6px;
             border-radius: 4px;
-            font-size: 11px;
+            font-size: 9px;
             white-space: nowrap;
             pointer-events: none;
         }
@@ -334,7 +374,7 @@ sh<!DOCTYPE html>
         </div>
         
         <!-- 建筑详情面板 (移至此处并居中) -->
-        <div id="building-details-panel" class="control-panel centered-panel p-6 rounded-xl text-white hidden w-full max-w-lg">
+        <div id="building-details-panel" class="control-panel centered-panel p-6 rounded-xl text-white hidden w-full max-w-2xl">
             <!-- 1. Header -->
             <div class="flex justify-between items-center mb-5 pb-4 border-b-2 border-gray-700">
                 <div class="flex items-center space-x-4">
@@ -349,68 +389,89 @@ sh<!DOCTYPE html>
                 <button id="btn-close-details" class="text-4xl text-gray-500 hover:text-white transition-colors leading-none">&times;</button>
             </div>
 
-            <!-- 2. Production Output -->
-            <div id="current-effect-section" class="bg-gradient-to-br from-gray-800/80 to-gray-900/80 p-4 rounded-xl mb-4 border border-gray-700">
-                <h4 class="text-xs font-bold text-gray-400 mb-2 uppercase tracking-wider flex items-center">
-                    <span class="mr-2">📊</span> 当前效果
-                </h4>
-                <p id="detail-current-effect" class="text-lg font-mono text-green-300 leading-relaxed"></p>
-            </div>
-
-            <!-- 3. Worker Slot -->
-            <div id="worker-slot" class="bg-gradient-to-br from-gray-800/80 to-gray-900/80 p-4 rounded-xl mb-4 border border-gray-700">
-                <h4 class="text-xs font-bold text-gray-400 mb-3 uppercase tracking-wider flex items-center">
-                    <span class="mr-2">👷</span> 工作动物
-                </h4>
-                <div id="worker-info" class="hidden flex items-center justify-between">
-                    <!-- 工作动物信息会在这里显示 -->
+            <!-- 主体内容布局 -->
+            <div class="space-y-4 mb-5">
+                <!-- 并排显示：当前效果（左）和 工作动物（右） -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- 2. 当前效果 -->
+                    <div id="current-effect-section" class="bg-gradient-to-br from-gray-800/80 to-gray-900/80 p-4 rounded-xl border border-gray-700 h-full">
+                        <h4 class="text-xs font-bold text-gray-400 mb-2 uppercase tracking-wider flex items-center">
+                            <span class="mr-2">📊</span> 当前效果
+                        </h4>
+                        <div id="detail-current-effect" class="text-base font-mono text-green-300 leading-relaxed"></div>
+                    </div>
+                    
+                    <!-- 3. Worker Slot -->
+                    <div id="worker-slot" class="bg-gradient-to-br from-gray-800/80 to-gray-900/80 p-4 rounded-xl border border-gray-700 h-full">
+                        <h4 class="text-xs font-bold text-gray-400 mb-3 uppercase tracking-wider flex items-center">
+                            <span class="mr-2">👷</span> 工作动物
+                        </h4>
+                        <div id="worker-info" class="hidden flex items-center justify-between">
+                            <!-- 工作动物信息会在这里显示 -->
+                        </div>
+                        <div id="assign-worker-section">
+                            <p id="no-worker-text" class="text-sm text-gray-500 mb-2">暂无动物工作</p>
+                            <button id="btn-assign-worker" class="w-full bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-2 px-4 rounded-lg text-sm transition-all duration-200 shadow-lg hover:shadow-cyan-500/50">
+                                ➕ 派遣动物
+                            </button>
+                        </div>
+                    </div>
                 </div>
-                <div id="assign-worker-section">
-                    <p id="no-worker-text" class="text-sm text-gray-500 mb-2">暂无动物工作</p>
-                    <button id="btn-assign-worker" class="w-full bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-2 px-4 rounded-lg text-sm transition-all duration-200 shadow-lg hover:shadow-cyan-500/50">
-                        ➕ 派遣动物
+
+                <!-- 4. 升级预览 (全宽显示) -->
+                <div id="detail-next-upgrade" class="bg-gradient-to-br from-indigo-900/30 to-purple-900/30 p-4 rounded-xl border border-indigo-700/50">
+                    <h4 class="text-xs font-bold text-indigo-300 mb-3 uppercase tracking-wider flex items-center">
+                        <span class="mr-2">⬆️</span> 升级预览
+                    </h4>
+                    <div class="space-y-2">
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm text-gray-300">下一级:</span>
+                            <span id="next-level" class="font-bold text-lg text-green-400">Lv. 2</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm text-gray-300">效果:</span>
+                            <span id="detail-next-effect" class="font-mono text-sm text-green-300"></span>
+                        </div>
+                        <!-- 5. 操作按钮 -> 移至此处作为升级按钮/成本展示 -->
+                        <button id="btn-upgrade-building" class="w-full mt-3 transition-all duration-200">
+                            <!-- 升级文字和费用将由JS注入 -->
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 3.5 农场作物选择区域 (全宽显示，仅农场显示) -->
+                <div id="farm-crop-selection" class="bg-gradient-to-br from-green-900/30 to-emerald-900/30 p-4 rounded-xl border border-green-700/50 hidden">
+                    <h4 class="text-xs font-bold text-green-300 mb-3 uppercase tracking-wider flex items-center">
+                        <span class="mr-2">🌾</span> 种植作物
+                    </h4>
+                    <div id="crop-buttons" class="grid grid-cols-4 gap-2 mb-3">
+                        <!-- 作物按钮由JS生成 -->
+                    </div>
+                    <div class="text-xs text-gray-400 mt-2 flex justify-between items-center">
+                        <div>当前种植: <span id="current-crop-display" class="text-yellow-400 font-bold">无</span></div>
+                    </div>
+                    <button id="btn-harvest-all" class="w-full mt-3 bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg hidden">
+                        🎉 收获所有成熟作物
                     </button>
                 </div>
             </div>
 
-            <!-- 4. Upgrade Section -->
-            <div id="detail-next-upgrade" class="bg-gradient-to-br from-indigo-900/30 to-purple-900/30 p-4 rounded-xl border border-indigo-700/50 mb-4">
-                <h4 class="text-xs font-bold text-indigo-300 mb-3 uppercase tracking-wider flex items-center">
-                    <span class="mr-2">⬆️</span> 升级预览
-                </h4>
-                <div class="space-y-2">
-                    <div class="flex items-center justify-between">
-                        <span class="text-sm text-gray-300">下一级:</span>
-                        <span id="next-level" class="font-bold text-lg text-green-400">Lv. 2</span>
-                    </div>
-                    <div class="flex items-center justify-between">
-                        <span class="text-sm text-gray-300">效果:</span>
-                        <span id="detail-next-effect" class="font-mono text-sm text-green-300"></span>
-                    </div>
-                    <div id="upgrade-cost-display" class="mt-3 pt-3 border-t border-indigo-700/50">
-                        <!-- 升级成本将由JS注入 -->
-                    </div>
+            <!-- 操作按钮区域 -->
+            <div class="space-y-3">
+                <!-- 6. 工坊合成按钮 (仅工坊显示) -->
+                <button id="btn-craft-potion" class="action-button w-full bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 text-white font-bold py-3 px-4 rounded-lg shadow-lg hover:shadow-cyan-500/50 transition-all duration-200 hidden">
+                    🧪 合成药水
+                </button>
+                
+                <!-- 7. 移动和拆除按钮 -->
+                <div class="grid grid-cols-2 gap-3">
+                    <button id="btn-move-building" class="action-button bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">
+                        📍 移动
+                    </button>
+                    <button id="btn-demolish-building" class="action-button bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg">
+                        🗑️ 拆除
+                    </button>
                 </div>
-            </div>
-
-            <!-- 5. 操作按钮 -->
-            <button id="btn-upgrade-building" class="action-button w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-bold py-3 px-4 rounded-lg shadow-lg hover:shadow-indigo-500/50 transition-all duration-200">
-                <!-- 升级文字和费用将由JS注入 -->
-            </button>
-            
-            <!-- 6. 工坊合成按钮 (仅工坊显示) -->
-            <button id="btn-craft-potion" class="action-button w-full bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 text-white font-bold py-3 px-4 rounded-lg mt-3 shadow-lg hover:shadow-cyan-500/50 transition-all duration-200 hidden">
-                🧪 合成药水
-            </button>
-            
-            <!-- 7. 移动和拆除按钮 -->
-            <div class="grid grid-cols-2 gap-2 mt-3">
-                <button id="btn-move-building" class="action-button bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">
-                    📍 移动
-                </button>
-                <button id="btn-demolish-building" class="action-button bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg">
-                    🗑️ 拆除
-                </button>
             </div>
 
         </div>
@@ -1405,7 +1466,6 @@ sh<!DOCTYPE html>
             btnCraftPotion: document.getElementById('btn-craft-potion'),
             btnMoveBuilding: document.getElementById('btn-move-building'),
             btnDemolishBuilding: document.getElementById('btn-demolish-building'),
-            upgradeCostDisplay: document.getElementById('upgrade-cost-display'),
             btnCloseDetails: document.getElementById('btn-close-details'),
             workerSlot: document.getElementById('worker-slot'),
             workerInfo: document.getElementById('worker-info'),
@@ -1790,6 +1850,12 @@ sh<!DOCTYPE html>
             if (previewUpdateFrame) return;
             
             previewUpdateFrame = requestAnimationFrame(() => {
+                // 再次检查 previewElement 是否存在（防御性编程）
+                if (!previewElement) {
+                    previewUpdateFrame = null;
+                    return;
+                }
+                
                 const rect = ui.mapContainer.getBoundingClientRect();
                 const x = ((event.clientX - rect.left) / rect.width) * 100;
                 const y = ((event.clientY - rect.top) / rect.height) * 100;
@@ -1922,6 +1988,10 @@ sh<!DOCTYPE html>
             buildingElement.style.transform = 'translate(-50%, -50%)';
             buildingElement.style.background = config.bgColor || '#666';
             buildingElement.style.fontSize = '56px';
+            // 如果是农场，提高z-index确保显示在格子上方
+            if (type === 'Farm') {
+                buildingElement.style.zIndex = '5';
+            }
             // 使用建筑特定的图标
             buildingElement.textContent = config.icon || '🏗️';
             
@@ -1951,6 +2021,13 @@ sh<!DOCTYPE html>
             };
             
             gameState.buildings.push(building);
+            
+            // 如果是农场，初始化格子并创建UI
+            if (type === 'Farm') {
+                farmGridSystem.initializeFarm(buildingId);
+                createFarmGridUI(building);
+            }
+            
             showStatus(`✅ 成功放置 ${config.name_cn}!`, 3000);
             exit2DBuildMode();
             updateUI();
@@ -2040,6 +2117,11 @@ sh<!DOCTYPE html>
                 }
             });
             
+            // 如果是农场，更新格子位置（8个格子）
+            if (building.type === 'Farm' && building.gridCells) {
+                updateFarmGridPositionsAndSize(building);
+            }
+            
             showStatus(`✅ ${BUILDINGS[building.type].name_cn} 已移动到新位置`, 2000);
             exit2DBuildMode();
         }
@@ -2090,6 +2172,14 @@ sh<!DOCTYPE html>
             // 从DOM中移除
             if (building.element) {
                 building.element.remove();
+            }
+            
+            // 如果是农场，移除格子UI
+            if (building.type === 'Farm') {
+                if (building.gridCells) {
+                    building.gridCells.forEach(cell => cell.remove());
+                }
+                farmGridSystem.clearFarm(building.id);
             }
             
             // 从数据中移除
@@ -2424,12 +2514,12 @@ sh<!DOCTYPE html>
         function startResourceLoops() {
             // 食物产出 (每 5 秒)
             foodTimer = setInterval(() => {
-                // 农场产出
-                gameState.buildings.filter(b => b.type === 'Farm').forEach(farm => {
-                    const amount = BUILDINGS.Farm.levels[farm.level].foodPerTick;
-                    spawnCollectible(farm, 'food', amount);
-                    processProduction(farm, 'food', amount);
-                });
+                // 农场产出 - 已改为格子系统，不再自动生成可收集物
+                // gameState.buildings.filter(b => b.type === 'Farm').forEach(farm => {
+                //     const amount = BUILDINGS.Farm.levels[farm.level].foodPerTick;
+                //     spawnCollectible(farm, 'food', amount);
+                //     processProduction(farm, 'food', amount);
+                // });
                 // 空中花园产出 (每 10 秒产出一次，这里在5秒循环里做个判断，或者简单点每次都产出)
                 gameState.buildings.filter(b => b.type === 'SkyGarden').forEach(garden => {
                     const amount = BUILDINGS.SkyGarden.levels[garden.level].foodPerTick;
@@ -2633,6 +2723,78 @@ sh<!DOCTYPE html>
             gameState.collectibles.splice(index, 1);
         }
 
+        // 新增：农场进度详情实时更新
+        function updateFarmDetailProgress(building) {
+            const grids = farmGridSystem.getFarmGrids(building.id);
+            let plantedCount = 0;
+            let totalProgress = 0;
+            let cropType = null;
+            let readyCount = 0;
+            
+            if (grids) {
+                for (let row = 0; row < farmGridSystem.GRID_SIZE; row++) {
+                    for (let col = 0; col < farmGridSystem.GRID_SIZE; col++) {
+                        if (row === 1 && col === 1) continue; // 跳过中心建筑位置
+                        const grid = grids[row][col];
+                        if (grid) {
+                            plantedCount++;
+                            cropType = grid.type;
+                            if (grid.harvestable) {
+                                readyCount++;
+                                totalProgress += 100;
+                            } else {
+                                const elapsed = Date.now() - grid.plantedAt;
+                                const progress = Math.min(100, Math.floor((elapsed / grid.growTime) * 100));
+                                totalProgress += progress;
+                            }
+                        }
+                    }
+                }
+            }
+            
+            const progressContainer = document.getElementById('farm-detail-progress-container');
+            if (!progressContainer) return;
+            
+            if (plantedCount > 0) {
+                const avgProgress = Math.floor(totalProgress / plantedCount);
+                const cropInfo = farmGridSystem.CROP_TYPES[cropType];
+                let statusText = avgProgress === 100 ? '可收获!' : '生长中...';
+                if (readyCount > 0 && readyCount < plantedCount) statusText = '部分可收';
+                
+                progressContainer.innerHTML = `
+                    <div class="text-sm text-yellow-300 flex justify-between items-end">
+                        <span>🌱 ${cropInfo.icon} ${cropInfo.name} <span class="text-gray-400 text-xs">(${plantedCount}块)</span></span>
+                        <span class="text-xs ${avgProgress === 100 ? 'text-green-400 font-bold' : 'text-gray-400'}">${statusText}</span>
+                    </div>
+                    <div class="w-full bg-gray-800 rounded-full h-2 mt-2 border border-gray-700">
+                        <div class="bg-gradient-to-r from-green-500 to-emerald-400 h-1.5 rounded-full transition-all duration-500" style="width: ${avgProgress}%; margin-top: 1px; margin-left: 1px;"></div>
+                    </div>
+                    <div class="text-xs text-right text-gray-400 mt-1">${avgProgress}%</div>
+                `;
+            } else {
+                progressContainer.innerHTML = `<div class="text-sm text-gray-500 flex items-center gap-2"><span class="text-lg opacity-50">🌱</span> <span>当前未种植任何作物</span></div>`;
+            }
+        }
+
+        // 新增：农场格子更新循环
+        function startFarmGridUpdateLoop() {
+            setInterval(() => {
+                if (farmGridSystem) {
+                    farmGridSystem.updateAllFarms();
+                    updateAllFarmGridsUI();
+                    
+                    if (selectedBuilding && selectedBuilding.type === 'Farm') {
+                        updateFarmDetailProgress(selectedBuilding);
+                        // 如果有作物成熟，检查是否需要显示一键收获按钮
+                        renderFarmCropSelection(selectedBuilding);
+                    }
+                    
+                    // 保存数据
+                    farmGridSystem.saveData();
+                }
+            }, 1000); // 每秒更新一次
+        }
+        
         // 新增：游戏状态更新循环 (每秒)
         function startGameStateUpdateLoop() {
             setInterval(() => {
@@ -3015,12 +3177,22 @@ sh<!DOCTYPE html>
             let currentEffect = '';
             let bonusEffect = ''; // 新增：加成效果
             const worker = building.workerId ? gameState.animals.find(a => a.id === building.workerId) : null;
+            
+            // 显示或隐藏农场作物选择区域
+            const farmCropSection = document.getElementById('farm-crop-selection');
+            if (building.type === 'Farm') {
+                farmCropSection.classList.remove('hidden');
+                renderFarmCropSelection(building);
+            } else {
+                farmCropSection.classList.add('hidden');
+            }
 
             if (building.type === 'Farm') {
-                currentEffect = `+${config.levels[currentLevel].foodPerTick} 食物/5s`;
+                currentEffect = `<div>+${config.levels[currentLevel].foodPerTick} 食物/5s</div>`;
                 if (worker && worker.abilities && worker.abilities.infrastructure && worker.abilities.infrastructure.specialized === '耕种专精') {
                     bonusEffect = ` (+${Math.round(config.levels[currentLevel].foodPerTick * 0.2)} 专精)`;
                 }
+                currentEffect += `<div id="farm-detail-progress-container" class="mt-3 pt-3 border-t border-gray-600/50"></div>`;
             } else if (building.type === 'Mint') {
                 currentEffect = `+${config.levels[currentLevel].goldPerMin} 金币/min`;
             } else if (building.type === 'LumberMill') {
@@ -3070,6 +3242,10 @@ sh<!DOCTYPE html>
             ui.detailIcon.textContent = iconMap[building.type] || '🏗️';
 
             ui.detailCurrentEffect.innerHTML = `${currentEffect} <span class="text-sm text-yellow-400">${bonusEffect}</span>`;
+            
+            if (building.type === 'Farm') {
+                updateFarmDetailProgress(building);
+            }
 
             // 填充下一级信息
             if (currentLevel < config.maxLevel) {
@@ -3109,78 +3285,70 @@ sh<!DOCTYPE html>
                 }
                 ui.detailNextEffect.textContent = nextEffect;
                 
-                // 显示升级成本详情
+                // 检查是否正在升级
+                const isUpgrading = gameState.upgradingBuildings[building.id];
+                let canUpgrade = true;
+
+                // 显示升级成本详情及按钮状态
                 if (nextConfig.costFood !== undefined) {
                     // 进阶建筑：多资源需求
                     const foodEnough = gameState.food >= nextConfig.costFood;
                     const woodEnough = gameState.wood >= nextConfig.costWood;
                     const stoneEnough = gameState.stone >= nextConfig.costStone;
+                    canUpgrade = foodEnough && woodEnough && stoneEnough;
                     
-                    ui.upgradeCostDisplay.innerHTML = `
-                        <div class="text-xs text-gray-400 mb-2">升级需要:</div>
-                        <div class="grid grid-cols-3 gap-2 text-center">
-                            <div class="bg-gray-900/50 p-2 rounded ${foodEnough ? 'border border-green-500' : 'border border-red-500'}">
-                                <div class="text-lg">🍎</div>
-                                <div class="text-xs ${foodEnough ? 'text-green-400' : 'text-red-400'}">${nextConfig.costFood}</div>
+                    ui.btnUpgradeBuilding.innerHTML = `
+                        <div class="flex flex-col items-center">
+                            <div class="text-sm font-bold mb-1">${isUpgrading ? '' : (canUpgrade ? '🚀 点击升级' : '❌ 资源不足')}</div>
+                            <div class="flex justify-center gap-3">
+                                <span class="${foodEnough ? 'text-green-300' : 'text-red-400'} text-xs">🍎 ${nextConfig.costFood}</span>
+                                <span class="${woodEnough ? 'text-green-300' : 'text-red-400'} text-xs">🪵 ${nextConfig.costWood}</span>
+                                <span class="${stoneEnough ? 'text-green-300' : 'text-red-400'} text-xs">🪨 ${nextConfig.costStone}</span>
                             </div>
-                            <div class="bg-gray-900/50 p-2 rounded ${woodEnough ? 'border border-green-500' : 'border border-red-500'}">
-                                <div class="text-lg">🪵</div>
-                                <div class="text-xs ${woodEnough ? 'text-green-400' : 'text-red-400'}">${nextConfig.costWood}</div>
-                            </div>
-                            <div class="bg-gray-900/50 p-2 rounded ${stoneEnough ? 'border border-green-500' : 'border border-red-500'}">
-                                <div class="text-lg">🪨</div>
-                                <div class="text-xs ${stoneEnough ? 'text-green-400' : 'text-red-400'}">${nextConfig.costStone}</div>
-                            </div>
+                            ${nextConfig.upgradeTime && !isUpgrading ? `<div class="text-xs text-amber-300 mt-1">⏱️ ${Math.floor(nextConfig.upgradeTime / 60)} 分钟</div>` : ''}
                         </div>
-                        ${nextConfig.upgradeTime ? `<div class="text-xs text-amber-400 mt-2 text-center">⏱️ 升级时间: ${Math.floor(nextConfig.upgradeTime / 60)} 分钟</div>` : ''}
                     `;
                 } else {
                     // 基础建筑：单资源需求
                     const foodEnough = gameState.food >= nextConfig.cost;
-                    ui.upgradeCostDisplay.innerHTML = `
-                        <div class="text-xs text-gray-400 mb-2">升级需要:</div>
-                        <div class="bg-gray-900/50 p-3 rounded ${foodEnough ? 'border border-green-500' : 'border border-red-500'} text-center">
-                            <span class="text-2xl">🍎</span>
-                            <span class="text-lg font-bold ml-2 ${foodEnough ? 'text-green-400' : 'text-red-400'}">${nextConfig.cost}</span>
+                    canUpgrade = foodEnough;
+                    
+                    ui.btnUpgradeBuilding.innerHTML = `
+                        <div class="flex flex-col items-center">
+                            <div class="text-sm font-bold mb-1">${isUpgrading ? '' : (canUpgrade ? '🚀 点击升级' : '❌ 资源不足')}</div>
+                            <div class="${foodEnough ? 'text-green-300' : 'text-red-400'} text-sm">
+                                🍎 ${nextConfig.cost}
+                            </div>
                         </div>
                     `;
                 }
                 
-                // 检查是否正在升级
-                if (gameState.upgradingBuildings[building.id]) {
+                if (isUpgrading) {
                     const upgradeInfo = gameState.upgradingBuildings[building.id];
                     const timeLeft = Math.max(0, upgradeInfo.endTime - Date.now());
                     const minutes = Math.floor(timeLeft / 60000);
                     const seconds = Math.floor((timeLeft % 60000) / 1000);
                     ui.btnUpgradeBuilding.disabled = true;
-                    ui.btnUpgradeBuilding.innerHTML = `⏳ 升级中... (${minutes}:${seconds.toString().padStart(2, '0')})`;
+                    ui.btnUpgradeBuilding.className = "w-full bg-gray-700 text-gray-400 font-bold py-2 px-4 rounded-lg mt-3 cursor-not-allowed border border-gray-600";
+                    ui.btnUpgradeBuilding.innerHTML = `
+                        <div class="flex flex-col items-center">
+                            <span class="text-sm font-bold mb-1">⏳ 升级中...</span>
+                            <span class="text-lg text-yellow-400 font-mono">${minutes}:${seconds.toString().padStart(2, '0')}</span>
+                        </div>
+                    `;
                 } else {
-                    // 检查资源需求
-                    let canUpgrade = true;
-                    
-                    if (nextConfig.costFood !== undefined) {
-                        canUpgrade = gameState.food >= nextConfig.costFood &&
-                                    gameState.wood >= nextConfig.costWood &&
-                                    gameState.stone >= nextConfig.costStone;
-                    } else {
-                        canUpgrade = gameState.food >= nextConfig.cost;
-                    }
-                    
                     ui.btnUpgradeBuilding.disabled = !canUpgrade;
                     if (!canUpgrade) {
-                        ui.btnUpgradeBuilding.innerHTML = `❌ 资源不足`;
+                        ui.btnUpgradeBuilding.className = "w-full bg-gray-800 border-2 border-red-900/50 text-gray-400 py-2 px-4 rounded-lg mt-3 cursor-not-allowed transition-colors";
                     } else {
-                        ui.btnUpgradeBuilding.innerHTML = `🚀 开始升级`;
+                        ui.btnUpgradeBuilding.className = "w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 text-white font-bold py-2 px-4 rounded-lg mt-3 shadow-lg hover:shadow-green-500/50 transition-all duration-200 transform hover:-translate-y-0.5";
                     }
                 }
 
             } else {
                 // 达到最高等级
                 ui.detailNextUpgrade.style.visibility = 'hidden';
-                // document.getElementById('upgrade-arrow').style.visibility = 'hidden';
-                ui.btnUpgradeBuilding.style.display = 'block';
-                ui.btnUpgradeBuilding.disabled = true;
-                ui.btnUpgradeBuilding.innerHTML = '✨ 已达到最高等级';
+                ui.btnUpgradeBuilding.style.display = 'none'; // 达到最高等级直接隐藏升级按钮区块
             }
 
             // 显示/隐藏合成按钮
@@ -3371,20 +3539,21 @@ sh<!DOCTYPE html>
             completeUpgrade(building, nextLevel, nextConfig);
         }
 
-        // 新增：完成建筑升级（2D版本）
+        // 新增：完成建筑升级（2D版本）- 修改为不改变建筑大小
         function completeUpgrade(building, nextLevel, nextConfig) {
             building.level = nextLevel;
 
             // 更新2D建筑显示
             if (building.element) {
                 const config = BUILDINGS[building.type];
-                const scale = nextConfig.scale || 1.0;
-                const newSize = 100 * scale; // 基础尺寸 * 缩放比例
-                const newFontSize = 56 * scale;
+                // 移除缩放逻辑，保持原始大小
+                // const scale = nextConfig.scale || 1.0;
+                // const newSize = 100 * scale;
+                // const newFontSize = 56 * scale;
                 
-                building.element.style.width = `${newSize}px`;
-                building.element.style.height = `${newSize}px`;
-                building.element.style.fontSize = `${newFontSize}px`;
+                // building.element.style.width = `${newSize}px`;
+                // building.element.style.height = `${newSize}px`;
+                // building.element.style.fontSize = `${newFontSize}px`;
                 
                 // 更新标签
                 const label = building.element.querySelector('.entity-label');
@@ -3392,6 +3561,12 @@ sh<!DOCTYPE html>
                     label.textContent = `${config.name_cn} Lv.${nextLevel}`;
                 }
                 
+                // 如果是农场，更新格子标签但不改变大小和位置
+                // 移除对格子大小和位置的更新
+                // if (building.type === 'Farm') {
+                //     updateFarmGridPositionsAndSize(building);
+                // }
+
                 // 闪烁效果
                 building.element.style.filter = 'brightness(1.5)';
                 setTimeout(() => {
@@ -3452,6 +3627,157 @@ sh<!DOCTYPE html>
             showStatus(`✅ 成功合成 ${ITEMS[potionType].name}！已放入背包。`, 3000);
             updateUI();
             showBuildingDetails(building); // 刷新面板
+        }
+
+        // 新增：根据建筑等级更新农场格子位置和大小
+        function updateFarmGridPositionsAndSize(building) {
+            if (building.type !== 'Farm' || !building.gridCells) return;
+            
+            const config = BUILDINGS['Farm'];
+            const levelConfig = config.levels[building.level];
+            const scale = levelConfig.scale || 1.0;
+            
+            const size = 100 * scale;
+            const offset = size + 10;
+            const fontSize = 52 * scale;
+            
+            const farmX = parseFloat(building.position2D.x);
+            const farmY = parseFloat(building.position2D.y);
+            
+            const positions = [
+                `left: ${farmX}%; top: calc(${farmY}% - ${offset}px); transform: translate(-50%, -50%); width: ${size}px; height: ${size}px; font-size: ${fontSize}px;`,
+                `left: ${farmX}%; top: calc(${farmY}% + ${offset}px); transform: translate(-50%, -50%); width: ${size}px; height: ${size}px; font-size: ${fontSize}px;`,
+                `left: calc(${farmX}% - ${offset}px); top: ${farmY}%; transform: translate(-50%, -50%); width: ${size}px; height: ${size}px; font-size: ${fontSize}px;`,
+                `left: calc(${farmX}% + ${offset}px); top: ${farmY}%; transform: translate(-50%, -50%); width: ${size}px; height: ${size}px; font-size: ${fontSize}px;`,
+                `left: calc(${farmX}% - ${offset}px); top: calc(${farmY}% - ${offset}px); transform: translate(-50%, -50%); width: ${size}px; height: ${size}px; font-size: ${fontSize}px;`,
+                `left: calc(${farmX}% + ${offset}px); top: calc(${farmY}% - ${offset}px); transform: translate(-50%, -50%); width: ${size}px; height: ${size}px; font-size: ${fontSize}px;`,
+                `left: calc(${farmX}% - ${offset}px); top: calc(${farmY}% + ${offset}px); transform: translate(-50%, -50%); width: ${size}px; height: ${size}px; font-size: ${fontSize}px;`,
+                `left: calc(${farmX}% + ${offset}px); top: calc(${farmY}% + ${offset}px); transform: translate(-50%, -50%); width: ${size}px; height: ${size}px; font-size: ${fontSize}px;`
+            ];
+            
+            building.gridCells.forEach((cell, index) => {
+                cell.setAttribute('style', positions[index]);
+            });
+        }
+
+        // 新增：创建农场格子UI - 8个格子围绕农场建筑（上下左右+四个对角）
+        function createFarmGridUI(building) {
+            building.gridCells = []; // 保存格子元素引用
+            
+            const cellPositions = [
+                { row: 0, col: 1 }, // 上
+                { row: 2, col: 1 }, // 下
+                { row: 1, col: 0 }, // 左
+                { row: 1, col: 2 }, // 右
+                { row: 0, col: 0 }, // 左上
+                { row: 0, col: 2 }, // 右上
+                { row: 2, col: 0 }, // 左下
+                { row: 2, col: 2 }  // 右下
+            ];
+            
+            cellPositions.forEach(pos => {
+                const cell = document.createElement('div');
+                cell.className = 'farm-cell';
+                cell.dataset.farmId = building.id;
+                cell.dataset.row = pos.row;
+                cell.dataset.col = pos.col;
+                cell.textContent = '';
+                cell.title = `格子 ${pos.row},${pos.col}`;
+                
+                // 绑定点击事件
+                cell.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    onFarmCellClick(building.id, pos.row, pos.col);
+                });
+                
+                ui.mapContainer.appendChild(cell);
+                building.gridCells.push(cell);
+            });
+            
+            updateFarmGridPositionsAndSize(building);
+        }
+        
+        // 新增：农场格子点击处理
+        function onFarmCellClick(farmId, row, col) {
+            const grids = farmGridSystem.getFarmGrids(farmId);
+            if (!grids) return;
+            
+            const grid = grids[row][col];
+            
+            // 如果格子为空，提示打开农场详情面板选择作物
+            if (grid === null) {
+                const building = gameState.buildings.find(b => b.id === farmId);
+                if (building) {
+                    showBuildingDetails(building);
+                    showStatus(`💡 请在农场详情面板中选择要种植的作物`, 2000);
+                }
+            }
+            // 如果格子有作物且成熟，收获单个格子
+            else if (grid.harvestable) {
+                const result = farmGridSystem.harvestCrop(farmId, row, col);
+                if (result.success) {
+                    gameState.food += result.yield;
+                    showStatus(`🎉 ${result.message}，获得${result.yield}食物！`, 2000);
+                    updateUI();
+                    updateFarmGridUI(farmId);
+                    
+                    // 如果详情面板开着，刷新按钮状态
+                    if (selectedBuilding && selectedBuilding.id === farmId) {
+                        renderFarmCropSelection(selectedBuilding);
+                    }
+                }
+            }
+            // 否则显示进度
+            else {
+                const progress = farmGridSystem.getGridProgress(farmId, row, col);
+                const crop = farmGridSystem.CROP_TYPES[grid.type];
+                showStatus(`🌾 ${crop.name} 生长中... ${progress}%`, 1500);
+            }
+        }
+        
+        // 新增：更新农场格子UI
+        function updateFarmGridUI(farmId) {
+            const grids = farmGridSystem.getFarmGrids(farmId);
+            const building = gameState.buildings.find(b => b.id === farmId);
+            if (!grids || !building || !building.gridCells) return;
+            
+            // 8个格子的坐标映射：上(0,1)、下(2,1)、左(1,0)、右(1,2)、左上(0,0)、右上(0,2)、左下(2,0)、右下(2,2)
+            const cellPositions = [
+                { row: 0, col: 1 }, // 上
+                { row: 2, col: 1 }, // 下
+                { row: 1, col: 0 }, // 左
+                { row: 1, col: 2 }, // 右
+                { row: 0, col: 0 }, // 左上
+                { row: 0, col: 2 }, // 右上
+                { row: 2, col: 0 }, // 左下
+                { row: 2, col: 2 }  // 右下
+            ];
+            
+            building.gridCells.forEach((cell, index) => {
+                const pos = cellPositions[index];
+                const grid = grids[pos.row][pos.col];
+                
+                if (grid === null) {
+                    cell.textContent = '';
+                    cell.classList.remove('farm-cell-harvestable');
+                } else {
+                    const icon = farmGridSystem.getGridIcon(grid);
+                    cell.textContent = icon;
+                    
+                    if (grid.harvestable) {
+                        cell.classList.add('farm-cell-harvestable');
+                    } else {
+                        cell.classList.remove('farm-cell-harvestable');
+                    }
+                }
+            });
+        }
+        
+        // 新增：更新所有农场格子UI
+        function updateAllFarmGridsUI() {
+            gameState.buildings.filter(b => b.type === 'Farm').forEach(farm => {
+                updateFarmGridUI(farm.id);
+            });
         }
 
         // 新增：更新建筑详情中的工人UI
@@ -4795,6 +5121,11 @@ sh<!DOCTYPE html>
                         
                         ui.mapContainer.appendChild(buildingElement);
                         buildingData.element = buildingElement;
+                        
+                        // 如果是农场，恢复格子UI
+                        if (buildingData.type === 'Farm') {
+                            createFarmGridUI(buildingData);
+                        }
                     }
                     
                     // 保持3D兼容性
@@ -5157,6 +5488,10 @@ sh<!DOCTYPE html>
             await gameTimeSystem.loadData();
             updateGameTimeDisplay();
             
+            // 初始化农场格子系统
+            farmGridSystem = new FarmGridSystem();
+            farmGridSystem.loadData();
+            
             loadGameStateFromStorage();
             processCapturedAnimal();
             
@@ -5173,6 +5508,7 @@ sh<!DOCTYPE html>
             startAuctionUpdateLoop();
             startResourceLoops();
             startGameStateUpdateLoop();
+            startFarmGridUpdateLoop(); // 启动农场格子更新循环
             animate(); // 启动动画循环（包含WASD移动更新）
             updateUI();
             
@@ -5302,6 +5638,183 @@ sh<!DOCTYPE html>
             // 检查图鉴解锁
             if (animalData.animalId) {
                 checkEncyclopediaUnlock(animalData);
+            }
+        }
+        
+        // 新增：渲染农场作物选择UI
+        function renderFarmCropSelection(building) {
+            if (!building || building.type !== 'Farm') return;
+            
+            const cropButtons = document.getElementById('crop-buttons');
+            const currentCropDisplay = document.getElementById('current-crop-display');
+            const btnHarvestAll = document.getElementById('btn-harvest-all');
+            
+            cropButtons.innerHTML = '';
+            
+            // 为每种作物创建按钮
+            Object.entries(farmGridSystem.CROP_TYPES).forEach(([key, crop]) => {
+                const isUnlocked = building.level >= (crop.unlockLevel || 1);
+                
+                const button = document.createElement('button');
+                if (isUnlocked) {
+                    button.className = 'bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-3 rounded-lg text-sm transition-colors relative';
+                    button.innerHTML = `
+                        <div class="text-2xl mb-1">${crop.icon}</div>
+                        <div class="text-xs">${crop.name}</div>
+                        <div class="text-xs text-yellow-300">💰${crop.cost}</div>
+                    `;
+                    button.onclick = () => plantAllCrops(building.id, key);
+                } else {
+                    button.className = 'bg-gray-800 text-gray-500 font-bold py-2 px-3 rounded-lg text-sm cursor-not-allowed border border-gray-700 relative';
+                    button.innerHTML = `
+                        <div class="text-2xl mb-1 opacity-50">${crop.icon}</div>
+                        <div class="text-xs">${crop.name}</div>
+                        <div class="text-xs text-red-400 mt-1">需 Lv.${crop.unlockLevel}</div>
+                        <div class="absolute inset-0 bg-black/40 rounded-lg flex items-center justify-center">
+                            <span class="text-xl">🔒</span>
+                        </div>
+                    `;
+                    button.disabled = true;
+                }
+                cropButtons.appendChild(button);
+            });
+            
+            // 显示当前种植的作物
+            const currentCrop = building.currentCrop || null;
+            if (currentCrop) {
+                const cropInfo = farmGridSystem.CROP_TYPES[currentCrop];
+                currentCropDisplay.textContent = `${cropInfo.icon} ${cropInfo.name}`;
+            } else {
+                currentCropDisplay.textContent = '无';
+            }
+            
+            // 检查是否有可收获的作物
+            const grids = farmGridSystem.getFarmGrids(building.id);
+            let hasHarvestable = false;
+            if (grids) {
+                for (let row = 0; row < farmGridSystem.GRID_SIZE; row++) {
+                    for (let col = 0; col < farmGridSystem.GRID_SIZE; col++) {
+                        if (row === 1 && col === 1) continue; // 跳过中心建筑位置
+                        const grid = grids[row][col];
+                        if (grid && grid.harvestable) {
+                            hasHarvestable = true;
+                            break;
+                        }
+                    }
+                    if (hasHarvestable) break;
+                }
+            }
+            
+            if (hasHarvestable) {
+                btnHarvestAll.classList.remove('hidden');
+                btnHarvestAll.onclick = () => harvestAllCrops(building.id);
+            } else {
+                btnHarvestAll.classList.add('hidden');
+            }
+        }
+        
+        // 新增：种植所有格子
+        function plantAllCrops(farmId, cropType) {
+            const building = gameState.buildings.find(b => b.id === farmId);
+            if (!building) return;
+            
+            const crop = farmGridSystem.CROP_TYPES[cropType];
+            if (building.level < (crop.unlockLevel || 1)) {
+                showStatus(`❌ ${crop.name} 需要农场达到 Lv.${crop.unlockLevel} 才能种植`, 2000);
+                return;
+            }
+            
+            // 先计算需要的成本（在实际种植前）
+            const grids = farmGridSystem.getFarmGrids(farmId);
+            if (!grids) return;
+            
+            let emptyCount = 0;
+            
+            // 统计空格子数量
+            for (let row = 0; row < farmGridSystem.GRID_SIZE; row++) {
+                for (let col = 0; col < farmGridSystem.GRID_SIZE; col++) {
+                    if (row === 1 && col === 1) continue; // 跳过中心建筑位置
+                    if (grids[row][col] === null) {
+                        emptyCount++;
+                    }
+                }
+            }
+            
+            if (emptyCount === 0) {
+                showStatus(`ℹ️ 所有格子都已有作物`, 2000);
+                return;
+            }
+            
+            const totalCost = crop.cost * emptyCount;
+            
+            // 检查食物是否足够
+            if (gameState.food < totalCost) {
+                showStatus(`❌ 食物不足！种植${emptyCount}个${crop.name}需要 ${totalCost} 食物`, 2000);
+                return;
+            }
+            
+            // 使用批量种植方法
+            const result = farmGridSystem.plantAllEmptyGrids(farmId, cropType);
+            
+            if (result.success && result.plantedCount > 0) {
+                // 扣除食物
+                gameState.food -= result.totalCost;
+                
+                // 记录当前种植的作物类型
+                building.currentCrop = cropType;
+                
+                showStatus(`🌱 ${result.message}，消耗 ${result.totalCost} 食物`, 2000);
+                updateUI();
+                updateFarmGridUI(farmId);
+                renderFarmCropSelection(building); // 刷新面板
+            } else {
+                showStatus(`❌ ${result.message}`, 2000);
+            }
+        }
+        
+        // 新增：收获所有成熟作物
+        function harvestAllCrops(farmId) {
+            const grids = farmGridSystem.getFarmGrids(farmId);
+            if (!grids) return;
+            
+            let totalYield = 0;
+            let harvestedCount = 0;
+            let cropNames = new Set();
+            
+            // 遍历所有格子并收获成熟作物
+            for (let row = 0; row < farmGridSystem.GRID_SIZE; row++) {
+                for (let col = 0; col < farmGridSystem.GRID_SIZE; col++) {
+                    if (row === 1 && col === 1) continue; // 跳过中心建筑位置
+                    const grid = grids[row][col];
+                    if (grid && grid.harvestable) {
+                        const result = farmGridSystem.harvestCrop(farmId, row, col);
+                        if (result.success) {
+                            totalYield += result.yield;
+                            harvestedCount++;
+                            cropNames.add(result.cropName);
+                        }
+                    }
+                }
+            }
+            
+            if (harvestedCount > 0) {
+                gameState.food += totalYield;
+                
+                // 清除当前种植记录
+                const building = gameState.buildings.find(b => b.id === farmId);
+                if (building) {
+                    building.currentCrop = null;
+                }
+                
+                const cropList = Array.from(cropNames).join('、');
+                showStatus(`🎉 收获了 ${harvestedCount} 个作物(${cropList})，获得 ${totalYield} 食物！`, 3000);
+                updateUI();
+                updateFarmGridUI(farmId);
+                
+                // 刷新农场详情面板
+                if (selectedBuilding && selectedBuilding.id === farmId) {
+                    renderFarmCropSelection(building);
+                }
             }
         }
 
