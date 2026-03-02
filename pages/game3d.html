@@ -291,12 +291,6 @@ sh<!DOCTYPE html>
             <!-- 资源/状态面板 (左上角) -->
             <div id="stats-panel" class="control-panel p-4 rounded-lg text-white">
                 <h2 class="text-xl font-bold mb-3 text-green-400 border-b border-gray-700 pb-2">栖息地状态</h2>
-                <!-- 游戏时间显示 -->
-                <div id="game-time-display" class="text-sm mb-3 pb-3 border-b border-gray-700" style="background: rgba(251, 191, 36, 0.1); padding: 8px; border-radius: 6px; border: 1px solid rgba(251, 191, 36, 0.3);">
-                    <div style="color: #fcd34d; font-weight: bold; margin-bottom: 4px;">🕐 游戏时间</div>
-                    <div id="time-display-text" class="font-mono text-cyan-300" style="font-size: 0.9em;">第1年 春季 第1周</div>
-                    <div id="round-display-text" class="font-mono text-gray-300" style="font-size: 0.8em; margin-top: 2px;">本周未开始</div>
-                </div>
                 <div id="stat-food" class="text-sm mb-1">🍎 食物: <span class="font-mono text-yellow-300">0</span></div>
                 <div id="stat-gold" class="text-sm mb-1">💰 金币: <span class="font-mono text-amber-400">0</span></div>
                 <div id="stat-wood" class="text-sm mb-1">🪵 木材: <span class="font-mono text-orange-400">0</span></div>
@@ -759,6 +753,18 @@ sh<!DOCTYPE html>
             <!-- 时间调整 -->
             <div class="mb-6">
                 <h4 class="text-lg font-bold text-cyan-400 mb-3">🕐 时间调整</h4>
+                
+                <!-- 自动推进开关 -->
+                <div class="bg-gray-800/50 p-3 rounded-lg mb-3 flex items-center justify-between">
+                    <div>
+                        <div class="text-sm font-bold text-white">⏰ 自动时间推进</div>
+                        <div class="text-xs text-gray-400 mt-1">现实6分钟 = 游戏1天</div>
+                    </div>
+                    <button id="toggle-auto-advance" onclick="toggleAutoAdvance()" class="px-4 py-2 rounded font-bold transition-colors">
+                        <span id="auto-advance-status">✅ 已启用</span>
+                    </button>
+                </div>
+                
                 <div class="grid grid-cols-3 gap-2 mb-3">
                     <div class="bg-gray-800/50 p-3 rounded-lg text-center">
                         <div class="text-sm text-gray-400 mb-1">当前年份</div>
@@ -850,8 +856,23 @@ sh<!DOCTYPE html>
             </div>
         </div>
 
-        <!-- 建筑菜单容器 (右上角) -->
-        <div id="build-menus-container" class="absolute top-4 right-4 flex flex-col space-y-2">
+        <!-- 游戏时间显示面板 (右上角) -->
+        <div class="absolute top-4 right-4 flex flex-col space-y-2">
+            <!-- 游戏时间 -->
+            <div id="game-time-display" class="control-panel p-3 rounded-lg text-white" style="min-width: 240px;">
+                <div class="flex items-center justify-between mb-3">
+                    <div style="color: #fcd34d; font-weight: bold; font-size: 0.9em;">🕐 游戏时间</div>
+                    <div id="game-clock" class="font-mono text-2xl font-bold text-yellow-300">06:00</div>
+                </div>
+                <div class="text-center">
+                    <div id="time-display-text" class="font-mono text-cyan-300 text-sm mb-1">第1年 春季 第1周</div>
+                    <div id="day-display-text" class="font-mono text-purple-300 text-sm">星期一</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 建筑菜单容器 (右上角，时间面板下方) -->
+        <div id="build-menus-container" class="absolute top-32 right-4 flex flex-col space-y-2">
             <!-- 主建筑菜单 -->
             <div id="build-main-menu" class="control-panel hidden w-full md:w-72 p-4 rounded-lg text-white">
                 <h3 class="text-lg font-bold mb-3 text-yellow-400 border-b border-gray-700 pb-2">选择建筑类型</h3>
@@ -891,7 +912,7 @@ sh<!DOCTYPE html>
                         </div>
                         <p class="text-sm font-mono text-yellow-300">50 🍎</p>
                     </div>
-                    <p class="text-xs text-gray-400 mt-1 pl-10">产出: +5 食物 / 5秒</p>
+                    <p class="text-xs text-gray-400 mt-1 pl-10">8个格子可种植作物</p>
                 </div>
                 <div data-building="Mint" class="build-button bg-gray-800 hover:bg-gray-700 p-3 rounded-lg w-full mb-2 cursor-pointer transition-colors">
                     <div class="flex justify-between items-center">
@@ -1177,9 +1198,9 @@ sh<!DOCTYPE html>
                 name_cn: '农场',
                 maxLevel: 3,
                 levels: {
-                    1: { cost: 0, foodPerTick: 5, scale: 1.0, shape: new THREE.BoxGeometry(0.8, 0.8, 0.8) },
-                    2: { cost: 100, foodPerTick: 10, scale: 1.3, shape: new THREE.BoxGeometry(0.8, 1.2, 0.8) },
-                    3: { cost: 250, foodPerTick: 25, scale: 1.7, shape: new THREE.BoxGeometry(0.8, 1.6, 0.8) }
+                    1: { cost: 0, yieldMultiplier: 1.0, scale: 1.0, shape: new THREE.BoxGeometry(0.8, 0.8, 0.8) },
+                    2: { cost: 100, yieldMultiplier: 1.5, scale: 1.3, shape: new THREE.BoxGeometry(0.8, 1.2, 0.8) },
+                    3: { cost: 250, yieldMultiplier: 2.0, scale: 1.7, shape: new THREE.BoxGeometry(0.8, 1.6, 0.8) }
                 },
             },
             Mint: {
@@ -2727,9 +2748,9 @@ sh<!DOCTYPE html>
         function updateFarmDetailProgress(building) {
             const grids = farmGridSystem.getFarmGrids(building.id);
             let plantedCount = 0;
-            let totalProgress = 0;
             let cropType = null;
             let readyCount = 0;
+            let earliestHarvestTime = null;
             
             if (grids) {
                 for (let row = 0; row < farmGridSystem.GRID_SIZE; row++) {
@@ -2741,11 +2762,12 @@ sh<!DOCTYPE html>
                             cropType = grid.type;
                             if (grid.harvestable) {
                                 readyCount++;
-                                totalProgress += 100;
                             } else {
-                                const elapsed = Date.now() - grid.plantedAt;
-                                const progress = Math.min(100, Math.floor((elapsed / grid.growTime) * 100));
-                                totalProgress += progress;
+                                // 计算成熟时间
+                                const harvestTime = grid.plantedAt + grid.growTime;
+                                if (!earliestHarvestTime || harvestTime < earliestHarvestTime) {
+                                    earliestHarvestTime = harvestTime;
+                                }
                             }
                         }
                     }
@@ -2756,21 +2778,44 @@ sh<!DOCTYPE html>
             if (!progressContainer) return;
             
             if (plantedCount > 0) {
-                const avgProgress = Math.floor(totalProgress / plantedCount);
                 const cropInfo = farmGridSystem.CROP_TYPES[cropType];
-                let statusText = avgProgress === 100 ? '可收获!' : '生长中...';
-                if (readyCount > 0 && readyCount < plantedCount) statusText = '部分可收';
                 
-                progressContainer.innerHTML = `
-                    <div class="text-sm text-yellow-300 flex justify-between items-end">
-                        <span>🌱 ${cropInfo.icon} ${cropInfo.name} <span class="text-gray-400 text-xs">(${plantedCount}块)</span></span>
-                        <span class="text-xs ${avgProgress === 100 ? 'text-green-400 font-bold' : 'text-gray-400'}">${statusText}</span>
-                    </div>
-                    <div class="w-full bg-gray-800 rounded-full h-2 mt-2 border border-gray-700">
-                        <div class="bg-gradient-to-r from-green-500 to-emerald-400 h-1.5 rounded-full transition-all duration-500" style="width: ${avgProgress}%; margin-top: 1px; margin-left: 1px;"></div>
-                    </div>
-                    <div class="text-xs text-right text-gray-400 mt-1">${avgProgress}%</div>
-                `;
+                if (readyCount === plantedCount) {
+                    // 全部成熟
+                    progressContainer.innerHTML = `
+                        <div class="text-sm text-green-400 font-bold flex items-center gap-2">
+                            <span>🌱 ${cropInfo.icon} ${cropInfo.name} <span class="text-gray-400 text-xs font-normal">(${plantedCount}块)</span></span>
+                            <span class="text-green-400">✅ 已成熟,可收获!</span>
+                        </div>
+                    `;
+                } else if (readyCount > 0) {
+                    // 部分成熟
+                    const timeUntilNext = earliestHarvestTime ? Math.max(0, earliestHarvestTime - Date.now()) : 0;
+                    const hours = Math.floor(timeUntilNext / (60 * 60 * 1000));
+                    const minutes = Math.floor((timeUntilNext % (60 * 60 * 1000)) / (60 * 1000));
+                    
+                    progressContainer.innerHTML = `
+                        <div class="text-sm text-yellow-300 flex justify-between items-center">
+                            <span>🌱 ${cropInfo.icon} ${cropInfo.name} <span class="text-gray-400 text-xs">(${plantedCount}块)</span></span>
+                            <span class="text-xs text-green-400">${readyCount}/${plantedCount} 可收</span>
+                        </div>
+                        <div class="text-xs text-orange-300 mt-2">
+                            ⏰ 下批成熟: ${hours}小时${minutes}分钟
+                        </div>
+                    `;
+                } else {
+                    // 全部生长中
+                    const timeUntilHarvest = earliestHarvestTime ? Math.max(0, earliestHarvestTime - Date.now()) : 0;
+                    const hours = Math.floor(timeUntilHarvest / (60 * 60 * 1000));
+                    const minutes = Math.floor((timeUntilHarvest % (60 * 60 * 1000)) / (60 * 1000));
+                    
+                    progressContainer.innerHTML = `
+                        <div class="text-sm text-yellow-300 flex justify-between items-center">
+                            <span>🌱 ${cropInfo.icon} ${cropInfo.name} <span class="text-gray-400 text-xs">(${plantedCount}块)</span></span>
+                            <span class="text-xs text-cyan-300 font-mono">⏰ ${hours}小时${minutes}分钟后</span>
+                        </div>
+                    `;
+                }
             } else {
                 progressContainer.innerHTML = `<div class="text-sm text-gray-500 flex items-center gap-2"><span class="text-lg opacity-50">🌱</span> <span>当前未种植任何作物</span></div>`;
             }
@@ -3188,9 +3233,11 @@ sh<!DOCTYPE html>
             }
 
             if (building.type === 'Farm') {
-                currentEffect = `<div>+${config.levels[currentLevel].foodPerTick} 食物/5s</div>`;
-                if (worker && worker.abilities && worker.abilities.infrastructure && worker.abilities.infrastructure.specialized === '耕种专精') {
-                    bonusEffect = ` (+${Math.round(config.levels[currentLevel].foodPerTick * 0.2)} 专精)`;
+                const multiplier = config.levels[currentLevel].yieldMultiplier;
+                const bonusPercent = Math.round((multiplier - 1) * 100);
+                currentEffect = `<div>格子产量倍率: <span class="text-yellow-400 font-bold">${multiplier}x</span></div>`;
+                if (bonusPercent > 0) {
+                    currentEffect += `<div class="text-xs text-green-400 mt-1">每格+${bonusPercent}%产出</div>`;
                 }
                 currentEffect += `<div id="farm-detail-progress-container" class="mt-3 pt-3 border-t border-gray-600/50"></div>`;
             } else if (building.type === 'Mint') {
@@ -3257,7 +3304,7 @@ sh<!DOCTYPE html>
 
                 let nextEffect = '';
                 if (building.type === 'Farm') {
-                    nextEffect = `+${nextConfig.foodPerTick} 食物/5s`;
+                    nextEffect = `格子产量倍率: ${nextConfig.yieldMultiplier}x`;
                 } else if (building.type === 'Mint') {
                     nextEffect = `+${nextConfig.goldPerMin} 金币/min`;
                 } else if (building.type === 'LumberMill') {
@@ -3716,8 +3763,12 @@ sh<!DOCTYPE html>
             else if (grid.harvestable) {
                 const result = farmGridSystem.harvestCrop(farmId, row, col);
                 if (result.success) {
-                    gameState.food += result.yield;
-                    showStatus(`🎉 ${result.message}，获得${result.yield}食物！`, 2000);
+                    const building = gameState.buildings.find(b => b.id === farmId);
+                    const multiplier = building ? BUILDINGS.Farm.levels[building.level].yieldMultiplier : 1.0;
+                    const finalYield = Math.floor(result.yield * multiplier);
+                    
+                    gameState.food += finalYield;
+                    showStatus(`🎉 ${result.message}，获得${finalYield}食物！`, 2000);
                     updateUI();
                     updateFarmGridUI(farmId);
                     
@@ -4885,10 +4936,46 @@ sh<!DOCTYPE html>
                 document.getElementById('debug-year').textContent = timeInfo.year;
                 document.getElementById('debug-season').textContent = timeInfo.season;
                 document.getElementById('debug-week').textContent = timeInfo.week;
+                
+                // 更新自动推进状态
+                updateAutoAdvanceButton();
             }
             
             ui.modalOverlay.classList.remove('hidden');
             document.getElementById('debug-panel').classList.remove('hidden');
+        }
+        
+        // 新增：切换自动推进
+        window.toggleAutoAdvance = function() {
+            if (!gameTimeSystem) {
+                showStatus('❌ 时间系统未初始化', 2000);
+                return;
+            }
+            
+            const enabled = gameTimeSystem.setAutoAdvance(!gameTimeSystem.autoAdvanceEnabled);
+            updateAutoAdvanceButton();
+            showStatus(enabled ? '✅ 自动时间推进已启用' : '⏸️ 自动时间推进已暂停', 2000);
+            
+            // 如果启用，重置计时器
+            if (enabled) {
+                gameTimeSystem.lastAdvanceTime = Date.now();
+            }
+        };
+        
+        // 新增：更新自动推进按钮状态
+        function updateAutoAdvanceButton() {
+            const button = document.getElementById('toggle-auto-advance');
+            const status = document.getElementById('auto-advance-status');
+            
+            if (!button || !status || !gameTimeSystem) return;
+            
+            if (gameTimeSystem.autoAdvanceEnabled) {
+                button.className = 'px-4 py-2 rounded font-bold bg-green-600 hover:bg-green-700 text-white transition-colors';
+                status.textContent = '✅ 已启用';
+            } else {
+                button.className = 'px-4 py-2 rounded font-bold bg-gray-600 hover:bg-gray-700 text-white transition-colors';
+                status.textContent = '⏸️ 已暂停';
+            }
         }
         
         function closeDebugPanel() {
@@ -5488,6 +5575,31 @@ sh<!DOCTYPE html>
             await gameTimeSystem.loadData();
             updateGameTimeDisplay();
             
+            // 注册时间变化事件监听
+            gameTimeSystem.addEventListener('onDayChange', (data) => {
+                updateGameTimeDisplay();
+                showStatus(`📅 时间推进到 ${data.dayName}${data.isMatchDay ? ' 🏟️' : ''}`, 2000);
+            });
+            
+            gameTimeSystem.addEventListener('onWeekChange', (data) => {
+                updateGameTimeDisplay();
+                showStatus(`📅 时间推进到第${data.week}周`, 2000);
+            });
+            
+            gameTimeSystem.addEventListener('onSeasonChange', (data) => {
+                updateGameTimeDisplay();
+                showStatus(`🌸 季节变换：${data.newSeason}到来！`, 3000);
+            });
+            
+            // 注册时间更新事件监听
+            gameTimeSystem.addEventListener('onTimeUpdate', (data) => {
+                // 时间更新事件会频繁触发，不需要额外操作
+                // updateGameTimeDisplay已在startTimeUpdateLoop中处理
+            });
+            
+            // 启动时间显示更新循环
+            startTimeUpdateLoop();
+            
             // 初始化农场格子系统
             farmGridSystem = new FarmGridSystem();
             farmGridSystem.loadData();
@@ -5534,14 +5646,25 @@ sh<!DOCTYPE html>
             
             const timeInfo = gameTimeSystem.getCurrentTime();
             const timeDisplayText = document.getElementById('time-display-text');
-            const roundDisplayText = document.getElementById('round-display-text');
+            const dayDisplayText = document.getElementById('day-display-text');
+            const gameClock = document.getElementById('game-clock');
             
             if (timeDisplayText) {
                 timeDisplayText.textContent = timeInfo.displayText;
             }
-            if (roundDisplayText) {
-                roundDisplayText.textContent = timeInfo.roundDisplayText;
+            if (dayDisplayText) {
+                dayDisplayText.textContent = timeInfo.dayDisplayText;
             }
+            if (gameClock && timeInfo.timeString) {
+                gameClock.textContent = timeInfo.timeString;
+            }
+        }
+        
+        // 启动时间显示更新循环
+        function startTimeUpdateLoop() {
+            setInterval(() => {
+                updateGameTimeDisplay();
+            }, 100); // 每100毫秒更新一次，确保时间显示流畅
         }
         
         // 从模板创建动物
@@ -5789,7 +5912,11 @@ sh<!DOCTYPE html>
                     if (grid && grid.harvestable) {
                         const result = farmGridSystem.harvestCrop(farmId, row, col);
                         if (result.success) {
-                            totalYield += result.yield;
+                            const building = gameState.buildings.find(b => b.id === farmId);
+                            const multiplier = building ? BUILDINGS.Farm.levels[building.level].yieldMultiplier : 1.0;
+                            const finalYield = Math.floor(result.yield * multiplier);
+                            
+                            totalYield += finalYield;
                             harvestedCount++;
                             cropNames.add(result.cropName);
                         }

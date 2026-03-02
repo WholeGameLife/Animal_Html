@@ -14,6 +14,7 @@ class GameTimeSystem {
     static WEEKS_PER_YEAR = 52;           // 一年52周
     static WEEKS_PER_SEASON = 13;         // 每季13周
     static DAYS_PER_WEEK = 7;             // 每周7天
+    static HOURS_PER_DAY = 24;            // 每天24小时
     static LEAGUE_MATCH_DAYS = [1, 4];    // 联赛比赛日：周一(1)和周四(4)
     static TOURNAMENT_MATCH_DAY = 6;      // 大陆赛事比赛日：周六(6)
     static DB_NAME = 'GameTimeSystemDB';
@@ -22,13 +23,24 @@ class GameTimeSystem {
     
     // 星期名称
     static DAY_NAMES = ['日', '一', '二', '三', '四', '五', '六'];
+    
+    // 自动推进常量
+    static REAL_TIME_PER_GAME_DAY = 6 * 60 * 1000;  // 现实6分钟 = 游戏1天 (毫秒)
+    static REAL_TIME_PER_GAME_HOUR = 15 * 1000;     // 现实15秒 = 游戏1小时 (6分钟/24小时)
 
     constructor() {
         // 当前时间状态
         this.currentYear = 1;              // 当前年份（游戏年）
         this.currentWeek = 1;              // 当前周数（1-52）
         this.currentDay = 1;               // 当前星期几（1-7，1=周一）
+        this.currentHour = 6;              // 当前小时（0-23，默认早上6点）
+        this.currentMinute = 0;            // 当前分钟（0-59）
         this.currentSeason = '春季';       // 当前季节
+        
+        // 自动推进相关
+        this.autoAdvanceEnabled = true;    // 是否启用自动推进
+        this.lastAdvanceTime = Date.now(); // 上次推进的时间戳
+        this.autoAdvanceTimer = null;      // 自动推进定时器
         
         // 季节定义
         this.seasons = {
@@ -66,12 +78,15 @@ class GameTimeSystem {
         
         // 事件监听器
         this.eventListeners = {
+            onTimeUpdate: [],
+            onDayChange: [],
             onWeekChange: [],
             onSeasonChange: [],
             onYearChange: [],
             onLeagueStart: [],
             onLeagueEnd: [],
-            onRoundComplete: []
+            onRoundComplete: [],
+            onTournamentRoundComplete: []
         };
         
         // 时间暂停状态
@@ -80,7 +95,117 @@ class GameTimeSystem {
         // 初始化当前季节
         this.updateCurrentSeason();
         
-        console.log('🕐 游戏时间系统初始化完成');
+        // 启动自动推进
+        this.startAutoAdvance();
+        
+        console.log('🕐 游戏时间系统初始化完成 - 自动推进已启用 (现实6分钟 = 游戏1天)');
+    }
+    
+    /**
+     * 启动自动时间推进
+     */
+    startAutoAdvance() {
+        if (this.autoAdvanceTimer) {
+            clearInterval(this.autoAdvanceTimer);
+        }
+        
+        // 每秒检查一次是否需要推进时间
+        this.autoAdvanceTimer = setInterval(() => {
+            if (!this.isPaused && this.autoAdvanceEnabled) {
+                const now = Date.now();
+                const elapsed = now - this.lastAdvanceTime;
+                
+                // 计算应该推进多少分钟 (现实15秒 = 游戏1小时 = 60分钟)
+                const minutesPerSecond = 60 / 15; // 每秒推进4分钟
+                const minutesToAdvance = Math.floor(elapsed / 250); // 每250ms推进1分钟
+                
+                if (minutesToAdvance > 0) {
+                    this.lastAdvanceTime = now;
+                    
+                    // 推进分钟
+                    for (let i = 0; i < minutesToAdvance; i++) {
+                        this.advanceMinute();
+                    }
+                    
+                    // 触发时间更新事件
+                    this.triggerEvent('onTimeUpdate', this.getCurrentTime());
+                }
+            }
+        }, 250); // 每250ms检查一次，确保流畅
+        
+        console.log('⏰ 自动时间推进已启动 (现实1秒 = 游戏4分钟)');
+    }
+    
+    /**
+     * 推进一分钟
+     */
+    advanceMinute() {
+        this.currentMinute++;
+        
+        // 检查是否到下一小时
+        if (this.currentMinute >= 60) {
+            this.currentMinute = 0;
+            this.currentHour++;
+            
+            // 检查是否到下一天
+            if (this.currentHour >= GameTimeSystem.HOURS_PER_DAY) {
+                this.currentHour = 0;
+                const result = this.advanceDay();
+                
+                // 如果是联赛比赛日，自动推进比赛
+                if (result.success && result.isLeagueMatchDay) {
+                    const matchResult = this.advanceRound();
+                    if (matchResult.success) {
+                        console.log(`⚽ 自动进行联赛比赛 - ${result.dayName}`);
+                    }
+                }
+                
+                // 如果是大陆赛事比赛日，自动推进比赛
+                if (result.success && result.isTournamentMatchDay) {
+                    const matchResult = this.advanceTournamentRound();
+                    if (matchResult.success) {
+                        console.log(`🏆 自动进行大陆赛事比赛`);
+                    }
+                }
+                
+                // 自动保存数据（每天保存一次）
+                this.saveData().catch(err => console.error('自动保存时间数据失败:', err));
+            }
+        }
+    }
+    
+    /**
+     * 停止自动时间推进
+     */
+    stopAutoAdvance() {
+        if (this.autoAdvanceTimer) {
+            clearInterval(this.autoAdvanceTimer);
+            this.autoAdvanceTimer = null;
+            console.log('⏸️ 自动时间推进已停止');
+        }
+    }
+    
+    /**
+     * 设置自动推进开关
+     */
+    setAutoAdvance(enabled) {
+        this.autoAdvanceEnabled = enabled;
+        console.log(enabled ? '✅ 自动时间推进已启用' : '❌ 自动时间推进已禁用');
+        return this.autoAdvanceEnabled;
+    }
+    
+    /**
+     * 获取距离下次推进的剩余时间（毫秒）
+     */
+    getTimeUntilNextAdvance() {
+        if (this.isPaused || !this.autoAdvanceEnabled) {
+            return -1; // 返回-1表示暂停或禁用
+        }
+        
+        const now = Date.now();
+        const elapsed = now - this.lastAdvanceTime;
+        const remaining = GameTimeSystem.REAL_TIME_PER_GAME_DAY - elapsed;
+        return Math.max(0, remaining);
     }
 
     /**
@@ -103,7 +228,10 @@ class GameTimeSystem {
      * 获取当前时间信息
      */
     getCurrentTime() {
-        const dayName = GameTimeSystem.DAY_NAMES[this.currentDay];
+        // currentDay是1-7 (周一到周日)，数组索引需要减1，但周日是0所以特殊处理
+        // currentDay: 1=周一, 2=周二, ..., 7=周日
+        const dayIndex = this.currentDay === 7 ? 0 : this.currentDay; // 周日映射到索引0
+        const dayName = GameTimeSystem.DAY_NAMES[dayIndex];
         const isLeagueMatchDay = GameTimeSystem.LEAGUE_MATCH_DAYS.includes(this.currentDay);
         const isTournamentMatchDay = this.currentDay === GameTimeSystem.TOURNAMENT_MATCH_DAY;
         
@@ -114,16 +242,25 @@ class GameTimeSystem {
             matchDayText = ' 🏆 大陆赛日';
         }
         
+        // 格式化时间字符串
+        const hourStr = this.currentHour.toString().padStart(2, '0');
+        const minuteStr = this.currentMinute.toString().padStart(2, '0');
+        const timeStr = `${hourStr}:${minuteStr}`;
+        
         return {
             year: this.currentYear,
             week: this.currentWeek,
             day: this.currentDay,
+            hour: this.currentHour,
+            minute: this.currentMinute,
             season: this.currentSeason,
             dayName: dayName,
+            timeString: timeStr,
             isLeagueMatchDay: isLeagueMatchDay,
             isTournamentMatchDay: isTournamentMatchDay,
             displayText: `第${this.currentYear}年 ${this.currentSeason} 第${this.currentWeek}周`,
             dayDisplayText: `星期${dayName}${matchDayText}`,
+            fullDisplayText: `第${this.currentYear}年 ${this.currentSeason} 第${this.currentWeek}周 星期${dayName} ${timeStr}`,
             isPaused: this.isPaused
         };
     }
@@ -581,6 +718,12 @@ class GameTimeSystem {
     togglePause() {
         this.isPaused = !this.isPaused;
         console.log(this.isPaused ? '⏸️ 时间暂停' : '▶️ 时间恢复');
+        
+        // 暂停时记录时间，恢复时重置计时器
+        if (!this.isPaused) {
+            this.lastAdvanceTime = Date.now();
+        }
+        
         return this.isPaused;
     }
 
@@ -590,6 +733,12 @@ class GameTimeSystem {
     setPause(paused) {
         this.isPaused = paused;
         console.log(paused ? '⏸️ 时间暂停' : '▶️ 时间恢复');
+        
+        // 暂停时记录时间，恢复时重置计时器
+        if (!paused) {
+            this.lastAdvanceTime = Date.now();
+        }
+        
         return this.isPaused;
     }
 
@@ -681,7 +830,10 @@ class GameTimeSystem {
         this.currentYear = 1;
         this.currentWeek = 1;
         this.currentDay = 1;
+        this.currentHour = 6;
+        this.currentMinute = 0;
         this.isPaused = false;
+        this.lastAdvanceTime = Date.now(); // 重置自动推进计时器
         
         for (const leagueName in this.activeLeagues) {
             this.activeLeagues[leagueName] = {
@@ -729,9 +881,13 @@ class GameTimeSystem {
                 currentYear: this.currentYear,
                 currentWeek: this.currentWeek,
                 currentDay: this.currentDay,
+                currentHour: this.currentHour,
+                currentMinute: this.currentMinute,
                 currentSeason: this.currentSeason,
                 activeLeagues: this.activeLeagues,
                 isPaused: this.isPaused,
+                autoAdvanceEnabled: this.autoAdvanceEnabled,
+                lastAdvanceTime: this.lastAdvanceTime,
                 timestamp: Date.now()
             };
             
@@ -768,11 +924,20 @@ class GameTimeSystem {
                         this.currentYear = data.currentYear || 1;
                         this.currentWeek = data.currentWeek || 1;
                         this.currentDay = data.currentDay || 1;
+                        this.currentHour = data.currentHour || 6;
+                        this.currentMinute = data.currentMinute || 0;
                         this.currentSeason = data.currentSeason || '春季';
                         this.activeLeagues = data.activeLeagues || this.activeLeagues;
                         this.isPaused = data.isPaused || false;
+                        this.autoAdvanceEnabled = data.autoAdvanceEnabled !== undefined ? data.autoAdvanceEnabled : true;
+                        this.lastAdvanceTime = data.lastAdvanceTime || Date.now();
                         
                         this.updateCurrentSeason();
+                        
+                        // 重新启动自动推进
+                        this.stopAutoAdvance();
+                        this.startAutoAdvance();
+                        
                         console.log('✅ 时间数据加载成功');
                         resolve(true);
                     } else {
@@ -818,13 +983,17 @@ class GameTimeSystem {
      */
     exportToJSON() {
         return {
-            version: '1.0',
+            version: '1.2',
             currentYear: this.currentYear,
             currentWeek: this.currentWeek,
             currentDay: this.currentDay,
+            currentHour: this.currentHour,
+            currentMinute: this.currentMinute,
             currentSeason: this.currentSeason,
             activeLeagues: this.activeLeagues,
             isPaused: this.isPaused,
+            autoAdvanceEnabled: this.autoAdvanceEnabled,
+            lastAdvanceTime: this.lastAdvanceTime,
             exportDate: new Date().toISOString()
         };
     }
@@ -837,11 +1006,20 @@ class GameTimeSystem {
             this.currentYear = jsonData.currentYear || 1;
             this.currentWeek = jsonData.currentWeek || 1;
             this.currentDay = jsonData.currentDay || 1;
+            this.currentHour = jsonData.currentHour || 6;
+            this.currentMinute = jsonData.currentMinute || 0;
             this.currentSeason = jsonData.currentSeason || '春季';
             this.activeLeagues = jsonData.activeLeagues || this.activeLeagues;
             this.isPaused = jsonData.isPaused || false;
+            this.autoAdvanceEnabled = jsonData.autoAdvanceEnabled !== undefined ? jsonData.autoAdvanceEnabled : true;
+            this.lastAdvanceTime = jsonData.lastAdvanceTime || Date.now();
             
             this.updateCurrentSeason();
+            
+            // 重新启动自动推进
+            this.stopAutoAdvance();
+            this.startAutoAdvance();
+            
             console.log('✅ 时间数据导入成功');
             return true;
         } catch (error) {

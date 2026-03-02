@@ -7,37 +7,41 @@ class FarmGridSystem {
     constructor() {
         // 格子配置
         this.GRID_SIZE = 3; // 3x3 的格子（实际8个种植位：上下左右+四个对角）
+        
+        // 时间常量: 现实6分钟 = 游戏1天
+        const REAL_TIME_PER_GAME_DAY = 6 * 60 * 1000; // 360000ms
+        
         this.CROP_TYPES = {
             wheat: {
                 name: '小麦',
                 icon: '🌾',
-                growTime: 30000, // 30秒生长时间
-                yield: 5, // 产出5个食物
-                cost: 2, // 种植成本2食物
+                growTime: REAL_TIME_PER_GAME_DAY * 2, // 游戏2天 = 现实12分钟
+                yield: 10, // 产出10个食物
+                cost: 3, // 种植成本3食物
                 unlockLevel: 1
             },
             corn: {
                 name: '玉米',
                 icon: '🌽',
-                growTime: 60000, // 60秒
-                yield: 12,
+                growTime: REAL_TIME_PER_GAME_DAY * 2, // 游戏2天 = 现实12分钟
+                yield: 15,
                 cost: 5,
                 unlockLevel: 1
             },
             tomato: {
                 name: '番茄',
                 icon: '🍅',
-                growTime: 45000, // 45秒
-                yield: 8,
-                cost: 3,
+                growTime: REAL_TIME_PER_GAME_DAY * 4, // 游戏4天 = 现实24分钟
+                yield: 25,
+                cost: 8,
                 unlockLevel: 2
             },
             carrot: {
                 name: '胡萝卜',
                 icon: '🥕',
-                growTime: 40000, // 40秒
-                yield: 7,
-                cost: 3,
+                growTime: REAL_TIME_PER_GAME_DAY * 7, // 游戏7天(1周) = 现实42分钟
+                yield: 50,
+                cost: 15,
                 unlockLevel: 3
             }
         };
