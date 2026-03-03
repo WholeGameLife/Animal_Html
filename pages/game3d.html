@@ -16,8 +16,12 @@ sh<!DOCTYPE html>
     <script src="../scripts/game_time_system.js"></script>
     <!-- 引入新手引导系统 -->
     <script src="../scripts/tutorial_system.js"></script>
+    <!-- 引入作物稀有度系统 -->
+    <script src="../scripts/crop_rarity_system.js"></script>
     <!-- 引入农场格子系统 -->
     <script src="../scripts/farm_grid.js"></script>
+    <!-- 引入仓库系统 -->
+    <script src="../scripts/storage_system.js"></script>
     <style>
         /* 2D地图样式 */
         body { margin: 0; overflow: hidden; font-family: 'Inter', sans-serif; background-color: #0a1120; }
@@ -385,30 +389,27 @@ sh<!DOCTYPE html>
 
             <!-- 主体内容布局 -->
             <div class="space-y-4 mb-5">
-                <!-- 并排显示：当前效果（左）和 工作动物（右） -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <!-- 2. 当前效果 -->
-                    <div id="current-effect-section" class="bg-gradient-to-br from-gray-800/80 to-gray-900/80 p-4 rounded-xl border border-gray-700 h-full">
-                        <h4 class="text-xs font-bold text-gray-400 mb-2 uppercase tracking-wider flex items-center">
-                            <span class="mr-2">📊</span> 当前效果
-                        </h4>
-                        <div id="detail-current-effect" class="text-base font-mono text-green-300 leading-relaxed"></div>
+                <!-- 2. 当前效果 (全宽) -->
+                <div id="current-effect-section" class="bg-gradient-to-br from-gray-800/80 to-gray-900/80 p-4 rounded-xl border border-gray-700">
+                    <h4 class="text-xs font-bold text-gray-400 mb-2 uppercase tracking-wider flex items-center">
+                        <span class="mr-2">📊</span> 当前效果
+                    </h4>
+                    <div id="detail-current-effect" class="text-base font-mono text-green-300 leading-relaxed"></div>
+                </div>
+                
+                <!-- 3. Worker Slot (全宽) -->
+                <div id="worker-slot" class="bg-gradient-to-br from-gray-800/80 to-gray-900/80 p-4 rounded-xl border border-gray-700">
+                    <h4 class="text-xs font-bold text-gray-400 mb-3 uppercase tracking-wider flex items-center">
+                        <span class="mr-2">👷</span> 工作动物
+                    </h4>
+                    <div id="worker-info" class="hidden flex items-center justify-between">
+                        <!-- 工作动物信息会在这里显示 -->
                     </div>
-                    
-                    <!-- 3. Worker Slot -->
-                    <div id="worker-slot" class="bg-gradient-to-br from-gray-800/80 to-gray-900/80 p-4 rounded-xl border border-gray-700 h-full">
-                        <h4 class="text-xs font-bold text-gray-400 mb-3 uppercase tracking-wider flex items-center">
-                            <span class="mr-2">👷</span> 工作动物
-                        </h4>
-                        <div id="worker-info" class="hidden flex items-center justify-between">
-                            <!-- 工作动物信息会在这里显示 -->
-                        </div>
-                        <div id="assign-worker-section">
-                            <p id="no-worker-text" class="text-sm text-gray-500 mb-2">暂无动物工作</p>
-                            <button id="btn-assign-worker" class="w-full bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-2 px-4 rounded-lg text-sm transition-all duration-200 shadow-lg hover:shadow-cyan-500/50">
-                                ➕ 派遣动物
-                            </button>
-                        </div>
+                    <div id="assign-worker-section">
+                        <p id="no-worker-text" class="text-sm text-gray-500 mb-2">暂无动物工作</p>
+                        <button id="btn-assign-worker" class="w-full bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-2 px-4 rounded-lg text-sm transition-all duration-200 shadow-lg hover:shadow-cyan-500/50">
+                            ➕ 派遣动物
+                        </button>
                     </div>
                 </div>
 
@@ -433,21 +434,6 @@ sh<!DOCTYPE html>
                     </div>
                 </div>
 
-                <!-- 3.5 农场作物选择区域 (全宽显示，仅农场显示) -->
-                <div id="farm-crop-selection" class="bg-gradient-to-br from-green-900/30 to-emerald-900/30 p-4 rounded-xl border border-green-700/50 hidden">
-                    <h4 class="text-xs font-bold text-green-300 mb-3 uppercase tracking-wider flex items-center">
-                        <span class="mr-2">🌾</span> 种植作物
-                    </h4>
-                    <div id="crop-buttons" class="grid grid-cols-4 gap-2 mb-3">
-                        <!-- 作物按钮由JS生成 -->
-                    </div>
-                    <div class="text-xs text-gray-400 mt-2 flex justify-between items-center">
-                        <div>当前种植: <span id="current-crop-display" class="text-yellow-400 font-bold">无</span></div>
-                    </div>
-                    <button id="btn-harvest-all" class="w-full mt-3 bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg hidden">
-                        🎉 收获所有成熟作物
-                    </button>
-                </div>
             </div>
 
             <!-- 操作按钮区域 -->
@@ -539,11 +525,16 @@ sh<!DOCTYPE html>
         <!-- 新增：道具商店面板 -->
         <div id="shop-panel" class="control-panel centered-panel p-6 rounded-xl text-white hidden w-full max-w-2xl">
             <div class="flex justify-between items-center mb-4">
-                <h3 class="text-2xl font-bold text-yellow-400">🛒 道具商店</h3>
+                <h3 class="text-2xl font-bold text-yellow-400">🛒 商店</h3>
                 <div class="flex items-center gap-4">
                     <div class="text-sm">💰 金币: <span id="shop-gold-display" class="font-mono text-amber-400">0</span></div>
                     <button id="btn-close-shop" class="text-3xl text-gray-500 hover:text-white">&times;</button>
                 </div>
+            </div>
+            <!-- 标签页 -->
+            <div class="flex border-b border-gray-600 mb-4">
+                <button data-tab="seeds" class="shop-tab-button flex-1 text-sm py-2 text-center text-white border-b-2 border-yellow-500">🌾 种子</button>
+                <button data-tab="items" class="shop-tab-button flex-1 text-sm py-2 text-center text-gray-400 border-b-2 border-transparent">🧪 养成道具</button>
             </div>
             <div id="shop-items-container" class="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <!-- 商品列表由 JS 生成 -->
@@ -690,6 +681,23 @@ sh<!DOCTYPE html>
             </div>
         </div>
 
+        <!-- 新增：仓库面板 -->
+        <div id="storage-panel" class="control-panel centered-panel p-6 rounded-xl text-white hidden w-full max-w-4xl">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-2xl font-bold text-teal-400">📦 仓库</h3>
+                <button id="btn-close-storage" class="text-3xl text-gray-500 hover:text-white">&times;</button>
+            </div>
+            <!-- 标签页 -->
+            <div class="flex border-b border-gray-600 mb-4">
+                <button data-tab="seeds" class="storage-tab-button flex-1 text-sm py-2 text-center text-white border-b-2 border-teal-500">🌾 种子</button>
+                <button data-tab="crops" class="storage-tab-button flex-1 text-sm py-2 text-center text-gray-400 border-b-2 border-transparent">🥕 作物</button>
+                <button data-tab="items" class="storage-tab-button flex-1 text-sm py-2 text-center text-gray-400 border-b-2 border-transparent">🧪 道具</button>
+            </div>
+            <div id="storage-content" class="grid grid-cols-6 gap-3 max-h-[60vh] overflow-y-auto">
+                <!-- 物品列表由JS生成 -->
+            </div>
+        </div>
+        
         <!-- 新增：道具目标选择面板 -->
         <div id="item-target-selector" class="control-panel centered-panel p-5 rounded-lg text-white hidden w-full md:w-[400px] z-[60]">
             <div class="flex justify-between items-center mb-4">
@@ -1089,12 +1097,17 @@ sh<!DOCTYPE html>
                 
                 <!-- 2.8 道具商店 -->
                 <button id="btn-open-shop" class="action-button bg-pink-600 hover:bg-pink-700 text-white font-bold py-3 px-4 rounded-lg text-center">
-                    🛒 道具商店<br><span class="text-xs"> (购买补给)</span>
+                    🛒 商店<br><span class="text-xs"> (种子/道具)</span>
                 </button>
                 
                 <!-- 2.8 背包 -->
                 <button id="btn-open-inventory" class="action-button bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg text-center">
                     🎒 我的背包<br><span class="text-xs"> (查看/使用)</span>
+                </button>
+                
+                <!-- 2.85 仓库 -->
+                <button id="btn-open-storage" class="action-button bg-teal-600 hover:bg-teal-700 text-white font-bold py-3 px-4 rounded-lg text-center">
+                    📦 仓库<br><span class="text-xs"> (种子/道具)</span>
                 </button>
 
                 <!-- 3. 基建系统: 放置建筑 -->
@@ -1172,12 +1185,52 @@ sh<!DOCTYPE html>
             { name: '外星遗物', rarity: '传说', icon: '👽' }
         ];
 
+        // 商店物品配置 - 基础价格
+        const BASE_SEED_PRICES = {
+            wheat: 50,
+            corn: 80,
+            tomato: 150,
+            carrot: 300
+        };
+        
         // 商店物品配置
         const SHOP_ITEMS = {
-            'exp_potion_s': { name: '小经验药水', icon: '🧪', desc: '增加50点经验', price: 100 },
-            'exp_potion_l': { name: '大经验药水', icon: '⚗️', desc: '增加200点经验', price: 350 },
-            'stamina_potion': { name: '体力药剂', icon: '⚡', desc: '恢复50点体力', price: 50 },
-            'mutation_serum': { name: '变异血清', icon: '💉', desc: '诱发基因突变', price: 500 }
+            // 小麦种子 - 所有稀有度
+            'seed_wheat_white': { name: '小麦种子', icon: '🌾', desc: '基础变异率', price: BASE_SEED_PRICES.wheat, type: 'seed', rarity: 'white', cropType: 'wheat' },
+            'seed_wheat_green': { name: '小麦种子', icon: '🌾', desc: '变异率+5%', price: Math.floor(BASE_SEED_PRICES.wheat * 2), type: 'seed', rarity: 'green', cropType: 'wheat' },
+            'seed_wheat_blue': { name: '小麦种子', icon: '🌾', desc: '变异率+10%', price: Math.floor(BASE_SEED_PRICES.wheat * 4), type: 'seed', rarity: 'blue', cropType: 'wheat' },
+            'seed_wheat_purple': { name: '小麦种子', icon: '🌾', desc: '变异率+20%', price: Math.floor(BASE_SEED_PRICES.wheat * 8), type: 'seed', rarity: 'purple', cropType: 'wheat' },
+            'seed_wheat_gold': { name: '小麦种子', icon: '🌾', desc: '变异率+35%', price: Math.floor(BASE_SEED_PRICES.wheat * 15), type: 'seed', rarity: 'gold', cropType: 'wheat' },
+            'seed_wheat_red': { name: '小麦种子', icon: '🌾', desc: '变异率+50%', price: Math.floor(BASE_SEED_PRICES.wheat * 30), type: 'seed', rarity: 'red', cropType: 'wheat' },
+            
+            // 玉米种子 - 所有稀有度
+            'seed_corn_white': { name: '玉米种子', icon: '🌽', desc: '基础变异率', price: BASE_SEED_PRICES.corn, type: 'seed', rarity: 'white', cropType: 'corn' },
+            'seed_corn_green': { name: '玉米种子', icon: '🌽', desc: '变异率+5%', price: Math.floor(BASE_SEED_PRICES.corn * 2), type: 'seed', rarity: 'green', cropType: 'corn' },
+            'seed_corn_blue': { name: '玉米种子', icon: '🌽', desc: '变异率+10%', price: Math.floor(BASE_SEED_PRICES.corn * 4), type: 'seed', rarity: 'blue', cropType: 'corn' },
+            'seed_corn_purple': { name: '玉米种子', icon: '🌽', desc: '变异率+20%', price: Math.floor(BASE_SEED_PRICES.corn * 8), type: 'seed', rarity: 'purple', cropType: 'corn' },
+            'seed_corn_gold': { name: '玉米种子', icon: '🌽', desc: '变异率+35%', price: Math.floor(BASE_SEED_PRICES.corn * 15), type: 'seed', rarity: 'gold', cropType: 'corn' },
+            'seed_corn_red': { name: '玉米种子', icon: '🌽', desc: '变异率+50%', price: Math.floor(BASE_SEED_PRICES.corn * 30), type: 'seed', rarity: 'red', cropType: 'corn' },
+            
+            // 番茄种子 - 所有稀有度
+            'seed_tomato_white': { name: '番茄种子', icon: '🍅', desc: '基础变异率', price: BASE_SEED_PRICES.tomato, type: 'seed', rarity: 'white', cropType: 'tomato' },
+            'seed_tomato_green': { name: '番茄种子', icon: '🍅', desc: '变异率+5%', price: Math.floor(BASE_SEED_PRICES.tomato * 2), type: 'seed', rarity: 'green', cropType: 'tomato' },
+            'seed_tomato_blue': { name: '番茄种子', icon: '🍅', desc: '变异率+10%', price: Math.floor(BASE_SEED_PRICES.tomato * 4), type: 'seed', rarity: 'blue', cropType: 'tomato' },
+            'seed_tomato_purple': { name: '番茄种子', icon: '🍅', desc: '变异率+20%', price: Math.floor(BASE_SEED_PRICES.tomato * 8), type: 'seed', rarity: 'purple', cropType: 'tomato' },
+            'seed_tomato_gold': { name: '番茄种子', icon: '🍅', desc: '变异率+35%', price: Math.floor(BASE_SEED_PRICES.tomato * 15), type: 'seed', rarity: 'gold', cropType: 'tomato' },
+            'seed_tomato_red': { name: '番茄种子', icon: '🍅', desc: '变异率+50%', price: Math.floor(BASE_SEED_PRICES.tomato * 30), type: 'seed', rarity: 'red', cropType: 'tomato' },
+            
+            // 胡萝卜种子 - 所有稀有度
+            'seed_carrot_white': { name: '胡萝卜种子', icon: '🥕', desc: '基础变异率', price: BASE_SEED_PRICES.carrot, type: 'seed', rarity: 'white', cropType: 'carrot' },
+            'seed_carrot_green': { name: '胡萝卜种子', icon: '🥕', desc: '变异率+5%', price: Math.floor(BASE_SEED_PRICES.carrot * 2), type: 'seed', rarity: 'green', cropType: 'carrot' },
+            'seed_carrot_blue': { name: '胡萝卜种子', icon: '🥕', desc: '变异率+10%', price: Math.floor(BASE_SEED_PRICES.carrot * 4), type: 'seed', rarity: 'blue', cropType: 'carrot' },
+            'seed_carrot_purple': { name: '胡萝卜种子', icon: '🥕', desc: '变异率+20%', price: Math.floor(BASE_SEED_PRICES.carrot * 8), type: 'seed', rarity: 'purple', cropType: 'carrot' },
+            'seed_carrot_gold': { name: '胡萝卜种子', icon: '🥕', desc: '变异率+35%', price: Math.floor(BASE_SEED_PRICES.carrot * 15), type: 'seed', rarity: 'gold', cropType: 'carrot' },
+            'seed_carrot_red': { name: '胡萝卜种子', icon: '🥕', desc: '变异率+50%', price: Math.floor(BASE_SEED_PRICES.carrot * 30), type: 'seed', rarity: 'red', cropType: 'carrot' },
+            
+            'exp_potion_s': { name: '小经验药水', icon: '🧪', desc: '增加50点经验', price: 100, type: 'potion' },
+            'exp_potion_l': { name: '大经验药水', icon: '⚗️', desc: '增加200点经验', price: 350, type: 'potion' },
+            'stamina_potion': { name: '体力药剂', icon: '⚡', desc: '恢复50点体力', price: 50, type: 'potion' },
+            'mutation_serum': { name: '变异血清', icon: '💉', desc: '诱发基因突变', price: 500, type: 'material' }
         };
 
         // 道具使用配置 (与 animal_management.html 保持一致)
@@ -1400,6 +1453,9 @@ sh<!DOCTYPE html>
 
         // 游戏时间系统（全局）
         let gameTimeSystem = null;
+        
+        // 仓库系统（全局）
+        let storageSystem = null;
         
         // 游戏状态
         const gameState = {
@@ -1720,8 +1776,10 @@ sh<!DOCTYPE html>
             ui.btnOpenMining.addEventListener('click', openMiningPage, false);
             ui.btnOpenWorldMap.addEventListener('click', openWorldMapPage, false);
             ui.btnOpenLeague.addEventListener('click', openLeaguePage, false); // 新增
-            ui.btnOpenShop.addEventListener('click', openShopPanel, false);
+            ui.btnOpenShop.addEventListener('click', () => openShopPanel(), false);
             ui.btnOpenInventory.addEventListener('click', openInventoryPanel, false); // 新增
+            document.getElementById('btn-open-storage').addEventListener('click', () => openStoragePanel(), false); // 新增
+            document.getElementById('btn-close-storage').addEventListener('click', closeStoragePanel, false); // 新增
             document.getElementById('btn-open-debug').addEventListener('click', openDebugPanel, false); // 新增
             document.getElementById('btn-restart-tutorial').addEventListener('click', restartTutorial, false); // 新增
 
@@ -1795,8 +1853,10 @@ sh<!DOCTYPE html>
             ui.btnOpenMining.addEventListener('click', openMiningPage);
             ui.btnOpenWorldMap.addEventListener('click', openWorldMapPage);
             ui.btnOpenLeague.addEventListener('click', openLeaguePage);
-            ui.btnOpenShop.addEventListener('click', openShopPanel);
+            ui.btnOpenShop.addEventListener('click', () => openShopPanel());
             ui.btnOpenInventory.addEventListener('click', openInventoryPanel);
+            document.getElementById('btn-open-storage').addEventListener('click', () => openStoragePanel());
+            document.getElementById('btn-close-storage').addEventListener('click', closeStoragePanel);
             ui.btnCloseStandaloneDetails.addEventListener('click', closeStandaloneAnimalDetails);
             ui.btnCloseBattleSetupPanel.addEventListener('click', closeBattleSetupPanel);
             ui.btnExecuteBattle.addEventListener('click', startCombat);
@@ -2235,6 +2295,7 @@ sh<!DOCTYPE html>
             closeBattleSetupPanel();
             closeMuseumPanel();
             closeShopPanel();
+            closeStoragePanel();
             closeExchangePanel();
             closeAuctionBidPanel();
             closeInventoryPanel();
@@ -2748,7 +2809,8 @@ sh<!DOCTYPE html>
             gameState.collectibles.splice(index, 1);
         }
 
-        // 新增：农场进度详情实时更新
+        // 已弃用：农场进度详情实时更新(现在在showBuildingDetails中直接显示)
+        /*
         function updateFarmDetailProgress(building) {
             const grids = farmGridSystem.getFarmGrids(building.id);
             let plantedCount = 0;
@@ -2825,6 +2887,8 @@ sh<!DOCTYPE html>
             }
         }
 
+        */
+        
         // 新增：农场格子更新循环
         function startFarmGridUpdateLoop() {
             setInterval(() => {
@@ -2833,13 +2897,15 @@ sh<!DOCTYPE html>
                     updateAllFarmGridsUI();
                     
                     if (selectedBuilding && selectedBuilding.type === 'Farm') {
-                        updateFarmDetailProgress(selectedBuilding);
-                        // 如果有作物成熟，检查是否需要显示一键收获按钮
-                        renderFarmCropSelection(selectedBuilding);
+                        // 刷新农场详情显示
+                        showBuildingDetails(selectedBuilding);
                     }
                     
                     // 保存数据
                     farmGridSystem.saveData();
+                    if (window.cropRaritySystem) {
+                        window.cropRaritySystem.saveData();
+                    }
                 }
             }, 1000); // 每秒更新一次
         }
@@ -3227,23 +3293,58 @@ sh<!DOCTYPE html>
             let bonusEffect = ''; // 新增：加成效果
             const worker = building.workerId ? gameState.animals.find(a => a.id === building.workerId) : null;
             
-            // 显示或隐藏农场作物选择区域
-            const farmCropSection = document.getElementById('farm-crop-selection');
-            if (building.type === 'Farm') {
-                farmCropSection.classList.remove('hidden');
-                renderFarmCropSelection(building);
-            } else {
-                farmCropSection.classList.add('hidden');
-            }
-
             if (building.type === 'Farm') {
                 const multiplier = config.levels[currentLevel].yieldMultiplier;
                 const bonusPercent = Math.round((multiplier - 1) * 100);
-                currentEffect = `<div>格子产量倍率: <span class="text-yellow-400 font-bold">${multiplier}x</span></div>`;
+                currentEffect = `<div class="mb-2">格子产量倍率: <span class="text-yellow-400 font-bold">${multiplier}x</span>`;
                 if (bonusPercent > 0) {
-                    currentEffect += `<div class="text-xs text-green-400 mt-1">每格+${bonusPercent}%产出</div>`;
+                    currentEffect += ` <span class="text-xs text-green-400">(每格+${bonusPercent}%产出)</span>`;
                 }
-                currentEffect += `<div id="farm-detail-progress-container" class="mt-3 pt-3 border-t border-gray-600/50"></div>`;
+                currentEffect += `</div>`;
+                
+                // 显示每个格子的详细信息
+                const grids = farmGridSystem.getFarmGrids(building.id);
+                if (grids) {
+                    currentEffect += `<div class="mt-3 pt-3 border-t border-gray-600/50">`;
+                    currentEffect += `<h5 class="text-xs font-bold text-gray-300 mb-2">🌱 格子状态 (8个种植位)</h5>`;
+                    currentEffect += `<div class="grid grid-cols-2 gap-2">`;
+                    
+                    // 8个格子的坐标
+                    const cellPositions = [
+                        { row: 0, col: 1, name: '上' },
+                        { row: 2, col: 1, name: '下' },
+                        { row: 1, col: 0, name: '左' },
+                        { row: 1, col: 2, name: '右' },
+                        { row: 0, col: 0, name: '左上' },
+                        { row: 0, col: 2, name: '右上' },
+                        { row: 2, col: 0, name: '左下' },
+                        { row: 2, col: 2, name: '右下' }
+                    ];
+                    
+                    cellPositions.forEach(pos => {
+                        const grid = grids[pos.row][pos.col];
+                        if (grid === null) {
+                            currentEffect += `<div class="bg-gray-900/50 p-2 rounded"><span class="text-gray-400 text-base font-bold">${pos.name}:</span> <span class="text-gray-600 text-lg ml-2">🟫 空地</span></div>`;
+                        } else {
+                            const crop = farmGridSystem.CROP_TYPES[grid.type];
+                            const icon = farmGridSystem.getGridIcon(grid, building.id, pos.row, pos.col);
+                            
+                            if (grid.harvestable) {
+                                currentEffect += `<div class="bg-green-900/30 border border-green-500/50 p-2 rounded animate-pulse"><span class="text-gray-300 text-base font-bold">${pos.name}:</span> <span class="text-green-400 font-bold text-lg ml-2">${icon} ${crop.name} ✅</span></div>`;
+                            } else {
+                                // 计算预计收获时间
+                                const harvestTime = grid.plantedAt + grid.growTime;
+                                const timeLeft = Math.max(0, harvestTime - Date.now());
+                                const hours = Math.floor(timeLeft / (60 * 60 * 1000));
+                                const minutes = Math.floor((timeLeft % (60 * 60 * 1000)) / (60 * 1000));
+                                
+                                currentEffect += `<div class="bg-gray-900/50 p-2 rounded flex items-center justify-between"><div><span class="text-gray-300 text-base font-bold">${pos.name}:</span> <span class="text-yellow-400 text-lg font-semibold ml-2">${icon} ${crop.name}</span></div><span class="text-cyan-400 text-base font-mono">⏰ ${hours}h${minutes}m</span></div>`;
+                            }
+                        }
+                    });
+                    
+                    currentEffect += `</div></div>`;
+                }
             } else if (building.type === 'Mint') {
                 currentEffect = `+${config.levels[currentLevel].goldPerMin} 金币/min`;
             } else if (building.type === 'LumberMill') {
@@ -3293,10 +3394,6 @@ sh<!DOCTYPE html>
             ui.detailIcon.textContent = iconMap[building.type] || '🏗️';
 
             ui.detailCurrentEffect.innerHTML = `${currentEffect} <span class="text-sm text-yellow-400">${bonusEffect}</span>`;
-            
-            if (building.type === 'Farm') {
-                updateFarmDetailProgress(building);
-            }
 
             // 填充下一级信息
             if (currentLevel < config.maxLevel) {
@@ -3671,11 +3768,13 @@ sh<!DOCTYPE html>
                 return;
             }
             
-            // 添加到背包
-            if (!gameState.inventory) gameState.inventory = {};
-            gameState.inventory[potionType] = (gameState.inventory[potionType] || 0) + 1;
+            // 添加到仓库
+            if (storageSystem) {
+                storageSystem.addItem(potionType, 1);
+                storageSystem.saveData();
+            }
             
-            showStatus(`✅ 成功合成 ${ITEMS[potionType].name}！已放入背包。`, 3000);
+            showStatus(`✅ 成功合成 ${ITEMS[potionType].name}！已放入仓库。`, 3000);
             updateUI();
             showBuildingDetails(building); // 刷新面板
         }
@@ -3755,13 +3854,9 @@ sh<!DOCTYPE html>
             
             const grid = grids[row][col];
             
-            // 如果格子为空，提示打开农场详情面板选择作物
+            // 如果格子为空，显示作物选择菜单
             if (grid === null) {
-                const building = gameState.buildings.find(b => b.id === farmId);
-                if (building) {
-                    showBuildingDetails(building);
-                    showStatus(`💡 请在农场详情面板中选择要种植的作物`, 2000);
-                }
+                showCropSelectionMenu(farmId, row, col);
             }
             // 如果格子有作物且成熟，收获单个格子
             else if (grid.harvestable) {
@@ -3776,9 +3871,9 @@ sh<!DOCTYPE html>
                     updateUI();
                     updateFarmGridUI(farmId);
                     
-                    // 如果详情面板开着，刷新按钮状态
+                    // 如果详情面板开着，刷新显示
                     if (selectedBuilding && selectedBuilding.id === farmId) {
-                        renderFarmCropSelection(selectedBuilding);
+                        showBuildingDetails(selectedBuilding);
                     }
                 }
             }
@@ -3787,6 +3882,146 @@ sh<!DOCTYPE html>
                 const progress = farmGridSystem.getGridProgress(farmId, row, col);
                 const crop = farmGridSystem.CROP_TYPES[grid.type];
                 showStatus(`🌾 ${crop.name} 生长中... ${progress}%`, 1500);
+            }
+        }
+        
+        // 新增：显示作物选择菜单
+        function showCropSelectionMenu(farmId, row, col) {
+            const building = gameState.buildings.find(b => b.id === farmId);
+            if (!building) return;
+            
+            // 创建弹出菜单
+            const menu = document.createElement('div');
+            menu.id = 'crop-selection-menu';
+            menu.className = 'fixed bg-gray-900 border-2 border-green-500 rounded-lg p-4 shadow-2xl z-[200]';
+            menu.style.left = '50%';
+            menu.style.top = '50%';
+            menu.style.transform = 'translate(-50%, -50%)';
+            menu.style.width = '750px';
+            
+            let menuHTML = '<h4 class="text-lg font-bold text-green-300 mb-4 text-center">🌱 选择种子</h4>';
+            menuHTML += '<div class="grid grid-cols-6 gap-3 max-h-[60vh] overflow-y-auto mb-4 pr-2">';
+            
+            // 遍历所有作物类型和稀有度，只显示拥有的种子
+            const cropTypes = [
+                { key: 'wheat', icon: '🌾' },
+                { key: 'corn', icon: '🌽' },
+                { key: 'tomato', icon: '🍅' },
+                { key: 'carrot', icon: '🥕' }
+            ];
+            const rarities = ['white', 'green', 'blue', 'purple', 'gold', 'red'];
+            
+            cropTypes.forEach(crop => {
+                rarities.forEach(rarity => {
+                    const seedKey = `seed_${crop.key}_${rarity}`;
+                    const count = storageSystem ? storageSystem.getItemCount(seedKey) : 0;
+                    
+                    if (count > 0) {
+                        const rarityInfo = storageSystem.rarities[rarity];
+                        const itemInfo = storageSystem.getItemInfo(seedKey);
+                        
+                        menuHTML += `
+                            <button class="rounded-lg flex flex-col items-center justify-center text-center transition-all hover:brightness-110 crop-select-btn border-2 p-3" 
+                                    data-crop-type="${crop.key}"
+                                    data-seed-key="${seedKey}"
+                                    data-rarity="${rarity}"
+                                    style="background-color: ${rarityInfo.bgColor}; border-color: ${rarityInfo.color};">
+                                <div class="text-4xl mb-2">${crop.icon}</div>
+                                <div class="text-xs text-white font-bold mb-1">${itemInfo.name}</div>
+                                <div class="text-xs text-green-400 font-mono">×${count}</div>
+                            </button>
+                        `;
+                    }
+                });
+            });
+            
+            menuHTML += '</div><button id="cancel-crop-selection" class="w-full bg-gray-600 hover:bg-gray-500 text-white font-bold py-2 px-4 rounded-lg">取消</button>';
+            menu.innerHTML = menuHTML;
+            
+            // 添加到页面
+            document.body.appendChild(menu);
+            ui.modalOverlay.classList.remove('hidden');
+            
+            // 绑定作物选择事件
+            menu.querySelectorAll('.crop-select-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const cropType = btn.dataset.cropType;
+                    const seedKey = btn.dataset.seedKey;
+                    const rarity = btn.dataset.rarity;
+                    plantSingleCrop(farmId, row, col, cropType, seedKey, rarity);
+                    closeCropSelectionMenu();
+                });
+            });
+            
+            // 绑定取消按钮
+            document.getElementById('cancel-crop-selection').addEventListener('click', closeCropSelectionMenu);
+        }
+        
+        // 新增：关闭作物选择菜单
+        function closeCropSelectionMenu() {
+            const menu = document.getElementById('crop-selection-menu');
+            if (menu) {
+                menu.remove();
+            }
+            ui.modalOverlay.classList.add('hidden');
+        }
+        
+        // 新增：种植单个格子
+        function plantSingleCrop(farmId, row, col, cropType, seedKey, rarity) {
+            const crop = farmGridSystem.CROP_TYPES[cropType];
+            
+            // 检查是否拥有指定稀有度的种子
+            if (!storageSystem || !storageSystem.hasItem(seedKey)) {
+                showStatus(`❌ 没有该种子！请先在商店购买`, 2000);
+                return;
+            }
+            
+            // 获取稀有度变异加成
+            const rarityInfo = storageSystem.rarities[rarity];
+            const mutationBonus = rarityInfo ? rarityInfo.mutationBonus : 0;
+            
+            // 计算最终变异率：基础变异率 + 稀有度加成（转换为小数）
+            const finalMutationRate = crop.baseMutationRate + (mutationBonus / 100);
+            
+            // 执行种植
+            const result = farmGridSystem.plantCrop(farmId, row, col, cropType);
+            
+            if (result.success) {
+                // 消耗种子
+                const removeResult = storageSystem.removeItem(seedKey, 1);
+                if (!removeResult.success) {
+                    // 如果移除失败，回滚种植
+                    farmGridSystem.getFarmGrids(farmId)[row][col] = null;
+                    showStatus(`❌ ${removeResult.message}`, 2000);
+                    return;
+                }
+                storageSystem.saveData();
+                
+                // 保存种子稀有度到格子数据
+                const gridData = farmGridSystem.getFarmGrids(farmId)[row][col];
+                if (gridData) {
+                    gridData.seedRarity = rarity;
+                }
+                
+                // 如果有稀有度系统，更新作物的变异率
+                if (window.cropRaritySystem) {
+                    const cropData = window.cropRaritySystem.crops[farmId]?.[`${row}_${col}`];
+                    if (cropData) {
+                        cropData.baseMutationRate = finalMutationRate;
+                    }
+                }
+                
+                const rarityName = rarityInfo ? rarityInfo.name : '普通';
+                showStatus(`🌱 使用${rarityName}种子种植${crop.name}（变异率: ${(finalMutationRate * 100).toFixed(1)}%）`, 2500);
+                updateUI();
+                updateFarmGridUI(farmId);
+                
+                // 如果详情面板开着，刷新显示
+                if (selectedBuilding && selectedBuilding.id === farmId) {
+                    showBuildingDetails(selectedBuilding);
+                }
+            } else {
+                showStatus(`❌ ${result.message}`, 2000);
             }
         }
         
@@ -3815,9 +4050,26 @@ sh<!DOCTYPE html>
                 if (grid === null) {
                     cell.textContent = '';
                     cell.classList.remove('farm-cell-harvestable');
+                    // 恢复默认背景
+                    cell.style.backgroundColor = 'rgba(101, 67, 33, 0.95)';
+                    cell.style.borderColor = '';
                 } else {
                     const icon = farmGridSystem.getGridIcon(grid);
                     cell.textContent = icon;
+                    
+                    // 如果有种子稀有度，使用对应背景色
+                    if (grid.seedRarity && storageSystem) {
+                        const rarityInfo = storageSystem.rarities[grid.seedRarity];
+                        if (rarityInfo) {
+                            cell.style.backgroundColor = rarityInfo.bgColor;
+                            cell.style.borderColor = rarityInfo.color;
+                            cell.style.borderWidth = '2px';
+                            cell.style.borderStyle = 'solid';
+                        }
+                    } else {
+                        cell.style.backgroundColor = 'rgba(101, 67, 33, 0.95)';
+                        cell.style.borderColor = '';
+                    }
                     
                     if (grid.harvestable) {
                         cell.classList.add('farm-cell-harvestable');
@@ -4141,38 +4393,214 @@ sh<!DOCTYPE html>
 
         // --- 新增：商店系统逻辑 ---
 
-        function openShopPanel() {
+        function openShopPanel(tabName = 'seeds') {
             closeAllDetailPanels();
             ui.shopGoldDisplay.textContent = gameState.gold;
-            ui.shopItemsContainer.innerHTML = '';
-
-            for (const [key, item] of Object.entries(SHOP_ITEMS)) {
-                const itemDiv = document.createElement('div');
-                itemDiv.className = 'bg-gray-800 p-4 rounded-lg flex flex-col items-center text-center border border-gray-700 hover:border-pink-500 transition-colors';
-                
-                // 检查背包数量
-                const count = (gameState.inventory && gameState.inventory[key]) || 0;
-
-                itemDiv.innerHTML = `
-                    <div class="text-4xl mb-2">${item.icon}</div>
-                    <h4 class="font-bold text-lg text-white">${item.name}</h4>
-                    <p class="text-xs text-gray-400 mb-2 h-8">${item.desc}</p>
-                    <div class="text-sm text-gray-300 mb-3">拥有: <span class="text-green-400 font-mono">${count}</span></div>
-                    <button class="w-full bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded flex justify-center items-center gap-2" onclick="buyItem('${key}')">
-                        <span>💰 ${item.price}</span>
-                        <span>购买</span>
-                    </button>
-                `;
-                ui.shopItemsContainer.appendChild(itemDiv);
-            }
+            
+            // 绑定标签页点击事件
+            document.querySelectorAll('.shop-tab-button').forEach(btn => {
+                btn.onclick = () => renderShopTab(btn.dataset.tab);
+            });
+            
+            // 渲染默认标签页（首次打开时默认显示种子）
+            renderShopTab(tabName);
 
             ui.modalOverlay.classList.remove('hidden');
             ui.shopPanel.classList.remove('hidden');
+        }
+        
+        function renderShopTab(tabName) {
+            // 更新标签样式
+            document.querySelectorAll('.shop-tab-button').forEach(btn => {
+                if (btn.dataset.tab === tabName) {
+                    btn.classList.add('text-white', 'border-yellow-500');
+                    btn.classList.remove('text-gray-400', 'border-transparent');
+                } else {
+                    btn.classList.remove('text-white', 'border-yellow-500');
+                    btn.classList.add('text-gray-400', 'border-transparent');
+                }
+            });
+            
+            // 渲染商品列表
+            ui.shopItemsContainer.innerHTML = '';
+            
+            if (tabName === 'seeds') {
+                // 种子标签页：按作物类型分组，添加滚动条
+                ui.shopItemsContainer.className = 'space-y-4 max-h-[60vh] overflow-y-auto pr-2';
+                
+                const cropTypes = [
+                    { key: 'wheat', name: '小麦', icon: '🌾' },
+                    { key: 'corn', name: '玉米', icon: '🌽' },
+                    { key: 'tomato', name: '番茄', icon: '🍅' },
+                    { key: 'carrot', name: '胡萝卜', icon: '🥕' }
+                ];
+                const rarities = ['white', 'green', 'blue', 'purple', 'gold', 'red'];
+                
+                // 按作物类型分组
+                cropTypes.forEach(crop => {
+                    const groupDiv = document.createElement('div');
+                    groupDiv.className = 'border-2 border-gray-700 rounded-lg p-4 bg-gray-800/50';
+                    
+                    // 作物标题
+                    const titleDiv = document.createElement('div');
+                    titleDiv.className = 'text-lg font-bold text-white mb-3 flex items-center gap-2';
+                    titleDiv.innerHTML = `<span class="text-3xl">${crop.icon}</span><span>${crop.name}种子</span>`;
+                    groupDiv.appendChild(titleDiv);
+                    
+                    // 稀有度网格 (3列×2行)
+                    const gridDiv = document.createElement('div');
+                    gridDiv.className = 'grid grid-cols-3 gap-3';
+                    
+                    rarities.forEach(rarity => {
+                        const seedKey = `seed_${crop.key}_${rarity}`;
+                        const item = SHOP_ITEMS[seedKey];
+                        if (!item) return;
+                        
+                        const count = storageSystem ? storageSystem.getItemCount(seedKey) : 0;
+                        const rarityInfo = storageSystem ? storageSystem.rarities[rarity] : null;
+                        
+                        const itemDiv = document.createElement('div');
+                        itemDiv.className = 'p-3 rounded-lg flex flex-col items-center text-center border-2 hover:brightness-110 transition-all cursor-pointer';
+                        
+                        if (rarityInfo) {
+                            itemDiv.style.backgroundColor = rarityInfo.bgColor;
+                            itemDiv.style.borderColor = rarityInfo.color;
+                        }
+                        
+                        itemDiv.innerHTML = `
+                            <div class="text-xs font-bold text-white mb-1">${rarityInfo ? rarityInfo.name : rarity}</div>
+                            <div class="text-xs text-gray-300 mb-2">${item.desc}</div>
+                            <div class="text-sm text-gray-300 mb-2">拥有: <span class="text-green-400 font-mono">${count}</span></div>
+                            <button class="w-full bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-1 px-2 text-xs rounded" onclick="buyItem('${seedKey}')">
+                                💰 ${item.price}
+                            </button>
+                        `;
+                        
+                        gridDiv.appendChild(itemDiv);
+                    });
+                    
+                    groupDiv.appendChild(gridDiv);
+                    ui.shopItemsContainer.appendChild(groupDiv);
+                });
+                
+            } else if (tabName === 'items') {
+                // 道具标签页：原有布局，添加滚动条
+                ui.shopItemsContainer.className = 'grid grid-cols-1 md:grid-cols-3 gap-4 max-h-[60vh] overflow-y-auto pr-2';
+                
+                const filteredItems = Object.entries(SHOP_ITEMS).filter(([key, item]) => {
+                    return item.type === 'potion' || item.type === 'material';
+                });
+                
+                for (const [key, item] of filteredItems) {
+                    const itemDiv = document.createElement('div');
+                    itemDiv.className = 'bg-gray-800 p-4 rounded-lg flex flex-col items-center text-center border border-gray-700 hover:border-pink-500 transition-colors';
+                    
+                    const count = storageSystem ? storageSystem.getItemCount(key) : 0;
+
+                    itemDiv.innerHTML = `
+                        <div class="text-4xl mb-2">${item.icon}</div>
+                        <h4 class="font-bold text-lg text-white">${item.name}</h4>
+                        <p class="text-xs text-gray-300 mb-2 h-8">${item.desc}</p>
+                        <div class="text-sm text-gray-300 mb-3">拥有: <span class="text-green-400 font-mono">${count}</span></div>
+                        <button class="w-full bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded flex justify-center items-center gap-2" onclick="buyItem('${key}')">
+                            <span>💰 ${item.price}</span>
+                            <span>购买</span>
+                        </button>
+                    `;
+                    ui.shopItemsContainer.appendChild(itemDiv);
+                }
+            }
         }
 
         function closeShopPanel() {
             ui.shopPanel.classList.add('hidden');
             ui.modalOverlay.classList.add('hidden');
+        }
+        
+        // 新增：打开仓库面板
+        function openStoragePanel(tabName = 'seeds') {
+            closeAllDetailPanels();
+            
+            // 绑定标签页点击事件
+            document.querySelectorAll('.storage-tab-button').forEach(btn => {
+                btn.onclick = () => renderStorageTab(btn.dataset.tab);
+            });
+            
+            // 渲染默认标签页
+            renderStorageTab(tabName);
+            
+            ui.modalOverlay.classList.remove('hidden');
+            document.getElementById('storage-panel').classList.remove('hidden');
+        }
+        
+        function closeStoragePanel() {
+            document.getElementById('storage-panel').classList.add('hidden');
+            ui.modalOverlay.classList.add('hidden');
+        }
+        
+        function renderStorageTab(tabName) {
+            // 更新标签样式
+            document.querySelectorAll('.storage-tab-button').forEach(btn => {
+                if (btn.dataset.tab === tabName) {
+                    btn.classList.add('text-white', 'border-teal-500');
+                    btn.classList.remove('text-gray-400', 'border-transparent');
+                } else {
+                    btn.classList.remove('text-white', 'border-teal-500');
+                    btn.classList.add('text-gray-400', 'border-transparent');
+                }
+            });
+            
+            const content = document.getElementById('storage-content');
+            content.innerHTML = '';
+            
+            if (!storageSystem) {
+                content.innerHTML = '<p class="col-span-full text-center text-gray-500 py-8">仓库系统未初始化</p>';
+                return;
+            }
+            
+            // 获取该类别的所有物品
+            const categoryItems = storageSystem.getItemsByCategory(tabName);
+            const itemKeys = Object.keys(categoryItems).filter(key => categoryItems[key] > 0);
+            
+            // 渲染6x6格子(36个格子)
+            for (let i = 0; i < 36; i++) {
+                const slot = document.createElement('div');
+                slot.className = 'border-2 border-gray-700 rounded-lg aspect-square flex flex-col items-center justify-center relative hover:border-teal-500 transition-colors';
+                
+                if (i < itemKeys.length) {
+                    const itemKey = itemKeys[i];
+                    const amount = categoryItems[itemKey];
+                    const itemInfo = storageSystem.getItemInfo(itemKey);
+                    
+                    if (itemInfo) {
+                        // 如果是种子且有稀有度，使用稀有度背景色
+                        if (itemInfo.category === 'seeds' && itemInfo.rarity) {
+                            const rarityInfo = storageSystem.rarities[itemInfo.rarity];
+                            if (rarityInfo) {
+                                slot.style.backgroundColor = rarityInfo.bgColor;
+                                slot.style.borderColor = rarityInfo.color;
+                            }
+                        } else {
+                            slot.style.backgroundColor = 'rgb(31, 41, 55)'; // bg-gray-800
+                        }
+                        
+                        slot.innerHTML = `
+                            <div class="flex-1 flex items-center justify-center">
+                                <div class="text-5xl">${itemInfo.icon}</div>
+                            </div>
+                            <div class="text-xs text-white font-bold text-center px-1 pb-1">${itemInfo.name}</div>
+                            <div class="absolute top-1 right-1 bg-teal-600 text-white text-xs font-bold px-2 py-0.5 rounded-full">×${amount}</div>
+                        `;
+                        slot.title = itemInfo.desc;
+                    }
+                } else {
+                    // 空格子
+                    slot.style.backgroundColor = 'rgb(31, 41, 55)'; // bg-gray-800
+                    slot.innerHTML = '<div class="text-3xl text-gray-700">□</div>';
+                }
+                
+                content.appendChild(slot);
+            }
         }
 
         window.buyItem = function(itemKey) {
@@ -4185,12 +4613,29 @@ sh<!DOCTYPE html>
             }
 
             gameState.gold -= item.price;
-            if (!gameState.inventory) gameState.inventory = {};
-            gameState.inventory[itemKey] = (gameState.inventory[itemKey] || 0) + 1;
+            
+            // 添加到仓库系统
+            if (storageSystem) {
+                const result = storageSystem.addItem(itemKey, 1);
+                if (!result.success) {
+                    showStatus(`❌ ${result.message}`, 2000);
+                    gameState.gold += item.price; // 退款
+                    return;
+                }
+                storageSystem.saveData();
+            }
 
-            showStatus(`✅ 购买成功: ${item.name}`, 2000);
+            if (item.type === 'seed') {
+                showStatus(`✅ 购买成功: ${item.name}，现在可以在农场种植了！`, 2000);
+            } else {
+                showStatus(`✅ 购买成功: ${item.name}`, 2000);
+            }
             updateUI();
-            openShopPanel(); // 刷新界面显示余额和数量
+            
+            // 刷新当前标签页
+            const currentTab = document.querySelector('.shop-tab-button.text-white');
+            const tabName = currentTab ? currentTab.dataset.tab : 'seeds';
+            renderShopTab(tabName);
         };
 
         // --- 背包系统逻辑已移至 inventory_system.js ---
@@ -4246,7 +4691,7 @@ sh<!DOCTYPE html>
             const animal = gameState.animals.find(a => a.id === animalId);
             const item = ITEMS[currentItemToUse];
             
-            if (animal && item && gameState.inventory[currentItemToUse] > 0) {
+            if (animal && item && storageSystem && storageSystem.hasItem(currentItemToUse)) {
                 if (item.type === 'exp') {
                     animal.experience += item.value;
                     showStatus(`🧪 ${animal.name} 获得了 ${item.value} 经验!`, 2000);
@@ -4254,7 +4699,8 @@ sh<!DOCTYPE html>
                     animal.stamina = Math.floor(Math.min(animal.maxStamina, animal.stamina + item.value));
                     showStatus(`⚡ ${animal.name} 恢复了 ${item.value} 体力!`, 2000);
                 }
-                gameState.inventory[currentItemToUse]--;
+                storageSystem.removeItem(currentItemToUse, 1);
+                storageSystem.saveData();
                 closeTargetSelector();
                 renderInventoryItems(); // 刷新背包
             }
@@ -5624,11 +6070,25 @@ sh<!DOCTYPE html>
             // 启动时间显示更新循环
             startTimeUpdateLoop();
             
+            // 初始化作物稀有度系统
+            window.cropRaritySystem = new CropRaritySystem(gameTimeSystem);
+            window.cropRaritySystem.loadData();
+            
             // 初始化农场格子系统
-            farmGridSystem = new FarmGridSystem();
+            farmGridSystem = new FarmGridSystem(window.cropRaritySystem);
             farmGridSystem.loadData();
             
+            // 初始化仓库系统
+            storageSystem = new StorageSystem();
+            storageSystem.loadData();
+            
             loadGameStateFromStorage();
+            
+            // 迁移旧的inventory数据到仓库系统
+            if (gameState.inventory && Object.keys(gameState.inventory).length > 0) {
+                storageSystem.migrateFromInventory(gameState.inventory);
+                console.log('✅ 已迁移背包数据到仓库系统');
+            }
             processCapturedAnimal();
             
             // 如果是首次游戏，从动物池创建一只初始动物
@@ -5702,7 +6162,7 @@ sh<!DOCTYPE html>
             // 创建3D模型
             const size = 0.8;
             const geometry = new THREE.SphereGeometry(size, 16, 16);
-            const color = parseInt(template.color.replace('#', ''), 16);
+            const color = template.color ? parseInt(template.color.replace('#', ''), 16) : 0x3b82f6;
             const material = new THREE.MeshPhongMaterial({ color: color, shininess: 150 });
             const mesh = new THREE.Mesh(geometry, material);
             
@@ -5792,86 +6252,19 @@ sh<!DOCTYPE html>
             }
         }
         
-        // 新增：渲染农场作物选择UI
-        function renderFarmCropSelection(building) {
-            if (!building || building.type !== 'Farm') return;
-            
-            const cropButtons = document.getElementById('crop-buttons');
-            const currentCropDisplay = document.getElementById('current-crop-display');
-            const btnHarvestAll = document.getElementById('btn-harvest-all');
-            
-            cropButtons.innerHTML = '';
-            
-            // 为每种作物创建按钮
-            Object.entries(farmGridSystem.CROP_TYPES).forEach(([key, crop]) => {
-                const isUnlocked = building.level >= (crop.unlockLevel || 1);
-                
-                const button = document.createElement('button');
-                if (isUnlocked) {
-                    button.className = 'bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-3 rounded-lg text-sm transition-colors relative';
-                    button.innerHTML = `
-                        <div class="text-2xl mb-1">${crop.icon}</div>
-                        <div class="text-xs">${crop.name}</div>
-                        <div class="text-xs text-yellow-300">💰${crop.cost}</div>
-                    `;
-                    button.onclick = () => plantAllCrops(building.id, key);
-                } else {
-                    button.className = 'bg-gray-800 text-gray-500 font-bold py-2 px-3 rounded-lg text-sm cursor-not-allowed border border-gray-700 relative';
-                    button.innerHTML = `
-                        <div class="text-2xl mb-1 opacity-50">${crop.icon}</div>
-                        <div class="text-xs">${crop.name}</div>
-                        <div class="text-xs text-red-400 mt-1">需 Lv.${crop.unlockLevel}</div>
-                        <div class="absolute inset-0 bg-black/40 rounded-lg flex items-center justify-center">
-                            <span class="text-xl">🔒</span>
-                        </div>
-                    `;
-                    button.disabled = true;
-                }
-                cropButtons.appendChild(button);
-            });
-            
-            // 显示当前种植的作物
-            const currentCrop = building.currentCrop || null;
-            if (currentCrop) {
-                const cropInfo = farmGridSystem.CROP_TYPES[currentCrop];
-                currentCropDisplay.textContent = `${cropInfo.icon} ${cropInfo.name}`;
-            } else {
-                currentCropDisplay.textContent = '无';
-            }
-            
-            // 检查是否有可收获的作物
-            const grids = farmGridSystem.getFarmGrids(building.id);
-            let hasHarvestable = false;
-            if (grids) {
-                for (let row = 0; row < farmGridSystem.GRID_SIZE; row++) {
-                    for (let col = 0; col < farmGridSystem.GRID_SIZE; col++) {
-                        if (row === 1 && col === 1) continue; // 跳过中心建筑位置
-                        const grid = grids[row][col];
-                        if (grid && grid.harvestable) {
-                            hasHarvestable = true;
-                            break;
-                        }
-                    }
-                    if (hasHarvestable) break;
-                }
-            }
-            
-            if (hasHarvestable) {
-                btnHarvestAll.classList.remove('hidden');
-                btnHarvestAll.onclick = () => harvestAllCrops(building.id);
-            } else {
-                btnHarvestAll.classList.add('hidden');
-            }
-        }
+        // 已删除：renderFarmHarvestButton - 不再需要单独的收获按钮区域
         
-        // 新增：种植所有格子
+        // 已弃用：种植所有格子（改为单独点击格子种植）
+        /*
         function plantAllCrops(farmId, cropType) {
             const building = gameState.buildings.find(b => b.id === farmId);
             if (!building) return;
             
             const crop = farmGridSystem.CROP_TYPES[cropType];
-            if (building.level < (crop.unlockLevel || 1)) {
-                showStatus(`❌ ${crop.name} 需要农场达到 Lv.${crop.unlockLevel} 才能种植`, 2000);
+            // 检查是否拥有种子
+            const seedKey = crop.seedKey;
+            if (!gameState.inventory || !gameState.inventory[seedKey] || gameState.inventory[seedKey] <= 0) {
+                showStatus(`❌ 没有${crop.name}种子！请先在商店购买`, 2000);
                 return;
             }
             
@@ -5917,11 +6310,13 @@ sh<!DOCTYPE html>
                 showStatus(`🌱 ${result.message}，消耗 ${result.totalCost} 食物`, 2000);
                 updateUI();
                 updateFarmGridUI(farmId);
-                renderFarmCropSelection(building); // 刷新面板
+                renderFarmHarvestButton(building); // 刷新面板
             } else {
                 showStatus(`❌ ${result.message}`, 2000);
             }
         }
+        
+        */
         
         // 新增：收获所有成熟作物
         function harvestAllCrops(farmId) {
@@ -5968,7 +6363,7 @@ sh<!DOCTYPE html>
                 
                 // 刷新农场详情面板
                 if (selectedBuilding && selectedBuilding.id === farmId) {
-                    renderFarmCropSelection(building);
+                    showBuildingDetails(building);
                 }
             }
         }
