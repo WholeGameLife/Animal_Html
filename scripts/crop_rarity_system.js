@@ -63,6 +63,16 @@ class CropRaritySystem {
      * @param {number} baseMutationRate - 基础变异概率（0-1，如0.05表示5%）
      */
     plantCrop(farmId, row, col, cropType, baseMutationRate = 0.05) {
+        // 从调试设置中读取基础变异率(如果有)
+        const debugSettings = JSON.parse(localStorage.getItem('debugSettings') || '{}');
+        if (debugSettings.baseMutationRate !== undefined) {
+            // 注意：种子的稀有度加成会在game3d.html的plantSingleCrop中额外添加
+            // 这里的baseMutationRate通常是作物类型的基础值 + 种子稀有度加成
+            // 所以只在baseMutationRate是默认值时才替换
+            if (baseMutationRate === 0.05 || baseMutationRate === 0.08 || baseMutationRate === 0.10) {
+                baseMutationRate = debugSettings.baseMutationRate;
+            }
+        }
         const key = `${row}_${col}`;
         
         if (!this.crops[farmId]) {
@@ -73,10 +83,18 @@ class CropRaritySystem {
         const timeInfo = this.gameTimeSystem.getCurrentTime();
         const currentWeather = timeInfo.weather || '晴';
         
+        // 记录种植时的游戏时间
+        const plantedGameTime = {
+            year: timeInfo.year,
+            week: timeInfo.week,
+            day: timeInfo.day
+        };
+        
         // 创建作物数据
         this.crops[farmId][key] = {
             type: cropType,
             plantedAt: now,
+            plantedGameTime: plantedGameTime, // 新增：游戏时间
             baseMutationRate: baseMutationRate,
             
             // 三个生长阶段
@@ -117,15 +135,20 @@ class CropRaritySystem {
     /**
      * 获取天气加成百分比
      * @param {string} weather - 天气类型
-     * @returns {number} 加成百分比（1 或 10）
+     * @returns {number} 加成百分比（默认：常规1%，极端10%）
      */
     getWeatherBonus(weather) {
+        // 从调试设置中读取加成值(如果有)
+        const debugSettings = JSON.parse(localStorage.getItem('debugSettings') || '{}');
+        const normalBonus = debugSettings.normalWeatherBonus !== undefined ? debugSettings.normalWeatherBonus : 1;
+        const extremeBonus = debugSettings.extremeWeatherBonus !== undefined ? debugSettings.extremeWeatherBonus : 10;
+        
         if (this.weatherCategories.extreme.includes(weather)) {
-            return 10; // 极端天气 +10%
+            return extremeBonus; // 极端天气(可调节)
         } else if (this.weatherCategories.normal.includes(weather)) {
-            return 1;  // 常规天气 +1%
+            return normalBonus;  // 常规天气(可调节)
         }
-        return 1; // 默认+1%
+        return normalBonus; // 默认使用常规天气加成
     }
     
     /**
@@ -137,18 +160,34 @@ class CropRaritySystem {
         const timeInfo = this.gameTimeSystem.getCurrentTime();
         const currentWeather = timeInfo.weather || '晴';
         
+        // 当前游戏时间（总天数）
+        const currentGameTime = {
+            year: timeInfo.year,
+            week: timeInfo.week,
+            day: timeInfo.day
+        };
+        
         for (const farmId in this.crops) {
             for (const key in this.crops[farmId]) {
                 const crop = this.crops[farmId][key];
                 
                 if (crop.isHarvested) continue;
                 
-                // 检查是否需要更新阶段
-                const elapsed = now - crop.plantedAt;
+                // 计算经过的游戏天数（优先使用游戏时间）
+                let elapsedGameDays = 0;
+                if (crop.plantedGameTime) {
+                    const plantedTotalDays = (crop.plantedGameTime.year - 1) * 364 + (crop.plantedGameTime.week - 1) * 7 + crop.plantedGameTime.day;
+                    const currentTotalDays = (currentGameTime.year - 1) * 364 + (currentGameTime.week - 1) * 7 + currentGameTime.day;
+                    elapsedGameDays = currentTotalDays - plantedTotalDays;
+                } else {
+                    // 备用：使用真实时间
+                    const elapsed = now - crop.plantedAt;
+                    elapsedGameDays = elapsed / this.REAL_TIME_PER_GAME_DAY;
+                }
                 
-                // 更新当前阶段
-                if (elapsed >= this.REAL_TIME_PER_GAME_DAY * 2) {
-                    // 进入成熟期
+                // 更新当前阶段（基于游戏天数）
+                if (elapsedGameDays >= 2) {
+                    // 进入成熟期（第3天）
                     if (crop.currentStage !== 'mature') {
                         crop.currentStage = 'mature';
                         if (!crop.stages.mature.weather) {
@@ -157,8 +196,8 @@ class CropRaritySystem {
                             console.log(`🌾 作物进入成熟期, 天气: ${currentWeather}, 加成: +${crop.stages.mature.weatherBonus}%`);
                         }
                     }
-                } else if (elapsed >= this.REAL_TIME_PER_GAME_DAY) {
-                    // 进入生长期
+                } else if (elapsedGameDays >= 1) {
+                    // 进入生长期（第2天）
                     if (crop.currentStage === 'seedling') {
                         crop.currentStage = 'growing';
                         if (!crop.stages.growing.weather) {
@@ -207,13 +246,13 @@ class CropRaritySystem {
   成熟期天气(${crop.stages.mature.weather || '未记录'}): +${crop.stages.mature.weatherBonus}%
   总变异概率: ${totalMutationRate}%`);
         
-        // 判断是否发生变异
+        // 判断是否发生变异（修复：逻辑应该是 roll < totalMutationRate 才变异）
         const roll = Math.random() * 100;
         
-        if (roll > totalMutationRate) {
+        if (roll >= totalMutationRate) {
             // 未变异，返回白色
             crop.rarity = 'white';
-            console.log(`⚪ 未发生变异 (roll: ${roll.toFixed(2)} > ${totalMutationRate})`);
+            console.log(`⚪ 未发生变异 (roll: ${roll.toFixed(2)} >= ${totalMutationRate})`);
             return { rarity: 'white', ...this.rarities.white };
         }
         
@@ -263,14 +302,32 @@ class CropRaritySystem {
             };
         }
         
-        // 检查是否成熟
-        const now = Date.now();
-        const elapsed = now - crop.plantedAt;
+        // 检查是否成熟（使用游戏时间，与updateAllCrops保持一致）
+        const timeInfo = this.gameTimeSystem.getCurrentTime();
+        const currentGameTime = {
+            year: timeInfo.year,
+            week: timeInfo.week,
+            day: timeInfo.day
+        };
         
-        if (elapsed < this.REAL_TIME_PER_GAME_DAY * 3) {
-            return { 
-                success: false, 
-                message: '作物尚未成熟'
+        // 计算经过的游戏天数
+        let elapsedGameDays = 0;
+        if (crop.plantedGameTime) {
+            const plantedTotalDays = (crop.plantedGameTime.year - 1) * 364 + (crop.plantedGameTime.week - 1) * 7 + crop.plantedGameTime.day;
+            const currentTotalDays = (currentGameTime.year - 1) * 364 + (currentGameTime.week - 1) * 7 + currentGameTime.day;
+            elapsedGameDays = currentTotalDays - plantedTotalDays;
+        } else {
+            // 备用：使用真实时间
+            const now = Date.now();
+            const elapsed = now - crop.plantedAt;
+            elapsedGameDays = elapsed / this.REAL_TIME_PER_GAME_DAY;
+        }
+        
+        // 需要至少3游戏天才能收获
+        if (elapsedGameDays < 3) {
+            return {
+                success: false,
+                message: `作物尚未成熟（已生长${elapsedGameDays.toFixed(1)}天，需要3天）`
             };
         }
         

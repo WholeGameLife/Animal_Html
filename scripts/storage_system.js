@@ -56,11 +56,38 @@ class StorageSystem {
             seed_carrot_gold: { name: '胡萝卜种子', icon: '🥕', category: 'seeds', rarity: 'gold', cropType: 'carrot', desc: '变异率+35%' },
             seed_carrot_red: { name: '胡萝卜种子', icon: '🥕', category: 'seeds', rarity: 'red', cropType: 'carrot', desc: '变异率+50%' },
             
-            // 作物类（收获物）
-            wheat: { name: '小麦', icon: '🌾', category: 'crops', desc: '收获的小麦' },
-            corn: { name: '玉米', icon: '🌽', category: 'crops', desc: '收获的玉米' },
-            tomato: { name: '番茄', icon: '🍅', category: 'crops', desc: '收获的番茄' },
-            carrot: { name: '胡萝卜', icon: '🥕', category: 'crops', desc: '收获的胡萝卜' },
+            // 作物类（收获物）- 按稀有度区分存储
+            // 小麦
+            wheat_white: { name: '小麦', icon: '🌾', category: 'crops', rarity: 'white', cropType: 'wheat', desc: '白色小麦' },
+            wheat_green: { name: '小麦', icon: '🌾', category: 'crops', rarity: 'green', cropType: 'wheat', desc: '绿色小麦' },
+            wheat_blue: { name: '小麦', icon: '🌾', category: 'crops', rarity: 'blue', cropType: 'wheat', desc: '蓝色小麦' },
+            wheat_purple: { name: '小麦', icon: '🌾', category: 'crops', rarity: 'purple', cropType: 'wheat', desc: '紫色小麦' },
+            wheat_gold: { name: '小麦', icon: '🌾', category: 'crops', rarity: 'gold', cropType: 'wheat', desc: '金色小麦' },
+            wheat_red: { name: '小麦', icon: '🌾', category: 'crops', rarity: 'red', cropType: 'wheat', desc: '红色小麦' },
+            
+            // 玉米
+            corn_white: { name: '玉米', icon: '🌽', category: 'crops', rarity: 'white', cropType: 'corn', desc: '白色玉米' },
+            corn_green: { name: '玉米', icon: '🌽', category: 'crops', rarity: 'green', cropType: 'corn', desc: '绿色玉米' },
+            corn_blue: { name: '玉米', icon: '🌽', category: 'crops', rarity: 'blue', cropType: 'corn', desc: '蓝色玉米' },
+            corn_purple: { name: '玉米', icon: '🌽', category: 'crops', rarity: 'purple', cropType: 'corn', desc: '紫色玉米' },
+            corn_gold: { name: '玉米', icon: '🌽', category: 'crops', rarity: 'gold', cropType: 'corn', desc: '金色玉米' },
+            corn_red: { name: '玉米', icon: '🌽', category: 'crops', rarity: 'red', cropType: 'corn', desc: '红色玉米' },
+            
+            // 番茄
+            tomato_white: { name: '番茄', icon: '🍅', category: 'crops', rarity: 'white', cropType: 'tomato', desc: '白色番茄' },
+            tomato_green: { name: '番茄', icon: '🍅', category: 'crops', rarity: 'green', cropType: 'tomato', desc: '绿色番茄' },
+            tomato_blue: { name: '番茄', icon: '🍅', category: 'crops', rarity: 'blue', cropType: 'tomato', desc: '蓝色番茄' },
+            tomato_purple: { name: '番茄', icon: '🍅', category: 'crops', rarity: 'purple', cropType: 'tomato', desc: '紫色番茄' },
+            tomato_gold: { name: '番茄', icon: '🍅', category: 'crops', rarity: 'gold', cropType: 'tomato', desc: '金色番茄' },
+            tomato_red: { name: '番茄', icon: '🍅', category: 'crops', rarity: 'red', cropType: 'tomato', desc: '红色番茄' },
+            
+            // 胡萝卜
+            carrot_white: { name: '胡萝卜', icon: '🥕', category: 'crops', rarity: 'white', cropType: 'carrot', desc: '白色胡萝卜' },
+            carrot_green: { name: '胡萝卜', icon: '🥕', category: 'crops', rarity: 'green', cropType: 'carrot', desc: '绿色胡萝卜' },
+            carrot_blue: { name: '胡萝卜', icon: '🥕', category: 'crops', rarity: 'blue', cropType: 'carrot', desc: '蓝色胡萝卜' },
+            carrot_purple: { name: '胡萝卜', icon: '🥕', category: 'crops', rarity: 'purple', cropType: 'carrot', desc: '紫色胡萝卜' },
+            carrot_gold: { name: '胡萝卜', icon: '🥕', category: 'crops', rarity: 'gold', cropType: 'carrot', desc: '金色胡萝卜' },
+            carrot_red: { name: '胡萝卜', icon: '🥕', category: 'crops', rarity: 'red', cropType: 'carrot', desc: '红色胡萝卜' },
             
             // 养成道具类
             exp_potion_s: { name: '小经验药水', icon: '🧪', category: 'items', desc: '增加50点经验' },
@@ -99,6 +126,68 @@ class StorageSystem {
             success: true,
             message: `添加了 ${amount} 个 ${itemConfig.name}`
         };
+    }
+    
+    /**
+     * 添加作物到仓库（按稀有度存储）
+     * @param {string} cropType - 作物类型 ('wheat', 'corn', 'tomato', 'carrot')
+     * @param {string} rarity - 稀有度 ('white', 'green', 'blue', 'purple', 'gold', 'red')
+     * @param {number} amount - 数量
+     * @returns {Object} 结果 {success: boolean, message: string}
+     */
+    addCrop(cropType, rarity, amount = 1) {
+        // 构建作物键值：cropType_rarity
+        const itemKey = `${cropType}_${rarity}`;
+        
+        const itemConfig = this.ITEM_TYPES[itemKey];
+        if (!itemConfig) {
+            console.warn(`未找到作物配置: ${itemKey}, 尝试添加默认配置`);
+            return { success: false, message: `未知的作物类型: ${itemKey}` };
+        }
+        
+        // 使用addItem方法添加
+        const result = this.addItem(itemKey, amount);
+        
+        // 如果有稀有度配置，显示更详细的信息
+        if (result.success && this.rarities[rarity]) {
+            const rarityInfo = this.rarities[rarity];
+            result.message = `添加了 ${amount} 个 ${rarityInfo.name}${itemConfig.name}`;
+        }
+        
+        return result;
+    }
+    
+    /**
+     * 获取指定作物类型的所有稀有度数量
+     * @param {string} cropType - 作物类型 ('wheat', 'corn', 'tomato', 'carrot')
+     * @returns {Object} 各稀有度的数量 {white: 0, green: 0, blue: 0, ...}
+     */
+    getCropCountByRarity(cropType) {
+        const counts = {
+            white: 0,
+            green: 0,
+            blue: 0,
+            purple: 0,
+            gold: 0,
+            red: 0
+        };
+        
+        for (const rarity in counts) {
+            const itemKey = `${cropType}_${rarity}`;
+            counts[rarity] = this.getItemCount(itemKey);
+        }
+        
+        return counts;
+    }
+    
+    /**
+     * 获取指定作物类型的总数量（所有稀有度相加）
+     * @param {string} cropType - 作物类型
+     * @returns {number} 总数量
+     */
+    getCropTotalCount(cropType) {
+        const counts = this.getCropCountByRarity(cropType);
+        return Object.values(counts).reduce((sum, count) => sum + count, 0);
     }
     
     /**
@@ -168,7 +257,7 @@ class StorageSystem {
     
     /**
      * 获取所有非空物品（用于UI显示）
-     * @returns {Array} 物品列表 [{key, name, icon, category, amount, desc}, ...]
+     * @returns {Array} 物品列表 [{key, name, icon, category, amount, desc, rarity?, rarityInfo?}, ...]
      */
     getAllItems() {
         const items = [];
@@ -179,14 +268,22 @@ class StorageSystem {
                 if (amount > 0) {
                     const config = this.ITEM_TYPES[itemKey];
                     if (config) {
-                        items.push({
+                        const itemData = {
                             key: itemKey,
                             name: config.name,
                             icon: config.icon,
                             category: category,
                             amount: amount,
                             desc: config.desc
-                        });
+                        };
+                        
+                        // 如果是作物或种子，添加稀有度信息
+                        if (config.rarity) {
+                            itemData.rarity = config.rarity;
+                            itemData.rarityInfo = this.rarities[config.rarity];
+                        }
+                        
+                        items.push(itemData);
                     }
                 }
             }
@@ -212,13 +309,21 @@ class StorageSystem {
                 if (amount > 0) {
                     const config = this.ITEM_TYPES[itemKey];
                     if (config) {
-                        categorized[category].push({
+                        const itemData = {
                             key: itemKey,
                             name: config.name,
                             icon: config.icon,
                             amount: amount,
                             desc: config.desc
-                        });
+                        };
+                        
+                        // 如果是作物或种子，添加稀有度信息
+                        if (config.rarity) {
+                            itemData.rarity = config.rarity;
+                            itemData.rarityInfo = this.rarities[config.rarity];
+                        }
+                        
+                        categorized[category].push(itemData);
                     }
                 }
             }
@@ -306,6 +411,40 @@ class StorageSystem {
         }
         
         console.log('✅ 已从旧背包系统迁移数据到仓库系统');
+    }
+    
+    /**
+     * 迁移旧的作物数据（不带稀有度）到新格式（按稀有度存储）
+     * 将旧的 wheat, corn, tomato, carrot 键转换为 wheat_white, corn_white 等
+     */
+    migrateCropData() {
+        const oldCropKeys = ['wheat', 'corn', 'tomato', 'carrot'];
+        let migrated = false;
+        
+        oldCropKeys.forEach(cropType => {
+            // 检查是否有旧格式的作物数据
+            if (this.storage.crops && this.storage.crops[cropType] > 0) {
+                const oldAmount = this.storage.crops[cropType];
+                
+                // 将旧数据迁移到白色稀有度
+                const newKey = `${cropType}_white`;
+                if (!this.storage.crops[newKey]) {
+                    this.storage.crops[newKey] = 0;
+                }
+                this.storage.crops[newKey] += oldAmount;
+                
+                // 删除旧键
+                delete this.storage.crops[cropType];
+                
+                migrated = true;
+                console.log(`✅ 迁移作物数据: ${cropType} (${oldAmount}个) -> ${newKey}`);
+            }
+        });
+        
+        if (migrated) {
+            this.saveData();
+            console.log('✅ 作物数据迁移完成，已按稀有度分开存储');
+        }
     }
 }
 

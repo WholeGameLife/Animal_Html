@@ -4,12 +4,15 @@
  */
 
 class FarmGridSystem {
-    constructor(cropRaritySystem = null) {
+    constructor(cropRaritySystem = null, gameTimeSystem = null) {
         // 格子配置
         this.GRID_SIZE = 3; // 3x3 的格子（实际8个种植位：上下左右+四个对角）
         
         // 稀有度系统引用
         this.cropRaritySystem = cropRaritySystem;
+        
+        // 游戏时间系统引用（用于基于游戏内时间的作物生长）
+        this.gameTimeSystem = gameTimeSystem;
         
         // 时间常量: 现实6分钟 = 游戏1天
         const REAL_TIME_PER_GAME_DAY = 6 * 60 * 1000; // 360000ms
@@ -20,7 +23,8 @@ class FarmGridSystem {
                 icon: '🌾',
                 seedKey: 'seed_wheat', // 商店种子key
                 cost: 5, // 种植成本（食物）
-                growTime: REAL_TIME_PER_GAME_DAY * 3, // 游戏3天 = 现实18分钟
+                growDays: 3, // 生长需要的游戏天数
+                growTime: REAL_TIME_PER_GAME_DAY * 3, // 游戏3天 = 现实18分钟（仅作为备用）
                 yield: 10, // 基础产出10个食物（实际产量由农场等级决定）
                 baseMutationRate: 0.05 // 基础变异概率5%
             },
@@ -29,7 +33,8 @@ class FarmGridSystem {
                 icon: '🌽',
                 seedKey: 'seed_corn',
                 cost: 8,
-                growTime: REAL_TIME_PER_GAME_DAY * 3, // 游戏3天 = 现实18分钟
+                growDays: 3,
+                growTime: REAL_TIME_PER_GAME_DAY * 3, // 游戏3天 = 现实18分钟（仅作为备用）
                 yield: 15,
                 baseMutationRate: 0.05
             },
@@ -38,7 +43,8 @@ class FarmGridSystem {
                 icon: '🍅',
                 seedKey: 'seed_tomato',
                 cost: 10,
-                growTime: REAL_TIME_PER_GAME_DAY * 3, // 游戏3天 = 现实18分钟
+                growDays: 3,
+                growTime: REAL_TIME_PER_GAME_DAY * 3, // 游戏3天 = 现实18分钟（仅作为备用）
                 yield: 25,
                 baseMutationRate: 0.08 // 番茄变异率稍高
             },
@@ -47,7 +53,8 @@ class FarmGridSystem {
                 icon: '🥕',
                 seedKey: 'seed_carrot',
                 cost: 15,
-                growTime: REAL_TIME_PER_GAME_DAY * 3, // 游戏3天 = 现实18分钟
+                growDays: 3,
+                growTime: REAL_TIME_PER_GAME_DAY * 3, // 游戏3天 = 现实18分钟（仅作为备用）
                 yield: 50,
                 baseMutationRate: 0.10 // 胡萝卜变异率更高
             }
@@ -109,10 +116,24 @@ class FarmGridSystem {
         
         // 种植作物
         const crop = this.CROP_TYPES[cropType];
+        
+        // 记录种植时的游戏时间（如果有游戏时间系统）或真实时间（作为备用）
+        let plantedGameTime = null;
+        if (this.gameTimeSystem) {
+            const currentTime = this.gameTimeSystem.getCurrentTime();
+            plantedGameTime = {
+                year: currentTime.year,
+                week: currentTime.week,
+                day: currentTime.day
+            };
+        }
+        
         this.farmGrids[farmId].grids[row][col] = {
             type: cropType,
-            plantedAt: Date.now(),
-            growTime: crop.growTime,
+            plantedAt: Date.now(), // 真实时间（备用）
+            plantedGameTime: plantedGameTime, // 游戏时间（优先使用）
+            growTime: crop.growTime, // 真实生长时间（备用）
+            growDays: crop.growDays, // 游戏内生长天数
             stage: 0, // 0=幼苗期, 1=生长中, 2=生长期, 3=成熟
             harvestable: false,
             rarity: null // 稀有度（收获时确定）
@@ -157,11 +178,18 @@ class FarmGridSystem {
         
         // 如果启用了稀有度系统，计算稀有度（仅用于收藏展示）
         if (this.cropRaritySystem) {
+            console.log(`🎯 调用稀有度系统收获: farmId=${farmId}, row=${row}, col=${col}`);
             const harvestResult = this.cropRaritySystem.harvestCrop(farmId, row, col);
+            console.log(`🎯 稀有度系统返回:`, harvestResult);
             if (harvestResult.success) {
                 rarityInfo = harvestResult.rarityInfo;
                 grid.rarity = harvestResult.rarity; // 记录稀有度
+                console.log(`✨ 稀有度已设置: ${rarityInfo.name}`);
+            } else {
+                console.log(`⚠️ 稀有度计算失败: ${harvestResult.message}`);
             }
+        } else {
+            console.log(`⚠️ 稀有度系统未启用`);
         }
         
         // 清空格子
@@ -191,6 +219,17 @@ class FarmGridSystem {
             this.cropRaritySystem.updateAllCrops();
         }
         
+        // 获取当前游戏时间
+        let currentGameTime = null;
+        if (this.gameTimeSystem) {
+            const timeInfo = this.gameTimeSystem.getCurrentTime();
+            currentGameTime = {
+                year: timeInfo.year,
+                week: timeInfo.week,
+                day: timeInfo.day
+            };
+        }
+        
         for (const farmId in this.farmGrids) {
             const farm = this.farmGrids[farmId];
             
@@ -205,8 +244,21 @@ class FarmGridSystem {
                     const grid = farm.grids[row][col];
                     if (grid === null || grid === undefined) continue;
                     
-                    const elapsed = now - grid.plantedAt;
-                    const progress = elapsed / grid.growTime;
+                    let progress = 0;
+                    
+                    // 优先使用游戏时间计算进度
+                    if (currentGameTime && grid.plantedGameTime && grid.growDays) {
+                        // 计算经过的游戏天数
+                        const plantedTotalDays = (grid.plantedGameTime.year - 1) * 364 + (grid.plantedGameTime.week - 1) * 7 + grid.plantedGameTime.day;
+                        const currentTotalDays = (currentGameTime.year - 1) * 364 + (currentGameTime.week - 1) * 7 + currentGameTime.day;
+                        const elapsedGameDays = currentTotalDays - plantedTotalDays;
+                        
+                        progress = elapsedGameDays / grid.growDays;
+                    } else {
+                        // 备用：使用真实时间计算进度
+                        const elapsed = now - grid.plantedAt;
+                        progress = elapsed / grid.growTime;
+                    }
                     
                     // 更新生长阶段（3个阶段均分：0-33%幼苗，33-66%生长，66-100%成熟）
                     if (progress >= 1.0) {
@@ -277,9 +329,23 @@ class FarmGridSystem {
         const grid = this.farmGrids[farmId].grids[row][col];
         if (grid === null) return 0;
         
-        const elapsed = Date.now() - grid.plantedAt;
-        const progress = Math.min(100, Math.floor((elapsed / grid.growTime) * 100));
-        return progress;
+        let progress = 0;
+        
+        // 优先使用游戏时间计算进度
+        if (this.gameTimeSystem && grid.plantedGameTime && grid.growDays) {
+            const currentTime = this.gameTimeSystem.getCurrentTime();
+            const plantedTotalDays = (grid.plantedGameTime.year - 1) * 364 + (grid.plantedGameTime.week - 1) * 7 + grid.plantedGameTime.day;
+            const currentTotalDays = (currentTime.year - 1) * 364 + (currentTime.week - 1) * 7 + currentTime.day;
+            const elapsedGameDays = currentTotalDays - plantedTotalDays;
+            
+            progress = (elapsedGameDays / grid.growDays) * 100;
+        } else {
+            // 备用：使用真实时间计算进度
+            const elapsed = Date.now() - grid.plantedAt;
+            progress = (elapsed / grid.growTime) * 100;
+        }
+        
+        return Math.min(100, Math.floor(progress));
     }
     
     /**
@@ -315,6 +381,17 @@ class FarmGridSystem {
             return { success: false, message: '所有格子都已有作物', plantedCount: 0 };
         }
         
+        // 记录种植时的游戏时间（如果有游戏时间系统）
+        let plantedGameTime = null;
+        if (this.gameTimeSystem) {
+            const currentTime = this.gameTimeSystem.getCurrentTime();
+            plantedGameTime = {
+                year: currentTime.year,
+                week: currentTime.week,
+                day: currentTime.day
+            };
+        }
+        
         // 种植所有空格子
         for (let row = 0; row < this.GRID_SIZE; row++) {
             for (let col = 0; col < this.GRID_SIZE; col++) {
@@ -323,7 +400,9 @@ class FarmGridSystem {
                     this.farmGrids[farmId].grids[row][col] = {
                         type: cropType,
                         plantedAt: Date.now(),
+                        plantedGameTime: plantedGameTime,
                         growTime: crop.growTime,
+                        growDays: crop.growDays,
                         stage: 0,
                         harvestable: false,
                         rarity: null

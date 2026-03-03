@@ -22,6 +22,8 @@ sh<!DOCTYPE html>
     <script src="../scripts/farm_grid.js"></script>
     <!-- 引入仓库系统 -->
     <script src="../scripts/storage_system.js"></script>
+    <!-- 引入调试器系统 -->
+    <script src="../scripts/debugger.js"></script>
     <style>
         /* 2D地图样式 */
         body { margin: 0; overflow: hidden; font-family: 'Inter', sans-serif; background-color: #0a1120; }
@@ -523,7 +525,7 @@ sh<!DOCTYPE html>
         </div>
 
         <!-- 新增：道具商店面板 -->
-        <div id="shop-panel" class="control-panel centered-panel p-6 rounded-xl text-white hidden w-full max-w-2xl">
+        <div id="shop-panel" class="control-panel centered-panel p-6 rounded-xl text-white hidden w-full max-w-4xl">
             <div class="flex justify-between items-center mb-4">
                 <h3 class="text-2xl font-bold text-yellow-400">🛒 商店</h3>
                 <div class="flex items-center gap-4">
@@ -531,12 +533,17 @@ sh<!DOCTYPE html>
                     <button id="btn-close-shop" class="text-3xl text-gray-500 hover:text-white">&times;</button>
                 </div>
             </div>
-            <!-- 标签页 -->
-            <div class="flex border-b border-gray-600 mb-4">
-                <button data-tab="seeds" class="shop-tab-button flex-1 text-sm py-2 text-center text-white border-b-2 border-yellow-500">🌾 种子</button>
-                <button data-tab="items" class="shop-tab-button flex-1 text-sm py-2 text-center text-gray-400 border-b-2 border-transparent">🧪 养成道具</button>
+            <!-- 一级标签页：购买/售出 -->
+            <div class="flex gap-2 mb-4">
+                <button data-main-tab="buy" class="shop-main-tab-button flex-1 text-base py-3 text-center font-bold rounded-lg transition-colors bg-yellow-600 text-white">💰 购买</button>
+                <button data-main-tab="sell" class="shop-main-tab-button flex-1 text-base py-3 text-center font-bold rounded-lg transition-colors bg-gray-700 text-gray-400">💵 售出</button>
             </div>
-            <div id="shop-items-container" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <!-- 二级标签页（仅在购买时显示） -->
+            <div id="shop-sub-tabs" class="flex gap-2 mb-4">
+                <button data-sub-tab="seeds" class="shop-sub-tab-button flex-1 text-sm py-2 text-center rounded-lg transition-colors bg-green-600 text-white">🌾 种子</button>
+                <button data-sub-tab="items" class="shop-sub-tab-button flex-1 text-sm py-2 text-center rounded-lg transition-colors bg-gray-700 text-gray-400">🧪 养成道具</button>
+            </div>
+            <div id="shop-content-container">
                 <!-- 商品列表由 JS 生成 -->
             </div>
         </div>
@@ -710,92 +717,6 @@ sh<!DOCTYPE html>
             </div>
         </div>
 
-        <!-- 新增：调试器面板 -->
-        <div id="debug-panel" class="control-panel p-5 rounded-xl text-white hidden w-full max-w-2xl" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 70;">
-            <div class="flex justify-between items-center mb-4 pb-3 border-b border-yellow-500/50">
-                <h3 class="text-2xl font-bold text-yellow-400">🛠️ 调试器</h3>
-                <button id="btn-close-debug" class="text-3xl text-gray-400 hover:text-white">&times;</button>
-            </div>
-            
-            <!-- 资源调整 -->
-            <div class="mb-6">
-                <h4 class="text-lg font-bold text-green-400 mb-3">💰 资源调整</h4>
-                <div class="grid grid-cols-2 gap-3">
-                    <div class="bg-gray-800/50 p-3 rounded-lg">
-                        <label class="text-sm text-gray-400 mb-1 block">🍎 食物</label>
-                        <input type="number" id="debug-food" class="w-full bg-gray-900 text-white rounded px-2 py-1 text-sm" value="0">
-                        <button onclick="setResource('food')" class="w-full mt-1 bg-green-600 hover:bg-green-700 text-white text-xs py-1 rounded">设置</button>
-                    </div>
-                    <div class="bg-gray-800/50 p-3 rounded-lg">
-                        <label class="text-sm text-gray-400 mb-1 block">💰 金币</label>
-                        <input type="number" id="debug-gold" class="w-full bg-gray-900 text-white rounded px-2 py-1 text-sm" value="0">
-                        <button onclick="setResource('gold')" class="w-full mt-1 bg-amber-600 hover:bg-amber-700 text-white text-xs py-1 rounded">设置</button>
-                    </div>
-                    <div class="bg-gray-800/50 p-3 rounded-lg">
-                        <label class="text-sm text-gray-400 mb-1 block">🪵 木材</label>
-                        <input type="number" id="debug-wood" class="w-full bg-gray-900 text-white rounded px-2 py-1 text-sm" value="0">
-                        <button onclick="setResource('wood')" class="w-full mt-1 bg-orange-600 hover:bg-orange-700 text-white text-xs py-1 rounded">设置</button>
-                    </div>
-                    <div class="bg-gray-800/50 p-3 rounded-lg">
-                        <label class="text-sm text-gray-400 mb-1 block">🪨 石材</label>
-                        <input type="number" id="debug-stone" class="w-full bg-gray-900 text-white rounded px-2 py-1 text-sm" value="0">
-                        <button onclick="setResource('stone')" class="w-full mt-1 bg-slate-600 hover:bg-slate-700 text-white text-xs py-1 rounded">设置</button>
-                    </div>
-                    <div class="bg-gray-800/50 p-3 rounded-lg">
-                        <label class="text-sm text-gray-400 mb-1 block">💎 宝石</label>
-                        <input type="number" id="debug-gems" class="w-full bg-gray-900 text-white rounded px-2 py-1 text-sm" value="0">
-                        <button onclick="setResource('gems')" class="w-full mt-1 bg-pink-600 hover:bg-pink-700 text-white text-xs py-1 rounded">设置</button>
-                    </div>
-                    <div class="bg-gray-800/50 p-3 rounded-lg">
-                        <label class="text-sm text-gray-400 mb-1 block">🌿 经验草</label>
-                        <input type="number" id="debug-expGrass" class="w-full bg-gray-900 text-white rounded px-2 py-1 text-sm" value="0">
-                        <button onclick="setResource('expGrass')" class="w-full mt-1 bg-green-500 hover:bg-green-600 text-white text-xs py-1 rounded">设置</button>
-                    </div>
-                </div>
-                <div class="mt-3 flex gap-2">
-                    <button onclick="addAllResources(1000)" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">➕ 所有+1000</button>
-                    <button onclick="addAllResources(10000)" class="flex-1 bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded">➕➕ 所有+10000</button>
-                </div>
-            </div>
-            
-            <!-- 时间调整 -->
-            <div class="mb-6">
-                <h4 class="text-lg font-bold text-cyan-400 mb-3">🕐 时间调整</h4>
-                
-                <!-- 自动推进开关 -->
-                <div class="bg-gray-800/50 p-3 rounded-lg mb-3 flex items-center justify-between">
-                    <div>
-                        <div class="text-sm font-bold text-white">⏰ 自动时间推进</div>
-                        <div class="text-xs text-gray-400 mt-1">现实6分钟 = 游戏1天</div>
-                    </div>
-                    <button id="toggle-auto-advance" onclick="toggleAutoAdvance()" class="px-4 py-2 rounded font-bold transition-colors">
-                        <span id="auto-advance-status">✅ 已启用</span>
-                    </button>
-                </div>
-                
-                <div class="grid grid-cols-3 gap-2 mb-3">
-                    <div class="bg-gray-800/50 p-3 rounded-lg text-center">
-                        <div class="text-sm text-gray-400 mb-1">当前年份</div>
-                        <div class="text-xl font-bold text-cyan-300" id="debug-year">1</div>
-                    </div>
-                    <div class="bg-gray-800/50 p-3 rounded-lg text-center">
-                        <div class="text-sm text-gray-400 mb-1">当前季节</div>
-                        <div class="text-xl font-bold text-cyan-300" id="debug-season">春季</div>
-                    </div>
-                    <div class="bg-gray-800/50 p-3 rounded-lg text-center">
-                        <div class="text-sm text-gray-400 mb-1">当前周</div>
-                        <div class="text-xl font-bold text-cyan-300" id="debug-week">1</div>
-                    </div>
-                </div>
-                <div class="grid grid-cols-2 gap-2">
-                    <button onclick="debugAdvanceDay()" class="bg-teal-600 hover:bg-teal-700 text-white font-bold py-2 px-4 rounded">⏩ 推进1天</button>
-                    <button onclick="debugAdvanceWeek()" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded">⏩⏩ 推进1周</button>
-                    <button onclick="debugAdvanceToSeason('夏季')" class="bg-orange-600 hover:bg-orange-700 text-white font-bold py-2 px-4 rounded">☀️ 跳到夏季</button>
-                    <button onclick="debugAdvanceToSeason('冬季')" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">❄️ 跳到冬季</button>
-                    <button onclick="debugResetTime()" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">🔄 重置时间</button>
-                </div>
-            </div>
-        </div>
 
         <!-- 新增：拍卖行竞价面板 -->
         <div id="auction-bid-panel" class="control-panel centered-panel p-6 rounded-xl text-white hidden w-full max-w-md z-[60]">
@@ -1113,11 +1034,6 @@ sh<!DOCTYPE html>
                 <!-- 3. 基建系统: 放置建筑 -->
                 <button id="btn-open-build" class="action-button bg-yellow-600 hover:bg-yellow-700 text-black font-bold py-3 px-4 rounded-lg text-center">
                     🔨 放置建筑
-                </button>
-                
-                <!-- 新增：调试器按钮 -->
-                <button id="btn-open-debug" class="action-button bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-4 rounded-lg text-center">
-                    🛠️ 调试器<br><span class="text-xs"> (资源/时间)</span>
                 </button>
                 
                 <!-- 新增：重启教程按钮 -->
@@ -1780,7 +1696,6 @@ sh<!DOCTYPE html>
             ui.btnOpenInventory.addEventListener('click', openInventoryPanel, false); // 新增
             document.getElementById('btn-open-storage').addEventListener('click', () => openStoragePanel(), false); // 新增
             document.getElementById('btn-close-storage').addEventListener('click', closeStoragePanel, false); // 新增
-            document.getElementById('btn-open-debug').addEventListener('click', openDebugPanel, false); // 新增
             document.getElementById('btn-restart-tutorial').addEventListener('click', restartTutorial, false); // 新增
 
             ui.btnCloseStandaloneDetails.addEventListener('click', closeStandaloneAnimalDetails, false);
@@ -1801,7 +1716,6 @@ sh<!DOCTYPE html>
                 ui.btnCloseSkillSelector.addEventListener('click', closeSkillSelector, false);
             }
             ui.btnCloseShop.addEventListener('click', closeShopPanel, false);
-            document.getElementById('btn-close-debug').addEventListener('click', closeDebugPanel, false);
             ui.buildButtons.forEach(button => {
                 button.addEventListener('click', (event) => {
                     const buildingType = event.currentTarget.dataset.building;
@@ -2300,7 +2214,6 @@ sh<!DOCTYPE html>
             closeAuctionBidPanel();
             closeInventoryPanel();
             closeTargetSelector();
-            closeDebugPanel();
             if (typeof closeTeamSelector === 'function') closeTeamSelector();
             if (typeof closeSkillSelector === 'function') closeSkillSelector();
         }
@@ -2594,6 +2507,154 @@ sh<!DOCTYPE html>
             setTimeout(() => {
                 ui.statusMessage.textContent = '';
             }, duration);
+        }
+        
+        // 新增：显示收获通知弹窗
+        function showHarvestNotification(cropName, amount, rarityName, rarityIcon) {
+            const notification = document.createElement('div');
+            notification.className = 'fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 border-4 rounded-2xl p-6 shadow-2xl z-[200] text-white text-center';
+            notification.style.minWidth = '300px';
+            notification.style.animation = 'fadeInScale 0.3s ease-out';
+            
+            // 添加动画样式（如果不存在）
+            if (!document.getElementById('harvest-animation-style')) {
+                const style = document.createElement('style');
+                style.id = 'harvest-animation-style';
+                style.textContent = `
+                    @keyframes fadeInScale {
+                        from { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
+                        to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+                    }
+                    @keyframes fadeOutScale {
+                        from { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+                        to { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
+                    }
+                `;
+                document.head.appendChild(style);
+            }
+            
+            // 根据稀有度选择颜色（包括背景渐变）
+            let bgGradient = 'linear-gradient(135deg, #065f46, #047857)'; // 默认绿色
+            let borderColor = '#4ade80';
+            let glowColor = '0 0 20px rgba(74, 222, 128, 0.5)';
+            
+            if (rarityName === '红色') {
+                bgGradient = 'linear-gradient(135deg, #7f1d1d, #991b1b)';
+                borderColor = '#ef4444';
+                glowColor = '0 0 30px rgba(239, 68, 68, 0.8)';
+            } else if (rarityName === '金色') {
+                bgGradient = 'linear-gradient(135deg, #854d0e, #a16207)';
+                borderColor = '#fbbf24';
+                glowColor = '0 0 30px rgba(250, 204, 21, 0.8)';
+            } else if (rarityName === '紫色') {
+                bgGradient = 'linear-gradient(135deg, #581c87, #6b21a8)';
+                borderColor = '#a855f7';
+                glowColor = '0 0 25px rgba(168, 85, 247, 0.7)';
+            } else if (rarityName === '蓝色') {
+                bgGradient = 'linear-gradient(135deg, #1e3a8a, #1e40af)';
+                borderColor = '#3b82f6';
+                glowColor = '0 0 20px rgba(59, 130, 246, 0.6)';
+            } else if (rarityName === '绿色') {
+                bgGradient = 'linear-gradient(135deg, #14532d, #166534)';
+                borderColor = '#22c55e';
+                glowColor = '0 0 20px rgba(34, 197, 94, 0.6)';
+            } else if (rarityName === '白色' || rarityName === '普通') {
+                bgGradient = 'linear-gradient(135deg, #1f2937, #374151)';
+                borderColor = '#9ca3af';
+                glowColor = '0 0 15px rgba(156, 163, 175, 0.4)';
+            }
+            
+            notification.style.background = bgGradient;
+            notification.style.borderColor = borderColor;
+            notification.style.boxShadow = glowColor;
+            
+            const crop = farmGridSystem.CROP_TYPES[cropName] || { icon: '🌾', name: cropName };
+            
+            notification.innerHTML = `
+                <div class="text-6xl mb-4 animate-bounce">${crop.icon}</div>
+                <h3 class="text-2xl font-bold mb-2">收获成功！</h3>
+                <div class="text-lg mb-3">
+                    <span class="font-bold text-green-300">${crop.name}</span>
+                    <span class="mx-2">×</span>
+                    <span class="font-bold text-yellow-300 text-2xl">${amount}</span>
+                </div>
+                <div class="text-sm">
+                    <span class="px-3 py-1 rounded-full font-bold ${
+                        rarityName === '红色' ? 'bg-red-500' :
+                        rarityName === '金色' ? 'bg-yellow-500' :
+                        rarityName === '紫色' ? 'bg-purple-500' :
+                        rarityName === '蓝色' ? 'bg-blue-500' :
+                        rarityName === '绿色' ? 'bg-green-500' :
+                        'bg-gray-500'
+                    }">
+                        ${rarityIcon} ${rarityName}品质
+                    </span>
+                </div>
+                <div class="text-xs mt-3 text-gray-300">已放入仓库</div>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            // 2秒后淡出并移除
+            setTimeout(() => {
+                notification.style.animation = 'fadeOutScale 0.3s ease-out forwards';
+                notification.style.pointerEvents = 'none';
+                setTimeout(() => {
+                    notification.remove();
+                }, 300);
+            }, 2000);
+        }
+        
+        // 新增：显示批量收获通知
+        function showBatchHarvestNotification(cropYields, totalCount) {
+            const notification = document.createElement('div');
+            notification.className = 'fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-gradient-to-br from-green-900 to-emerald-900 border-4 border-green-400 rounded-2xl p-6 shadow-2xl z-[200] text-white';
+            notification.style.minWidth = '400px';
+            notification.style.maxHeight = '70vh';
+            notification.style.overflowY = 'auto';
+            notification.style.animation = 'fadeInScale 0.3s ease-out';
+            notification.style.boxShadow = '0 0 30px rgba(74, 222, 128, 0.6)';
+            
+            // 构建作物列表HTML
+            let cropsHTML = '';
+            for (const cropType in cropYields) {
+                const cropData = cropYields[cropType];
+                const crop = farmGridSystem.CROP_TYPES[cropType];
+                cropsHTML += `
+                    <div class="flex items-center justify-between p-3 bg-gray-800/50 rounded-lg mb-2">
+                        <div class="flex items-center gap-3">
+                            <div class="text-4xl">${crop.icon}</div>
+                            <div>
+                                <div class="font-bold text-green-300">${crop.name}</div>
+                            </div>
+                        </div>
+                        <div class="text-yellow-300 font-bold text-xl">×${cropData.count}</div>
+                    </div>
+                `;
+            }
+            
+            notification.innerHTML = `
+                <div class="text-center mb-4">
+                    <div class="text-5xl mb-3">🎉</div>
+                    <h3 class="text-2xl font-bold">批量收获完成！</h3>
+                    <p class="text-sm text-gray-300 mt-1">共收获 ${totalCount} 格作物</p>
+                </div>
+                <div class="space-y-2">
+                    ${cropsHTML}
+                </div>
+                <div class="text-xs mt-4 text-center text-gray-300 border-t border-gray-700 pt-3">已全部放入仓库</div>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            // 3秒后淡出并移除
+            setTimeout(() => {
+                notification.style.animation = 'fadeOutScale 0.3s ease-out forwards';
+                notification.style.pointerEvents = 'none';
+                setTimeout(() => {
+                    notification.remove();
+                }, 300);
+            }, 3000);
         }
 
         // 初始化资源循环定时器
@@ -3332,13 +3393,17 @@ sh<!DOCTYPE html>
                             if (grid.harvestable) {
                                 currentEffect += `<div class="bg-green-900/30 border border-green-500/50 p-2 rounded animate-pulse"><span class="text-gray-300 text-base font-bold">${pos.name}:</span> <span class="text-green-400 font-bold text-lg ml-2">${icon} ${crop.name} ✅</span></div>`;
                             } else {
-                                // 计算预计收获时间
-                                const harvestTime = grid.plantedAt + grid.growTime;
-                                const timeLeft = Math.max(0, harvestTime - Date.now());
-                                const hours = Math.floor(timeLeft / (60 * 60 * 1000));
-                                const minutes = Math.floor((timeLeft % (60 * 60 * 1000)) / (60 * 1000));
+                                // 计算还需要多少游戏天数成熟
+                                let daysLeft = crop.growDays;
+                                if (gameTimeSystem && grid.plantedGameTime && grid.growDays) {
+                                    const currentTime = gameTimeSystem.getCurrentTime();
+                                    const plantedTotalDays = (grid.plantedGameTime.year - 1) * 364 + (grid.plantedGameTime.week - 1) * 7 + grid.plantedGameTime.day;
+                                    const currentTotalDays = (currentTime.year - 1) * 364 + (currentTime.week - 1) * 7 + currentTime.day;
+                                    const elapsedGameDays = currentTotalDays - plantedTotalDays;
+                                    daysLeft = Math.max(0, grid.growDays - elapsedGameDays);
+                                }
                                 
-                                currentEffect += `<div class="bg-gray-900/50 p-2 rounded flex items-center justify-between"><div><span class="text-gray-300 text-base font-bold">${pos.name}:</span> <span class="text-yellow-400 text-lg font-semibold ml-2">${icon} ${crop.name}</span></div><span class="text-cyan-400 text-base font-mono">⏰ ${hours}h${minutes}m</span></div>`;
+                                currentEffect += `<div class="bg-gray-900/50 p-2 rounded flex items-center justify-between"><div><span class="text-gray-300 text-base font-bold">${pos.name}:</span> <span class="text-yellow-400 text-lg font-semibold ml-2">${icon} ${crop.name}</span></div><span class="text-cyan-400 text-base font-mono">⏰ 还需${daysLeft}天</span></div>`;
                             }
                         }
                     });
@@ -3866,8 +3931,18 @@ sh<!DOCTYPE html>
                     const multiplier = building ? BUILDINGS.Farm.levels[building.level].yieldMultiplier : 1.0;
                     const finalYield = Math.floor(result.yield * multiplier);
                     
-                    gameState.food += finalYield;
-                    showStatus(`🎉 ${result.message}，获得${finalYield}食物！`, 2000);
+                    // 将作物放入仓库而不是直接转换为食物（按稀有度存储）
+                    if (storageSystem) {
+                        const rarity = result.rarity || 'white'; // 从收获结果获取稀有度
+                        storageSystem.addCrop(grid.type, rarity, finalYield);
+                        storageSystem.saveData();
+                    }
+                    
+                    // 显示详细的收获信息
+                    const rarityName = result.rarityInfo ? result.rarityInfo.name : '普通';
+                    const rarityIcon = result.rarityInfo ? result.rarityInfo.icon : '';
+                    showHarvestNotification(result.cropName, finalYield, rarityName, rarityIcon);
+                    
                     updateUI();
                     updateFarmGridUI(farmId);
                     
@@ -4050,9 +4125,12 @@ sh<!DOCTYPE html>
                 if (grid === null) {
                     cell.textContent = '';
                     cell.classList.remove('farm-cell-harvestable');
-                    // 恢复默认背景
+                    // 完全重置所有样式
                     cell.style.backgroundColor = 'rgba(101, 67, 33, 0.95)';
                     cell.style.borderColor = '';
+                    cell.style.borderWidth = '';
+                    cell.style.borderStyle = '';
+                    cell.style.border = 'none';
                 } else {
                     const icon = farmGridSystem.getGridIcon(grid);
                     cell.textContent = icon;
@@ -4069,6 +4147,9 @@ sh<!DOCTYPE html>
                     } else {
                         cell.style.backgroundColor = 'rgba(101, 67, 33, 0.95)';
                         cell.style.borderColor = '';
+                        cell.style.borderWidth = '';
+                        cell.style.borderStyle = '';
+                        cell.style.border = 'none';
                     }
                     
                     if (grid.harvestable) {
@@ -4393,40 +4474,84 @@ sh<!DOCTYPE html>
 
         // --- 新增：商店系统逻辑 ---
 
-        function openShopPanel(tabName = 'seeds') {
+        function openShopPanel(mainTab = 'buy', subTab = 'seeds') {
             closeAllDetailPanels();
             ui.shopGoldDisplay.textContent = gameState.gold;
             
-            // 绑定标签页点击事件
-            document.querySelectorAll('.shop-tab-button').forEach(btn => {
-                btn.onclick = () => renderShopTab(btn.dataset.tab);
+            // 绑定一级标签页点击事件
+            document.querySelectorAll('.shop-main-tab-button').forEach(btn => {
+                btn.onclick = () => {
+                    const tab = btn.dataset.mainTab;
+                    renderShopMainTab(tab);
+                };
             });
             
-            // 渲染默认标签页（首次打开时默认显示种子）
-            renderShopTab(tabName);
+            // 绑定二级标签页点击事件（购买子标签）
+            document.querySelectorAll('.shop-sub-tab-button').forEach(btn => {
+                btn.onclick = () => renderShopSubTab(btn.dataset.subTab);
+            });
+            
+            // 渲染默认标签页
+            renderShopMainTab(mainTab);
 
             ui.modalOverlay.classList.remove('hidden');
             ui.shopPanel.classList.remove('hidden');
         }
         
-        function renderShopTab(tabName) {
-            // 更新标签样式
-            document.querySelectorAll('.shop-tab-button').forEach(btn => {
-                if (btn.dataset.tab === tabName) {
-                    btn.classList.add('text-white', 'border-yellow-500');
-                    btn.classList.remove('text-gray-400', 'border-transparent');
+        function renderShopMainTab(mainTab) {
+            // 更新一级标签样式
+            document.querySelectorAll('.shop-main-tab-button').forEach(btn => {
+                if (btn.dataset.mainTab === mainTab) {
+                    if (mainTab === 'buy') {
+                        btn.className = 'shop-main-tab-button flex-1 text-base py-3 text-center font-bold rounded-lg transition-colors bg-yellow-600 text-white';
+                    } else {
+                        btn.className = 'shop-main-tab-button flex-1 text-base py-3 text-center font-bold rounded-lg transition-colors bg-purple-600 text-white';
+                    }
                 } else {
-                    btn.classList.remove('text-white', 'border-yellow-500');
-                    btn.classList.add('text-gray-400', 'border-transparent');
+                    btn.className = 'shop-main-tab-button flex-1 text-base py-3 text-center font-bold rounded-lg transition-colors bg-gray-700 text-gray-400';
                 }
             });
             
-            // 渲染商品列表
-            ui.shopItemsContainer.innerHTML = '';
+            const subTabsContainer = document.getElementById('shop-sub-tabs');
+            const contentContainer = document.getElementById('shop-content-container');
             
-            if (tabName === 'seeds') {
+            if (mainTab === 'buy') {
+                // 显示二级标签
+                subTabsContainer.classList.remove('hidden');
+                // 渲染购买内容（默认显示种子）
+                renderShopSubTab('seeds');
+            } else {
+                // 隐藏二级标签
+                subTabsContainer.classList.add('hidden');
+                // 渲染售出内容
+                renderShopSellTab();
+            }
+        }
+        
+        function renderShopSubTab(subTab) {
+            // 更新二级标签样式
+            document.querySelectorAll('.shop-sub-tab-button').forEach(btn => {
+                if (btn.dataset.subTab === subTab) {
+                    if (subTab === 'seeds') {
+                        btn.className = 'shop-sub-tab-button flex-1 text-sm py-2 text-center rounded-lg transition-colors bg-green-600 text-white';
+                    } else {
+                        btn.className = 'shop-sub-tab-button flex-1 text-sm py-2 text-center rounded-lg transition-colors bg-cyan-600 text-white';
+                    }
+                } else {
+                    btn.className = 'shop-sub-tab-button flex-1 text-sm py-2 text-center rounded-lg transition-colors bg-gray-700 text-gray-400';
+                }
+            });
+            
+            renderShopBuyContent(subTab);
+        }
+        
+        function renderShopBuyContent(subTab) {
+            const contentContainer = document.getElementById('shop-content-container');
+            contentContainer.innerHTML = '';
+            
+            if (subTab === 'seeds') {
                 // 种子标签页：按作物类型分组，添加滚动条
-                ui.shopItemsContainer.className = 'space-y-4 max-h-[60vh] overflow-y-auto pr-2';
+                contentContainer.className = 'space-y-4 h-[55vh] overflow-y-auto pr-2';
                 
                 const cropTypes = [
                     { key: 'wheat', name: '小麦', icon: '🌾' },
@@ -4447,9 +4572,9 @@ sh<!DOCTYPE html>
                     titleDiv.innerHTML = `<span class="text-3xl">${crop.icon}</span><span>${crop.name}种子</span>`;
                     groupDiv.appendChild(titleDiv);
                     
-                    // 稀有度网格 (3列×2行)
+                    // 稀有度网格 (6列×1行)
                     const gridDiv = document.createElement('div');
-                    gridDiv.className = 'grid grid-cols-3 gap-3';
+                    gridDiv.className = 'grid grid-cols-6 gap-2';
                     
                     rarities.forEach(rarity => {
                         const seedKey = `seed_${crop.key}_${rarity}`;
@@ -4480,12 +4605,12 @@ sh<!DOCTYPE html>
                     });
                     
                     groupDiv.appendChild(gridDiv);
-                    ui.shopItemsContainer.appendChild(groupDiv);
+                    contentContainer.appendChild(groupDiv);
                 });
                 
-            } else if (tabName === 'items') {
+            } else if (subTab === 'items') {
                 // 道具标签页：原有布局，添加滚动条
-                ui.shopItemsContainer.className = 'grid grid-cols-1 md:grid-cols-3 gap-4 max-h-[60vh] overflow-y-auto pr-2';
+                contentContainer.className = 'grid grid-cols-1 md:grid-cols-3 gap-4 h-[55vh] overflow-y-auto pr-2';
                 
                 const filteredItems = Object.entries(SHOP_ITEMS).filter(([key, item]) => {
                     return item.type === 'potion' || item.type === 'material';
@@ -4507,8 +4632,146 @@ sh<!DOCTYPE html>
                             <span>购买</span>
                         </button>
                     `;
-                    ui.shopItemsContainer.appendChild(itemDiv);
+                    contentContainer.appendChild(itemDiv);
                 }
+            }
+        }
+        
+        function renderShopSellTab() {
+            const contentContainer = document.getElementById('shop-content-container');
+            contentContainer.innerHTML = '';
+            contentContainer.className = 'space-y-3 h-[55vh] overflow-y-auto pr-2';
+            
+            // 显示可出售的作物
+            if (!storageSystem) {
+                contentContainer.innerHTML = '<p class="text-center text-gray-500 py-8">仓库系统未初始化</p>';
+                return;
+            }
+            
+            const crops = storageSystem.getItemsByCategory('crops');
+            const cropKeys = Object.keys(crops).filter(key => crops[key] > 0);
+            
+            if (cropKeys.length === 0) {
+                contentContainer.innerHTML = '<p class="text-center text-gray-500 py-8">没有可出售的作物，请先收获农场作物</p>';
+                return;
+            }
+            
+            // 作物售价配置（基础收购价）
+            const cropSellPrices = {
+                wheat: 10,
+                corn: 15,
+                tomato: 25,
+                carrot: 40
+            };
+            
+            // cropKeys现在包含带稀有度的键，如 wheat_white, wheat_green 等
+            cropKeys.forEach(cropKey => {
+                const amount = crops[cropKey];
+                const itemInfo = storageSystem.getItemInfo(cropKey);
+                
+                if (!itemInfo) return;
+                
+                const cropType = itemInfo.cropType || cropKey;
+                const rarity = itemInfo.rarity || 'white';
+                const rarityInfo = storageSystem.rarities[rarity];
+                
+                const cropInfo = farmGridSystem.CROP_TYPES[cropType];
+                if (!cropInfo) return;
+                
+                // 计算价格：基础价格 × 稀有度倍数
+                const baseSellPrice = cropSellPrices[cropType] || 10;
+                const priceMultiplier = rarityInfo ? rarityInfo.priceMultiplier : 1.0;
+                const sellPrice = Math.floor(baseSellPrice * priceMultiplier);
+                
+                const itemDiv = document.createElement('div');
+                itemDiv.className = 'p-4 rounded-lg flex items-center justify-between hover:brightness-110 transition-all border-2';
+                
+                // 使用稀有度背景色和边框色
+                if (rarityInfo) {
+                    itemDiv.style.backgroundColor = rarityInfo.bgColor;
+                    itemDiv.style.borderColor = rarityInfo.color;
+                } else {
+                    itemDiv.className += ' bg-gray-800/80 border-gray-700';
+                }
+                
+                itemDiv.innerHTML = `
+                    <div class="flex items-center gap-4">
+                        <div class="text-5xl">${cropInfo.icon}</div>
+                        <div>
+                            <h4 class="font-bold text-lg text-white">${cropInfo.name}</h4>
+                            <p class="text-sm ${rarityInfo ? `font-bold` : 'text-gray-400'}" style="color: ${rarityInfo ? rarityInfo.color : 'inherit'}">
+                                ${rarityInfo ? rarityInfo.name : '普通'}品质
+                            </p>
+                            <p class="text-sm text-gray-300">拥有: <span class="text-green-400 font-mono">${amount}</span></p>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-yellow-400 font-bold mb-2">💰 ${sellPrice} 金币/个</div>
+                        <div class="flex gap-2">
+                            <button class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded text-sm" onclick="sellCrop('${cropKey}', 1)">
+                                出售 1个
+                            </button>
+                            <button class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded text-sm" onclick="sellCrop('${cropKey}', ${amount})">
+                                出售全部
+                            </button>
+                        </div>
+                    </div>
+                `;
+                contentContainer.appendChild(itemDiv);
+            });
+        }
+        
+        // 新增：出售作物函数（支持按稀有度出售）
+        window.sellCrop = function(cropKey, amount) {
+            if (!storageSystem) return;
+            
+            // 作物售价配置（基础价格）
+            const cropSellPrices = {
+                wheat: 10,
+                corn: 15,
+                tomato: 25,
+                carrot: 40
+            };
+            
+            // 从cropKey解析作物类型和稀有度
+            const itemInfo = storageSystem.getItemInfo(cropKey);
+            if (!itemInfo) {
+                showStatus('❌ 未知的作物类型！', 2000);
+                return;
+            }
+            
+            const cropType = itemInfo.cropType || cropKey; // 兼容旧格式
+            const rarity = itemInfo.rarity || 'white';
+            
+            const currentAmount = storageSystem.getItemCount(cropKey);
+            if (currentAmount < amount) {
+                showStatus('❌ 作物数量不足！', 2000);
+                return;
+            }
+            
+            // 计算价格：基础价格 × 稀有度倍数
+            const baseSellPrice = cropSellPrices[cropType] || 10;
+            const rarityInfo = storageSystem.rarities[rarity];
+            const priceMultiplier = rarityInfo ? rarityInfo.priceMultiplier : 1.0;
+            const sellPrice = Math.floor(baseSellPrice * priceMultiplier);
+            const totalPrice = sellPrice * amount;
+            
+            // 移除作物
+            const removeResult = storageSystem.removeItem(cropKey, amount);
+            if (removeResult.success) {
+                gameState.gold += totalPrice;
+                storageSystem.saveData();
+                updateUI();
+                
+                const rarityName = rarityInfo ? rarityInfo.name : '普通';
+                const cropInfo = farmGridSystem.CROP_TYPES[cropType];
+                showStatus(`✅ 出售了 ${amount} 个 ${rarityName}${cropInfo ? cropInfo.name : cropType}，获得 ${totalPrice} 金币`, 2500);
+                
+                // 刷新售出标签
+                renderShopSellTab();
+                ui.shopGoldDisplay.textContent = gameState.gold;
+            } else {
+                showStatus(`❌ ${removeResult.message}`, 2000);
             }
         }
 
@@ -4573,22 +4836,30 @@ sh<!DOCTYPE html>
                     const itemInfo = storageSystem.getItemInfo(itemKey);
                     
                     if (itemInfo) {
-                        // 如果是种子且有稀有度，使用稀有度背景色
-                        if (itemInfo.category === 'seeds' && itemInfo.rarity) {
+                        // 如果有稀有度（种子或作物），使用稀有度背景色
+                        if (itemInfo.rarity) {
                             const rarityInfo = storageSystem.rarities[itemInfo.rarity];
                             if (rarityInfo) {
                                 slot.style.backgroundColor = rarityInfo.bgColor;
                                 slot.style.borderColor = rarityInfo.color;
+                                slot.style.borderWidth = '2px';
                             }
                         } else {
                             slot.style.backgroundColor = 'rgb(31, 41, 55)'; // bg-gray-800
+                        }
+                        
+                        // 构建显示名称（如果有稀有度，显示稀有度）
+                        let displayName = itemInfo.name;
+                        if (itemInfo.rarity && storageSystem.rarities[itemInfo.rarity]) {
+                            const rarityInfo = storageSystem.rarities[itemInfo.rarity];
+                            displayName = `${rarityInfo.name}${itemInfo.name}`;
                         }
                         
                         slot.innerHTML = `
                             <div class="flex-1 flex items-center justify-center">
                                 <div class="text-5xl">${itemInfo.icon}</div>
                             </div>
-                            <div class="text-xs text-white font-bold text-center px-1 pb-1">${itemInfo.name}</div>
+                            <div class="text-xs text-white font-bold text-center px-1 pb-1">${displayName}</div>
                             <div class="absolute top-1 right-1 bg-teal-600 text-white text-xs font-bold px-2 py-0.5 rounded-full">×${amount}</div>
                         `;
                         slot.title = itemInfo.desc;
@@ -4633,9 +4904,10 @@ sh<!DOCTYPE html>
             updateUI();
             
             // 刷新当前标签页
-            const currentTab = document.querySelector('.shop-tab-button.text-white');
-            const tabName = currentTab ? currentTab.dataset.tab : 'seeds';
-            renderShopTab(tabName);
+            const currentSubTab = document.querySelector('.shop-sub-tab-button.text-white');
+            const subTabName = currentSubTab ? currentSubTab.dataset.subTab : 'seeds';
+            renderShopBuyContent(subTabName);
+            ui.shopGoldDisplay.textContent = gameState.gold;
         };
 
         // --- 背包系统逻辑已移至 inventory_system.js ---
@@ -5368,202 +5640,6 @@ sh<!DOCTYPE html>
             window.location.href = '../pages/league.html';
         }
         
-        // 新增：调试器相关函数
-        function openDebugPanel() {
-            closeAllDetailPanels();
-            
-            // 填充当前值
-            document.getElementById('debug-food').value = Math.floor(gameState.food);
-            document.getElementById('debug-gold').value = gameState.gold;
-            document.getElementById('debug-wood').value = gameState.wood;
-            document.getElementById('debug-stone').value = gameState.stone;
-            document.getElementById('debug-gems').value = gameState.gems;
-            document.getElementById('debug-expGrass').value = gameState.expGrass;
-            
-            // 更新时间显示
-            if (gameTimeSystem) {
-                const timeInfo = gameTimeSystem.getCurrentTime();
-                document.getElementById('debug-year').textContent = timeInfo.year;
-                document.getElementById('debug-season').textContent = timeInfo.season;
-                document.getElementById('debug-week').textContent = timeInfo.week;
-                
-                // 更新自动推进状态
-                updateAutoAdvanceButton();
-            }
-            
-            ui.modalOverlay.classList.remove('hidden');
-            document.getElementById('debug-panel').classList.remove('hidden');
-        }
-        
-        // 新增：切换自动推进
-        window.toggleAutoAdvance = function() {
-            if (!gameTimeSystem) {
-                showStatus('❌ 时间系统未初始化', 2000);
-                return;
-            }
-            
-            const enabled = gameTimeSystem.setAutoAdvance(!gameTimeSystem.autoAdvanceEnabled);
-            updateAutoAdvanceButton();
-            showStatus(enabled ? '✅ 自动时间推进已启用' : '⏸️ 自动时间推进已暂停', 2000);
-            
-            // 如果启用，重置计时器
-            if (enabled) {
-                gameTimeSystem.lastAdvanceTime = Date.now();
-            }
-        };
-        
-        // 新增：更新自动推进按钮状态
-        function updateAutoAdvanceButton() {
-            const button = document.getElementById('toggle-auto-advance');
-            const status = document.getElementById('auto-advance-status');
-            
-            if (!button || !status || !gameTimeSystem) return;
-            
-            if (gameTimeSystem.autoAdvanceEnabled) {
-                button.className = 'px-4 py-2 rounded font-bold bg-green-600 hover:bg-green-700 text-white transition-colors';
-                status.textContent = '✅ 已启用';
-            } else {
-                button.className = 'px-4 py-2 rounded font-bold bg-gray-600 hover:bg-gray-700 text-white transition-colors';
-                status.textContent = '⏸️ 已暂停';
-            }
-        }
-        
-        function closeDebugPanel() {
-            document.getElementById('debug-panel').classList.add('hidden');
-            ui.modalOverlay.classList.add('hidden');
-        }
-        
-        window.setResource = function(resourceType) {
-            const inputId = `debug-${resourceType}`;
-            const value = parseInt(document.getElementById(inputId).value, 10);
-            if (isNaN(value) || value < 0) {
-                showStatus('❌ 请输入有效的数值', 2000);
-                return;
-            }
-            gameState[resourceType] = value;
-            updateUI();
-            showStatus(`✅ ${resourceType} 已设置为 ${value}`, 2000);
-        };
-        
-        window.addAllResources = function(amount) {
-            gameState.food += amount;
-            gameState.gold += amount;
-            gameState.wood += amount;
-            gameState.stone += amount;
-            gameState.gems += amount;
-            gameState.expGrass += amount;
-            gameState.moonFlower += amount;
-            gameState.mutationCrystal += amount;
-            gameState.voidEssence += amount;
-            updateUI();
-            showStatus(`✅ 所有资源 +${amount}`, 2000);
-        };
-        
-        window.debugAdvanceDay = async function() {
-            if (!gameTimeSystem) {
-                showStatus('❌ 时间系统未初始化', 2000);
-                return;
-            }
-            const result = gameTimeSystem.advanceDay();
-            if (result.success) {
-                await gameTimeSystem.saveData();
-                updateGameTimeDisplay();
-                // 更新调试面板显示
-                const timeInfo = gameTimeSystem.getCurrentTime();
-                document.getElementById('debug-year').textContent = timeInfo.year;
-                document.getElementById('debug-season').textContent = timeInfo.season;
-                document.getElementById('debug-week').textContent = timeInfo.week;
-                showStatus(`✅ 时间推进1天 - 星期${result.dayName} ${timeInfo.weatherDisplay}`, 2500);
-            } else {
-                showStatus(`❌ ${result.reason}`, 2000);
-            }
-        };
-        
-        window.debugAdvanceWeek = async function() {
-            if (!gameTimeSystem) {
-                showStatus('❌ 时间系统未初始化', 2000);
-                return;
-            }
-            const result = gameTimeSystem.advanceWeek();
-            if (result.success) {
-                await gameTimeSystem.saveData();
-                updateGameTimeDisplay();
-                // 更新调试面板显示
-                const timeInfo = gameTimeSystem.getCurrentTime();
-                document.getElementById('debug-year').textContent = timeInfo.year;
-                document.getElementById('debug-season').textContent = timeInfo.season;
-                document.getElementById('debug-week').textContent = timeInfo.week;
-                showStatus(`✅ 时间推进到第${timeInfo.year}年 ${timeInfo.season} 第${timeInfo.week}周`, 2500);
-            } else {
-                showStatus(`❌ ${result.reason}`, 2000);
-            }
-        };
-        
-        window.debugAdvanceToSeason = async function(targetSeason) {
-            if (!gameTimeSystem) {
-                showStatus('❌ 时间系统未初始化', 2000);
-                return;
-            }
-            
-            const seasonWeeks = {
-                '春季': 1,
-                '夏季': 14,
-                '秋季': 27,
-                '冬季': 40
-            };
-            
-            const targetWeek = seasonWeeks[targetSeason];
-            if (!targetWeek) return;
-            
-            const timeInfo = gameTimeSystem.getCurrentTime();
-            let weeksToAdvance = 0;
-            
-            if (timeInfo.week <= targetWeek) {
-                weeksToAdvance = targetWeek - timeInfo.week;
-            } else {
-                // 跨年
-                weeksToAdvance = (52 - timeInfo.week) + targetWeek;
-            }
-            
-            if (weeksToAdvance > 0) {
-                const result = gameTimeSystem.fastForward(weeksToAdvance);
-                if (result.success) {
-                    await gameTimeSystem.saveData();
-                    updateGameTimeDisplay();
-                    // 更新调试面板显示
-                    const newTimeInfo = gameTimeSystem.getCurrentTime();
-                    document.getElementById('debug-year').textContent = newTimeInfo.year;
-                    document.getElementById('debug-season').textContent = newTimeInfo.season;
-                    document.getElementById('debug-week').textContent = newTimeInfo.week;
-                    showStatus(`✅ 已跳转到${targetSeason}：第${newTimeInfo.year}年第${newTimeInfo.week}周`, 3000);
-                }
-            } else {
-                showStatus(`ℹ️ 当前已经是${targetSeason}`, 2000);
-            }
-        };
-        
-        window.debugResetTime = async function() {
-            if (!gameTimeSystem) {
-                showStatus('❌ 时间系统未初始化', 2000);
-                return;
-            }
-            
-            if (!confirm('确定要重置时间到第1年春季第1周吗？')) {
-                return;
-            }
-            
-            gameTimeSystem.reset();
-            await gameTimeSystem.saveData();
-            updateGameTimeDisplay();
-            
-            // 更新调试面板显示
-            document.getElementById('debug-year').textContent = '1';
-            document.getElementById('debug-season').textContent = '春季';
-            document.getElementById('debug-week').textContent = '1';
-            
-            showStatus('🔄 时间已重置', 2000);
-        };
-        
         // 新增：重启教程函数
         function restartTutorial() {
             if (window.tutorialInstance) {
@@ -6074,13 +6150,20 @@ sh<!DOCTYPE html>
             window.cropRaritySystem = new CropRaritySystem(gameTimeSystem);
             window.cropRaritySystem.loadData();
             
-            // 初始化农场格子系统
-            farmGridSystem = new FarmGridSystem(window.cropRaritySystem);
+            // 初始化农场格子系统（传入稀有度系统和游戏时间系统）
+            farmGridSystem = new FarmGridSystem(window.cropRaritySystem, gameTimeSystem);
             farmGridSystem.loadData();
             
             // 初始化仓库系统
             storageSystem = new StorageSystem();
             storageSystem.loadData();
+            
+            // 迁移旧的作物数据到按稀有度存储的格式
+            storageSystem.migrateCropData();
+            
+            // 初始化调试器系统
+            debuggerInstance = new DebuggerSystem();
+            await debuggerInstance.init(gameTimeSystem, window.cropRaritySystem, farmGridSystem, storageSystem, gameState);
             
             loadGameStateFromStorage();
             
@@ -6323,9 +6406,8 @@ sh<!DOCTYPE html>
             const grids = farmGridSystem.getFarmGrids(farmId);
             if (!grids) return;
             
-            let totalYield = 0;
             let harvestedCount = 0;
-            let cropNames = new Set();
+            const cropYields = {}; // 按作物类型和稀有度统计产量
             
             // 遍历所有格子并收获成熟作物
             for (let row = 0; row < farmGridSystem.GRID_SIZE; row++) {
@@ -6338,17 +6420,30 @@ sh<!DOCTYPE html>
                             const building = gameState.buildings.find(b => b.id === farmId);
                             const multiplier = building ? BUILDINGS.Farm.levels[building.level].yieldMultiplier : 1.0;
                             const finalYield = Math.floor(result.yield * multiplier);
+                            const rarity = result.rarity || 'white';
                             
-                            totalYield += finalYield;
+                            // 按作物类型统计（用于显示）
+                            if (!cropYields[grid.type]) {
+                                cropYields[grid.type] = { count: 0, name: result.cropName };
+                            }
+                            cropYields[grid.type].count += finalYield;
+                            
+                            // 添加到仓库（按稀有度存储）
+                            if (storageSystem) {
+                                storageSystem.addCrop(grid.type, rarity, finalYield);
+                            }
+                            
                             harvestedCount++;
-                            cropNames.add(result.cropName);
                         }
                     }
                 }
             }
             
             if (harvestedCount > 0) {
-                gameState.food += totalYield;
+                // 保存仓库数据
+                if (storageSystem) {
+                    storageSystem.saveData();
+                }
                 
                 // 清除当前种植记录
                 const building = gameState.buildings.find(b => b.id === farmId);
@@ -6356,8 +6451,9 @@ sh<!DOCTYPE html>
                     building.currentCrop = null;
                 }
                 
-                const cropList = Array.from(cropNames).join('、');
-                showStatus(`🎉 收获了 ${harvestedCount} 个作物(${cropList})，获得 ${totalYield} 食物！`, 3000);
+                // 显示批量收获通知
+                showBatchHarvestNotification(cropYields, harvestedCount);
+                
                 updateUI();
                 updateFarmGridUI(farmId);
                 
