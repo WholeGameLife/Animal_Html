@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+o<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
@@ -482,33 +482,89 @@
         /* 回合指示器 */
         .turn-badge {
             position: absolute;
-            top: 1rem;
-            background: rgba(59, 130, 246, 0.9);
+            background: rgba(59, 130, 246, 0.95);
             color: white;
-            padding: 0.5rem 1rem;
+            padding: 0.75rem 1.5rem;
             border-radius: 20px;
             font-weight: bold;
-            font-size: 0.875rem;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+            font-size: 1.125rem;
+            box-shadow: 0 6px 16px rgba(0,0,0,0.5), 0 0 32px rgba(59, 130, 246, 0.5);
             display: none;
+            z-index: 50;
+            border: 2px solid rgba(255,255,255,0.3);
+            text-align: center;
         }
 
         .turn-badge.player {
-            left: 2rem;
+            left: 20%;
+            top: 15%;
+            transform: translateX(-50%);
+            background: rgba(59, 130, 246, 0.95);
         }
 
         .turn-badge.opponent {
-            right: 2rem;
+            right: 20%;
+            top: 15%;
+            transform: translateX(50%);
+            background: rgba(239, 68, 68, 0.95);
+            box-shadow: 0 6px 16px rgba(0,0,0,0.5), 0 0 32px rgba(239, 68, 68, 0.5);
         }
 
         .turn-badge.show {
             display: block;
-            animation: pulse 1s ease-in-out infinite;
         }
 
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.05); }
+        .turn-badge.player.show {
+            animation: turn-pulse-player 1s ease-in-out infinite;
+        }
+
+        .turn-badge.opponent.show {
+            animation: turn-pulse-opponent 1s ease-in-out infinite;
+        }
+
+        .turn-countdown {
+            display: block;
+            font-size: 1.5rem;
+            margin-top: 0.375rem;
+            color: #fbbf24;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.6);
+            font-weight: 900;
+        }
+
+        @keyframes turn-pulse-player {
+            0%, 100% { transform: translateX(-50%) scale(1); }
+            50% { transform: translateX(-50%) scale(1.08); }
+        }
+
+        @keyframes turn-pulse-opponent {
+            0%, 100% { transform: translateX(50%) scale(1); }
+            50% { transform: translateX(50%) scale(1.08); }
+        }
+
+        /* 中心倒计时 */
+        .center-countdown {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 5rem;
+            font-weight: 900;
+            color: #fbbf24;
+            text-shadow: 0 0 30px rgba(251, 191, 36, 0.8), 0 0 60px rgba(251, 191, 36, 0.4);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+            z-index: 100;
+        }
+
+        .center-countdown.show {
+            opacity: 1;
+            animation: countdown-pulse 1s ease-in-out infinite;
+        }
+
+        @keyframes countdown-pulse {
+            0%, 100% { transform: translate(-50%, -50%) scale(1); }
+            50% { transform: translate(-50%, -50%) scale(1.15); }
         }
 
         /* 联赛比分 */
@@ -617,8 +673,17 @@
             <div class="character-model opponent" id="opponent-model"></div>
 
             <!-- 回合指示器 -->
-            <div class="turn-badge player" id="player-turn-badge">我的回合</div>
-            <div class="turn-badge opponent" id="opponent-turn-badge">敌方回合</div>
+            <div class="turn-badge player" id="player-turn-badge">
+                <div>我的回合</div>
+                <div class="turn-countdown" id="player-countdown"></div>
+            </div>
+            <div class="turn-badge opponent" id="opponent-turn-badge">
+                <div>敌方回合</div>
+                <div class="turn-countdown" id="opponent-countdown"></div>
+            </div>
+
+            <!-- 中心倒计时 -->
+            <div class="center-countdown" id="center-countdown"></div>
 
             <!-- 联赛比分 -->
             <div class="league-score" id="league-score">
@@ -699,6 +764,16 @@
                 setTimeout(() => {
                     battleSystem.startBattle();
                 }, 1000);
+            } else {
+                // 非联赛战斗：默认手动模式，提示玩家选择
+                battleSystem.addLog('🤚 默认手动战斗模式 - 点击技能释放，或点击"自动战斗"切换模式', 'text-cyan-300');
+                battleSystem.addLog('⏱️ 每回合有10秒时间选择技能', 'text-yellow-300');
+                
+                // 自动开始战斗循环（但不切换到自动模式）
+                setTimeout(() => {
+                    battleSystem.battleInProgress = true;
+                    battleSystem.battleLoop();
+                }, 2000);
             }
         };
     </script>

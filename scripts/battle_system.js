@@ -288,7 +288,7 @@ function applyStatusEffect(target, status, effectKey, battleState, addLog) {
             const sourceValue = getSourceValue(effectConfig.source);
             const value = effectConfig.value || 0.05;
             const damage = Math.round(sourceValue * value * stacks);
-            unit.hp -= damage;
+            unit.hp = Math.max(0, unit.hp - damage);
             addLog(`→ ${statusName}: 造成 ${damage} 点伤害 (${stacks}层)`, 'red');
             break;
         }
@@ -611,6 +611,9 @@ class BattleSystem {
         this.battleInProgress = false;
         this.battlePaused = false;
         this.turnCount = 0;
+        this.isManualMode = true; // 默认手动战斗
+        this.selectedSkill = null; // 玩家选择的技能
+        this.turnTimeout = null; // 回合计时器
         
         // UI元素
         this.ui = {
@@ -623,7 +626,10 @@ class BattleSystem {
             btnAnimals: document.getElementById('btn-animals'),
             btnFlee: document.getElementById('btn-flee'),
             playerTurnBadge: document.getElementById('player-turn-badge'),
-            opponentTurnBadge: document.getElementById('opponent-turn-badge')
+            opponentTurnBadge: document.getElementById('opponent-turn-badge'),
+            playerCountdown: document.getElementById('player-countdown'),
+            opponentCountdown: document.getElementById('opponent-countdown'),
+            centerCountdown: document.getElementById('center-countdown')
         };
     }
 
@@ -793,6 +799,7 @@ class BattleSystem {
                 
                 if (isOnCooldown) {
                     card.style.opacity = '0.5';
+                    card.style.cursor = 'not-allowed';
                 }
                 
                 card.innerHTML = `
@@ -804,12 +811,22 @@ class BattleSystem {
                     </div>
                     <div class="skill-type" style="background: ${this.getSkillTypeColor(skill.types ? skill.types[0] : 'attack')}">${this.getSkillTypeName(skill.types ? skill.types[0] : 'attack')}</div>
                 `;
+                
+                // 添加点击事件(只在手动模式和非冷却时有效)
+                if (!isOnCooldown) {
+                    card.addEventListener('click', () => {
+                        if (this.isManualMode && this.battleInProgress && !this.selectedSkill) {
+                            this.selectSkill(skillKey, index);
+                        }
+                    });
+                }
             } else {
                 // 空技能槽
                 card.innerHTML = `
                     <div class="skill-icon" style="opacity: 0.3;">🔒</div>
                     <div class="skill-name" style="color: #6b7280;">空槽</div>
                 `;
+                card.style.cursor = 'not-allowed';
             }
             
             container.appendChild(card);
@@ -849,7 +866,98 @@ class BattleSystem {
             this.playerStats.statuses.forEach(status => {
                 const buffIcon = document.createElement('div');
                 buffIcon.className = 'buff-icon';
-                buffIcon.textContent = status.data?.icon || '🔮';
+                // 优先使用icon字段，其次iconImage，最后默认图标
+                const iconText = status.data?.icon || status.data?.iconEmoji || '🔮';
+                if (status.data?.iconImage) {
+                    // 如果有图片图标，使用img标签
+                    buffIcon.innerHTML = `<img src="${status.data.iconImage}" class="w-full h-full object-contain">`;
+                } else {
+                    buffIcon.textContent = iconText;
+                }
+                
+                // 构建详细的悬停提示
+                let tooltip = `【${status.data?.name || status.key}】\n`;
+                
+                // 添加状态描述
+                if (status.data?.description) {
+                    tooltip += `${status.data.description}\n\n`;
+                }
+                
+                // 添加持续时间信息
+                const isPermanent = status.data?.isPermanent;
+                const isStackPermanent = status.data?.isStackPermanent;
+                const hasStacks = status.data?.hasStacks !== false;
+                
+                if (isPermanent && isStackPermanent) {
+                    tooltip += `持续时间: 永久\n`;
+                } else if (isPermanent && !isStackPermanent) {
+                    tooltip += `状态: 永久\n`;
+                } else if (!isPermanent && isStackPermanent) {
+                    tooltip += `状态持续: ${status.statusDuration || 0}回合\n`;
+                } else {
+                    tooltip += `状态持续: ${status.statusDuration || 0}回合\n`;
+                }
+                
+                // 添加层数信息
+                if (hasStacks && status.stackDurations) {
+                    const stacks = status.stackDurations.length;
+                    tooltip += `当前层数: ${stacks}层\n`;
+                    if (!isStackPermanent) {
+                        tooltip += `各层剩余: [${status.stackDurations.join(', ')}]回合\n`;
+                    }
+                    if (status.data?.maxStacks) {
+                        tooltip += `最大层数: ${status.data.maxStacks}层\n`;
+                    }
+                }
+                
+                // 添加效果信息
+                if (status.data?.effects && status.data.effects.length > 0) {
+                    tooltip += `\n效果:\n`;
+                    status.data.effects.forEach(effectKey => {
+                        const effectConfig = status.data.effectConfigs?.[effectKey];
+                        if (effectConfig) {
+                            const effectNames = {
+                                'dot-damage': '持续伤害',
+                                'hot-heal': '持续恢复',
+                                'boost-attack': '提升攻击',
+                                'boost-defense': '提升防御',
+                                'boost-speed': '提升敏捷',
+                                'boost-damage': '提升伤害',
+                                'reduce-attack': '降低攻击',
+                                'reduce-defense': '降低防御',
+                                'reduce-agility': '降低敏捷',
+                                'reduce-damage': '降低伤害',
+                                'ignore-defense': '无视防御',
+                                'element-bonus': '属性增伤',
+                                'element-advantage': '克制倍率',
+                                'cannot-act': '无法行动',
+                                'cannot-attack': '无法攻击',
+                                'cannot-defend': '无法防御',
+                                'first-strike': '先手行动',
+                                'double-action': '行动两次',
+                                'reverse-stats': '攻防反转',
+                                'reverse-element': '系别反转',
+                                'reset-cooldown': '冷却重置'
+                            };
+                            const effectName = effectNames[effectKey] || effectKey;
+                            const value = effectConfig.value || 0;
+                            const source = effectConfig.source || '';
+                            
+                            if (['dot-damage', 'hot-heal', 'boost-attack', 'boost-defense', 
+                                 'boost-speed', 'reduce-attack', 'reduce-defense', 'reduce-agility'].includes(effectKey)) {
+                                tooltip += `  • ${effectName}: ${(value * 100).toFixed(0)}%\n`;
+                            } else if (['boost-damage', 'reduce-damage', 'ignore-defense', 'element-bonus'].includes(effectKey)) {
+                                tooltip += `  • ${effectName}: +${(value * 100).toFixed(0)}%\n`;
+                            } else if (effectKey === 'element-advantage') {
+                                tooltip += `  • ${effectName}: ×${value.toFixed(2)}\n`;
+                            } else {
+                                tooltip += `  • ${effectName}\n`;
+                            }
+                        }
+                    });
+                }
+                
+                buffIcon.title = tooltip;
                 
                 if (status.stackDurations && status.stackDurations.length > 1) {
                     const countSpan = document.createElement('span');
@@ -869,7 +977,98 @@ class BattleSystem {
             this.opponentStats.statuses.forEach(status => {
                 const buffIcon = document.createElement('div');
                 buffIcon.className = 'buff-icon';
-                buffIcon.textContent = status.data?.icon || '🔮';
+                // 优先使用icon字段，其次iconEmoji，最后默认图标
+                const iconText = status.data?.icon || status.data?.iconEmoji || '🔮';
+                if (status.data?.iconImage) {
+                    // 如果有图片图标，使用img标签
+                    buffIcon.innerHTML = `<img src="${status.data.iconImage}" class="w-full h-full object-contain">`;
+                } else {
+                    buffIcon.textContent = iconText;
+                }
+                
+                // 构建详细的悬停提示
+                let tooltip = `【${status.data?.name || status.key}】\n`;
+                
+                // 添加状态描述
+                if (status.data?.description) {
+                    tooltip += `${status.data.description}\n\n`;
+                }
+                
+                // 添加持续时间信息
+                const isPermanent = status.data?.isPermanent;
+                const isStackPermanent = status.data?.isStackPermanent;
+                const hasStacks = status.data?.hasStacks !== false;
+                
+                if (isPermanent && isStackPermanent) {
+                    tooltip += `持续时间: 永久\n`;
+                } else if (isPermanent && !isStackPermanent) {
+                    tooltip += `状态: 永久\n`;
+                } else if (!isPermanent && isStackPermanent) {
+                    tooltip += `状态持续: ${status.statusDuration || 0}回合\n`;
+                } else {
+                    tooltip += `状态持续: ${status.statusDuration || 0}回合\n`;
+                }
+                
+                // 添加层数信息
+                if (hasStacks && status.stackDurations) {
+                    const stacks = status.stackDurations.length;
+                    tooltip += `当前层数: ${stacks}层\n`;
+                    if (!isStackPermanent) {
+                        tooltip += `各层剩余: [${status.stackDurations.join(', ')}]回合\n`;
+                    }
+                    if (status.data?.maxStacks) {
+                        tooltip += `最大层数: ${status.data.maxStacks}层\n`;
+                    }
+                }
+                
+                // 添加效果信息
+                if (status.data?.effects && status.data.effects.length > 0) {
+                    tooltip += `\n效果:\n`;
+                    status.data.effects.forEach(effectKey => {
+                        const effectConfig = status.data.effectConfigs?.[effectKey];
+                        if (effectConfig) {
+                            const effectNames = {
+                                'dot-damage': '持续伤害',
+                                'hot-heal': '持续恢复',
+                                'boost-attack': '提升攻击',
+                                'boost-defense': '提升防御',
+                                'boost-speed': '提升敏捷',
+                                'boost-damage': '提升伤害',
+                                'reduce-attack': '降低攻击',
+                                'reduce-defense': '降低防御',
+                                'reduce-agility': '降低敏捷',
+                                'reduce-damage': '降低伤害',
+                                'ignore-defense': '无视防御',
+                                'element-bonus': '属性增伤',
+                                'element-advantage': '克制倍率',
+                                'cannot-act': '无法行动',
+                                'cannot-attack': '无法攻击',
+                                'cannot-defend': '无法防御',
+                                'first-strike': '先手行动',
+                                'double-action': '行动两次',
+                                'reverse-stats': '攻防反转',
+                                'reverse-element': '系别反转',
+                                'reset-cooldown': '冷却重置'
+                            };
+                            const effectName = effectNames[effectKey] || effectKey;
+                            const value = effectConfig.value || 0;
+                            const source = effectConfig.source || '';
+                            
+                            if (['dot-damage', 'hot-heal', 'boost-attack', 'boost-defense', 
+                                 'boost-speed', 'reduce-attack', 'reduce-defense', 'reduce-agility'].includes(effectKey)) {
+                                tooltip += `  • ${effectName}: ${(value * 100).toFixed(0)}%\n`;
+                            } else if (['boost-damage', 'reduce-damage', 'ignore-defense', 'element-bonus'].includes(effectKey)) {
+                                tooltip += `  • ${effectName}: +${(value * 100).toFixed(0)}%\n`;
+                            } else if (effectKey === 'element-advantage') {
+                                tooltip += `  • ${effectName}: ×${value.toFixed(2)}\n`;
+                            } else {
+                                tooltip += `  • ${effectName}\n`;
+                            }
+                        }
+                    });
+                }
+                
+                buffIcon.title = tooltip;
                 
                 if (status.stackDurations && status.stackDurations.length > 1) {
                     const countSpan = document.createElement('span');
@@ -1084,14 +1283,30 @@ class BattleSystem {
     }
 
     async startBattle() {
-        if (this.battleInProgress) return;
+        // 如果战斗已在进行中,则切换模式
+        if (this.battleInProgress) {
+            if (this.isManualMode) {
+                this.isManualMode = false;
+                this.ui.btnStartBattle.textContent = '🤚 切换手动';
+                this.ui.btnStartBattle.className = 'control-btn secondary';
+                this.addLog('⚔️ 已切换到自动战斗模式！');
+            } else {
+                this.isManualMode = true;
+                this.ui.btnStartBattle.textContent = '▶ 自动战斗';
+                this.ui.btnStartBattle.className = 'control-btn primary';
+                this.addLog('🤚 已切换到手动战斗模式！');
+            }
+            return;
+        }
         
+        // 首次启动:切换为自动战斗模式
         this.battleInProgress = true;
         this.battlePaused = false;
-        this.ui.btnStartBattle.disabled = true;
-        this.ui.btnStartBattle.style.display = 'none';
+        this.isManualMode = false;
+        this.ui.btnStartBattle.textContent = '🤚 切换手动';
+        this.ui.btnStartBattle.className = 'control-btn secondary';
         this.ui.btnPause.style.display = 'inline-block';
-        this.addLog('⚔️ 战斗开始！双方进入战斗状态！');
+        this.addLog('⚔️ 战斗开始！已切换到自动战斗模式！');
         
         await this.sleep(2000);
         await this.battleLoop();
@@ -1131,7 +1346,7 @@ class BattleSystem {
             }
             
             this.addLog(`\n━━━ 第 ${this.turnCount} 回合开始 ━━━`, 'text-cyan-400 font-bold');
-            await this.sleep(1000);
+            await this.sleep(500);
             await this.waitForUnpause();
             
             // 回合开始：重置属性到基础值
@@ -1149,7 +1364,7 @@ class BattleSystem {
             await this.triggerStatusSkills(true);  // 玩家
             await this.triggerStatusSkills(false); // 对手
             
-            await this.sleep(800);
+            await this.sleep(300);
             await this.waitForUnpause();
             
             // 根据敏捷值决定出手顺序（考虑firstStrike）
@@ -1165,19 +1380,19 @@ class BattleSystem {
             // 第一个攻击者行动
             const firstName = firstAttacker === 'player' ? this.playerData.name : this.opponentData.name;
             this.addLog(`${firstName} 先手出击！`, 'text-blue-300');
-            await this.sleep(800);
+            await this.sleep(300);
             await this.waitForUnpause();
             
             await this.executeTurn(firstAttacker);
             if (!this.battleInProgress) break;
             
-            await this.sleep(1500);
+            await this.sleep(800);
             await this.waitForUnpause();
             
             // 第二个攻击者行动
             const secondName = secondAttacker === 'player' ? this.playerData.name : this.opponentData.name;
             this.addLog(`${secondName} 反击！`, 'text-orange-300');
-            await this.sleep(800);
+            await this.sleep(300);
             await this.waitForUnpause();
             
             await this.executeTurn(secondAttacker);
@@ -1196,7 +1411,7 @@ class BattleSystem {
             
             this.addLog(`━━━ 第 ${this.turnCount} 回合结束 ━━━`, 'text-blue-400');
             
-            await this.sleep(2000);
+            await this.sleep(1000);
             await this.waitForUnpause();
         }
     }
@@ -1210,11 +1425,23 @@ class BattleSystem {
         // 显示回合指示器
         this.showTurnIndicator(isPlayer);
         
-        // 只执行攻击，防御改为技能触发
+        // 手动模式下玩家回合:等待玩家选择技能
+        if (isPlayer && this.isManualMode) {
+            await this.waitForSkillSelection();
+        } else if (!isPlayer) {
+            // 敌人回合:随机选择一个技能
+            await this.selectEnemySkill();
+        }
+        
+        // 隐藏回合指示器和倒计时（在技能使用后立即隐藏）
+        this.hideTurnIndicator(isPlayer);
+        
+        // 执行攻击
         await this.executeAttack(isPlayer);
         
-        // 隐藏回合指示器
-        this.hideTurnIndicator(isPlayer);
+        // 清除选中状态
+        this.selectedSkill = null;
+        this.renderSkillsContainer();
     }
 
     async executeAttack(isPlayer) {
@@ -1260,24 +1487,57 @@ class BattleSystem {
         }
         const baseDamage = Math.max(1, Math.floor(baseAttack - defense));
         
-        // 触发所有攻击相关的技能（检查冷却）
-        for (const skill of attackerSkills) {
+        // 根据模式和选中的技能决定要触发的技能
+        let skillsToTrigger = [];
+        
+        if (this.isManualMode) {
+            // 手动模式下
+            if (isPlayer) {
+                // 玩家：只释放选中的技能
+                if (this.selectedSkill) {
+                    skillsToTrigger = attackerSkills.filter(s => s.key === this.selectedSkill);
+                } else {
+                    // 没有选择技能,放弃行动
+                    this.addLog(`${attackerName} 放弃本回合行动`, 'text-gray-400');
+                    return;
+                }
+            } else {
+                // 敌人：释放选中的技能（由selectEnemySkill选择）
+                if (this.selectedSkill) {
+                    skillsToTrigger = attackerSkills.filter(s => s.key === this.selectedSkill);
+                } else {
+                    // 敌人没有可用技能，放弃行动
+                    this.addLog(`${attackerName} 放弃本回合行动`, 'text-gray-400');
+                    return;
+                }
+            }
+        } else {
+            // 自动模式:释放所有可用技能
+            skillsToTrigger = attackerSkills;
+        }
+        
+        // 触发攻击相关的技能（检查冷却）
+        for (const skill of skillsToTrigger) {
             // 获取技能的所有类型和效果（支持多类型多效果）
             const skillTypes = skill.types || (skill.type ? [skill.type] : []);
             const skillEffects = skill.effects || (skill.effect ? [skill.effect] : []);
             
-            // 判断是否为防御、敏捷或纯被动技能
-            const isDefenseSkill = skillTypes.includes('defense') ||
-                                  skillEffects.some(e => ['defense_counter', 'buff_defense', 'counter',
-                                                          'passive_defense', 'damage_reduction',
-                                                          'guaranteed_dodge', 'direct_defense',
-                                                          'continuous_defense'].includes(e));
-            
-            const isAgilityBuff = skillEffects.some(e => ['buff_agility', 'passive_agility'].includes(e));
-            const isPassiveOnly = skillEffects.some(e => ['passive_attack', 'regen', 'heal_reduce', 'rebirth'].includes(e));
-            
-            if (isDefenseSkill || isAgilityBuff || isPassiveOnly) {
-                continue; // 跳过防御和敏捷技能
+            // 自动模式下跳过防御、敏捷和纯被动技能
+            // 手动模式下允许所有技能类型
+            if (!this.isManualMode) {
+                // 判断是否为防御、敏捷或纯被动技能
+                const isDefenseSkill = skillTypes.includes('defense') ||
+                                      skillEffects.some(e => ['defense_counter', 'buff_defense', 'counter',
+                                                              'passive_defense', 'damage_reduction',
+                                                              'guaranteed_dodge', 'direct_defense',
+                                                              'continuous_defense'].includes(e));
+                
+                const isAgilityBuff = skillEffects.some(e => ['buff_agility', 'passive_agility'].includes(e));
+                const isPassiveOnly = skillEffects.some(e => ['passive_attack', 'regen', 'heal_reduce', 'rebirth'].includes(e));
+                
+                if (isDefenseSkill || isAgilityBuff || isPassiveOnly) {
+                    continue; // 跳过防御和敏捷技能
+                }
             }
             
             // 检查技能是否在冷却中
@@ -1295,11 +1555,11 @@ class BattleSystem {
                 let effectDamage = 0;
                 let damageType = '';
                 
-                // 跳过非攻击效果
+                // 跳过非攻击效果(但不跳过状态附加效果，将在后面单独处理)
                 if (['buff_attack', 'buff_defense', 'buff_speed', 'buff_purify',
                      'buff_heal_amp', 'debuff_attack', 'debuff_defense', 'debuff_speed',
                      'debuff_no_heal', 'debuff_heal_reduce', 'heal_direct', 'heal_continuous',
-                     'heal_percent', 'heal_rebirth'].includes(effect)) {
+                     'heal_percent', 'heal_rebirth', 'buff_status_enemy', 'debuff_status_self'].includes(effect)) {
                     continue;
                 }
                 
@@ -1452,7 +1712,16 @@ class BattleSystem {
                 }
             }
             
-            // 如果这个技能造成了伤害，显示技能效果
+            // 检查技能是否包含非攻击效果（buff_status_enemy, debuff_status_self等）
+            const hasNonDamageEffects = skillEffects.some(e => 
+                ['buff_status_enemy', 'debuff_status_self', 'buff_attack', 'buff_defense', 
+                 'buff_speed', 'buff_purify', 'buff_heal_amp', 'debuff_attack', 'debuff_defense', 
+                 'debuff_speed', 'debuff_no_heal', 'debuff_heal_reduce', 'heal_direct', 
+                 'heal_continuous', 'heal_percent', 'heal_rebirth', 'buff_element_damage', 
+                 'debuff_element_damage'].includes(e)
+            );
+            
+            // 如果技能造成了伤害，累加并显示
             if (skillTotalDamage > 0) {
                 totalDamage += skillTotalDamage;
                 
@@ -1470,6 +1739,35 @@ class BattleSystem {
                 }
                 
                 await this.triggerSkillEffect(skill, isPlayer, combinedInfo);
+            }
+            
+            // 如果技能有效果（伤害或非伤害），应用非攻击效果并设置冷却
+            if (skillTotalDamage > 0 || hasNonDamageEffects) {
+                // 应用技能的非攻击效果（包括状态附加、治愈等）
+                if (hasNonDamageEffects) {
+                    // 调试日志
+                    const effectNames = skillEffects.filter(e => 
+                        ['buff_status_enemy', 'debuff_status_self', 'buff_attack', 'buff_defense', 
+                         'buff_speed', 'buff_purify', 'buff_heal_amp', 'debuff_attack', 'debuff_defense', 
+                         'debuff_speed', 'debuff_no_heal', 'debuff_heal_reduce', 'heal_direct', 
+                         'heal_continuous', 'heal_percent', 'heal_rebirth', 'buff_element_damage', 
+                         'debuff_element_damage'].includes(e)
+                    );
+                    if (effectNames.length > 0) {
+                        this.addLog(`→ 应用非伤害效果: ${effectNames.map(e => EFFECT_PARAMS_CONFIG[e]?.name || e).join(', ')}`, 'text-cyan-300');
+                    }
+                    
+                    this.applySkillEffect(skill, isPlayer);
+                    // 更新UI显示新附加的状态和血量变化
+                    this.updateBuffIcons();
+                    this.updateStatusUI();
+                    this.updateHealthUI();
+                }
+                
+                // 如果技能没有造成伤害但有其他效果，显示技能触发
+                if (skillTotalDamage === 0 && hasNonDamageEffects) {
+                    await this.triggerSkillEffect(skill, isPlayer, '辅助效果');
+                }
                 
                 // 设置冷却
                 if (skill.cooldown) {
@@ -1479,28 +1777,34 @@ class BattleSystem {
         }
         
         // 最终伤害就是所有技能伤害的总和
-        let damage = Math.max(1, totalDamage);
+        // 手动模式下：如果没有攻击技能或攻击技能冷却中，totalDamage为0，不造成伤害
+        // 自动模式下：至少造成1点伤害
+        let damage = totalDamage;
+        if (!this.isManualMode && damage === 0) {
+            damage = 1; // 自动模式下保证至少1点伤害
+        }
         
-        // 应用属性克制倍率
+        // 只有在有伤害时才应用克制倍率和显示伤害
         if (damage > 0) {
+            // 应用属性克制倍率
             damage = this.applyElementDamageModifiers(damage, isPlayer);
+            
+            // 应用伤害（同时更新两套血量变量）
+            if (isPlayer) {
+                this.opponentCurrentHealth = Math.max(0, this.opponentCurrentHealth - damage);
+                this.opponentStats.hp = this.opponentCurrentHealth; // 同步到新变量
+                this.shakeCard(false);
+            } else {
+                this.playerCurrentHealth = Math.max(0, this.playerCurrentHealth - damage);
+                this.playerStats.hp = this.playerCurrentHealth; // 同步到新变量
+                this.shakeCard(true);
+            }
+            
+            // 显示伤害信息
+            const critText = isCriticalHit ? '💥 暴击！' : '';
+            this.addLog(`${critText}${attackerName} 对 ${defenderName} 造成 ${damage} 点伤害！`, isCriticalHit ? 'text-red-400 font-bold' : 'text-red-300');
+            await this.sleep(1000);
         }
-        
-        // 应用伤害（同时更新两套血量变量）
-        if (isPlayer) {
-            this.opponentCurrentHealth = Math.max(0, this.opponentCurrentHealth - damage);
-            this.opponentStats.hp = this.opponentCurrentHealth; // 同步到新变量
-            this.shakeCard(false);
-        } else {
-            this.playerCurrentHealth = Math.max(0, this.playerCurrentHealth - damage);
-            this.playerStats.hp = this.playerCurrentHealth; // 同步到新变量
-            this.shakeCard(true);
-        }
-        
-        // 显示伤害信息
-        const critText = isCriticalHit ? '💥 暴击！' : '';
-        this.addLog(`${critText}${attackerName} 对 ${defenderName} 造成 ${damage} 点伤害！`, isCriticalHit ? 'text-red-400 font-bold' : 'text-red-300');
-        await this.sleep(1000);
         
         // 生命汲取效果
         if (attackerStats.buffs.lifesteal) {
@@ -1541,6 +1845,11 @@ class BattleSystem {
     }
 
     async triggerDefenseSkills(isDefender) {
+        // 手动模式下,不触发任何防御技能（双方都只在自己的回合释放技能）
+        if (this.isManualMode) {
+            return;
+        }
+        
         const defenderName = isDefender ? this.playerData.name : this.opponentData.name;
         const defenderStats = isDefender ? this.playerStats : this.opponentStats;
         const defenderModel = isDefender ? this.ui.playerModel : this.ui.opponentModel;
@@ -1627,6 +1936,11 @@ class BattleSystem {
             logMessage += ` (${damageInfo})`;
         }
         this.addLog(logMessage, 'text-purple-300');
+        
+        // 只在手动模式下且是玩家触发时才高亮底部技能卡片
+        if (!this.isManualMode || !isPlayer) {
+            return;
+        }
         
         // 获取装备的技能列表
         const animalData = isPlayer ? this.playerData : this.opponentData;
@@ -2220,6 +2534,166 @@ class BattleSystem {
         actionPanel.appendChild(returnButton);
     }
 
+    selectSkill(skillKey, skillIndex) {
+        // 选中技能
+        this.selectedSkill = skillKey;
+        
+        // 清除之前的选中状态
+        for (let i = 0; i < 4; i++) {
+            const card = document.getElementById(`skill-card-${i}`);
+            if (card) {
+                card.style.border = '2px solid rgba(100, 116, 139, 0.5)';
+                card.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1)';
+            }
+        }
+        
+        // 高亮选中的技能卡片
+        const selectedCard = document.getElementById(`skill-card-${skillIndex}`);
+        if (selectedCard) {
+            selectedCard.style.border = '2px solid #22c55e';
+            selectedCard.style.boxShadow = '0 0 24px rgba(34, 197, 94, 0.8)';
+        }
+        
+        this.addLog(`已选择技能进行释放`, 'text-green-300');
+        
+        // 清除计时器
+        if (this.turnTimeout) {
+            clearTimeout(this.turnTimeout);
+            this.turnTimeout = null;
+        }
+        
+        // 清空倒计时显示
+        if (this.ui.playerCountdown) {
+            this.ui.playerCountdown.textContent = '';
+        }
+    }
+    
+    async waitForSkillSelection() {
+        this.addLog('⏰ 请在10秒内选择技能释放...', 'text-yellow-300');
+        
+        let remainingTime = 10;
+        
+        // 清除之前可能存在的interval
+        if (this.countdownInterval) {
+            clearInterval(this.countdownInterval);
+            this.countdownInterval = null;
+        }
+        
+        // 显示中心倒计时
+        if (this.ui.centerCountdown) {
+            this.ui.centerCountdown.classList.add('show');
+        }
+        
+        // 设置10秒计时器
+        const timeoutPromise = new Promise((resolve) => {
+            // 倒计时显示
+            this.countdownInterval = setInterval(() => {
+                if (this.ui.centerCountdown) {
+                    this.ui.centerCountdown.textContent = remainingTime;
+                }
+                remainingTime--;
+                
+                if (remainingTime < 0) {
+                    clearInterval(this.countdownInterval);
+                    this.countdownInterval = null;
+                }
+            }, 1000);
+            
+            this.turnTimeout = setTimeout(() => {
+                if (this.countdownInterval) {
+                    clearInterval(this.countdownInterval);
+                    this.countdownInterval = null;
+                }
+                if (this.ui.centerCountdown) {
+                    this.ui.centerCountdown.textContent = '';
+                    this.ui.centerCountdown.classList.remove('show');
+                }
+                this.addLog('⏱️ 超时！放弃本回合行动', 'text-gray-400');
+                resolve();
+            }, 10000);
+        });
+        
+        // 等待玩家选择技能
+        const selectionPromise = new Promise((resolve) => {
+            const checkInterval = setInterval(() => {
+                if (this.selectedSkill) {
+                    clearInterval(checkInterval);
+                    clearTimeout(this.turnTimeout);
+                    this.turnTimeout = null;
+                    if (this.countdownInterval) {
+                        clearInterval(this.countdownInterval);
+                        this.countdownInterval = null;
+                    }
+                    if (this.ui.centerCountdown) {
+                        this.ui.centerCountdown.textContent = '';
+                        this.ui.centerCountdown.classList.remove('show');
+                    }
+                    resolve();
+                }
+            }, 100);
+            
+            // 如果超时,也要清除检查循环
+            setTimeout(() => {
+                clearInterval(checkInterval);
+            }, 10000);
+        });
+        
+        // 等待任意一个完成
+        await Promise.race([timeoutPromise, selectionPromise]);
+    }
+    
+    async selectEnemySkill() {
+        const enemySkills = this.opponentPassiveSkills;
+        
+        // 在手动模式下,选择所有可用技能(不限类型)
+        // 在自动模式下,只选择攻击技能
+        let availableSkills;
+        
+        if (this.isManualMode) {
+            // 手动模式：选择所有不在冷却中的技能
+            availableSkills = enemySkills.filter(skill => {
+                return !this.isSkillOnCooldown(skill.key, false);
+            });
+        } else {
+            // 自动模式：过滤出可用的攻击技能(不在冷却中)
+            availableSkills = enemySkills.filter(skill => {
+                const skillTypes = skill.types || (skill.type ? [skill.type] : []);
+                const skillEffects = skill.effects || (skill.effect ? [skill.effect] : []);
+                
+                // 不是防御/敏捷/纯被动技能
+                const isDefenseSkill = skillTypes.includes('defense') ||
+                                      skillEffects.some(e => ['defense_counter', 'buff_defense', 'counter',
+                                                              'passive_defense', 'damage_reduction',
+                                                              'guaranteed_dodge', 'direct_defense',
+                                                              'continuous_defense'].includes(e));
+                const isAgilityBuff = skillEffects.some(e => ['buff_agility', 'passive_agility'].includes(e));
+                const isPassiveOnly = skillEffects.some(e => ['passive_attack', 'regen', 'heal_reduce', 'rebirth'].includes(e));
+                
+                if (isDefenseSkill || isAgilityBuff || isPassiveOnly) {
+                    return false;
+                }
+                
+                // 不在冷却中
+                return !this.isSkillOnCooldown(skill.key, false);
+            });
+        }
+        
+        // 随机选择一个技能
+        if (availableSkills.length > 0) {
+            const selectedSkill = availableSkills[Math.floor(Math.random() * availableSkills.length)];
+            this.selectedSkill = selectedSkill.key;
+            this.addLog(`敌人准备使用 [${selectedSkill.name}]`, 'text-red-300');
+        } else {
+            // 没有可用技能,不选择
+            this.selectedSkill = null;
+            if (this.isManualMode) {
+                this.addLog(`敌人没有可用技能（${enemySkills.length}个技能，全部冷却中或不可用）`, 'text-gray-400');
+            }
+        }
+        
+        await this.sleep(500);
+    }
+    
     showItems() {
         this.addLog('🎒 道具功能开发中...', 'text-yellow-300');
         alert('道具功能正在开发中，敬请期待！');
@@ -2461,7 +2935,7 @@ class BattleSystem {
                 }
                 
                 actualDamage = this.applyElementDamageModifiers(actualDamage, isPlayer);
-                defenderStats.hp -= actualDamage;
+                defenderStats.hp = Math.max(0, defenderStats.hp - actualDamage);
                 attackerStats.turnDamage += actualDamage;
                 
                 // 同步到旧的health变量
@@ -2510,6 +2984,42 @@ class BattleSystem {
                         this.opponentCurrentHealth = attackerStats.hp;
                     }
                     this.addLog(`直接恢复: +${heal} 生命`, 'text-green-300');
+                }
+                break;
+            }
+            
+            case 'heal_continuous': {
+                const target = params[`${effectKey}_target`];
+                const bonus = params[`${effectKey}_bonus`] || 1;
+                const heal = Math.round(sourceValue * bonus * count);
+                if (target === 'self' || target === 'ally-all') {
+                    attackerStats.hp = Math.min(attackerStats.maxHp, attackerStats.hp + heal);
+                    
+                    // 同步到旧的health变量
+                    if (isPlayer) {
+                        this.playerCurrentHealth = attackerStats.hp;
+                    } else {
+                        this.opponentCurrentHealth = attackerStats.hp;
+                    }
+                    this.addLog(`持续恢复: +${heal} 生命`, 'text-green-300');
+                }
+                break;
+            }
+            
+            case 'heal_percent': {
+                const target = params[`${effectKey}_target`];
+                const percent = params[`${effectKey}_percent`] || 0.1;
+                const heal = Math.round(attackerStats.maxHp * percent);
+                if (target === 'self' || target === 'ally-all') {
+                    attackerStats.hp = Math.min(attackerStats.maxHp, attackerStats.hp + heal);
+                    
+                    // 同步到旧的health变量
+                    if (isPlayer) {
+                        this.playerCurrentHealth = attackerStats.hp;
+                    } else {
+                        this.opponentCurrentHealth = attackerStats.hp;
+                    }
+                    this.addLog(`百分比恢复: +${heal} 生命 (${(percent * 100).toFixed(0)}%)`, 'text-green-300');
                 }
                 break;
             }
@@ -2841,6 +3351,11 @@ class BattleSystem {
     
     // 触发状态技能（回合开始时自动释放）
     async triggerStatusSkills(isPlayer) {
+        // 手动模式下不自动触发任何技能
+        if (this.isManualMode) {
+            return;
+        }
+        
         const attackerName = isPlayer ? this.playerData.name : this.opponentData.name;
         const attackerSkills = isPlayer ? this.playerPassiveSkills : this.opponentPassiveSkills;
         
@@ -2914,6 +3429,8 @@ class BattleSystem {
         // 同步hp到旧变量（全局函数已修改hp）
         this.playerCurrentHealth = this.playerStats.hp;
         this.opponentCurrentHealth = this.opponentStats.hp;
+        // 更新状态图标显示（状态可能已被移除）
+        this.updateBuffIcons();
         // 更新UI显示状态造成的伤害
         this.updateHealthUI();
     }
