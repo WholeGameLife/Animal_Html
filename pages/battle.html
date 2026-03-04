@@ -8,329 +8,670 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body {
-            background-color: #111827;
+            background: linear-gradient(180deg, #0a1929 0%, #1a2744 50%, #0a1929 100%);
             color: #f3f4f6;
             font-family: 'Inter', sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
             margin: 0;
             overflow: hidden;
+            height: 100vh;
         }
 
         .battle-container {
             width: 100%;
-            max-width: 1200px;
-            height: 100%;
+            height: 100vh;
             display: flex;
             flex-direction: column;
-            justify-content: space-between;
-            padding: 2rem;
-        }
-
-        .battle-arena {
-            display: flex;
-            justify-content: space-around;
-            align-items: center;
-            flex-grow: 1;
             position: relative;
         }
 
-        .animal-card {
-            background: rgba(31, 41, 55, 0.8);
-            backdrop-filter: blur(10px);
-            border: 1px solid #4b5563;
-            border-radius: 1rem;
-            padding: 1.5rem;
-            width: 300px;
-            text-align: center;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
-            transition: transform 0.3s ease;
+        /* 顶部状态栏 */
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            padding: 1rem 2rem;
+            background: linear-gradient(180deg, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0) 100%);
+            position: relative;
         }
 
-        /* 攻击抖动效果 */
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
-            20%, 40%, 60%, 80% { transform: translateX(5px); }
-        }
-        .animate-shake {
-            animation: shake 0.3s ease-in-out;
-        }
-
-        /* 防御发光效果 */
-        @keyframes defend-glow {
-            0%, 100% { box-shadow: 0 0 10px rgba(59, 130, 246, 0.5); }
-            50% { box-shadow: 0 0 30px rgba(59, 130, 246, 1); }
-        }
-        .animate-defend {
-            animation: defend-glow 0.5s ease-in-out;
-            border-color: #3b82f6 !important;
+        .vs-center-top {
+            position: absolute;
+            left: 50%;
+            top: 1rem;
+            transform: translateX(-50%);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            z-index: 10;
         }
 
-        /* 技能激活效果 */
-        @keyframes skill-activate {
-            0% { transform: scale(1); box-shadow: 0 0 0 rgba(167, 139, 250, 0); }
-            50% { transform: scale(1.1); box-shadow: 0 0 25px rgba(167, 139, 250, 1); }
-            100% { transform: scale(1); box-shadow: 0 0 0 rgba(167, 139, 250, 0); }
-        }
-        .skill-triggered {
-            animation: skill-activate 0.6s ease-in-out;
-            border-color: #a78bfa !important;
-            border-width: 3px !important;
-            background: linear-gradient(135deg, rgba(167, 139, 250, 0.6) 0%, rgba(236, 72, 153, 0.6) 100%) !important;
-        }
-        
-        /* 持续生效的技能高亮 */
-        @keyframes skill-active-glow {
-            0%, 100% { box-shadow: 0 0 10px rgba(34, 197, 94, 0.6); }
-            50% { box-shadow: 0 0 20px rgba(34, 197, 94, 1); }
-        }
-        .skill-active {
-            animation: skill-active-glow 1.5s ease-in-out infinite;
-            border-color: #22c55e !important;
-            border-width: 3px !important;
-            background: linear-gradient(135deg, rgba(34, 197, 94, 0.4) 0%, rgba(16, 185, 129, 0.4) 100%) !important;
+        .turn-counter {
+            background: rgba(0,0,0,0.8);
+            border: 2px solid rgba(59, 130, 246, 0.6);
+            border-radius: 8px;
+            padding: 0.5rem 1rem;
+            font-size: 0.875rem;
+            font-weight: bold;
+            color: #60a5fa;
+            white-space: nowrap;
         }
 
-        .animal-card:hover {
-            transform: translateY(-10px);
+        .advantage-badge-small {
+            background: rgba(0,0,0,0.8);
+            border: 2px solid rgba(255,255,255,0.2);
+            border-radius: 8px;
+            padding: 0.5rem 1rem;
+            font-size: 0.875rem;
+            font-weight: bold;
+            white-space: nowrap;
         }
 
-        .animal-avatar {
-            width: 100px;
-            height: 100px;
+        .character-status {
+            width: 40%;
+            display: flex;
+            gap: 1rem;
+        }
+
+        .character-status.player {
+            align-items: flex-start;
+        }
+
+        .character-status.opponent {
+            align-items: flex-start;
+            flex-direction: row-reverse;
+        }
+
+        .character-avatar-col {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .character-portrait {
+            width: 90px;
+            height: 90px;
             border-radius: 50%;
-            margin: 0 auto 1rem;
             border: 4px solid;
             display: flex;
             justify-content: center;
             align-items: center;
-            font-size: 2rem;
-            font-weight: bold;
+            font-size: 2.5rem;
+            background: rgba(0,0,0,0.5);
         }
 
-        .health-bar-container {
-            background-color: #4b5563;
-            border-radius: 9999px;
-            height: 1rem;
-            width: 100%;
-            margin-top: 0.5rem;
-            overflow: hidden;
-        }
-
-        .health-bar {
-            background-color: #22c55e;
-            height: 100%;
-            border-radius: 9999px;
-            transition: width 0.5s ease-in-out;
-        }
-
-        .opponent .animal-avatar {
-            border-color: #ef4444;
-        }
-
-        .player .animal-avatar {
+        .player .character-portrait {
             border-color: #3b82f6;
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.6);
         }
 
-        .action-panel {
-            background: rgba(17, 24, 39, 0.9);
-            padding: 1rem;
-            border-radius: 1rem;
-            border-top: 1px solid #374151;
+        .opponent .character-portrait {
+            border-color: #ef4444;
+            box-shadow: 0 0 20px rgba(239, 68, 68, 0.6);
+        }
+
+        .character-name {
+            font-size: 1.125rem;
+            font-weight: bold;
+            text-align: center;
+            max-width: 100px;
+        }
+
+        .status-info-col {
+            display: flex;
+            flex-direction: column;
+            gap: 0.625rem;
+            flex: 1;
+            max-width: 450px;
+        }
+
+        .player .status-info-col {
+            align-items: flex-start;
+        }
+
+        .opponent .status-info-col {
+            align-items: flex-end;
+        }
+
+        .hp-bar-container {
+            background: rgba(0,0,0,0.6);
+            border-radius: 12px;
+            height: 36px;
+            position: relative;
+            overflow: hidden;
+            border: 2px solid rgba(255,255,255,0.2);
+            width: 100%;
+            min-width: 280px;
+        }
+
+        .hp-bar {
+            height: 100%;
+            transition: width 0.5s ease-in-out;
+            border-radius: 10px;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+
+        .player .hp-bar {
+            background: linear-gradient(90deg, #84cc16 0%, #22c55e 100%);
+        }
+
+        .opponent .hp-bar {
+            background: linear-gradient(90deg, #ef4444 0%, #dc2626 100%);
+        }
+
+        .hp-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 1rem;
+            font-weight: bold;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+            z-index: 2;
+            color: white;
+        }
+
+        .stats-row {
+            display: flex;
+            gap: 1.25rem;
+            font-size: 0.875rem;
+            color: #d1d5db;
+            font-weight: 500;
+        }
+
+        .buff-icons {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            margin-top: 0.5rem;
+        }
+
+        .buff-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            border: 2px solid rgba(255,255,255,0.3);
             display: flex;
             justify-content: center;
-            gap: 1rem;
+            align-items: center;
+            font-size: 1.25rem;
+            background: rgba(0,0,0,0.4);
+            position: relative;
         }
 
-        .action-button {
-            background-color: #3b82f6;
-            color: white;
+        .buff-icon .buff-count {
+            position: absolute;
+            bottom: -4px;
+            right: -4px;
+            background: rgba(0,0,0,0.8);
+            border-radius: 50%;
+            width: 16px;
+            height: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.625rem;
             font-weight: bold;
-            padding: 0.75rem 1.5rem;
-            border-radius: 0.5rem;
-            border: none;
-            cursor: pointer;
-            transition: background-color 0.2s;
-            min-width: 120px;
         }
 
-        .action-button:hover:not(:disabled) {
-            background-color: #2563eb;
+        /* 中央战场 */
+        .battle-arena {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            position: relative;
         }
 
-        .action-button:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
+        .character-model {
+            width: 280px;
+            height: 280px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 10rem;
+            position: absolute;
+            transition: transform 0.3s ease;
         }
 
-        .flee-button {
-            background-color: #6b7280;
+        .character-model.player {
+            filter: drop-shadow(0 0 20px rgba(59, 130, 246, 0.5));
+            left: 20%;
+            transform: translateX(-50%);
         }
 
-        .flee-button:hover {
-            background-color: #4b5563;
+        .character-model.opponent {
+            filter: drop-shadow(0 0 20px rgba(239, 68, 68, 0.5));
+            right: 20%;
+            transform: translateX(50%);
+        }
+
+        /* 攻击动画 */
+        @keyframes attack-forward {
+            0% { transform: translateX(0); }
+            50% { transform: translateX(30px); }
+            100% { transform: translateX(0); }
+        }
+        @keyframes attack-backward {
+            0% { transform: translateX(0); }
+            50% { transform: translateX(-30px); }
+            100% { transform: translateX(0); }
+        }
+        .animate-attack-player {
+            animation: attack-forward 0.4s ease-in-out;
+        }
+        .animate-attack-opponent {
+            animation: attack-backward 0.4s ease-in-out;
+        }
+
+        /* 受击动画 */
+        @keyframes hit-shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px) scale(0.95); }
+            75% { transform: translateX(10px) scale(0.95); }
+        }
+        .animate-hit {
+            animation: hit-shake 0.4s ease-in-out;
+        }
+
+        .vs-center {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
         }
 
         .vs-text {
-            font-size: 4rem;
+            font-size: 3rem;
             font-weight: bold;
             color: #ef4444;
-            text-shadow: 0 0 15px #ef4444;
+            text-shadow: 0 0 20px #ef4444;
+            margin-bottom: 0.5rem;
         }
 
-        .return-button {
-            background-color: #22c55e;
-            color: white;
+        .advantage-badge {
+            background: rgba(0,0,0,0.7);
+            border: 2px solid rgba(255,255,255,0.2);
+            border-radius: 12px;
+            padding: 0.5rem 1rem;
+            font-size: 0.875rem;
             font-weight: bold;
-            padding: 0.75rem 1.5rem;
-            border-radius: 0.5rem;
-            border: none;
+        }
+
+        /* 底部技能栏 */
+        .bottom-panel {
+            background: linear-gradient(0deg, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.6) 100%);
+            padding: 1rem 2rem;
+            display: flex;
+            align-items: stretch;
+            gap: 1.5rem;
+        }
+
+        .battle-log-panel {
+            width: 450px;
+            background: rgba(0,0,0,0.7);
+            border: 2px solid rgba(75, 85, 99, 0.8);
+            border-radius: 12px;
+            padding: 0.75rem;
+            overflow-y: auto;
+            max-height: 180px;
+        }
+
+        .battle-log-panel::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .battle-log-panel::-webkit-scrollbar-track {
+            background: rgba(0,0,0,0.3);
+            border-radius: 3px;
+        }
+
+        .battle-log-panel::-webkit-scrollbar-thumb {
+            background: rgba(100,100,100,0.5);
+            border-radius: 3px;
+        }
+
+        .battle-log-panel::-webkit-scrollbar-thumb:hover {
+            background: rgba(150,150,150,0.7);
+        }
+
+        .skills-container {
+            flex: 1;
+            display: flex;
+            gap: 1rem;
+            align-items: stretch;
+            padding: 0 1.5rem;
+            border-left: 2px solid rgba(75, 85, 99, 0.4);
+            border-right: 2px solid rgba(75, 85, 99, 0.4);
+        }
+
+        .controls {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.75rem;
+            padding-left: 1.5rem;
+            width: 280px;
+        }
+
+        .skill-card {
+            background: linear-gradient(135deg, rgba(30, 41, 59, 0.95) 0%, rgba(15, 23, 42, 0.95) 100%);
+            border: 2px solid rgba(100, 116, 139, 0.5);
+            border-radius: 16px;
+            padding: 1rem;
+            width: calc(25% - 0.75rem);
             cursor: pointer;
-            transition: background-color 0.2s;
-            min-width: 240px;
+            transition: all 0.3s ease;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            gap: 0.625rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        }
+
+        .skill-card:hover {
+            transform: translateY(-6px);
+            border-color: #a78bfa;
+            box-shadow: 0 8px 24px rgba(167, 139, 250, 0.5), 0 0 16px rgba(167, 139, 250, 0.3);
+            background: linear-gradient(135deg, rgba(88, 80, 236, 0.2) 0%, rgba(109, 40, 217, 0.2) 100%);
+        }
+
+        .skill-card.active {
+            border-color: #22c55e;
+            box-shadow: 0 0 24px rgba(34, 197, 94, 0.8), 0 0 48px rgba(34, 197, 94, 0.4);
+            background: linear-gradient(135deg, rgba(34, 197, 94, 0.3) 0%, rgba(16, 185, 129, 0.3) 100%) !important;
+            animation: skill-glow 0.6s ease-in-out;
+        }
+
+        @keyframes skill-glow {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.08); }
+        }
+
+        .skill-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.3) 0%, rgba(139, 92, 246, 0.3) 100%);
+            border: 2px solid rgba(167, 139, 250, 0.4);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.75rem;
+            margin: 0 auto;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4), inset 0 1px 2px rgba(255, 255, 255, 0.1);
+        }
+
+        .skill-name {
+            font-size: 0.9375rem;
+            font-weight: 700;
+            text-align: center;
+            color: #f1f5f9;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+        }
+
+        .skill-stats {
+            display: flex;
+            gap: 0.625rem;
+            justify-content: center;
+            font-size: 0.8125rem;
+            color: #cbd5e1;
+            font-weight: 600;
+        }
+
+        .skill-type {
+            display: inline-block;
+            padding: 0.25rem 0.625rem;
+            border-radius: 6px;
+            font-size: 0.6875rem;
+            font-weight: 700;
+            text-align: center;
+            margin-top: 0.25rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        /* 控制按钮 */
+
+        .control-btn {
+            background: rgba(55, 65, 81, 0.9);
+            border: 2px solid rgba(75, 85, 99, 0.8);
+            border-radius: 12px;
+            padding: 0.75rem 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            white-space: nowrap;
+            min-width: 120px;
+        }
+
+        .control-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+        }
+
+        .control-btn.primary {
+            background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+            border-color: #22c55e;
+        }
+
+        .control-btn.secondary {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            border-color: #f59e0b;
+        }
+
+        .control-btn.danger {
+            background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+            border-color: #6b7280;
+        }
+
+        .log-entry {
+            padding: 0.25rem 0;
+            font-size: 0.875rem;
+            line-height: 1.5;
+            color: #d1d5db;
         }
 
         /* 回合指示器 */
-        .turn-indicator {
+        .turn-badge {
             position: absolute;
-            top: -2rem;
-            left: 50%;
-            transform: translateX(-50%);
+            top: 1rem;
             background: rgba(59, 130, 246, 0.9);
             color: white;
-            padding: 0.5rem 1.5rem;
-            border-radius: 9999px;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
             font-weight: bold;
             font-size: 0.875rem;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+            display: none;
+        }
+
+        .turn-badge.player {
+            left: 2rem;
+        }
+
+        .turn-badge.opponent {
+            right: 2rem;
+        }
+
+        .turn-badge.show {
+            display: block;
+            animation: pulse 1s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        /* 联赛比分 */
+        .league-score {
+            position: absolute;
+            top: 8rem;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.7);
+            border: 2px solid rgba(255,255,255,0.2);
+            border-radius: 12px;
+            padding: 0.75rem 1.5rem;
+            display: none;
+        }
+
+        .league-score.show {
+            display: flex;
+            gap: 1.5rem;
+            align-items: center;
+        }
+
+        .score-dots {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .score-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: rgba(100, 100, 100, 0.4);
+            border: 2px solid rgba(255,255,255,0.3);
+        }
+
+        .score-dot.win {
+            background: #22c55e;
+            box-shadow: 0 0 8px #22c55e;
+        }
+
+        .score-dot.lose {
+            background: #ef4444;
+            box-shadow: 0 0 8px #ef4444;
         }
     </style>
 </head>
 <body>
 
     <div class="battle-container">
-        <!-- 战斗日志 (顶部) - 滚动日志面板 -->
-        <div class="bg-gray-900/80 rounded-lg border border-gray-700 mb-4" style="height: 150px; overflow-y: auto;">
-            <div id="battle-log" class="text-sm space-y-1 font-mono p-4">
-                <div class="text-yellow-300">⚔️ 战斗准备中...</div>
+        <!-- 顶部状态栏 -->
+        <div class="status-bar">
+            <!-- 回合数和克制关系（中间） -->
+            <div class="vs-center-top">
+                <div class="turn-counter" id="turn-counter">第 1 回合</div>
+                <div class="advantage-badge-small" id="advantage-indicator">无克制</div>
+            </div>
+
+            <!-- 玩家状态 -->
+            <div class="character-status player">
+                <div class="character-avatar-col">
+                    <div id="player-portrait" class="character-portrait"></div>
+                    <div class="character-name" id="player-name">玩家动物</div>
+                </div>
+                <div class="status-info-col">
+                    <div class="hp-bar-container">
+                        <div class="hp-bar" id="player-hp-bar" style="width: 100%;"></div>
+                        <div class="hp-text" id="player-hp-text">100 / 100</div>
+                    </div>
+                    <div class="stats-row">
+                        <span id="player-level">Lv. 1</span>
+                        <span id="player-element">💧 水系</span>
+                    </div>
+                    <div class="buff-icons" id="player-buffs">
+                        <!-- 动态生成状态图标 -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- 对手状态 -->
+            <div class="character-status opponent">
+                <div class="character-avatar-col">
+                    <div id="opponent-portrait" class="character-portrait"></div>
+                    <div class="character-name" id="opponent-name">野生动物</div>
+                </div>
+                <div class="status-info-col">
+                    <div class="hp-bar-container">
+                        <div class="hp-bar" id="opponent-hp-bar" style="width: 100%;"></div>
+                        <div class="hp-text" id="opponent-hp-text">100 / 100</div>
+                    </div>
+                    <div class="stats-row">
+                        <span id="opponent-level">Lv. 1</span>
+                        <span id="opponent-element">🔥 火系</span>
+                    </div>
+                    <div class="buff-icons" id="opponent-buffs">
+                        <!-- 动态生成状态图标 -->
+                    </div>
+                </div>
             </div>
         </div>
 
-        <!-- 战斗区域 -->
+        <!-- 中央战场 -->
         <div class="battle-arena">
-            <!-- 我方动物 -->
-            <div id="player-card" class="animal-card player" style="position: relative;">
-                <div id="player-turn-indicator" class="turn-indicator" style="display: none;">我的回合</div>
-                <div id="player-avatar" class="animal-avatar"></div>
-                <h2 id="player-name" class="text-2xl font-bold">玩家动物</h2>
-                <p id="player-level" class="text-sm text-gray-400">Lv. 1</p>
-                <div class="flex justify-center items-center gap-2 my-1">
-                    <span id="player-element" class="text-sm font-bold px-3 py-1 rounded-full bg-blue-600 text-white">💧 水系</span>
-                </div>
-                <div class="health-bar-container">
-                    <div id="player-health-bar" class="health-bar"></div>
-                </div>
-                <p id="player-health-text" class="text-xs mt-1">100 / 100</p>
-                <div class="mt-2 text-xs text-gray-400">
-                    <span>⚔️ <span id="player-atk">10</span></span>
-                    <span class="ml-2">🛡️ <span id="player-def">5</span></span>
-                    <span class="ml-2">⚡ <span id="player-agi">8</span></span>
-                </div>
-                
-                <!-- 异常状态显示 -->
-                <div class="mt-2 pt-2 border-t border-gray-600">
-                    <p class="text-xs text-gray-400 mb-1">🔮 异常状态</p>
-                    <div id="player-status" class="flex flex-wrap gap-1 min-h-[24px]">
-                        <span class="text-xs text-gray-500">无</span>
-                    </div>
-                </div>
-                
-                <!-- 技能槽显示 -->
-                <div class="mt-3 pt-3 border-t border-gray-600">
-                    <p class="text-xs text-gray-400 mb-2">装备技能</p>
-                    <div id="player-skill-slots" class="grid grid-cols-2 gap-2">
+            <!-- 玩家角色模型 -->
+            <div class="character-model player" id="player-model"></div>
+
+            <!-- 对手角色模型 -->
+            <div class="character-model opponent" id="opponent-model"></div>
+
+            <!-- 回合指示器 -->
+            <div class="turn-badge player" id="player-turn-badge">我的回合</div>
+            <div class="turn-badge opponent" id="opponent-turn-badge">敌方回合</div>
+
+            <!-- 联赛比分 -->
+            <div class="league-score" id="league-score">
+                <div style="text-align: center;">
+                    <div class="text-xs text-blue-400 mb-1">我方</div>
+                    <div class="score-dots" id="player-score-dots">
                         <!-- 动态生成 -->
                     </div>
                 </div>
-            </div>
-
-            <!-- VS 和克制关系显示 -->
-            <div class="flex flex-col items-center gap-3">
-                <!-- 联赛比分显示（仅联赛战斗时显示） -->
-                <div id="league-score-display" style="display: none;">
-                    <div class="text-xs text-gray-400 text-center mb-2">比分详情</div>
-                    <div class="flex gap-6 items-center justify-center">
-                        <!-- 我方比分圈 -->
-                        <div class="flex flex-col items-center gap-1">
-                            <div class="text-xs text-blue-400 font-bold mb-1">我方</div>
-                            <div id="player-score-circles" class="flex gap-1">
-                                <!-- 动态生成5个圈 -->
-                            </div>
-                        </div>
-                        <!-- VS -->
-                        <div class="text-2xl font-bold text-gray-400">VS</div>
-                        <!-- 对方比分圈 -->
-                        <div class="flex flex-col items-center gap-1">
-                            <div class="text-xs text-red-400 font-bold mb-1">对方</div>
-                            <div id="opponent-score-circles" class="flex gap-1">
-                                <!-- 动态生成5个圈 -->
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="vs-text">VS</div>
-                <div id="advantage-indicator" class="text-sm font-bold px-4 py-2 rounded-lg bg-gray-800 border border-gray-600 text-gray-400">
-                    无克制
-                </div>
-            </div>
-
-            <!-- 敌方动物 -->
-            <div id="opponent-card" class="animal-card opponent" style="position: relative;">
-                <div id="opponent-turn-indicator" class="turn-indicator" style="display: none;">敌方回合</div>
-                <div id="opponent-avatar" class="animal-avatar"></div>
-                <h2 id="opponent-name" class="text-2xl font-bold">野生动物</h2>
-                <p id="opponent-level" class="text-sm text-gray-400">Lv. 1</p>
-                <div class="flex justify-center items-center gap-2 my-1">
-                    <span id="opponent-element" class="text-sm font-bold px-3 py-1 rounded-full bg-red-600 text-white">🔥 火系</span>
-                </div>
-                <div class="health-bar-container">
-                    <div id="opponent-health-bar" class="health-bar bg-red-500"></div>
-                </div>
-                <p id="opponent-health-text" class="text-xs mt-1">100 / 100</p>
-                <div class="mt-2 text-xs text-gray-400">
-                    <span>⚔️ <span id="opponent-atk">10</span></span>
-                    <span class="ml-2">🛡️ <span id="opponent-def">5</span></span>
-                    <span class="ml-2">⚡ <span id="opponent-agi">8</span></span>
-                </div>
-                
-                <!-- 异常状态显示 -->
-                <div class="mt-2 pt-2 border-t border-gray-600">
-                    <p class="text-xs text-gray-400 mb-1">🔮 异常状态</p>
-                    <div id="opponent-status" class="flex flex-wrap gap-1 min-h-[24px]">
-                        <span class="text-xs text-gray-500">无</span>
-                    </div>
-                </div>
-                
-                <!-- 技能槽显示 -->
-                <div class="mt-3 pt-3 border-t border-gray-600">
-                    <p class="text-xs text-gray-400 mb-2">装备技能</p>
-                    <div id="opponent-skill-slots" class="grid grid-cols-2 gap-2">
+                <div class="text-sm font-bold text-gray-400">VS</div>
+                <div style="text-align: center;">
+                    <div class="text-xs text-red-400 mb-1">对方</div>
+                    <div class="score-dots" id="opponent-score-dots">
                         <!-- 动态生成 -->
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- 操作面板 -->
-        <div class="action-panel">
-            <button id="btn-start-battle" class="action-button bg-green-600 hover:bg-green-700">开始自动战斗</button>
-            <button id="btn-pause" class="action-button bg-yellow-600 hover:bg-yellow-700" style="display: none;">⏸ 暂停</button>
-            <button id="btn-flee" class="action-button flee-button">逃跑</button>
+        <!-- 底部面板 -->
+        <div class="bottom-panel">
+            <!-- 战斗日志面板 -->
+            <div class="battle-log-panel" id="battle-log">
+                <div id="battle-log-content">
+                    <div class="text-yellow-300 text-sm">⚔️ 战斗准备中...</div>
+                </div>
+            </div>
+
+            <!-- 技能栏 -->
+            <div class="skills-container" id="skills-container">
+                <!-- 动态生成技能卡片 -->
+            </div>
+
+            <!-- 控制按钮 -->
+            <div class="controls">
+                <button id="btn-animals" class="control-btn secondary">
+                    🐾 动物
+                </button>
+                <button id="btn-start-battle" class="control-btn primary">
+                    ▶ 自动战斗
+                </button>
+                <button id="btn-pause" class="control-btn secondary" style="display: none; grid-column: 2;">
+                    ⏸ 暂停
+                </button>
+                <button id="btn-items" class="control-btn secondary">
+                    🎒 道具
+                </button>
+                <button id="btn-flee" class="control-btn danger">
+                    🏃 逃跑
+                </button>
+            </div>
         </div>
+
     </div>
 
     <!-- 引入图像库和战斗系统 -->
@@ -360,8 +701,6 @@
                 }, 1000);
             }
         };
-    </script>
-
     </script>
 
 </body>

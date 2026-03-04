@@ -614,22 +614,23 @@ class BattleSystem {
         
         // UI元素
         this.ui = {
-            battleLog: document.getElementById('battle-log'),
-            playerCard: document.getElementById('player-card'),
-            opponentCard: document.getElementById('opponent-card'),
+            battleLog: document.getElementById('battle-log-content'),
+            playerModel: document.getElementById('player-model'),
+            opponentModel: document.getElementById('opponent-model'),
             btnStartBattle: document.getElementById('btn-start-battle'),
             btnPause: document.getElementById('btn-pause'),
+            btnItems: document.getElementById('btn-items'),
+            btnAnimals: document.getElementById('btn-animals'),
             btnFlee: document.getElementById('btn-flee'),
-            playerTurnIndicator: document.getElementById('player-turn-indicator'),
-            opponentTurnIndicator: document.getElementById('opponent-turn-indicator')
+            playerTurnBadge: document.getElementById('player-turn-badge'),
+            opponentTurnBadge: document.getElementById('opponent-turn-badge')
         };
     }
 
     init() {
         this.renderPlayerInfo();
         this.renderOpponentInfo();
-        this.renderPlayerSkillSlots();
-        this.renderOpponentSkillSlots();
+        this.renderSkillsContainer();
         this.setupEventListeners();
         
         // 检查是否是联赛战斗，初始化比分显示
@@ -642,7 +643,8 @@ class BattleSystem {
     renderPlayerInfo() {
         document.getElementById('player-name').textContent = this.playerData.name;
         document.getElementById('player-level').textContent = `Lv. ${this.playerData.level}`;
-        const playerAvatar = document.getElementById('player-avatar');
+        const playerPortrait = document.getElementById('player-portrait');
+        const playerModel = document.getElementById('player-model');
         
         // 使用图像库获取头像（优先本地文件）
         let avatarData = this.playerData.avatarData;
@@ -655,35 +657,43 @@ class BattleSystem {
             }
         }
         
-        // 优先使用头像图片，如果没有则使用颜色球
+        // 设置头像和角色模型
         if (avatarData) {
-            playerAvatar.style.backgroundImage = `url(${avatarData})`;
-            playerAvatar.style.backgroundSize = 'cover';
-            playerAvatar.style.backgroundPosition = 'center';
-            playerAvatar.textContent = '';
+            playerPortrait.style.backgroundImage = `url(${avatarData})`;
+            playerPortrait.style.backgroundSize = 'cover';
+            playerPortrait.style.backgroundPosition = 'center';
+            playerPortrait.textContent = '';
+            
+            playerModel.style.backgroundImage = `url(${avatarData})`;
+            playerModel.style.backgroundSize = 'contain';
+            playerModel.style.backgroundPosition = 'center';
+            playerModel.style.backgroundRepeat = 'no-repeat';
+            playerModel.textContent = '';
         } else {
-            playerAvatar.style.backgroundImage = '';
-            playerAvatar.style.backgroundColor = '#' + this.playerData.color.toString(16).padStart(6, '0');
-            playerAvatar.textContent = this.playerData.name.charAt(0).toUpperCase();
+            playerPortrait.style.backgroundImage = '';
+            playerPortrait.style.backgroundColor = '#' + this.playerData.color.toString(16).padStart(6, '0');
+            playerPortrait.textContent = this.playerData.name.charAt(0).toUpperCase();
+            
+            playerModel.textContent = this.playerData.name.charAt(0).toUpperCase();
+            playerModel.style.fontSize = '8rem';
+            playerModel.style.color = '#' + this.playerData.color.toString(16).padStart(6, '0');
         }
         
-        document.getElementById('player-health-bar').style.width = '100%';
-        document.getElementById('player-health-text').textContent = `${this.playerCurrentHealth} / ${this.playerData.stamina}`;
-        document.getElementById('player-atk').textContent = this.playerStats.attack;
-        document.getElementById('player-def').textContent = this.playerStats.defense;
-        document.getElementById('player-agi').textContent = this.playerStats.agility;
+        document.getElementById('player-hp-bar').style.width = '100%';
+        document.getElementById('player-hp-text').textContent = `${this.playerCurrentHealth} / ${this.playerData.stamina}`;
         
         // 初始化系别显示
         this.updateElementDisplay();
         
-        // 初始化异常状态显示
-        this.updateStatusUI();
+        // 初始化buff图标
+        this.updateBuffIcons();
     }
 
     renderOpponentInfo() {
         document.getElementById('opponent-name').textContent = this.opponentData.name;
         document.getElementById('opponent-level').textContent = `Lv. ${this.opponentData.level}`;
-        const opponentAvatar = document.getElementById('opponent-avatar');
+        const opponentPortrait = document.getElementById('opponent-portrait');
+        const opponentModel = document.getElementById('opponent-model');
         
         // 使用图像库获取头像（优先本地文件）
         let avatarData = this.opponentData.avatarData;
@@ -696,29 +706,181 @@ class BattleSystem {
             }
         }
         
-        // 优先使用头像图片，如果没有则使用颜色球
+        // 设置头像和角色模型
         if (avatarData) {
-            opponentAvatar.style.backgroundImage = `url(${avatarData})`;
-            opponentAvatar.style.backgroundSize = 'cover';
-            opponentAvatar.style.backgroundPosition = 'center';
-            opponentAvatar.textContent = '';
+            opponentPortrait.style.backgroundImage = `url(${avatarData})`;
+            opponentPortrait.style.backgroundSize = 'cover';
+            opponentPortrait.style.backgroundPosition = 'center';
+            opponentPortrait.textContent = '';
+            
+            opponentModel.style.backgroundImage = `url(${avatarData})`;
+            opponentModel.style.backgroundSize = 'contain';
+            opponentModel.style.backgroundPosition = 'center';
+            opponentModel.style.backgroundRepeat = 'no-repeat';
+            opponentModel.textContent = '';
         } else {
-            opponentAvatar.style.backgroundImage = '';
-            opponentAvatar.style.backgroundColor = '#' + this.opponentData.color.toString(16).padStart(6, '0');
-            opponentAvatar.textContent = this.opponentData.name.charAt(0).toUpperCase();
+            opponentPortrait.style.backgroundImage = '';
+            opponentPortrait.style.backgroundColor = '#' + this.opponentData.color.toString(16).padStart(6, '0');
+            opponentPortrait.textContent = this.opponentData.name.charAt(0).toUpperCase();
+            
+            opponentModel.textContent = this.opponentData.name.charAt(0).toUpperCase();
+            opponentModel.style.fontSize = '8rem';
+            opponentModel.style.color = '#' + this.opponentData.color.toString(16).padStart(6, '0');
         }
         
-        document.getElementById('opponent-health-bar').style.width = '100%';
-        document.getElementById('opponent-health-text').textContent = `${this.opponentCurrentHealth} / ${this.opponentData.stamina}`;
-        document.getElementById('opponent-atk').textContent = this.opponentStats.attack;
-        document.getElementById('opponent-def').textContent = this.opponentStats.defense;
-        document.getElementById('opponent-agi').textContent = this.opponentStats.agility;
+        document.getElementById('opponent-hp-bar').style.width = '100%';
+        document.getElementById('opponent-hp-text').textContent = `${this.opponentCurrentHealth} / ${this.opponentData.stamina}`;
         
         // 初始化系别显示
         this.updateElementDisplay();
         
-        // 初始化异常状态显示
-        this.updateStatusUI();
+        // 初始化buff图标
+        this.updateBuffIcons();
+    }
+    
+    // 渲染底部技能容器
+    renderSkillsContainer() {
+        const container = document.getElementById('skills-container');
+        if (!container) return;
+        
+        container.innerHTML = '';
+        
+        // 读取技能池
+        const skillPool = JSON.parse(localStorage.getItem('SKILL_POOL') || '[]');
+        
+        // 获取装备的技能
+        let equippedSkills = [];
+        if (this.playerData.combatSkills) {
+            if (Array.isArray(this.playerData.combatSkills)) {
+                equippedSkills = this.playerData.combatSkills;
+            } else if (this.playerData.combatSkills.equipped) {
+                equippedSkills = this.playerData.combatSkills.equipped;
+            }
+        }
+        
+        // 固定渲染4个技能槽
+        for (let index = 0; index < 4; index++) {
+            const skillKey = equippedSkills[index];
+            let skill = COMBAT_SKILLS[skillKey] || MUTATION_SKILLS[skillKey];
+            
+            if (!skill && skillKey) {
+                const customSkill = skillPool.find(s => s.key === skillKey);
+                if (customSkill) {
+                    const types = customSkill.types || (customSkill.type ? [customSkill.type] : []);
+                    const effects = customSkill.effects || (customSkill.effect ? [customSkill.effect] : []);
+                    
+                    skill = {
+                        name: customSkill.name,
+                        icon: customSkill.icon,
+                        desc: customSkill.description || customSkill.desc,
+                        types: types,
+                        effects: effects,
+                        value: customSkill.value,
+                        cooldown: customSkill.params?.cooldown || customSkill.cooldown || 0,
+                        duration: customSkill.params?.duration || customSkill.duration || 0,
+                        params: customSkill.params || {}
+                    };
+                }
+            }
+            
+            const card = document.createElement('div');
+            card.className = 'skill-card';
+            card.id = `skill-card-${index}`;
+            
+            if (skill) {
+                const cooldownRemaining = this.playerStats.skillCooldowns[skillKey] || 0;
+                const isOnCooldown = cooldownRemaining > 0;
+                
+                if (isOnCooldown) {
+                    card.style.opacity = '0.5';
+                }
+                
+                card.innerHTML = `
+                    <div class="skill-icon">${skill.icon}</div>
+                    <div class="skill-name">${skill.name}</div>
+                    <div class="skill-stats">
+                        ${skill.cooldown ? `<span>CD:${skill.cooldown}</span>` : ''}
+                        ${isOnCooldown ? `<span class="text-red-400">⏳${cooldownRemaining}</span>` : ''}
+                    </div>
+                    <div class="skill-type" style="background: ${this.getSkillTypeColor(skill.types ? skill.types[0] : 'attack')}">${this.getSkillTypeName(skill.types ? skill.types[0] : 'attack')}</div>
+                `;
+            } else {
+                // 空技能槽
+                card.innerHTML = `
+                    <div class="skill-icon" style="opacity: 0.3;">🔒</div>
+                    <div class="skill-name" style="color: #6b7280;">空槽</div>
+                `;
+            }
+            
+            container.appendChild(card);
+        }
+    }
+    
+    getSkillTypeColor(type) {
+        const colors = {
+            'attack': '#ef4444',
+            'defense': '#3b82f6',
+            'support': '#22c55e',
+            'heal': '#10b981',
+            'debuff': '#a855f7',
+            'buff': '#f59e0b'
+        };
+        return colors[type] || '#6b7280';
+    }
+    
+    getSkillTypeName(type) {
+        const names = {
+            'attack': '攻击',
+            'defense': '防御',
+            'support': '辅助',
+            'heal': '治疗',
+            'debuff': '减益',
+            'buff': '增益'
+        };
+        return names[type] || type;
+    }
+    
+    // 新增：更新buff图标显示
+    updateBuffIcons() {
+        // 更新玩家buff
+        const playerBuffs = document.getElementById('player-buffs');
+        if (playerBuffs && this.playerStats.statuses) {
+            playerBuffs.innerHTML = '';
+            this.playerStats.statuses.forEach(status => {
+                const buffIcon = document.createElement('div');
+                buffIcon.className = 'buff-icon';
+                buffIcon.textContent = status.data?.icon || '🔮';
+                
+                if (status.stackDurations && status.stackDurations.length > 1) {
+                    const countSpan = document.createElement('span');
+                    countSpan.className = 'buff-count';
+                    countSpan.textContent = status.stackDurations.length;
+                    buffIcon.appendChild(countSpan);
+                }
+                
+                playerBuffs.appendChild(buffIcon);
+            });
+        }
+        
+        // 更新敌人buff
+        const opponentBuffs = document.getElementById('opponent-buffs');
+        if (opponentBuffs && this.opponentStats.statuses) {
+            opponentBuffs.innerHTML = '';
+            this.opponentStats.statuses.forEach(status => {
+                const buffIcon = document.createElement('div');
+                buffIcon.className = 'buff-icon';
+                buffIcon.textContent = status.data?.icon || '🔮';
+                
+                if (status.stackDurations && status.stackDurations.length > 1) {
+                    const countSpan = document.createElement('span');
+                    countSpan.className = 'buff-count';
+                    countSpan.textContent = status.stackDurations.length;
+                    buffIcon.appendChild(countSpan);
+                }
+                
+                opponentBuffs.appendChild(buffIcon);
+            });
+        }
     }
     
     renderPlayerSkillSlots() {
@@ -916,6 +1078,8 @@ class BattleSystem {
     setupEventListeners() {
         this.ui.btnStartBattle.addEventListener('click', () => this.startBattle());
         this.ui.btnPause.addEventListener('click', () => this.togglePause());
+        this.ui.btnItems.addEventListener('click', () => this.showItems());
+        this.ui.btnAnimals.addEventListener('click', () => this.showAnimals());
         this.ui.btnFlee.addEventListener('click', () => this.flee());
     }
 
@@ -959,6 +1123,12 @@ class BattleSystem {
             if (!this.battleInProgress) break;
             
             this.turnCount++;
+            
+            // 更新顶部回合计数器
+            const turnCounter = document.getElementById('turn-counter');
+            if (turnCounter) {
+                turnCounter.textContent = `第 ${this.turnCount} 回合`;
+            }
             
             this.addLog(`\n━━━ 第 ${this.turnCount} 回合开始 ━━━`, 'text-cyan-400 font-bold');
             await this.sleep(1000);
@@ -1373,7 +1543,7 @@ class BattleSystem {
     async triggerDefenseSkills(isDefender) {
         const defenderName = isDefender ? this.playerData.name : this.opponentData.name;
         const defenderStats = isDefender ? this.playerStats : this.opponentStats;
-        const defenderCard = isDefender ? this.ui.playerCard : this.ui.opponentCard;
+        const defenderModel = isDefender ? this.ui.playerModel : this.ui.opponentModel;
         const defenderSkills = isDefender ? this.playerPassiveSkills : this.opponentPassiveSkills;
         
         let hasDefenseSkill = false;
@@ -1431,9 +1601,11 @@ class BattleSystem {
                 }
                 
                 // 显示防御效果
-                defenderCard.classList.add('animate-defend');
-                await this.sleep(500);
-                defenderCard.classList.remove('animate-defend');
+                if (defenderModel) {
+                    defenderModel.classList.add('animate-defend');
+                    await this.sleep(500);
+                    defenderModel.classList.remove('animate-defend');
+                }
                 
                 // 设置冷却
                 if (skill.cooldown) {
@@ -1456,12 +1628,6 @@ class BattleSystem {
         }
         this.addLog(logMessage, 'text-purple-300');
         
-        // 找到并高亮对应的技能槽
-        const containerId = isPlayer ? 'player-skill-slots' : 'opponent-skill-slots';
-        const stats = isPlayer ? this.playerStats : this.opponentStats;
-        const container = document.getElementById(containerId);
-        if (!container) return;
-        
         // 获取装备的技能列表
         const animalData = isPlayer ? this.playerData : this.opponentData;
         let equippedSkills = [];
@@ -1476,29 +1642,13 @@ class BattleSystem {
         // 找到技能在槽位中的索引
         const skillIndex = equippedSkills.indexOf(skill.key);
         if (skillIndex !== -1) {
-            const slotElement = document.getElementById(`${containerId}-slot-${skillIndex}`);
-            if (slotElement) {
+            // 高亮底部技能卡片
+            const skillCard = document.getElementById(`skill-card-${skillIndex}`);
+            if (skillCard) {
                 // 触发动画
-                slotElement.classList.add('skill-triggered');
+                skillCard.classList.add('active');
                 await this.sleep(600);
-                slotElement.classList.remove('skill-triggered');
-                
-                // 如果是有持续时间的buff技能，添加持续高亮
-                if (skill.duration && skill.duration > 0) {
-                    // 记录技能生效
-                    if (!stats.activeSkills.includes(skill.key)) {
-                        stats.activeSkills.push(skill.key);
-                    }
-                    slotElement.classList.add('skill-active');
-                    
-                    // 在buff中记录技能key和槽位索引，用于后续移除高亮
-                    const buffKey = `buff_${skill.effect.split('_')[1] || skill.effect}`;
-                    if (stats.buffs[buffKey]) {
-                        stats.buffs[buffKey].skillKey = skill.key;
-                        stats.buffs[buffKey].slotIndex = skillIndex;
-                        stats.buffs[buffKey].containerId = containerId;
-                    }
-                }
+                skillCard.classList.remove('active');
             }
         }
     }
@@ -1604,39 +1754,45 @@ class BattleSystem {
     }
 
     showTurnIndicator(isPlayer) {
-        if (isPlayer) {
-            this.ui.playerTurnIndicator.style.display = 'block';
-        } else {
-            this.ui.opponentTurnIndicator.style.display = 'block';
+        if (isPlayer && this.ui.playerTurnBadge) {
+            this.ui.playerTurnBadge.classList.add('show');
+        } else if (!isPlayer && this.ui.opponentTurnBadge) {
+            this.ui.opponentTurnBadge.classList.add('show');
         }
     }
 
     hideTurnIndicator(isPlayer) {
-        if (isPlayer) {
-            this.ui.playerTurnIndicator.style.display = 'none';
-        } else {
-            this.ui.opponentTurnIndicator.style.display = 'none';
+        if (isPlayer && this.ui.playerTurnBadge) {
+            this.ui.playerTurnBadge.classList.remove('show');
+        } else if (!isPlayer && this.ui.opponentTurnBadge) {
+            this.ui.opponentTurnBadge.classList.remove('show');
         }
     }
 
     shakeCard(isPlayer) {
-        const card = isPlayer ? this.ui.playerCard : this.ui.opponentCard;
-        card.classList.add('animate-shake');
-        setTimeout(() => {
-            card.classList.remove('animate-shake');
-        }, 300);
+        const model = isPlayer ? this.ui.playerModel : this.ui.opponentModel;
+        if (model) {
+            model.classList.add('animate-hit');
+            setTimeout(() => {
+                model.classList.remove('animate-hit');
+            }, 400);
+        }
     }
 
     updateHealthUI() {
         // 更新玩家血条
         const playerHealthPercent = Math.max(0, (this.playerCurrentHealth / this.playerData.stamina) * 100);
-        document.getElementById('player-health-bar').style.width = `${playerHealthPercent}%`;
-        document.getElementById('player-health-text').textContent = `${this.playerCurrentHealth} / ${this.playerData.stamina}`;
+        const playerHpBar = document.getElementById('player-hp-bar');
+        const playerHpText = document.getElementById('player-hp-text');
+        if (playerHpBar) playerHpBar.style.width = `${playerHealthPercent}%`;
+        if (playerHpText) playerHpText.textContent = `${this.playerCurrentHealth} / ${this.playerData.stamina}`;
 
         // 更新对手血条
         const opponentHealthPercent = Math.max(0, (this.opponentCurrentHealth / this.opponentData.stamina) * 100);
-        document.getElementById('opponent-health-bar').style.width = `${opponentHealthPercent}%`;
-        document.getElementById('opponent-health-text').textContent = `${this.opponentCurrentHealth} / ${this.opponentData.stamina}`;
+        const opponentHpBar = document.getElementById('opponent-hp-bar');
+        const opponentHpText = document.getElementById('opponent-hp-text');
+        if (opponentHpBar) opponentHpBar.style.width = `${opponentHealthPercent}%`;
+        if (opponentHpText) opponentHpText.textContent = `${this.opponentCurrentHealth} / ${this.opponentData.stamina}`;
         
         // 更新系别显示和克制关系
         this.updateElementDisplay();
@@ -1969,12 +2125,13 @@ class BattleSystem {
         this.addLog(`${playerWon ? '🎉 恭喜获胜！' : '💔 遗憾落败...'}`, playerWon ? 'text-green-400 font-bold' : 'text-red-400 font-bold');
         this.addLog(`━━━━━━━━━━━━━━━━━━━━━━`, 'text-gray-400');
         
-        const actionPanel = document.querySelector('.action-panel');
+        const actionPanel = document.querySelector('.controls');
+        if (!actionPanel) return;
         actionPanel.innerHTML = '';
         
         const returnButton = document.createElement('button');
         returnButton.textContent = '返回联赛页面';
-        returnButton.className = 'return-button';
+        returnButton.className = 'control-btn primary';
         returnButton.onclick = () => {
             const returnUrl = localStorage.getItem('battleReturnUrl') || 'league.html';
             localStorage.removeItem('battleOpponent');
@@ -1986,14 +2143,15 @@ class BattleSystem {
     }
 
     showCaptureOptions() {
-        const actionPanel = document.querySelector('.action-panel');
+        const actionPanel = document.querySelector('.controls');
+        if (!actionPanel) return;
         actionPanel.innerHTML = '';
         
         this.addLog(`要尝试捕获 ${this.opponentData.name} 吗？`, 'text-yellow-300');
         
         const captureButton = document.createElement('button');
         captureButton.textContent = '✅ 捕获';
-        captureButton.className = 'action-button bg-green-600 hover:bg-green-700';
+        captureButton.className = 'control-btn primary';
         captureButton.onclick = () => {
             // 创建不含avatarData的副本以避免超出localStorage配额
             const capturedData = { ...this.opponentData };
@@ -2006,7 +2164,7 @@ class BattleSystem {
         
         const releaseButton = document.createElement('button');
         releaseButton.textContent = '❌ 放走';
-        releaseButton.className = 'action-button flee-button';
+        releaseButton.className = 'control-btn danger';
         releaseButton.onclick = () => {
             this.addLog(`你放走了 ${this.opponentData.name}。`, 'text-gray-400');
             actionPanel.querySelectorAll('button').forEach(btn => btn.disabled = true);
@@ -2044,12 +2202,13 @@ class BattleSystem {
     }
 
     showReturnButton(message) {
-        const actionPanel = document.querySelector('.action-panel');
+        const actionPanel = document.querySelector('.controls');
+        if (!actionPanel) return;
         actionPanel.innerHTML = '';
         
         const returnButton = document.createElement('button');
         returnButton.textContent = message;
-        returnButton.className = 'return-button';
+        returnButton.className = 'control-btn primary';
         returnButton.onclick = () => {
             const returnUrl = localStorage.getItem('battleReturnUrl') || 'game3d.html';
             localStorage.removeItem('battleOpponent');
@@ -2059,6 +2218,16 @@ class BattleSystem {
         };
         
         actionPanel.appendChild(returnButton);
+    }
+
+    showItems() {
+        this.addLog('🎒 道具功能开发中...', 'text-yellow-300');
+        alert('道具功能正在开发中，敬请期待！');
+    }
+    
+    showAnimals() {
+        this.addLog('🐾 动物功能开发中...', 'text-yellow-300');
+        alert('动物功能正在开发中，敬请期待！');
     }
 
     flee() {
@@ -2071,13 +2240,18 @@ class BattleSystem {
 
     addLog(message, className = 'text-gray-300') {
         const logContainer = this.ui.battleLog;
+        if (!logContainer) return;
+        
         const logEntry = document.createElement('div');
-        logEntry.className = className;
+        logEntry.className = `log-entry ${className}`;
         logEntry.textContent = message;
         logContainer.appendChild(logEntry);
         
         // 自动滚动到底部
-        logContainer.parentElement.scrollTop = logContainer.parentElement.scrollHeight;
+        const battleLogPanel = document.getElementById('battle-log');
+        if (battleLogPanel) {
+            battleLogPanel.scrollTop = battleLogPanel.scrollHeight;
+        }
     }
 
     sleep(ms) {
