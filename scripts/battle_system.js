@@ -1604,12 +1604,12 @@ class BattleSystem {
                     if (multiBonus.length > 0) {
                         if (multiBonus.length === 1) {
                             for (let i = 0; i < count; i++) {
-                                hitDamages.push(Math.floor(baseDamage * multiBonus[0]));
+                                hitDamages.push(baseDamage * multiBonus[0]);
                             }
                             hitCount = count;
                         } else {
                             for (let i = 0; i < count && i < multiBonus.length; i++) {
-                                hitDamages.push(Math.floor(baseDamage * multiBonus[i]));
+                                hitDamages.push(baseDamage * multiBonus[i]);
                             }
                             hitCount = Math.min(count, multiBonus.length);
                         }
@@ -1619,13 +1619,15 @@ class BattleSystem {
                         }
                     }
                     
-                    effectDamage = hitDamages.reduce((sum, dmg) => sum + dmg, 0);
+                    // 先累加所有段的伤害（保留小数），最后统一取整
+                    const totalHitDamage = hitDamages.reduce((sum, dmg) => sum + dmg, 0);
+                    effectDamage = Math.floor(totalHitDamage);
                     damageType = 'multi';
                     damageInfoList.push({
                         type: 'multi',
                         damage: effectDamage,
                         hitCount: hitCount,
-                        hitDamages: hitDamages
+                        hitDamages: hitDamages.map(d => d.toFixed(1))
                     });
                 } else if (effect === 'critical' && skill.value) {
                     effectDamage = Math.floor(baseDamage * skill.value);
@@ -2113,21 +2115,53 @@ class BattleSystem {
         if (opponentHpBar) opponentHpBar.style.width = `${opponentHealthPercent}%`;
         if (opponentHpText) opponentHpText.textContent = `${this.opponentCurrentHealth} / ${this.opponentData.stamina}`;
         
-        // 更新玩家属性数值
+        // 更新玩家属性数值（带变化指示）
         const playerAttackValue = document.getElementById('player-attack-value');
         const playerDefenseValue = document.getElementById('player-defense-value');
         const playerAgilityValue = document.getElementById('player-agility-value');
-        if (playerAttackValue) playerAttackValue.textContent = this.playerStats.attack;
-        if (playerDefenseValue) playerDefenseValue.textContent = this.playerStats.defense;
-        if (playerAgilityValue) playerAgilityValue.textContent = this.playerStats.agility;
         
-        // 更新敌方属性数值
+        if (playerAttackValue) {
+            const attackDiff = this.playerStats.attack - this.playerStats.baseAttack;
+            const arrow = attackDiff > 0 ? '<span style="color:#22c55e">↑</span>' :
+                         attackDiff < 0 ? '<span style="color:#ef4444">↓</span>' : '';
+            playerAttackValue.innerHTML = `${this.playerStats.attack}${arrow}`;
+        }
+        if (playerDefenseValue) {
+            const defenseDiff = this.playerStats.defense - this.playerStats.baseDefense;
+            const arrow = defenseDiff > 0 ? '<span style="color:#22c55e">↑</span>' :
+                         defenseDiff < 0 ? '<span style="color:#ef4444">↓</span>' : '';
+            playerDefenseValue.innerHTML = `${this.playerStats.defense}${arrow}`;
+        }
+        if (playerAgilityValue) {
+            const agilityDiff = this.playerStats.agility - this.playerStats.baseAgility;
+            const arrow = agilityDiff > 0 ? '<span style="color:#22c55e">↑</span>' :
+                         agilityDiff < 0 ? '<span style="color:#ef4444">↓</span>' : '';
+            playerAgilityValue.innerHTML = `${this.playerStats.agility}${arrow}`;
+        }
+        
+        // 更新敌方属性数值（带变化指示）
         const opponentAttackValue = document.getElementById('opponent-attack-value');
         const opponentDefenseValue = document.getElementById('opponent-defense-value');
         const opponentAgilityValue = document.getElementById('opponent-agility-value');
-        if (opponentAttackValue) opponentAttackValue.textContent = this.opponentStats.attack;
-        if (opponentDefenseValue) opponentDefenseValue.textContent = this.opponentStats.defense;
-        if (opponentAgilityValue) opponentAgilityValue.textContent = this.opponentStats.agility;
+        
+        if (opponentAttackValue) {
+            const attackDiff = this.opponentStats.attack - this.opponentStats.baseAttack;
+            const arrow = attackDiff > 0 ? '<span style="color:#22c55e">↑</span>' :
+                         attackDiff < 0 ? '<span style="color:#ef4444">↓</span>' : '';
+            opponentAttackValue.innerHTML = `${this.opponentStats.attack}${arrow}`;
+        }
+        if (opponentDefenseValue) {
+            const defenseDiff = this.opponentStats.defense - this.opponentStats.baseDefense;
+            const arrow = defenseDiff > 0 ? '<span style="color:#22c55e">↑</span>' :
+                         defenseDiff < 0 ? '<span style="color:#ef4444">↓</span>' : '';
+            opponentDefenseValue.innerHTML = `${this.opponentStats.defense}${arrow}`;
+        }
+        if (opponentAgilityValue) {
+            const agilityDiff = this.opponentStats.agility - this.opponentStats.baseAgility;
+            const arrow = agilityDiff > 0 ? '<span style="color:#22c55e">↑</span>' :
+                         agilityDiff < 0 ? '<span style="color:#ef4444">↓</span>' : '';
+            opponentAgilityValue.innerHTML = `${this.opponentStats.agility}${arrow}`;
+        }
         
         // 更新系别显示和克制关系
         this.updateElementDisplay();
