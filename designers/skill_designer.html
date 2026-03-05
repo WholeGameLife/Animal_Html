@@ -421,6 +421,11 @@
                         </button>
                     </div>
                 </div>
+                    <!-- 搜索框 -->
+                    <div class="mb-3">
+                        <input type="text" id="skill-search" placeholder="🔍 按名称搜索技能..."
+                            class="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-2 text-white text-sm focus:outline-none focus:border-blue-500 placeholder-gray-500">
+                    </div>
                     <div id="skills-list" class="space-y-3 max-h-96 overflow-y-auto">
                         <div class="text-center text-gray-500 text-sm py-8">
                             暂无技能
@@ -512,10 +517,8 @@
             
             let options = '';
             statusPool.forEach(status => {
-                // 显示状态图标（如果有）
-                const displayName = status.iconImage ?
-                    `${status.name}` : status.name;
-                options += `<option value="${status.key}">${displayName}</option>`;
+                // 显示状态名称
+                options += `<option value="${status.key}">${status.name}</option>`;
             });
             
             return options;
@@ -536,6 +539,7 @@
             setupEmojiPicker();
             setupFormListeners();
             updateSkillCount();
+            setupSkillSearch();
         }
 
         // 更新技能数量
@@ -892,13 +896,6 @@
                             <option value="earth">土</option>
                         </select></div>`;
                 
-                case 'rebirth-condition':
-                    return `<div><label class="block text-xs font-medium text-gray-400 mb-1">重生条件</label>
-                        <select id="${paramId}" class="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white text-sm">
-                            <option value="death">死亡后触发</option>
-                            <option value="low-hp">低生命触发</option>
-                        </select></div>`;
-                
                 default:
                     return '';
             }
@@ -1052,14 +1049,37 @@
             localStorage.setItem('SKILL_POOL', JSON.stringify(skills));
         }
 
+        // 设置技能搜索功能
+        function setupSkillSearch() {
+            const searchInput = document.getElementById('skill-search');
+            searchInput.addEventListener('input', (e) => {
+                const searchTerm = e.target.value.toLowerCase().trim();
+                renderSkillsList(searchTerm);
+            });
+        }
+
         // 渲染技能列表
-        function renderSkillsList() {
-            if (skills.length === 0) {
-                skillsList.innerHTML = `<div class="text-center text-gray-500 text-sm py-8">暂无技能</div>`;
+        function renderSkillsList(searchTerm = '') {
+            let filteredSkills = skills;
+            
+            // 如果有搜索词，过滤技能列表
+            if (searchTerm) {
+                filteredSkills = skills.filter(skill =>
+                    skill.name.toLowerCase().includes(searchTerm)
+                );
+            }
+
+            if (filteredSkills.length === 0) {
+                if (searchTerm) {
+                    skillsList.innerHTML = `<div class="text-center text-gray-500 text-sm py-8">未找到匹配"${searchTerm}"的技能</div>`;
+                } else {
+                    skillsList.innerHTML = `<div class="text-center text-gray-500 text-sm py-8">暂无技能</div>`;
+                }
                 return;
             }
 
-            skillsList.innerHTML = skills.map((skill, index) => {
+            skillsList.innerHTML = filteredSkills.map((skill) => {
+                const index = skills.indexOf(skill); // 使用原数组索引
                 const effects = skill.effects || [];
                 const effectLabels = effects.map(effect =>
                     `<span class="bg-green-600/30 text-green-300 px-1.5 py-0.5 rounded text-xs">${EFFECT_PARAMS_CONFIG[effect]?.name || effect}</span>`
@@ -1230,7 +1250,7 @@
                 'heal_direct': ['effect-source', 'bonus', 'target'],
                 'heal_continuous': ['effect-source', 'bonus', 'target'],
                 'heal_percent': ['effect-source', 'percent', 'target'],
-                'heal_rebirth': ['effect-source', 'percent', 'rebirth-condition'],
+                'heal_rebirth': ['effect-source', 'percent'],
                 'heal_lifesteal': ['effect-source', 'bonus']
             };
 
@@ -1297,8 +1317,6 @@
                                 value = getPurifyTypeName(value);
                             } else if (param === 'element-type') {
                                 value = getElementName(value);
-                            } else if (param === 'rebirth-condition') {
-                                value = value === 'death' ? '死亡后触发' : '低生命触发';
                             }
                         } else {
                             value = '';
@@ -1348,8 +1366,7 @@
                 'status-stacks': '施加层数',
                 'purify-type': '驱散类型',
                 'purify-count': '驱散数量',
-                'element-type': '属性类型',
-                'rebirth-condition': '重生条件'
+                'element-type': '属性类型'
             };
             return names[param] || param;
         }
@@ -1493,7 +1510,16 @@
             const status = statusPool.find(s => s.key === statusKey);
             
             if (status) {
-                // 如果找到状态，显示图片或名称
+                // 如果找到状态，显示图片
+                // 从状态key中提取ID（如 status_1 -> 1）
+                const statusIdMatch = status.key.match(/status_(\d+)/);
+                if (statusIdMatch) {
+                    const statusId = statusIdMatch[1];
+                    const paddedNum = String(statusId).padStart(4, '0');
+                    const iconPath = `../images/Status/${paddedNum}.png`;
+                    return `<img src="${iconPath}" class="w-5 h-5 inline-block object-contain" title="${status.name}" onerror="this.outerHTML='${status.name}'">`;
+                }
+                // 兼容旧数据（base64图片）
                 if (status.iconImage) {
                     return `<img src="${status.iconImage}" class="w-5 h-5 inline-block object-contain" title="${status.name}">`;
                 }

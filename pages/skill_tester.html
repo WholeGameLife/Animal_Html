@@ -1258,6 +1258,12 @@
                 }
             }
             
+            // 重置技能选择
+            playerSelectedSkills = [];
+            enemySelectedSkills = [];
+            replacingSlotIndex = -1;
+            replacingSide = 'player';
+            
             // 显示配置模态框
             document.getElementById('config-modal').style.display = 'flex';
             document.getElementById('battle-container').style.display = 'none';

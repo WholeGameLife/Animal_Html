@@ -463,6 +463,21 @@ function getStatusDisplay(statusKey) {
     const status = statusPool.find(s => s.key === statusKey);
     
     if (status) {
+        // 从状态key中提取ID（如 status_1 -> 1）
+        const statusIdMatch = status.key.match(/status_(\d+)/);
+        if (statusIdMatch) {
+            const statusId = statusIdMatch[1];
+            const paddedNum = String(statusId).padStart(4, '0');
+            // 自动检测当前路径
+            const currentPath = window.location.pathname;
+            let imageFolder = '../images/Status/'; // 默认从子文件夹访问
+            if (!currentPath.includes('/pages/') && !currentPath.includes('/designers/')) {
+                imageFolder = 'images/Status/'; // 从根目录访问
+            }
+            const iconPath = `${imageFolder}${paddedNum}.png`;
+            return `<img src="${iconPath}" class="w-5 h-5 inline-block object-contain" title="${status.name}" onerror="this.outerHTML='${status.name}'">`;
+        }
+        // 兼容旧数据（base64图片）
         if (status.iconImage) {
             return `<img src="${status.iconImage}" class="w-5 h-5 inline-block object-contain" title="${status.name}">`;
         }
@@ -866,12 +881,23 @@ class BattleSystem {
             this.playerStats.statuses.forEach(status => {
                 const buffIcon = document.createElement('div');
                 buffIcon.className = 'buff-icon';
-                // 优先使用icon字段，其次iconImage，最后默认图标
-                const iconText = status.data?.icon || status.data?.iconEmoji || '🔮';
-                if (status.data?.iconImage) {
-                    // 如果有图片图标，使用img标签
+                // 从状态key中提取ID并索引图片，或使用旧数据
+                const statusIdMatch = status.key.match(/status_(\d+)/);
+                if (statusIdMatch) {
+                    const statusId = statusIdMatch[1];
+                    const paddedNum = String(statusId).padStart(4, '0');
+                    const currentPath = window.location.pathname;
+                    let imageFolder = '../images/Status/';
+                    if (!currentPath.includes('/pages/') && !currentPath.includes('/designers/')) {
+                        imageFolder = 'images/Status/';
+                    }
+                    const iconPath = `${imageFolder}${paddedNum}.png`;
+                    buffIcon.innerHTML = `<img src="${iconPath}" class="w-full h-full object-contain" onerror="this.outerHTML='<div class=\\'buff-icon\\'>🔮</div>'">`;
+                } else if (status.data?.iconImage) {
+                    // 兼容旧数据（base64图片）
                     buffIcon.innerHTML = `<img src="${status.data.iconImage}" class="w-full h-full object-contain">`;
                 } else {
+                    const iconText = status.data?.icon || status.data?.iconEmoji || '🔮';
                     buffIcon.textContent = iconText;
                 }
                 
@@ -978,11 +1004,23 @@ class BattleSystem {
                 const buffIcon = document.createElement('div');
                 buffIcon.className = 'buff-icon';
                 // 优先使用icon字段，其次iconEmoji，最后默认图标
-                const iconText = status.data?.icon || status.data?.iconEmoji || '🔮';
-                if (status.data?.iconImage) {
-                    // 如果有图片图标，使用img标签
+                // 从状态key中提取ID并索引图片，或使用旧数据
+                const statusIdMatch = status.key.match(/status_(\d+)/);
+                if (statusIdMatch) {
+                    const statusId = statusIdMatch[1];
+                    const paddedNum = String(statusId).padStart(4, '0');
+                    const currentPath = window.location.pathname;
+                    let imageFolder = '../images/Status/';
+                    if (!currentPath.includes('/pages/') && !currentPath.includes('/designers/')) {
+                        imageFolder = 'images/Status/';
+                    }
+                    const iconPath = `${imageFolder}${paddedNum}.png`;
+                    buffIcon.innerHTML = `<img src="${iconPath}" class="w-full h-full object-contain" onerror="this.outerHTML='<div class=\\'debuff-icon\\'>🔮</div>'">`;
+                } else if (status.data?.iconImage) {
+                    // 兼容旧数据（base64图片）
                     buffIcon.innerHTML = `<img src="${status.data.iconImage}" class="w-full h-full object-contain">`;
                 } else {
+                    const iconText = status.data?.icon || status.data?.iconEmoji || '🔮';
                     buffIcon.textContent = iconText;
                 }
                 
@@ -2331,16 +2369,44 @@ class BattleSystem {
     }
 
     async checkBattleEnd() {
+        // 检查敌方死亡
         if (this.opponentCurrentHealth <= 0) {
+            // 检查敌方是否有重生效果
+            if (this.opponentStats.rebirthPercent && this.opponentStats.rebirthPercent > 0) {
+                const rebirthHp = Math.floor(this.opponentStats.maxHp * this.opponentStats.rebirthPercent);
+                this.opponentCurrentHealth = rebirthHp;
+                this.opponentStats.hp = rebirthHp;
+                this.addLog(`✨ ${this.opponentData.name} 触发重生效果，恢复 ${rebirthHp} 点生命！`, 'text-yellow-300 font-bold');
+                this.opponentStats.rebirthPercent = 0; // 清除重生标记
+                this.updateHealthUI();
+                await this.sleep(1500);
+                return false;
+            }
+            
             this.battleInProgress = false;
             await this.handleVictory();
             return true;
         }
+        
+        // 检查玩家死亡
         if (this.playerCurrentHealth <= 0) {
+            // 检查玩家是否有重生效果
+            if (this.playerStats.rebirthPercent && this.playerStats.rebirthPercent > 0) {
+                const rebirthHp = Math.floor(this.playerStats.maxHp * this.playerStats.rebirthPercent);
+                this.playerCurrentHealth = rebirthHp;
+                this.playerStats.hp = rebirthHp;
+                this.addLog(`✨ ${this.playerData.name} 触发重生效果，恢复 ${rebirthHp} 点生命！`, 'text-yellow-300 font-bold');
+                this.playerStats.rebirthPercent = 0; // 清除重生标记
+                this.updateHealthUI();
+                await this.sleep(1500);
+                return false;
+            }
+            
             this.battleInProgress = false;
             await this.handleDefeat();
             return true;
         }
+        
         return false;
     }
 

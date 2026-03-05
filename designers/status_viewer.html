@@ -383,9 +383,17 @@
             paramsHtml += paramDisplay('层数自增长', status.autoGrow ? '是' : undefined);
             paramsHtml += paramDisplay('每回合增加', status.autoGrow && status.growRate ? `${status.growRate}层` : undefined);
             
-            // 图标显示 - 支持iconImage（图片）或icon（emoji）
+            // 图标显示 - 使用状态ID索引图片或兼容旧数据
             let iconDisplay = '';
-            if (status.iconImage) {
+            // 从状态key中提取ID（如 status_1 -> 1）
+            const statusIdMatch = status.key.match(/status_(\d+)/);
+            if (statusIdMatch) {
+                const statusId = statusIdMatch[1];
+                const paddedNum = String(statusId).padStart(4, '0');
+                const iconPath = `../images/Status/${paddedNum}.png`;
+                iconDisplay = `<img src="${iconPath}" class="w-12 h-12 object-contain" style="max-height: 48px;" onerror="this.outerHTML='<div class=\\'w-12 h-12 bg-gray-700 rounded flex items-center justify-center text-2xl\\'>❓</div>'">`;
+            } else if (status.iconImage) {
+                // 兼容旧数据（base64图片）
                 iconDisplay = `<img src="${status.iconImage}" class="w-12 h-12 object-contain" style="max-height: 48px;">`;
             } else if (status.icon) {
                 iconDisplay = status.icon;
@@ -394,7 +402,14 @@
             }
             
             let iconDisplaySmall = '';
-            if (status.iconImage) {
+            // 使用状态ID索引图片或兼容旧数据
+            if (statusIdMatch) {
+                const statusId = statusIdMatch[1];
+                const paddedNum = String(statusId).padStart(4, '0');
+                const iconPath = `../images/Status/${paddedNum}.png`;
+                iconDisplaySmall = `<img src="${iconPath}" class="w-12 h-12 object-contain" style="max-height: 48px;" onerror="this.outerHTML='<div class=\\'w-12 h-12 bg-gray-700 rounded flex items-center justify-center\\'>❓</div>'">`;
+            } else if (status.iconImage) {
+                // 兼容旧数据
                 iconDisplaySmall = `<img src="${status.iconImage}" class="w-12 h-12 object-contain" style="max-height: 48px;">`;
             } else if (status.icon) {
                 iconDisplaySmall = status.icon;

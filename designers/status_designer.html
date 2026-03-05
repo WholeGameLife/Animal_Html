@@ -62,24 +62,24 @@
                                 class="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-300 mb-2">状态图标 * (仅支持上传图片)</label>
-                            <div class="space-y-2">
-                                <div class="flex gap-2">
-                                    <label for="icon-upload"
-                                        class="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg cursor-pointer flex items-center justify-center gap-2">
-                                        <span>📁</span>
-                                        <span>选择图片上传</span>
-                                    </label>
-                                    <input type="file" id="icon-upload" accept="image/*" class="hidden">
-                                    <button type="button" id="clear-icon-btn"
-                                        class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg">
-                                        清除
-                                    </button>
-                                </div>
-                                <div id="icon-preview" class="hidden bg-gray-800 border border-gray-600 rounded-lg p-2 flex items-center justify-center" style="height: 60px;">
-                                    <img id="icon-preview-img" class="max-h-full max-w-full object-contain" style="max-height: 50px;">
-                                </div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">状态ID *</label>
+                            <div class="flex items-center gap-2">
+                                <span class="text-gray-400 text-sm font-mono bg-gray-800 px-3 py-2 rounded-l-lg border border-r-0 border-gray-600">status_</span>
+                                <input type="number" id="status-id" required min="1" placeholder="输入数字"
+                                    class="flex-1 bg-gray-800 border border-gray-600 rounded-r-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500">
                             </div>
+                            <p class="text-xs text-gray-500 mt-1">自动生成格式: status_数字（如 status_1）</p>
+                        </div>
+                    </div>
+                    
+                    <!-- 状态图标预览 -->
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">状态图标</label>
+                            <div id="icon-preview" class="bg-gray-800 border border-gray-600 rounded-lg p-2 flex items-center justify-center" style="height: 80px;">
+                                <img id="icon-preview-img" class="max-h-full max-w-full object-contain" style="max-height: 70px;" alt="图标预览">
+                            </div>
+                            <p class="text-xs text-gray-500 mt-1">自动根据状态ID索引: Status/000{ID}.png</p>
                         </div>
                     </div>
 
@@ -321,6 +321,10 @@
                                         <input type="checkbox" class="effect-checkbox" data-effect="reset-cooldown">
                                         <span>重置冷却</span>
                                     </label>
+                                    <label class="flex items-center gap-2 text-white text-sm cursor-pointer hover:bg-gray-700 p-2 rounded">
+                                        <input type="checkbox" class="effect-checkbox" data-effect="rebirth">
+                                        <span>重生</span>
+                                    </label>
                                 </div>
                             </div>
                         </div>
@@ -382,8 +386,13 @@
                                 class="bg-teal-600 hover:bg-teal-700 text-white text-sm font-bold py-2 px-4 rounded-lg transition-colors">
                                 📊 导出CSV
                             </button>
+                            <button id="batch-update-refs-btn"
+                                class="bg-orange-600 hover:bg-orange-700 text-white text-sm font-bold py-2 px-4 rounded-lg transition-colors">
+                                🔧 批量更新引用
+                            </button>
                         </div>
                     </div>
+                    <p class="text-xs text-gray-400 mt-2">💡 如果技能中使用了旧的状态ID，点击"批量更新引用"可自动修复</p>
                     <div id="status-list" class="space-y-3 max-h-96 overflow-y-auto">
                         <div class="text-center text-gray-500 text-sm py-8">
                             暂无状态
@@ -415,7 +424,8 @@
             'reverse-element': { name: '系别反转', needsSource: false, needsValue: false },
             'element-advantage': { name: '属性克制', needsSource: false, needsValue: true, label: '每层增伤倍率', defaultValue: 1.5, min: 1, step: 0.1 },
             'element-bonus': { name: '属性增伤', needsSource: true, needsValue: true, label: '每层增伤百分比', defaultValue: 0.2, min: 0, step: 0.05 },
-            'reset-cooldown': { name: '重置冷却', needsSource: false, needsValue: false }
+            'reset-cooldown': { name: '重置冷却', needsSource: false, needsValue: false },
+            'rebirth': { name: '重生', needsSource: true, needsValue: true, label: '重生生命百分比', defaultValue: 0.5, min: 0, max: 1, step: 0.1 }
         };
 
         // 状态池存储
@@ -429,8 +439,8 @@
         const statusCount = document.getElementById('status-count');
         const effectValues = document.getElementById('effect-values');
 
-        // 图片数据存储
-        let iconImageData = null;
+        // 图片路径前缀（根据当前路径自动调整）
+        const STATUS_IMAGE_FOLDER = '../images/Status/';
 
         // 初始化
         function init() {
@@ -541,9 +551,8 @@
                 updatePreview();
             });
 
-            // 图标上传
-            document.getElementById('icon-upload').onchange = handleIconUpload;
-            document.getElementById('clear-icon-btn').onclick = clearIcon;
+            // 状态ID输入监听（用于实时更新图标预览）
+            document.getElementById('status-id').addEventListener('input', updateIconPreview);
 
             // 表单提交
             form.onsubmit = (e) => {
@@ -558,7 +567,6 @@
             // 清空按钮
             document.getElementById('clear-btn').onclick = () => {
                 form.reset();
-                clearIcon();
                 cancelEdit();
                 effectValues.innerHTML = '<p class="text-xs text-gray-500">选择状态效果后，这里将显示对应的数值配置</p>';
                 updatePreview();
@@ -567,7 +575,6 @@
             // 取消编辑按钮
             document.getElementById('cancel-edit-btn').onclick = () => {
                 form.reset();
-                clearIcon();
                 cancelEdit();
                 effectValues.innerHTML = '<p class="text-xs text-gray-500">选择状态效果后，这里将显示对应的数值配置</p>';
                 updatePreview();
@@ -577,75 +584,37 @@
             document.getElementById('export-btn').onclick = exportStatuses;
             document.getElementById('export-csv-btn').onclick = exportStatusesToCSV;
             document.getElementById('import-file').onchange = importStatuses;
+            
+            // 批量更新引用
+            document.getElementById('batch-update-refs-btn').onclick = batchUpdateAllReferences;
         }
         
-        // 处理图标上传
-        function handleIconUpload(e) {
-            const file = e.target.files[0];
-            if (!file) return;
+        // 根据状态ID获取状态图标路径
+        function getStatusIconPath(statusId) {
+            if (!statusId) return null;
+            // 补齐为4位数字，例如1变为0001
+            const paddedNum = String(statusId).padStart(4, '0');
+            return `${STATUS_IMAGE_FOLDER}${paddedNum}.png`;
+        }
+        
+        // 更新图标预览（基于状态ID）
+        function updateIconPreview() {
+            const statusIdNum = document.getElementById('status-id').value;
+            const previewImg = document.getElementById('icon-preview-img');
             
-            if (!file.type.startsWith('image/')) {
-                alert('请上传图片文件！');
-                return;
-            }
-            
-            // 检查文件大小（限制为 500KB）
-            if (file.size > 500 * 1024) {
-                alert('图片文件过大！请上传小于 500KB 的图片，或使用图片压缩工具压缩后再上传。');
-                return;
-            }
-            
-            const reader = new FileReader();
-            reader.onload = (event) => {
-                const img = new Image();
-                img.onload = () => {
-                    // 压缩图片到合适尺寸
-                    const canvas = document.createElement('canvas');
-                    const ctx = canvas.getContext('2d');
-                    
-                    // 限制最大尺寸为 64x64
-                    const maxSize = 64;
-                    let width = img.width;
-                    let height = img.height;
-                    
-                    if (width > height) {
-                        if (width > maxSize) {
-                            height *= maxSize / width;
-                            width = maxSize;
-                        }
-                    } else {
-                        if (height > maxSize) {
-                            width *= maxSize / height;
-                            height = maxSize;
-                        }
-                    }
-                    
-                    canvas.width = width;
-                    canvas.height = height;
-                    ctx.drawImage(img, 0, 0, width, height);
-                    
-                    // 转换为 base64，质量设为 0.8
-                    iconImageData = canvas.toDataURL('image/jpeg', 0.8);
-                    
-                    // 显示预览
-                    const preview = document.getElementById('icon-preview');
-                    const previewImg = document.getElementById('icon-preview-img');
-                    previewImg.src = iconImageData;
-                    preview.classList.remove('hidden');
-                    
-                    // 更新主预览
-                    updatePreview();
+            if (statusIdNum) {
+                const iconPath = getStatusIconPath(statusIdNum);
+                previewImg.src = iconPath;
+                previewImg.style.display = 'block';
+                // 处理图片加载失败
+                previewImg.onerror = () => {
+                    previewImg.style.display = 'none';
+                    previewImg.alt = '图片不存在';
                 };
-                img.src = event.target.result;
-            };
-            reader.readAsDataURL(file);
-        }
-        
-        // 清除图标
-        function clearIcon() {
-            iconImageData = null;
-            document.getElementById('icon-preview').classList.add('hidden');
-            document.getElementById('icon-upload').value = '';
+            } else {
+                previewImg.style.display = 'none';
+            }
+            
             updatePreview();
         }
 
@@ -769,10 +738,12 @@
                 `<span class="bg-purple-600/30 text-purple-300 px-2 py-1 rounded text-xs">${EFFECT_CONFIG[effect].name}</span>`
             ).join(' ');
 
-            // 图标显示：使用上传的图片
+            // 图标显示：使用状态ID索引图片
             let iconDisplay = '';
-            if (iconImageData) {
-                iconDisplay = `<img src="${iconImageData}" class="w-12 h-12 object-contain flex-shrink-0">`;
+            const statusIdNum = document.getElementById('status-id').value;
+            if (statusIdNum) {
+                const iconPath = getStatusIconPath(statusIdNum);
+                iconDisplay = `<img src="${iconPath}" class="w-12 h-12 object-contain flex-shrink-0" onerror="this.style.display='none'">`;
             } else {
                 iconDisplay = `<div class="w-12 h-12 bg-gray-700 rounded flex items-center justify-center text-2xl flex-shrink-0">❓</div>`;
             }
@@ -863,7 +834,6 @@
             
             return {
                 name: document.getElementById('status-name').value,
-                iconImage: iconImageData,
                 description: document.getElementById('status-description').value,
                 statusType: document.getElementById('status-type').value,
                 statusDuration: statusDuration,
@@ -890,17 +860,30 @@
                 return;
             }
             
-            if (!data.iconImage) {
-                alert('请上传状态图标图片！');
+            
+            // 获取用户输入的状态ID
+            const statusIdNum = document.getElementById('status-id').value;
+            if (!statusIdNum) {
+                alert('请输入状态ID（数字）！');
+                return;
+            }
+            
+            const statusKey = `status_${statusIdNum}`;
+            
+            // 检查key是否已存在
+            if (statuses.find(s => s.key === statusKey)) {
+                alert(`❌ 状态ID "${statusKey}" 已存在！请使用不同的数字。`);
                 return;
             }
 
-            const statusKey = `STATUS_${Date.now()}`;
             const status = {
                 key: statusKey,
                 ...data,
                 createdAt: new Date().toISOString()
             };
+            
+            // 确保不保存iconImage字段
+            delete status.iconImage;
 
             statuses.push(status);
             saveStatusPool();
@@ -908,11 +891,10 @@
             renderStatusList();
             updateStatusCount();
             form.reset();
-            clearIcon();
             effectValues.innerHTML = '<p class="text-xs text-gray-500">选择状态效果后，这里将显示对应的数值配置</p>';
             updatePreview();
             
-            alert(`✅ 状态 "${data.name}" 已创建！`);
+            alert(`✅ 状态 "${data.name}" (${statusKey}) 已创建！`);
         }
 
         // 更新状态
@@ -924,29 +906,53 @@
                 return;
             }
             
-            if (!data.iconImage) {
-                alert('请上传状态图标图片！');
+            // 获取用户输入的状态ID
+            const statusIdNum = document.getElementById('status-id').value;
+            if (!statusIdNum) {
+                alert('请输入状态ID（数字）！');
                 return;
             }
             
+            const newStatusKey = `status_${statusIdNum}`;
+            const oldKey = statuses[editingIndex].key;
+            
+            // 如果ID被修改了，检查新ID是否已被其他状态使用
+            if (newStatusKey !== oldKey) {
+                if (statuses.find((s, i) => s.key === newStatusKey && i !== editingIndex)) {
+                    alert(`❌ 状态ID "${newStatusKey}" 已被其他状态使用！请使用不同的数字。`);
+                    return;
+                }
+            }
+            
             const status = {
-                key: statuses[editingIndex].key,
+                key: newStatusKey,
                 ...data,
                 createdAt: statuses[editingIndex].createdAt,
                 updatedAt: new Date().toISOString()
             };
+            
+            // 清除旧的iconImage字段（如果存在）
+            delete status.iconImage;
 
             statuses[editingIndex] = status;
             saveStatusPool();
             
+            // 如果ID改变了，自动更新技能池中的引用
+            if (newStatusKey !== oldKey) {
+                updateSkillReferences(oldKey, newStatusKey);
+            }
+            
+            // 强制重新加载状态池以确保显示最新数据
+            statuses = JSON.parse(localStorage.getItem('STATUS_POOL') || '[]');
+            
             renderStatusList();
+            updateStatusCount();
             form.reset();
-            clearIcon();
             cancelEdit();
             effectValues.innerHTML = '<p class="text-xs text-gray-500">选择状态效果后，这里将显示对应的数值配置</p>';
             updatePreview();
             
-            alert(`✅ 状态 "${data.name}" 已更新！`);
+            alert(`✅ 状态 "${data.name}" (${newStatusKey}) 已更新！${newStatusKey !== oldKey ? '\n✨ 已自动更新所有技能中的状态引用' : ''}`);
         }
 
         // 编辑状态
@@ -960,6 +966,15 @@
             document.getElementById('status-type').value = status.statusType || 'negative';
             document.getElementById('status-canPurify').value = status.canPurify ? 'true' : 'false';
             document.getElementById('status-uniqueEffect').value = status.uniqueEffect ? 'true' : 'false';
+            
+            // 填充状态ID（提取status_后面的数字）
+            if (status.key && status.key.startsWith('status_')) {
+                const idNum = status.key.replace('status_', '');
+                document.getElementById('status-id').value = idNum;
+            } else if (status.key && status.key.startsWith('STATUS_')) {
+                // 兼容旧格式（STATUS_时间戳）
+                document.getElementById('status-id').value = status.key.replace('STATUS_', '');
+            }
             
             // 处理层数系统
             const hasStacks = status.hasStacks !== false; // 默认为true以兼容旧数据
@@ -1027,14 +1042,8 @@
                 growRateContainer.style.display = 'none';
             }
             
-            // 设置图标
-            if (status.iconImage) {
-                iconImageData = status.iconImage;
-                const iconPreview = document.getElementById('icon-preview');
-                const previewImg = document.getElementById('icon-preview-img');
-                previewImg.src = iconImageData;
-                iconPreview.classList.remove('hidden');
-            }
+            // 图标会自动根据状态ID更新预览
+            updateIconPreview();
             
             // 选中效果复选框
             document.querySelectorAll('.effect-checkbox').forEach(cb => cb.checked = false);
@@ -1109,9 +1118,16 @@
                     `<span class="bg-purple-600/30 text-purple-300 px-1.5 py-0.5 rounded text-xs">${EFFECT_CONFIG[effect]?.name || effect}</span>`
                 ).join(' ');
                 
-                // 图标显示：只使用上传的图片
+                // 图标显示：使用状态ID索引图片（兼容旧的base64图片）
                 let iconDisplay = '';
-                if (status.iconImage) {
+                // 提取状态ID数字部分（如 status_1 -> 1）
+                const statusIdMatch = status.key.match(/status_(\d+)/);
+                if (statusIdMatch) {
+                    const statusId = statusIdMatch[1];
+                    const iconPath = getStatusIconPath(statusId);
+                    iconDisplay = `<img src="${iconPath}" class="w-10 h-10 object-contain flex-shrink-0" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="w-10 h-10 bg-gray-700 rounded flex items-center justify-center text-lg flex-shrink-0" style="display:none;">❓</div>`;
+                } else if (status.iconImage) {
+                    // 兼容旧数据（base64图片）
                     iconDisplay = `<img src="${status.iconImage}" class="w-10 h-10 object-contain flex-shrink-0">`;
                 } else {
                     iconDisplay = `<div class="w-10 h-10 bg-gray-700 rounded flex items-center justify-center text-lg flex-shrink-0">❓</div>`;
@@ -1124,6 +1140,7 @@
                             <div class="flex-1 min-w-0">
                                 <div class="flex items-center gap-2 mb-1 flex-wrap">
                                     <h5 class="text-sm font-bold text-white truncate">${status.name}</h5>
+                                    <span class="text-xs bg-gray-700/80 text-gray-300 px-1.5 py-0.5 rounded font-mono flex-shrink-0">${status.key}</span>
                                     ${getStatusTypeBadgeForList(status.statusType)}
                                     ${status.canPurify ? '<span class="text-xs bg-green-600/30 text-green-300 px-1.5 py-0.5 rounded flex-shrink-0">可净化</span>' : '<span class="text-xs bg-red-600/30 text-red-300 px-1.5 py-0.5 rounded flex-shrink-0">不可净化</span>'}
                                 </div>
@@ -1215,7 +1232,7 @@
                 'boost-damage', 'boost-attack', 'boost-defense', 'boost-speed',
                 'reduce-damage', 'reduce-attack', 'reduce-defense', 'reduce-agility',
                 'ignore-defense', 'first-strike', 'reverse-element', 'element-advantage',
-                'element-bonus', 'reset-cooldown'
+                'element-bonus', 'reset-cooldown', 'rebirth'
             ];
 
             const effectHeaders = [];
@@ -1383,6 +1400,112 @@
             return badges[statusType] || badges['negative'];
         }
 
+        // 更新技能池中的状态引用
+        function updateSkillReferences(oldKey, newKey) {
+            try {
+                const skillPool = JSON.parse(localStorage.getItem('SKILL_POOL') || '[]');
+                let updatedCount = 0;
+                
+                skillPool.forEach(skill => {
+                    if (skill.params) {
+                        // 检查所有参数，更新状态引用
+                        Object.keys(skill.params).forEach(paramKey => {
+                            if (paramKey.includes('status-type') && skill.params[paramKey] === oldKey) {
+                                skill.params[paramKey] = newKey;
+                                updatedCount++;
+                            }
+                        });
+                    }
+                });
+                
+                if (updatedCount > 0) {
+                    localStorage.setItem('SKILL_POOL', JSON.stringify(skillPool));
+                    console.log(`✅ 已更新 ${updatedCount} 个技能中的状态引用：${oldKey} → ${newKey}`);
+                }
+            } catch (e) {
+                console.error('更新技能引用失败：', e);
+            }
+        }
+        
+        // 批量更新所有技能中的状态引用
+        function batchUpdateAllReferences() {
+            try {
+                const skillPool = JSON.parse(localStorage.getItem('SKILL_POOL') || '[]');
+                
+                // 先扫描所有无效引用（状态池中不存在的ID）
+                const invalidRefs = [];
+                const validStatusKeys = new Set(statuses.map(s => s.key));
+                
+                skillPool.forEach((skill, skillIndex) => {
+                    if (skill.params) {
+                        Object.keys(skill.params).forEach(paramKey => {
+                            if (paramKey.includes('status-type')) {
+                                const statusId = skill.params[paramKey];
+                                if (statusId && !validStatusKeys.has(statusId)) {
+                                    invalidRefs.push({
+                                        skill: skill,
+                                        paramKey: paramKey,
+                                        oldId: statusId,
+                                        skillIndex: skillIndex
+                                    });
+                                }
+                            }
+                        });
+                    }
+                });
+                
+                if (invalidRefs.length === 0) {
+                    alert('✅ 所有技能中的状态引用都是有效的，无需更新！');
+                    return;
+                }
+                
+                // 显示无效引用列表，询问是否清除
+                let message = `⚠️ 发现 ${invalidRefs.length} 处无效的状态引用！\n\n`;
+                message += `这些引用指向的状态在状态池中不存在（可能ID已被修改）：\n\n`;
+                invalidRefs.slice(0, 5).forEach(ref => {
+                    message += `• 技能"${ref.skill.name}": ${ref.oldId}\n`;
+                });
+                if (invalidRefs.length > 5) {
+                    message += `... 还有 ${invalidRefs.length - 5} 个\n`;
+                }
+                message += `\n是否将这些无效引用清空？\n（清空后需要在技能设计器中重新选择正确的状态）`;
+                
+                if (!confirm(message)) {
+                    return;
+                }
+                
+                // 清空无效引用
+                let updatedSkillCount = 0;
+                const updatedSkillNames = [];
+                
+                invalidRefs.forEach(ref => {
+                    // 直接清空无效引用（设置为空字符串）
+                    skillPool[ref.skillIndex].params[ref.paramKey] = '';
+                    if (!updatedSkillNames.includes(ref.skill.name)) {
+                        updatedSkillNames.push(ref.skill.name);
+                        updatedSkillCount++;
+                    }
+                });
+                
+                localStorage.setItem('SKILL_POOL', JSON.stringify(skillPool));
+                
+                let resultMessage = `✅ 已清空 ${invalidRefs.length} 处无效引用！\n\n`;
+                resultMessage += `📋 涉及的技能（${updatedSkillCount}个）：\n`;
+                updatedSkillNames.slice(0, 10).forEach(name => {
+                    resultMessage += `• ${name}\n`;
+                });
+                if (updatedSkillNames.length > 10) {
+                    resultMessage += `... 还有 ${updatedSkillNames.length - 10} 个\n`;
+                }
+                resultMessage += `\n请在技能设计器中重新为这些技能选择正确的状态！`;
+                
+                alert(resultMessage);
+            } catch (e) {
+                console.error('批量更新失败：', e);
+                alert('❌ 批量更新失败：' + e.message);
+            }
+        }
+        
         // 初始化应用
         init();
     </script>
