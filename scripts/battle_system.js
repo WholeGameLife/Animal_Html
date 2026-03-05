@@ -1713,11 +1713,11 @@ class BattleSystem {
             }
             
             // 检查技能是否包含非攻击效果（buff_status_enemy, debuff_status_self等）
-            const hasNonDamageEffects = skillEffects.some(e => 
-                ['buff_status_enemy', 'debuff_status_self', 'buff_attack', 'buff_defense', 
-                 'buff_speed', 'buff_purify', 'buff_heal_amp', 'debuff_attack', 'debuff_defense', 
-                 'debuff_speed', 'debuff_no_heal', 'debuff_heal_reduce', 'heal_direct', 
-                 'heal_continuous', 'heal_percent', 'heal_rebirth', 'buff_element_damage', 
+            const hasNonDamageEffects = skillEffects.some(e =>
+                ['buff_status_enemy', 'debuff_status_self', 'buff_attack', 'buff_defense',
+                 'buff_speed', 'buff_purify', 'buff_heal_amp', 'debuff_attack', 'debuff_defense',
+                 'debuff_speed', 'debuff_no_heal', 'debuff_heal_reduce', 'debuff_hp_cost', 'heal_direct',
+                 'heal_continuous', 'heal_percent', 'heal_rebirth', 'buff_element_damage',
                  'debuff_element_damage'].includes(e)
             );
             
@@ -1743,14 +1743,24 @@ class BattleSystem {
             
             // 如果技能有效果（伤害或非伤害），应用非攻击效果并设置冷却
             if (skillTotalDamage > 0 || hasNonDamageEffects) {
+                // 如果技能造成了伤害，显示技能触发
+                if (skillTotalDamage > 0) {
+                    // 伤害已经在上面显示过了（第1741行），这里不需要重复
+                }
+                
                 // 应用技能的非攻击效果（包括状态附加、治愈等）
                 if (hasNonDamageEffects) {
+                    // 如果技能没有造成伤害但有其他效果，显示技能触发
+                    if (skillTotalDamage === 0) {
+                        await this.triggerSkillEffect(skill, isPlayer, '辅助效果');
+                    }
+                    
                     // 调试日志
-                    const effectNames = skillEffects.filter(e => 
-                        ['buff_status_enemy', 'debuff_status_self', 'buff_attack', 'buff_defense', 
-                         'buff_speed', 'buff_purify', 'buff_heal_amp', 'debuff_attack', 'debuff_defense', 
-                         'debuff_speed', 'debuff_no_heal', 'debuff_heal_reduce', 'heal_direct', 
-                         'heal_continuous', 'heal_percent', 'heal_rebirth', 'buff_element_damage', 
+                    const effectNames = skillEffects.filter(e =>
+                        ['buff_status_enemy', 'debuff_status_self', 'buff_attack', 'buff_defense',
+                         'buff_speed', 'buff_purify', 'buff_heal_amp', 'debuff_attack', 'debuff_defense',
+                         'debuff_speed', 'debuff_no_heal', 'debuff_heal_reduce', 'debuff_hp_cost', 'heal_direct',
+                         'heal_continuous', 'heal_percent', 'heal_rebirth', 'buff_element_damage',
                          'debuff_element_damage'].includes(e)
                     );
                     if (effectNames.length > 0) {
@@ -1762,11 +1772,6 @@ class BattleSystem {
                     this.updateBuffIcons();
                     this.updateStatusUI();
                     this.updateHealthUI();
-                }
-                
-                // 如果技能没有造成伤害但有其他效果，显示技能触发
-                if (skillTotalDamage === 0 && hasNonDamageEffects) {
-                    await this.triggerSkillEffect(skill, isPlayer, '辅助效果');
                 }
                 
                 // 设置冷却
@@ -2107,6 +2112,22 @@ class BattleSystem {
         const opponentHpText = document.getElementById('opponent-hp-text');
         if (opponentHpBar) opponentHpBar.style.width = `${opponentHealthPercent}%`;
         if (opponentHpText) opponentHpText.textContent = `${this.opponentCurrentHealth} / ${this.opponentData.stamina}`;
+        
+        // 更新玩家属性数值
+        const playerAttackValue = document.getElementById('player-attack-value');
+        const playerDefenseValue = document.getElementById('player-defense-value');
+        const playerAgilityValue = document.getElementById('player-agility-value');
+        if (playerAttackValue) playerAttackValue.textContent = this.playerStats.attack;
+        if (playerDefenseValue) playerDefenseValue.textContent = this.playerStats.defense;
+        if (playerAgilityValue) playerAgilityValue.textContent = this.playerStats.agility;
+        
+        // 更新敌方属性数值
+        const opponentAttackValue = document.getElementById('opponent-attack-value');
+        const opponentDefenseValue = document.getElementById('opponent-defense-value');
+        const opponentAgilityValue = document.getElementById('opponent-agility-value');
+        if (opponentAttackValue) opponentAttackValue.textContent = this.opponentStats.attack;
+        if (opponentDefenseValue) opponentDefenseValue.textContent = this.opponentStats.defense;
+        if (opponentAgilityValue) opponentAgilityValue.textContent = this.opponentStats.agility;
         
         // 更新系别显示和克制关系
         this.updateElementDisplay();
@@ -2970,6 +2991,108 @@ class BattleSystem {
                 break;
             }
             
+            case 'multi_attack': {
+                // 多段攻击（在applySingleEffect中不执行，在executeAttack中处理）
+                this.addLog(`多段攻击效果已在攻击阶段处理`, 'text-gray-400');
+                break;
+            }
+            
+            case 'dot_damage': {
+                // 附加伤害（在applySingleEffect中不执行，在executeAttack中处理）
+                this.addLog(`附加伤害效果已在攻击阶段处理`, 'text-gray-400');
+                break;
+            }
+            
+            case 'percent_damage': {
+                // 百分比伤害
+                const effectSource = params[`${effectKey}_effect-source`] || 'enemy-max-hp';
+                const percent = params[`${effectKey}_percent`] || 0.1;
+                
+                // 获取来源值
+                let targetHp = 0;
+                if (effectSource === 'enemy-max-hp') {
+                    targetHp = defenderStats.maxHp;
+                } else if (effectSource === 'enemy-current-hp') {
+                    targetHp = defenderStats.hp;
+                } else if (effectSource === 'enemy-lost-hp') {
+                    targetHp = defenderStats.maxHp - defenderStats.hp;
+                } else if (effectSource === 'self-max-hp') {
+                    targetHp = attackerStats.maxHp;
+                } else if (effectSource === 'self-current-hp') {
+                    targetHp = attackerStats.hp;
+                }
+                
+                const damage = Math.round(targetHp * percent);
+                defenderStats.hp = Math.max(0, defenderStats.hp - damage);
+                attackerStats.turnDamage += damage;
+                
+                // 同步到旧的health变量
+                if (isPlayer) {
+                    this.opponentCurrentHealth = defenderStats.hp;
+                } else {
+                    this.playerCurrentHealth = defenderStats.hp;
+                }
+                this.addLog(`百分比伤害: 造成 ${damage} 点伤害 (${(percent * 100).toFixed(0)}%)`, 'text-red-300');
+                break;
+            }
+            
+            case 'direct_defense': {
+                // 直接防御（本回合临时提升）
+                const bonus = params[`${effectKey}_bonus`] || 0.3;
+                const increase = Math.round(sourceValue * bonus);
+                attackerStats.defense += increase;
+                this.addLog(`直接防御: ${attackerName}防御力 +${increase}`, 'text-blue-300');
+                break;
+            }
+            
+            case 'continuous_defense': {
+                // 持续防御（需要配合duration使用）
+                const bonus = params[`${effectKey}_bonus`] || 0.3;
+                const increase = Math.round(sourceValue * bonus);
+                attackerStats.defense += increase;
+                this.addLog(`持续防御: ${attackerName}防御力 +${increase}`, 'text-blue-300');
+                break;
+            }
+            
+            case 'defense_counter': {
+                // 防御反击
+                const defenseBonus = params[`${effectKey}_defense-bonus`] || 0.3;
+                const counterSource = params[`${effectKey}_counter-effect-source`] || 'self-current-defense';
+                const counterBonus = params[`${effectKey}_counter-bonus`] || 0.5;
+                
+                // 防御加成
+                const defenseIncrease = Math.round(sourceValue * defenseBonus);
+                attackerStats.defense += defenseIncrease;
+                
+                // 设置反击buff（将在受到攻击时触发）
+                attackerStats.buffs.counter = {
+                    value: counterBonus,
+                    duration: 1,
+                    source: counterSource
+                };
+                
+                this.addLog(`防御反击: ${attackerName}防御力 +${defenseIncrease}，并准备反击`, 'text-blue-300');
+                break;
+            }
+            
+            case 'direct_speed': {
+                // 直接增速（本回合临时提升）
+                const bonus = params[`${effectKey}_bonus`] || 0.3;
+                const increase = Math.round(sourceValue * bonus);
+                attackerStats.agility += increase;
+                this.addLog(`直接增速: ${attackerName}敏捷 +${increase}`, 'text-cyan-300');
+                break;
+            }
+            
+            case 'continuous_speed': {
+                // 持续增速（需要配合duration使用）
+                const bonus = params[`${effectKey}_bonus`] || 0.3;
+                const increase = Math.round(sourceValue * bonus);
+                attackerStats.agility += increase;
+                this.addLog(`持续增速: ${attackerName}敏捷 +${increase}`, 'text-cyan-300');
+                break;
+            }
+            
             case 'heal_direct': {
                 const target = params[`${effectKey}_target`];
                 const bonus = params[`${effectKey}_bonus`] || 1;
@@ -3020,6 +3143,67 @@ class BattleSystem {
                         this.opponentCurrentHealth = attackerStats.hp;
                     }
                     this.addLog(`百分比恢复: +${heal} 生命 (${(percent * 100).toFixed(0)}%)`, 'text-green-300');
+                }
+                break;
+            }
+            
+            case 'heal_rebirth': {
+                // 重生效果（在单位即将死亡时触发）
+                const target = params[`${effectKey}_target`];
+                const percent = params[`${effectKey}_percent`] || 0.3;
+                const condition = params[`${effectKey}_rebirth-condition`] || 'on-death';
+                
+                // 在applySingleEffect中设置重生标记，实际触发在checkBattleEnd中
+                if (target === 'self' || target === 'ally-all') {
+                    attackerStats.rebirthPercent = percent;
+                    this.addLog(`重生准备: ${attackerName}获得重生效果 (${(percent * 100).toFixed(0)}%生命)`, 'text-yellow-300');
+                }
+                break;
+            }
+            
+            case 'heal_lifesteal': {
+                // 生命汲取（在造成伤害后触发）
+                // 这个效果在executeAttack中的旧系统buff中已处理
+                // 这里作为新系统的补充，可以直接设置buff
+                const bonus = params[`${effectKey}_bonus`] || 0.5;
+                attackerStats.buffs.lifesteal = { value: bonus, duration: 1 };
+                this.addLog(`生命汲取: ${attackerName}伤害转化 ${(bonus * 100).toFixed(0)}% 生命`, 'text-pink-300');
+                break;
+            }
+            
+            case 'buff_heal_amp': {
+                // 增加治疗量
+                const target = params[`${effectKey}_target`];
+                const bonus = params[`${effectKey}_bonus`] || 0.3;
+                
+                if (target === 'self' || target === 'ally-all') {
+                    if (!attackerStats.healAmp) attackerStats.healAmp = 0;
+                    attackerStats.healAmp += bonus;
+                    this.addLog(`增加治疗量: ${attackerName}治疗效果 +${Math.round(bonus * 100)}%`, 'text-green-300');
+                } else if (target === 'enemy-single' || target === 'enemy-all') {
+                    if (!defenderStats.healAmp) defenderStats.healAmp = 0;
+                    defenderStats.healAmp += bonus;
+                    this.addLog(`增加治疗量: ${defenderName}治疗效果 +${Math.round(bonus * 100)}%`, 'text-green-300');
+                }
+                break;
+            }
+            
+            case 'debuff_element_damage': {
+                // 属性减伤
+                const target = params[`${effectKey}_target`];
+                const elementType = params[`${effectKey}_element-type`] || 'fire';
+                const damageReduce = params[`${effectKey}_damage-reduce`] || 0.2;
+                
+                if (target === 'self' || target === 'ally-all') {
+                    if (!attackerStats.elementDamageReduce) attackerStats.elementDamageReduce = {};
+                    attackerStats.elementDamageReduce[elementType] =
+                        (attackerStats.elementDamageReduce[elementType] || 0) + damageReduce;
+                    this.addLog(`属性减伤: ${isPlayer ? '我方' : '敌方'}受${this.getElementName(elementType)}系伤害 -${Math.round(damageReduce * 100)}%`, 'text-blue-300');
+                } else if (target === 'enemy-single' || target === 'enemy-all') {
+                    if (!defenderStats.elementDamageReduce) defenderStats.elementDamageReduce = {};
+                    defenderStats.elementDamageReduce[elementType] =
+                        (defenderStats.elementDamageReduce[elementType] || 0) + damageReduce;
+                    this.addLog(`属性减伤: ${isPlayer ? '敌方' : '我方'}受${this.getElementName(elementType)}系伤害 -${Math.round(damageReduce * 100)}%`, 'text-blue-300');
                 }
                 break;
             }
@@ -3282,6 +3466,102 @@ class BattleSystem {
                         defenderStats.status.push('heal-reduce');
                         this.addLog(`减疗: ${defenderName}治疗效果降低 ${Math.round(bonus * 100)}%`, 'text-purple-300');
                     }
+                }
+                break;
+            }
+            
+            case 'debuff_hp_cost': {
+                // 扣血（生命燃烧等技能）
+                const target = params[`${effectKey}_target`];
+                const bonus = params[`${effectKey}_bonus`] || 0.1;
+                const hpCost = Math.round(sourceValue * bonus);
+                
+                if (target === 'self' || target === 'ally-all') {
+                    // 扣除自己的生命
+                    attackerStats.hp = Math.max(1, attackerStats.hp - hpCost); // 至少保留1点生命
+                    
+                    // 同步到旧的health变量
+                    if (isPlayer) {
+                        this.playerCurrentHealth = attackerStats.hp;
+                    } else {
+                        this.opponentCurrentHealth = attackerStats.hp;
+                    }
+                    this.addLog(`扣血: ${attackerName}消耗 ${hpCost} 点生命`, 'text-orange-300');
+                } else if (target === 'enemy-single' || target === 'enemy-all') {
+                    // 扣除敌人的生命
+                    defenderStats.hp = Math.max(0, defenderStats.hp - hpCost);
+                    
+                    // 同步到旧的health变量
+                    if (isPlayer) {
+                        this.opponentCurrentHealth = defenderStats.hp;
+                    } else {
+                        this.playerCurrentHealth = defenderStats.hp;
+                    }
+                    this.addLog(`扣血: ${defenderName}失去 ${hpCost} 点生命`, 'text-red-300');
+                }
+                break;
+            }
+            
+            case 'debuff_attack': {
+                // 减攻
+                const target = params[`${effectKey}_target`];
+                const bonus = params[`${effectKey}_bonus`] || 0.1;
+                const decrease = Math.round(sourceValue * bonus);
+                
+                if (target === 'enemy-single' || target === 'enemy-all') {
+                    defenderStats.attack = Math.max(0, defenderStats.attack - decrease);
+                    this.addLog(`减攻: ${defenderName}攻击力 -${decrease}`, 'text-purple-300');
+                } else if (target === 'self' || target === 'ally-all') {
+                    attackerStats.attack = Math.max(0, attackerStats.attack - decrease);
+                    this.addLog(`减攻: ${attackerName}攻击力 -${decrease}`, 'text-purple-300');
+                }
+                break;
+            }
+            
+            case 'debuff_defense': {
+                // 减防
+                const target = params[`${effectKey}_target`];
+                const bonus = params[`${effectKey}_bonus`] || 0.1;
+                const decrease = Math.round(sourceValue * bonus);
+                
+                if (target === 'enemy-single' || target === 'enemy-all') {
+                    defenderStats.defense = Math.max(0, defenderStats.defense - decrease);
+                    this.addLog(`减防: ${defenderName}防御力 -${decrease}`, 'text-purple-300');
+                } else if (target === 'self' || target === 'ally-all') {
+                    attackerStats.defense = Math.max(0, attackerStats.defense - decrease);
+                    this.addLog(`减防: ${attackerName}防御力 -${decrease}`, 'text-purple-300');
+                }
+                break;
+            }
+            
+            case 'debuff_speed': {
+                // 减速
+                const target = params[`${effectKey}_target`];
+                const bonus = params[`${effectKey}_bonus`] || 0.1;
+                const decrease = Math.round(sourceValue * bonus);
+                
+                if (target === 'enemy-single' || target === 'enemy-all') {
+                    defenderStats.agility = Math.max(0, defenderStats.agility - decrease);
+                    this.addLog(`减速: ${defenderName}敏捷 -${decrease}`, 'text-purple-300');
+                } else if (target === 'self' || target === 'ally-all') {
+                    attackerStats.agility = Math.max(0, attackerStats.agility - decrease);
+                    this.addLog(`减速: ${attackerName}敏捷 -${decrease}`, 'text-purple-300');
+                }
+                break;
+            }
+            
+            case 'buff_speed': {
+                // 增速
+                const target = params[`${effectKey}_target`];
+                const bonus = params[`${effectKey}_bonus`] || 0.1;
+                const increase = Math.round(sourceValue * bonus);
+                
+                if (target === 'self' || target === 'ally-all') {
+                    attackerStats.agility += increase;
+                    this.addLog(`增速: ${attackerName}敏捷 +${increase}`, 'text-green-300');
+                } else if (target === 'enemy-single' || target === 'enemy-all') {
+                    defenderStats.agility += increase;
+                    this.addLog(`增速: ${defenderName}敏捷 +${increase}`, 'text-green-300');
                 }
                 break;
             }

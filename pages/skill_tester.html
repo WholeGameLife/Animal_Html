@@ -1,0 +1,1270 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>技能测试器 - 电子盆栽</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background: linear-gradient(180deg, #0a1929 0%, #1a2744 50%, #0a1929 100%);
+            color: #f3f4f6;
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        .battle-container {
+            width: 100%;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        /* 顶部状态栏 */
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            padding: 1rem 2rem;
+            background: linear-gradient(180deg, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0) 100%);
+            position: relative;
+        }
+
+        .vs-center-top {
+            position: absolute;
+            left: 50%;
+            top: 1rem;
+            transform: translateX(-50%);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            z-index: 10;
+        }
+
+        .turn-counter {
+            background: rgba(0,0,0,0.8);
+            border: 2px solid rgba(59, 130, 246, 0.6);
+            border-radius: 8px;
+            padding: 0.5rem 1rem;
+            font-size: 0.875rem;
+            font-weight: bold;
+            color: #60a5fa;
+            white-space: nowrap;
+        }
+
+        .character-status {
+            width: 40%;
+            display: flex;
+            gap: 1rem;
+        }
+
+        .character-status.player {
+            align-items: flex-start;
+        }
+
+        .character-status.opponent {
+            align-items: flex-start;
+            flex-direction: row-reverse;
+        }
+
+        .character-avatar-col {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .character-portrait {
+            width: 90px;
+            height: 90px;
+            border-radius: 50%;
+            border: 4px solid;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 2.5rem;
+            background: rgba(0,0,0,0.5);
+        }
+
+        .player .character-portrait {
+            border-color: #3b82f6;
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.6);
+        }
+
+        .opponent .character-portrait {
+            border-color: #ef4444;
+            box-shadow: 0 0 20px rgba(239, 68, 68, 0.6);
+        }
+
+        .character-name {
+            font-size: 1.125rem;
+            font-weight: bold;
+            text-align: center;
+            max-width: 100px;
+        }
+
+        .status-info-col {
+            display: flex;
+            flex-direction: column;
+            gap: 0.625rem;
+            flex: 1;
+            max-width: 450px;
+        }
+
+        .player .status-info-col {
+            align-items: flex-start;
+        }
+
+        .opponent .status-info-col {
+            align-items: flex-end;
+        }
+
+        .hp-bar-container {
+            background: rgba(0,0,0,0.6);
+            border-radius: 12px;
+            height: 36px;
+            position: relative;
+            overflow: hidden;
+            border: 2px solid rgba(255,255,255,0.2);
+            width: 100%;
+            min-width: 280px;
+        }
+
+        .hp-bar {
+            height: 100%;
+            transition: width 0.5s ease-in-out;
+            border-radius: 10px;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+
+        .player .hp-bar {
+            background: linear-gradient(90deg, #84cc16 0%, #22c55e 100%);
+        }
+
+        .opponent .hp-bar {
+            background: linear-gradient(90deg, #ef4444 0%, #dc2626 100%);
+        }
+
+        .hp-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 1rem;
+            font-weight: bold;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+            z-index: 2;
+            color: white;
+        }
+
+        .stats-row {
+            display: flex;
+            gap: 1.25rem;
+            font-size: 0.875rem;
+            color: #d1d5db;
+            font-weight: 500;
+        }
+
+        .buff-icons {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            margin-top: 0.5rem;
+        }
+
+        .buff-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            border: 2px solid rgba(255,255,255,0.3);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.25rem;
+            background: rgba(0,0,0,0.4);
+            position: relative;
+        }
+
+        .buff-icon .buff-count {
+            position: absolute;
+            bottom: -4px;
+            right: -4px;
+            background: rgba(0,0,0,0.8);
+            border-radius: 50%;
+            width: 16px;
+            height: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.625rem;
+            font-weight: bold;
+        }
+
+        /* 中央战场 */
+        .battle-arena {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            position: relative;
+        }
+
+        .character-model {
+            width: 280px;
+            height: 280px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 10rem;
+            position: absolute;
+            transition: transform 0.3s ease;
+        }
+
+        .character-model.player {
+            filter: drop-shadow(0 0 20px rgba(59, 130, 246, 0.5));
+            left: 20%;
+            transform: translateX(-50%);
+        }
+
+        .character-model.opponent {
+            filter: drop-shadow(0 0 20px rgba(239, 68, 68, 0.5));
+            right: 20%;
+            transform: translateX(50%);
+        }
+
+        /* 受击动画 */
+        @keyframes hit-shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px) scale(0.95); }
+            75% { transform: translateX(10px) scale(0.95); }
+        }
+        .animate-hit {
+            animation: hit-shake 0.4s ease-in-out;
+        }
+
+        /* 底部技能栏 */
+        .bottom-panel {
+            background: linear-gradient(0deg, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.6) 100%);
+            padding: 1rem 2rem;
+            display: flex;
+            align-items: stretch;
+            gap: 1.5rem;
+        }
+
+        .battle-log-panel {
+            width: 450px;
+            background: rgba(0,0,0,0.7);
+            border: 2px solid rgba(75, 85, 99, 0.8);
+            border-radius: 12px;
+            padding: 0.75rem;
+            overflow-y: auto;
+            max-height: 180px;
+        }
+
+        .skills-container {
+            flex: 1;
+            display: flex;
+            gap: 1rem;
+            align-items: stretch;
+            padding: 0 1.5rem;
+            border-left: 2px solid rgba(75, 85, 99, 0.4);
+            border-right: 2px solid rgba(75, 85, 99, 0.4);
+        }
+
+        .controls {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.75rem;
+            padding-left: 1.5rem;
+            width: 280px;
+        }
+
+        .skill-card {
+            background: linear-gradient(135deg, rgba(30, 41, 59, 0.95) 0%, rgba(15, 23, 42, 0.95) 100%);
+            border: 2px solid rgba(100, 116, 139, 0.5);
+            border-radius: 16px;
+            padding: 1rem;
+            width: calc(25% - 0.75rem);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            gap: 0.625rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        }
+
+        .skill-card:hover {
+            transform: translateY(-6px);
+            border-color: #a78bfa;
+            box-shadow: 0 8px 24px rgba(167, 139, 250, 0.5);
+        }
+
+        .skill-card.active {
+            border-color: #22c55e;
+            box-shadow: 0 0 24px rgba(34, 197, 94, 0.8);
+            animation: skill-glow 0.6s ease-in-out;
+        }
+
+        @keyframes skill-glow {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.08); }
+        }
+
+        .skill-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.3) 0%, rgba(139, 92, 246, 0.3) 100%);
+            border: 2px solid rgba(167, 139, 250, 0.4);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.75rem;
+            margin: 0 auto;
+        }
+
+        .skill-name {
+            font-size: 0.9375rem;
+            font-weight: 700;
+            text-align: center;
+            color: #f1f5f9;
+        }
+
+        .skill-stats {
+            display: flex;
+            gap: 0.625rem;
+            justify-content: center;
+            font-size: 0.8125rem;
+            color: #cbd5e1;
+            font-weight: 600;
+        }
+
+        .skill-type {
+            display: inline-block;
+            padding: 0.25rem 0.625rem;
+            border-radius: 6px;
+            font-size: 0.6875rem;
+            font-weight: 700;
+            text-align: center;
+            margin-top: 0.25rem;
+        }
+
+        .control-btn {
+            background: rgba(55, 65, 81, 0.9);
+            border: 2px solid rgba(75, 85, 99, 0.8);
+            border-radius: 12px;
+            padding: 0.75rem 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            white-space: nowrap;
+            min-width: 120px;
+        }
+
+        .control-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+        }
+
+        .control-btn.primary {
+            background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+            border-color: #22c55e;
+        }
+
+        .control-btn.secondary {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            border-color: #f59e0b;
+        }
+
+        .control-btn.danger {
+            background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+            border-color: #6b7280;
+        }
+
+        .log-entry {
+            padding: 0.25rem 0;
+            font-size: 0.875rem;
+            line-height: 1.5;
+            color: #d1d5db;
+        }
+
+        /* 配置模态框 */
+        .config-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .config-panel {
+            background: rgba(17, 24, 39, 0.95);
+            border: 2px solid rgba(75, 85, 99, 0.8);
+            border-radius: 16px;
+            padding: 2rem;
+            max-width: 1200px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .config-section {
+            background: rgba(31, 41, 55, 0.6);
+            border: 1px solid rgba(75, 85, 99, 0.5);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .skill-selector {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1rem;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .skill-option {
+            background: rgba(55, 65, 81, 0.8);
+            border: 2px solid rgba(75, 85, 99, 0.6);
+            border-radius: 8px;
+            padding: 1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .skill-option:hover {
+            border-color: #a78bfa;
+            background: rgba(88, 80, 236, 0.2);
+        }
+
+        .skill-option.selected {
+            border-color: #22c55e;
+            background: rgba(34, 197, 94, 0.2);
+        }
+
+        /* 中心倒计时 */
+        .center-countdown {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 5rem;
+            font-weight: 900;
+            color: #fbbf24;
+            text-shadow: 0 0 30px rgba(251, 191, 36, 0.8);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+            z-index: 100;
+        }
+
+        .center-countdown.show {
+            opacity: 1;
+            animation: countdown-pulse 1s ease-in-out infinite;
+        }
+
+        @keyframes countdown-pulse {
+            0%, 100% { transform: translate(-50%, -50%) scale(1); }
+            50% { transform: translate(-50%, -50%) scale(1.15); }
+        }
+
+        /* 回合指示器 */
+        .turn-badge {
+            position: absolute;
+            background: rgba(59, 130, 246, 0.95);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 1.125rem;
+            box-shadow: 0 6px 16px rgba(0,0,0,0.5);
+            display: none;
+            z-index: 50;
+            border: 2px solid rgba(255,255,255,0.3);
+        }
+
+        .turn-badge.player {
+            left: 20%;
+            top: 15%;
+            transform: translateX(-50%);
+        }
+
+        .turn-badge.opponent {
+            right: 20%;
+            top: 15%;
+            transform: translateX(50%);
+            background: rgba(239, 68, 68, 0.95);
+        }
+
+        .turn-badge.show {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <!-- 技能切换模态框 -->
+    <div class="config-modal" id="skill-change-modal" style="display: none;">
+        <div class="config-panel" style="max-width: 1000px;">
+            <h2 class="text-2xl font-bold text-white mb-6 text-center">🔄 切换技能</h2>
+            
+            <div class="grid grid-cols-2 gap-6">
+                <!-- 我方技能 -->
+                <div class="bg-blue-900/20 border border-blue-600 rounded-lg p-4">
+                    <h3 class="text-lg font-bold text-blue-300 mb-3">👤 我方技能</h3>
+                    <div id="current-player-skills" class="space-y-2"></div>
+                </div>
+                
+                <!-- 敌方技能 -->
+                <div class="bg-red-900/20 border border-red-600 rounded-lg p-4">
+                    <h3 class="text-lg font-bold text-red-300 mb-3">👹 敌方技能</h3>
+                    <div id="current-enemy-skills" class="space-y-2"></div>
+                </div>
+            </div>
+            
+            <div class="mt-6">
+                <div class="flex items-center justify-between mb-3">
+                    <h3 class="text-lg font-bold text-purple-300">
+                        <span id="replacement-side-text">选择替换的技能</span>
+                    </h3>
+                    <div class="flex items-center gap-2">
+                        <label class="text-sm text-gray-300">效果筛选:</label>
+                        <select id="effect-filter"
+                            class="bg-gray-700 border border-gray-600 rounded-lg px-3 py-1.5 text-white text-sm"
+                            onchange="renderReplacementSkillSelector()">
+                            <option value="all">全部效果</option>
+                            <optgroup label="攻击类">
+                                <option value="direct_attack">直接攻击</option>
+                                <option value="multi_attack">多段攻击</option>
+                                <option value="dot_damage">附加伤害</option>
+                                <option value="percent_damage">百分比伤害</option>
+                            </optgroup>
+                            <optgroup label="防御类">
+                                <option value="direct_defense">直接防御</option>
+                                <option value="continuous_defense">持续防御</option>
+                                <option value="defense_counter">防御反击</option>
+                            </optgroup>
+                            <optgroup label="增益类">
+                                <option value="buff_attack">增攻</option>
+                                <option value="buff_defense">增防</option>
+                                <option value="buff_speed">增速</option>
+                                <option value="buff_status_enemy">附加异常</option>
+                                <option value="buff_purify">净化</option>
+                                <option value="buff_heal_amp">增加治疗量</option>
+                                <option value="buff_element_damage">属性增伤</option>
+                            </optgroup>
+                            <optgroup label="减益类">
+                                <option value="debuff_attack">减攻</option>
+                                <option value="debuff_defense">减防</option>
+                                <option value="debuff_speed">减速</option>
+                                <option value="debuff_status_self">自身异常</option>
+                                <option value="debuff_no_heal">禁疗</option>
+                                <option value="debuff_heal_reduce">减疗</option>
+                                <option value="debuff_element_damage">属性减伤</option>
+                                <option value="debuff_hp_cost">扣血</option>
+                            </optgroup>
+                            <optgroup label="治疗类">
+                                <option value="heal_direct">直接恢复</option>
+                                <option value="heal_continuous">持续恢复</option>
+                                <option value="heal_percent">百分比恢复</option>
+                                <option value="heal_rebirth">重生</option>
+                                <option value="heal_lifesteal">生命汲取</option>
+                            </optgroup>
+                            <optgroup label="速度类">
+                                <option value="direct_speed">直接增速</option>
+                                <option value="continuous_speed">持续增速</option>
+                            </optgroup>
+                        </select>
+                    </div>
+                </div>
+                <div class="skill-selector" id="replacement-skill-selector"
+                    style="max-height: 300px; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));"></div>
+            </div>
+            
+            <div class="flex gap-4 justify-center mt-6">
+                <button id="cancel-change-btn" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 px-8 rounded-lg transition-colors">
+                    关闭
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 配置模态框 -->
+    <div class="config-modal" id="config-modal">
+        <div class="config-panel">
+            <h2 class="text-3xl font-bold text-white mb-6 text-center">⚙️ 技能测试器配置</h2>
+            
+            <!-- 我方配置 -->
+            <div class="config-section">
+                <h3 class="text-xl font-bold text-blue-300 mb-4">👤 我方设置</h3>
+                <div class="grid grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-sm text-gray-300 mb-2">名称</label>
+                        <input type="text" id="config-player-name" value="测试者" 
+                            class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white">
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-300 mb-2">系别</label>
+                        <select id="config-player-element"
+                            class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white">
+                            <option value="water">💧 水系</option>
+                            <option value="fire">🔥 火系</option>
+                            <option value="grass">🌿 草系</option>
+                            <option value="wind">💨 风系</option>
+                            <option value="metal">🪙 金系</option>
+                            <option value="earth">🪨 土系</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-300 mb-2">生命值</label>
+                        <input type="number" id="config-player-hp" value="1000" min="1"
+                            class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white">
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-300 mb-2">攻击力</label>
+                        <input type="number" id="config-player-attack" value="100" min="0"
+                            class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white">
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-300 mb-2">防御力</label>
+                        <input type="number" id="config-player-defense" value="50" min="0"
+                            class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white">
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-300 mb-2">敏捷</label>
+                        <input type="number" id="config-player-agility" value="80" min="0"
+                            class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white">
+                    </div>
+                </div>
+            </div>
+
+            <!-- 敌方配置 -->
+            <div class="config-section">
+                <h3 class="text-xl font-bold text-red-300 mb-4">👹 敌方设置</h3>
+                <div class="grid grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-sm text-gray-300 mb-2">名称</label>
+                        <input type="text" id="config-enemy-name" value="测试假人" 
+                            class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white">
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-300 mb-2">系别</label>
+                        <select id="config-enemy-element"
+                            class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white">
+                            <option value="water">💧 水系</option>
+                            <option value="fire" selected>🔥 火系</option>
+                            <option value="grass">🌿 草系</option>
+                            <option value="wind">💨 风系</option>
+                            <option value="metal">🪙 金系</option>
+                            <option value="earth">🪨 土系</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-300 mb-2">生命值</label>
+                        <input type="number" id="config-enemy-hp" value="800" min="1"
+                            class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white">
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-300 mb-2">攻击力</label>
+                        <input type="number" id="config-enemy-attack" value="90" min="0"
+                            class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white">
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-300 mb-2">防御力</label>
+                        <input type="number" id="config-enemy-defense" value="40" min="0"
+                            class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white">
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-300 mb-2">敏捷</label>
+                        <input type="number" id="config-enemy-agility" value="70" min="0"
+                            class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-yellow-900/20 border border-yellow-600 rounded-lg p-4 mt-6">
+                <div class="flex items-start gap-3">
+                    <span class="text-2xl">💡</span>
+                    <div class="flex-1 text-sm text-yellow-200">
+                        <p class="font-bold mb-1">提示：</p>
+                        <p>• 技能将在开始测试后通过"切换技能"按钮配置</p>
+                        <p>• 战斗中可随时切换技能组合进行测试</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 按钮 -->
+            <div class="flex gap-4 justify-center mt-6">
+                <button id="start-test-btn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-lg transition-colors">
+                    ✨ 开始测试
+                </button>
+                <button onclick="window.location.href='../designers/skill_designer.html'" 
+                    class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 px-8 rounded-lg transition-colors">
+                    ← 返回技能设计器
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="battle-container" id="battle-container" style="display: none;">
+        <!-- 顶部状态栏 -->
+        <div class="status-bar">
+            <div class="vs-center-top">
+                <div class="turn-counter" id="turn-counter">第 1 回合</div>
+                <div id="advantage-indicator" class="text-sm font-bold px-4 py-2 rounded-lg bg-gray-800 border border-gray-600 text-gray-400">无克制关系</div>
+            </div>
+
+            <!-- 玩家状态 -->
+            <div class="character-status player">
+                <div class="character-avatar-col">
+                    <div id="player-portrait" class="character-portrait">🧪</div>
+                    <div class="character-name" id="player-name">测试者</div>
+                </div>
+                <div class="status-info-col">
+                    <div class="hp-bar-container">
+                        <div class="hp-bar" id="player-hp-bar" style="width: 100%;"></div>
+                        <div class="hp-text" id="player-hp-text">1000 / 1000</div>
+                    </div>
+                    <div class="stats-row">
+                        <span id="player-level">Lv. 1</span>
+                        <span id="player-element">💧 水系</span>
+                        <span>⚔️<span id="player-attack-value">100</span></span>
+                        <span>🛡️<span id="player-defense-value">50</span></span>
+                        <span>⚡<span id="player-agility-value">80</span></span>
+                    </div>
+                    <div class="buff-icons" id="player-buffs"></div>
+                </div>
+            </div>
+
+            <!-- 对手状态 -->
+            <div class="character-status opponent">
+                <div class="character-avatar-col">
+                    <div id="opponent-portrait" class="character-portrait">🎯</div>
+                    <div class="character-name" id="opponent-name">测试假人</div>
+                </div>
+                <div class="status-info-col">
+                    <div class="hp-bar-container">
+                        <div class="hp-bar" id="opponent-hp-bar" style="width: 100%;"></div>
+                        <div class="hp-text" id="opponent-hp-text">800 / 800</div>
+                    </div>
+                    <div class="stats-row">
+                        <span>⚔️<span id="opponent-attack-value">90</span></span>
+                        <span>🛡️<span id="opponent-defense-value">40</span></span>
+                        <span>⚡<span id="opponent-agility-value">70</span></span>
+                        <span id="opponent-element">🔥 火系</span>
+                        <span id="opponent-level">Lv. 1</span>
+                    </div>
+                    <div class="buff-icons" id="opponent-buffs"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 中央战场 -->
+        <div class="battle-arena">
+            <div class="character-model player" id="player-model">🧪</div>
+            <div class="character-model opponent" id="opponent-model">🎯</div>
+            
+            <div class="turn-badge player" id="player-turn-badge">
+                <div>我的回合</div>
+                <div class="turn-countdown" id="player-countdown"></div>
+            </div>
+            <div class="turn-badge opponent" id="opponent-turn-badge">
+                <div>敌方回合</div>
+                <div class="turn-countdown" id="opponent-countdown"></div>
+            </div>
+
+            <div class="center-countdown" id="center-countdown"></div>
+        </div>
+
+        <!-- 底部面板 -->
+        <div class="bottom-panel">
+            <div class="battle-log-panel" id="battle-log">
+                <div id="battle-log-content">
+                    <div class="text-yellow-300 text-sm">⚔️ 战斗准备中...</div>
+                </div>
+            </div>
+
+            <div class="skills-container" id="skills-container"></div>
+
+            <div class="controls">
+                <button id="btn-animals" class="control-btn secondary" style="display: none;">
+                    🐾 动物
+                </button>
+                <button id="btn-change-skill" class="control-btn secondary">
+                    🔄 切换技能
+                </button>
+                <button id="btn-start-battle" class="control-btn primary">
+                    ▶ 自动战斗
+                </button>
+                <button id="btn-pause" class="control-btn secondary">
+                    ⏸ 暂停
+                </button>
+                <button id="btn-items" class="control-btn secondary" style="display: none;">
+                    🎒 道具
+                </button>
+                <button id="btn-reset" class="control-btn secondary">
+                    🔄 重置
+                </button>
+                <button id="btn-flee" class="control-btn danger" style="display: none;">
+                    ← 返回
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="../scripts/battle_system.js"></script>
+    <script>
+        let battleSystem = null;
+        let playerSelectedSkills = [];
+        let enemySelectedSkills = [];
+        let replacingSlotIndex = -1;
+        let replacingSide = 'player'; // 'player' 或 'enemy'
+        
+        // 技能效果中文映射（从battle_system.js同步）
+        const EFFECT_NAME_MAP = {
+            'direct_attack': '直接攻击',
+            'multi_attack': '多段攻击',
+            'dot_damage': '附加伤害',
+            'percent_damage': '百分比伤害',
+            'direct_defense': '直接防御',
+            'continuous_defense': '持续防御',
+            'defense_counter': '防御反击',
+            'direct_speed': '直接增速',
+            'continuous_speed': '持续增速',
+            'buff_attack': '增攻',
+            'buff_defense': '增防',
+            'buff_speed': '增速',
+            'buff_status_enemy': '为敌方附加异常',
+            'buff_purify': '净化',
+            'buff_heal_amp': '增加治疗量',
+            'buff_element_damage': '属性增伤',
+            'debuff_attack': '减攻',
+            'debuff_defense': '减防',
+            'debuff_speed': '减速',
+            'debuff_status_self': '为自身附加异常',
+            'debuff_no_heal': '禁疗',
+            'debuff_heal_reduce': '减疗',
+            'debuff_element_damage': '属性减伤',
+            'debuff_hp_cost': '扣血',
+            'heal_direct': '直接恢复',
+            'heal_continuous': '持续恢复',
+            'heal_percent': '百分比恢复',
+            'heal_rebirth': '重生',
+            'heal_lifesteal': '生命汲取'
+        };
+
+        // 初始化
+        window.onload = function() {
+            setupConfigModal();
+        };
+
+        // 设置配置模态框
+        function setupConfigModal() {
+            document.getElementById('start-test-btn').onclick = startBattle;
+            
+            const btnConfig = document.getElementById('btn-config');
+            if (btnConfig) {
+                btnConfig.onclick = () => {
+                    document.getElementById('config-modal').style.display = 'flex';
+                    loadSkillPool();
+                };
+            }
+            
+            const btnFlee = document.getElementById('btn-flee');
+            if (btnFlee) {
+                btnFlee.onclick = () => {
+                    window.location.href = '../designers/skill_designer.html';
+                };
+            }
+            
+            const btnReset = document.getElementById('btn-reset');
+            if (btnReset) {
+                btnReset.onclick = resetBattle;
+            }
+            
+            const btnChangeSkill = document.getElementById('btn-change-skill');
+            if (btnChangeSkill) {
+                btnChangeSkill.onclick = openSkillChangeModal;
+            }
+            
+            const btnCancelChange = document.getElementById('cancel-change-btn');
+            if (btnCancelChange) {
+                btnCancelChange.onclick = closeSkillChangeModal;
+            }
+        }
+
+        // 打开技能切换模态框
+        function openSkillChangeModal() {
+            if (!battleSystem) return;
+            
+            // 自动暂停战斗
+            if (battleSystem.battleInProgress && !battleSystem.battlePaused) {
+                battleSystem.togglePause();
+            }
+            
+            const modal = document.getElementById('skill-change-modal');
+            modal.style.display = 'flex';
+            
+            const skillPool = JSON.parse(localStorage.getItem('SKILL_POOL') || '[]');
+            
+            // 渲染我方技能
+            renderCurrentSkills('player', skillPool);
+            // 渲染敌方技能
+            renderCurrentSkills('enemy', skillPool);
+            
+            renderReplacementSkillSelector();
+        }
+
+        // 渲染当前技能列表
+        function renderCurrentSkills(side, skillPool) {
+            const container = document.getElementById(`current-${side}-skills`);
+            const selectedSkills = side === 'player' ? playerSelectedSkills : enemySelectedSkills;
+            const borderColor = side === 'player' ? 'border-blue-600' : 'border-red-600';
+            const btnColor = side === 'player' ? 'bg-blue-600 hover:bg-blue-700' : 'bg-red-600 hover:bg-red-700';
+            
+            container.innerHTML = selectedSkills.map((skillKey, index) => {
+                const skill = skillPool.find(s => s.key === skillKey);
+                if (!skill) {
+                    return `
+                        <div class="bg-gray-800 border border-gray-600 rounded-lg p-2">
+                            <div class="text-center text-gray-500 text-sm">空槽 ${index + 1}</div>
+                            <button onclick="selectSlotForReplacement('${side}', ${index})" 
+                                class="w-full mt-2 ${btnColor} text-white text-xs py-1.5 px-3 rounded">
+                                选择技能
+                            </button>
+                        </div>
+                    `;
+                }
+                
+                const effects = (skill.effects || []).map(e =>
+                    EFFECT_NAME_MAP[e] || e
+                ).join('、');
+                
+                return `
+                    <div class="bg-gray-800 border ${borderColor} rounded-lg p-2">
+                        <div class="flex items-center gap-2 mb-2">
+                            <span class="text-xl">${skill.icon}</span>
+                            <div class="flex-1">
+                                <div class="font-bold text-white text-xs">${skill.name}</div>
+                                <div class="text-xs text-gray-400 truncate">${effects}</div>
+                            </div>
+                        </div>
+                        <button onclick="selectSlotForReplacement('${side}', ${index})" 
+                            class="w-full bg-yellow-600 hover:bg-yellow-700 text-white text-xs py-1.5 px-3 rounded transition-colors">
+                            替换
+                        </button>
+                    </div>
+                `;
+            }).join('');
+            
+            if (selectedSkills.length < 4) {
+                container.innerHTML += `
+                    <div class="bg-gray-800 border border-gray-600 rounded-lg p-2">
+                        <div class="text-center text-gray-500 text-sm">空槽 ${selectedSkills.length + 1}</div>
+                        <button onclick="selectSlotForReplacement('${side}', ${selectedSkills.length})" 
+                            class="w-full mt-2 ${btnColor} text-white text-xs py-1.5 px-3 rounded">
+                            选择
+                        </button>
+                    </div>
+                `;
+            }
+        }
+
+        // 关闭技能切换模态框
+        function closeSkillChangeModal() {
+            document.getElementById('skill-change-modal').style.display = 'none';
+            replacingSlotIndex = -1;
+            replacingSide = 'player';
+        }
+
+        // 选择要替换的槽位
+        function selectSlotForReplacement(side, index) {
+            replacingSide = side;
+            replacingSlotIndex = index;
+            
+            const sideText = side === 'player' ? '我方' : '敌方';
+            document.getElementById('replacement-side-text').textContent = 
+                `为${sideText}的槽位${index + 1}选择技能`;
+            
+            renderReplacementSkillSelector();
+        }
+
+        // 渲染替换技能选择器
+        function renderReplacementSkillSelector() {
+            const container = document.getElementById('replacement-skill-selector');
+            let skillPool = JSON.parse(localStorage.getItem('SKILL_POOL') || '[]');
+            
+            if (replacingSlotIndex === -1) {
+                container.innerHTML = '<div class="text-center text-gray-400 py-8 col-span-full">请先选择要替换的技能槽</div>';
+                return;
+            }
+            
+            // 获取选中的效果筛选器
+            const effectFilter = document.getElementById('effect-filter')?.value || 'all';
+            
+            // 根据效果筛选技能
+            if (effectFilter !== 'all') {
+                skillPool = skillPool.filter(skill => {
+                    const effects = skill.effects || [];
+                    return effects.includes(effectFilter);
+                });
+            }
+            
+            if (skillPool.length === 0) {
+                container.innerHTML = '<div class="text-center text-gray-400 py-8 col-span-full">没有包含该效果的技能</div>';
+                return;
+            }
+            
+            container.innerHTML = skillPool.map(skill => {
+                const effects = (skill.effects || []).map(e =>
+                    EFFECT_NAME_MAP[e] || e
+                ).join('、');
+                
+                return `
+                    <div class="skill-option" onclick="replaceSkill('${skill.key}')">
+                        <div class="flex items-center gap-2 mb-2">
+                            <span class="text-xl">${skill.icon}</span>
+                            <span class="font-bold text-white text-xs">${skill.name}</span>
+                        </div>
+                        <div class="text-xs text-gray-400">${effects}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // 替换技能
+        function replaceSkill(skillKey) {
+            if (replacingSlotIndex === -1) return;
+            
+            const selectedSkills = replacingSide === 'player' ? playerSelectedSkills : enemySelectedSkills;
+            const isPlayer = replacingSide === 'player';
+            
+            // 检查技能唯一性（同一方不能装备两个相同的技能）
+            const existingIndex = selectedSkills.indexOf(skillKey);
+            if (existingIndex !== -1 && existingIndex !== replacingSlotIndex) {
+                const skillPool = JSON.parse(localStorage.getItem('SKILL_POOL') || '[]');
+                const skill = skillPool.find(s => s.key === skillKey);
+                const sideName = isPlayer ? '我方' : '敌方';
+                alert(`❌ ${sideName}已经装备了技能"${skill?.name || skillKey}"（槽位${existingIndex + 1}），不能重复装备！`);
+                return;
+            }
+            
+            // 更新技能列表
+            if (replacingSlotIndex >= selectedSkills.length) {
+                selectedSkills.push(skillKey);
+            } else {
+                selectedSkills[replacingSlotIndex] = skillKey;
+            }
+            
+            // 保存到全局变量
+            if (isPlayer) {
+                playerSelectedSkills = selectedSkills;
+            } else {
+                enemySelectedSkills = selectedSkills;
+            }
+            
+            // 更新战斗系统中的技能
+            if (battleSystem) {
+                const targetData = isPlayer ? battleSystem.playerData : battleSystem.opponentData;
+                if (targetData) {
+                    targetData.combatSkills.equipped = selectedSkills;
+                    
+                    if (isPlayer) {
+                        battleSystem.playerPassiveSkills = battleSystem.getPassiveSkills(targetData);
+                        battleSystem.renderSkillsContainer();
+                    } else {
+                        battleSystem.opponentPassiveSkills = battleSystem.getPassiveSkills(targetData);
+                    }
+                    
+                    if (battleSystem.addLog) {
+                        const skillPool = JSON.parse(localStorage.getItem('SKILL_POOL') || '[]');
+                        const skill = skillPool.find(s => s.key === skillKey);
+                        const sideName = isPlayer ? '我方' : '敌方';
+                        battleSystem.addLog(`✨ 已替换${sideName}槽位${replacingSlotIndex + 1}的技能为：${skill?.name || skillKey}`, 'text-green-300');
+                    }
+                }
+            }
+            
+            // 刷新显示并关闭
+            const skillPool2 = JSON.parse(localStorage.getItem('SKILL_POOL') || '[]');
+            renderCurrentSkills('player', skillPool2);
+            renderCurrentSkills('enemy', skillPool2);
+            
+            replacingSlotIndex = -1;
+            renderReplacementSkillSelector();
+        }
+
+        // 加载技能池
+        function loadSkillPool() {
+            const skillPool = JSON.parse(localStorage.getItem('SKILL_POOL') || '[]');
+            
+            if (skillPool.length === 0) {
+                document.getElementById('player-skill-selector').innerHTML = 
+                    '<div class="text-center text-gray-400 py-8 col-span-full">暂无技能，请先在技能设计器中创建</div>';
+                document.getElementById('enemy-skill-selector').innerHTML = 
+                    '<div class="text-center text-gray-400 py-8 col-span-full">暂无技能，请先在技能设计器中创建</div>';
+                return;
+            }
+
+            renderSkillSelector('player', skillPool);
+            renderSkillSelector('enemy', skillPool);
+        }
+
+        // 渲染技能选择器
+        function renderSkillSelector(side, skillPool) {
+            const container = document.getElementById(`${side}-skill-selector`);
+            const selectedSkills = side === 'player' ? playerSelectedSkills : enemySelectedSkills;
+            
+            container.innerHTML = skillPool.map((skill, index) => {
+                const isSelected = selectedSkills.includes(skill.key);
+                const effects = (skill.effects || []).map(e =>
+                    EFFECT_NAME_MAP[e] || e
+                ).join('、');
+                
+                return `
+                    <div class="skill-option ${isSelected ? 'selected' : ''}" 
+                         data-skill-key="${skill.key}"
+                         onclick="toggleSkillSelection('${side}', '${skill.key}')">
+                        <div class="flex items-center gap-2 mb-2">
+                            <span class="text-2xl">${skill.icon}</span>
+                            <span class="font-bold text-white text-sm">${skill.name}</span>
+                        </div>
+                        <div class="text-xs text-gray-400">${effects}</div>
+                        ${skill.params?.cooldown ? `<div class="text-xs text-yellow-300 mt-1">CD: ${skill.params.cooldown}</div>` : ''}
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // 切换技能选择
+        function toggleSkillSelection(side, skillKey) {
+            const selectedSkills = side === 'player' ? playerSelectedSkills : enemySelectedSkills;
+            const index = selectedSkills.indexOf(skillKey);
+            
+            if (index > -1) {
+                selectedSkills.splice(index, 1);
+            } else {
+                if (selectedSkills.length >= 4) {
+                    alert('最多只能选择4个技能！');
+                    return;
+                }
+                selectedSkills.push(skillKey);
+            }
+            
+            // 更新选择状态
+            if (side === 'player') {
+                playerSelectedSkills = selectedSkills;
+            } else {
+                enemySelectedSkills = selectedSkills;
+            }
+            
+            // 重新渲染
+            const skillPool = JSON.parse(localStorage.getItem('SKILL_POOL') || '[]');
+            renderSkillSelector(side, skillPool);
+        }
+
+        // 开始战斗
+        function startBattle() {
+            // 初始化技能列表为空（通过切换技能按钮添加）
+            if (!playerSelectedSkills) playerSelectedSkills = [];
+            if (!enemySelectedSkills) enemySelectedSkills = [];
+
+            // 隐藏配置模态框
+            document.getElementById('config-modal').style.display = 'none';
+            document.getElementById('battle-container').style.display = 'flex';
+
+            // 创建玩家数据
+            const playerData = {
+                name: document.getElementById('config-player-name').value,
+                level: 1,
+                element: document.getElementById('config-player-element').value,
+                stamina: parseInt(document.getElementById('config-player-hp').value),
+                abilities: {
+                    combat: {
+                        attack: parseInt(document.getElementById('config-player-attack').value),
+                        defense: parseInt(document.getElementById('config-player-defense').value),
+                        agility: parseInt(document.getElementById('config-player-agility').value)
+                    }
+                },
+                combatSkills: {
+                    equipped: playerSelectedSkills
+                },
+                color: 0x3b82f6
+            };
+
+            // 创建敌方数据
+            const opponentData = {
+                name: document.getElementById('config-enemy-name').value,
+                level: 1,
+                element: document.getElementById('config-enemy-element').value,
+                stamina: parseInt(document.getElementById('config-enemy-hp').value),
+                abilities: {
+                    combat: {
+                        attack: parseInt(document.getElementById('config-enemy-attack').value),
+                        defense: parseInt(document.getElementById('config-enemy-defense').value),
+                        agility: parseInt(document.getElementById('config-enemy-agility').value)
+                    }
+                },
+                combatSkills: {
+                    equipped: enemySelectedSkills
+                },
+                color: 0xef4444
+            };
+
+            // 初始化战斗系统
+            battleSystem = new BattleSystem(playerData, opponentData);
+            battleSystem.init();
+            
+            // 默认手动模式，提示玩家
+            battleSystem.addLog('🧪 技能测试模式启动！', 'text-cyan-300');
+            battleSystem.addLog('🤚 默认手动战斗 - 点击技能释放，或点击"自动战斗"切换模式', 'text-cyan-300');
+            battleSystem.addLog('⏱️ 每回合有10秒时间选择技能', 'text-yellow-300');
+            
+            // 自动开始战斗循环
+            setTimeout(() => {
+                battleSystem.battleInProgress = true;
+                battleSystem.battleLoop();
+            }, 2000);
+        }
+
+        // 重置战斗
+        function resetBattle() {
+            if (battleSystem) {
+                battleSystem.battleInProgress = false;
+                battleSystem.battlePaused = false;
+                battleSystem.turnCount = 0;
+                
+                // 清除所有计时器
+                if (battleSystem.turnTimeout) {
+                    clearTimeout(battleSystem.turnTimeout);
+                }
+                if (battleSystem.countdownInterval) {
+                    clearInterval(battleSystem.countdownInterval);
+                }
+            }
+            
+            // 显示配置模态框
+            document.getElementById('config-modal').style.display = 'flex';
+            document.getElementById('battle-container').style.display = 'none';
+            
+            // 重新加载技能池
+            loadSkillPool();
+        }
+    </script>
+</body>
+</html>
