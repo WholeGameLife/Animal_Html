@@ -1,4 +1,4 @@
-o<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
@@ -618,7 +618,7 @@ o<!DOCTYPE html>
             <!-- 回合数和克制关系（中间） -->
             <div class="vs-center-top">
                 <div class="turn-counter" id="turn-counter">第 1 回合</div>
-                <div class="advantage-badge-small" id="advantage-indicator">无克制</div>
+                <div id="advantage-indicator" class="text-sm font-bold px-4 py-2 rounded-lg bg-gray-800 border border-gray-600 text-gray-400">无克制关系</div>
             </div>
 
             <!-- 玩家状态 -->
@@ -635,6 +635,9 @@ o<!DOCTYPE html>
                     <div class="stats-row">
                         <span id="player-level">Lv. 1</span>
                         <span id="player-element">💧 水系</span>
+                        <span>⚔️<span id="player-attack-value">100</span></span>
+                        <span>🛡️<span id="player-defense-value">50</span></span>
+                        <span>⚡<span id="player-agility-value">80</span></span>
                     </div>
                     <div class="buff-icons" id="player-buffs">
                         <!-- 动态生成状态图标 -->
@@ -654,8 +657,11 @@ o<!DOCTYPE html>
                         <div class="hp-text" id="opponent-hp-text">100 / 100</div>
                     </div>
                     <div class="stats-row">
-                        <span id="opponent-level">Lv. 1</span>
+                        <span>⚔️<span id="opponent-attack-value">90</span></span>
+                        <span>🛡️<span id="opponent-defense-value">40</span></span>
+                        <span>⚡<span id="opponent-agility-value">70</span></span>
                         <span id="opponent-element">🔥 火系</span>
+                        <span id="opponent-level">Lv. 1</span>
                     </div>
                     <div class="buff-icons" id="opponent-buffs">
                         <!-- 动态生成状态图标 -->

@@ -1313,52 +1313,59 @@ class BattleSystem {
     }
 
     setupEventListeners() {
-        this.ui.btnStartBattle.addEventListener('click', () => this.startBattle());
-        this.ui.btnPause.addEventListener('click', () => this.togglePause());
-        this.ui.btnItems.addEventListener('click', () => this.showItems());
-        this.ui.btnAnimals.addEventListener('click', () => this.showAnimals());
-        this.ui.btnFlee.addEventListener('click', () => this.flee());
+        if (this.ui.btnStartBattle) {
+            this.ui.btnStartBattle.addEventListener('click', () => this.startBattle());
+        }
+        if (this.ui.btnPause) {
+            this.ui.btnPause.addEventListener('click', () => this.togglePause());
+        }
+        if (this.ui.btnItems) {
+            this.ui.btnItems.addEventListener('click', () => this.showItems());
+        }
+        if (this.ui.btnAnimals) {
+            this.ui.btnAnimals.addEventListener('click', () => this.showAnimals());
+        }
+        if (this.ui.btnFlee) {
+            this.ui.btnFlee.addEventListener('click', () => this.flee());
+        }
     }
 
     async startBattle() {
-        // 如果战斗已在进行中,则切换模式
-        if (this.battleInProgress) {
-            if (this.isManualMode) {
-                this.isManualMode = false;
-                this.ui.btnStartBattle.textContent = '🤚 切换手动';
-                this.ui.btnStartBattle.className = 'control-btn secondary';
-                this.addLog('⚔️ 已切换到自动战斗模式！');
-            } else {
-                this.isManualMode = true;
-                this.ui.btnStartBattle.textContent = '▶ 自动战斗';
-                this.ui.btnStartBattle.className = 'control-btn primary';
-                this.addLog('🤚 已切换到手动战斗模式！');
-            }
+        // 在技能测试器中不使用该函数,由暂停按钮控制战斗开始
+        if (!this.battleInProgress) {
+            this.battleInProgress = true;
+            this.battlePaused = false;
+            this.isManualMode = true; // 始终为手动模式
+            this.ui.btnPause.textContent = '⏸ 暂停';
+            this.addLog('⚔️ 战斗开始！');
+            await this.sleep(2000);
+            await this.battleLoop();
+        }
+    }
+    
+    async togglePause() {
+        // 如果战斗还没开始,则开始战斗
+        if (!this.battleInProgress) {
+            this.battleInProgress = true;
+            this.battlePaused = false;
+            this.isManualMode = true; // 始终为手动模式
+            this.ui.btnPause.textContent = '⏸ 暂停';
+            this.ui.btnPause.className = 'control-btn secondary';
+            this.addLog('⚔️ 战斗开始！', 'text-cyan-300');
+            await this.sleep(2000);
+            await this.battleLoop();
             return;
         }
         
-        // 首次启动:切换为自动战斗模式
-        this.battleInProgress = true;
-        this.battlePaused = false;
-        this.isManualMode = false;
-        this.ui.btnStartBattle.textContent = '🤚 切换手动';
-        this.ui.btnStartBattle.className = 'control-btn secondary';
-        this.ui.btnPause.style.display = 'inline-block';
-        this.addLog('⚔️ 战斗开始！已切换到自动战斗模式！');
-        
-        await this.sleep(2000);
-        await this.battleLoop();
-    }
-    
-    togglePause() {
+        // 战斗进行中,切换暂停状态
         this.battlePaused = !this.battlePaused;
         if (this.battlePaused) {
             this.ui.btnPause.textContent = '▶️ 继续';
-            this.ui.btnPause.className = 'action-button bg-green-600 hover:bg-green-700';
+            this.ui.btnPause.className = 'control-btn primary';
             this.addLog('⏸ 战斗已暂停', 'text-yellow-300');
         } else {
             this.ui.btnPause.textContent = '⏸ 暂停';
-            this.ui.btnPause.className = 'action-button bg-yellow-600 hover:bg-yellow-700';
+            this.ui.btnPause.className = 'control-btn secondary';
             this.addLog('▶️ 战斗继续', 'text-green-300');
         }
     }
@@ -2821,8 +2828,151 @@ class BattleSystem {
     }
     
     showAnimals() {
-        this.addLog('🐾 动物功能开发中...', 'text-yellow-300');
-        alert('动物功能正在开发中，敬请期待！');
+        // 暂停战斗
+        if (this.battleInProgress && !this.battlePaused) {
+            this.togglePause();
+        }
+        
+        // 获取背包中的动物
+        const animalPool = JSON.parse(localStorage.getItem('ANIMAL_POOL') || '[]');
+        const currentPlayerKey = this.playerData.key || this.playerData.animalId;
+        
+        // 保存当前技能栏以便恢复
+        this.savedSkillsContainer = document.getElementById('skills-container').innerHTML;
+        
+        // 渲染动物选择栏
+        const container = document.getElementById('skills-container');
+        container.innerHTML = '';
+        
+        if (animalPool.length === 0) {
+            const emptyCard = document.createElement('div');
+            emptyCard.className = 'flex items-center justify-center text-gray-400 text-center';
+            emptyCard.textContent = '背包中没有动物';
+            container.appendChild(emptyCard);
+        } else {
+            // 动物数量决定每个卡片的宽度
+            const cardWidth = animalPool.length <= 4 ? 'calc(25% - 0.75rem)' : 'calc(20% - 0.8rem)';
+            
+            animalPool.forEach(animal => {
+                const isCurrent = (animal.key || animal.animalId) === currentPlayerKey;
+                const animalKey = animal.key || animal.animalId;
+                
+                const card = document.createElement('div');
+                card.className = 'skill-card';
+                card.style.width = cardWidth;
+                
+                // 当前动物显示绿色边框
+                if (isCurrent) {
+                    card.style.border = '2px solid #22c55e';
+                    card.style.boxShadow = '0 0 16px rgba(34, 197, 94, 0.6)';
+                    card.style.cursor = 'not-allowed';
+                } else {
+                    card.style.cursor = 'pointer';
+                    card.onclick = () => {
+                        this.switchToAnimal(animalKey, animalPool);
+                    };
+                }
+                
+                card.innerHTML = `
+                    <div class="skill-icon">${animal.icon || '🐾'}</div>
+                    <div class="skill-name">${animal.name}</div>
+                    <div class="skill-stats">
+                        <span>Lv.${animal.level || 1}</span>
+                        <span>HP:${animal.stamina || 100}</span>
+                    </div>
+                    <div class="skill-type" style="background: ${isCurrent ? '#22c55e' : '#6b7280'}">
+                        ${isCurrent ? '当前' : '切换'}
+                    </div>
+                `;
+                
+                container.appendChild(card);
+            });
+        }
+        
+        // 添加返回按钮
+        const returnCard = document.createElement('div');
+        returnCard.className = 'skill-card';
+        returnCard.style.width = cardWidth;
+        returnCard.style.cursor = 'pointer';
+        returnCard.onclick = () => {
+            this.restoreSkillsContainer();
+        };
+        
+        returnCard.innerHTML = `
+            <div class="skill-icon">↩️</div>
+            <div class="skill-name">返回</div>
+            <div class="skill-type" style="background: #6b7280">取消</div>
+        `;
+        
+        container.appendChild(returnCard);
+        
+        this.addLog('💡 点击动物图标切换，点击"返回"图标恢复技能栏', 'text-cyan-300');
+    }
+    
+    switchToAnimal(animalKey, animalPool) {
+        const animal = animalPool.find(a => (a.key || a.animalId) === animalKey);
+        if (!animal) return;
+        
+        // 保存当前战斗状态
+        const wasInBattle = this.battleInProgress;
+        const wasPaused = this.battlePaused;
+        
+        // 更新玩家数据
+        this.playerData = {
+            ...animal,
+            key: animal.key || animal.animalId,
+            animalId: animal.animalId || animal.key,
+            stamina: animal.stamina || animal.abilities?.combat?.hp || 100,
+            abilities: animal.abilities || {
+                combat: {
+                    attack: 10,
+                    defense: 5,
+                    agility: 8
+                }
+            },
+            combatSkills: animal.combatSkills || { equipped: [] }
+        };
+        
+        // 重置战斗状态
+        this.playerStats.hp = this.playerData.stamina;
+        this.playerStats.maxHp = this.playerData.stamina;
+        this.playerStats.attack = this.playerData.abilities.combat.attack;
+        this.playerStats.defense = this.playerData.abilities.combat.defense;
+        this.playerStats.agility = this.playerData.abilities.combat.agility;
+        this.playerStats.baseAttack = this.playerData.abilities.combat.attack;
+        this.playerStats.baseDefense = this.playerData.abilities.combat.defense;
+        this.playerStats.baseAgility = this.playerData.abilities.combat.agility;
+        this.playerStats.element = this.playerData.element || 'water';
+        this.playerStats.statuses = [];
+        this.playerStats.buffs = {};
+        this.playerStats.skillCooldowns = {};
+        this.playerStats.rebirthPercent = 0;
+        
+        this.playerCurrentHealth = this.playerData.stamina;
+        
+        // 更新被动技能
+        this.playerPassiveSkills = this.getPassiveSkills(this.playerData);
+        
+        // 恢复技能栏并更新UI
+        this.restoreSkillsContainer();
+        this.renderPlayerInfo();
+        this.updateHealthUI();
+        
+        this.addLog(`✨ 已切换到 ${animal.name}！`, 'text-green-300');
+        
+        // 如果之前战斗已暂停,保持暂停状态
+        if (wasInBattle && wasPaused) {
+            this.battlePaused = true;
+        }
+    }
+    
+    restoreSkillsContainer() {
+        if (this.savedSkillsContainer) {
+            document.getElementById('skills-container').innerHTML = this.savedSkillsContainer;
+            this.savedSkillsContainer = null;
+        } else {
+            this.renderSkillsContainer();
+        }
     }
 
     flee() {

@@ -802,17 +802,14 @@
             <div class="skills-container" id="skills-container"></div>
 
             <div class="controls">
-                <button id="btn-animals" class="control-btn secondary" style="display: none;">
+                <button id="btn-animals" class="control-btn secondary">
                     🐾 动物
                 </button>
                 <button id="btn-change-skill" class="control-btn secondary">
                     🔄 切换技能
                 </button>
-                <button id="btn-start-battle" class="control-btn primary">
-                    ▶ 自动战斗
-                </button>
-                <button id="btn-pause" class="control-btn secondary">
-                    ⏸ 暂停
+                <button id="btn-pause" class="control-btn primary">
+                    ▶ 开始战斗
                 </button>
                 <button id="btn-items" class="control-btn secondary" style="display: none;">
                     🎒 道具
@@ -1191,6 +1188,9 @@
             // 创建玩家数据
             const playerData = {
                 name: document.getElementById('config-player-name').value,
+                key: 'test_player_' + Date.now(),
+                animalId: 'test_player_' + Date.now(),
+                icon: '🧪',
                 level: 1,
                 element: document.getElementById('config-player-element').value,
                 stamina: parseInt(document.getElementById('config-player-hp').value),
@@ -1206,6 +1206,14 @@
                 },
                 color: 0x3b82f6
             };
+            
+            // 将玩家数据添加到 ANIMAL_POOL 以支持切换动物功能
+            let animalPool = JSON.parse(localStorage.getItem('ANIMAL_POOL') || '[]');
+            // 清除之前的测试动物
+            animalPool = animalPool.filter(a => !a.key || !a.key.startsWith('test_'));
+            // 添加当前测试动物
+            animalPool.push(playerData);
+            localStorage.setItem('ANIMAL_POOL', JSON.stringify(animalPool));
 
             // 创建敌方数据
             const opponentData = {
@@ -1230,16 +1238,9 @@
             battleSystem = new BattleSystem(playerData, opponentData);
             battleSystem.init();
             
-            // 默认手动模式，提示玩家
+            // 提示玩家
             battleSystem.addLog('🧪 技能测试模式启动！', 'text-cyan-300');
-            battleSystem.addLog('🤚 默认手动战斗 - 点击技能释放，或点击"自动战斗"切换模式', 'text-cyan-300');
-            battleSystem.addLog('⏱️ 每回合有10秒时间选择技能', 'text-yellow-300');
-            
-            // 自动开始战斗循环
-            setTimeout(() => {
-                battleSystem.battleInProgress = true;
-                battleSystem.battleLoop();
-            }, 2000);
+            battleSystem.addLog('💡 使用"动物"按钮切换参战动物，点击"暂停"开始战斗', 'text-cyan-300');
         }
 
         // 重置战斗
