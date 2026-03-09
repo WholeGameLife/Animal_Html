@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>技能测试器 - 电子盆栽</title>
+    <title>战斗测试器 - 电子盆栽</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body {
@@ -607,7 +607,7 @@
     <!-- 配置模态框 -->
     <div class="config-modal" id="config-modal">
         <div class="config-panel">
-            <h2 class="text-3xl font-bold text-white mb-6 text-center">⚙️ 技能测试器配置</h2>
+            <h2 class="text-3xl font-bold text-white mb-6 text-center">⚙️ 战斗测试器配置</h2>
             
             <!-- 我方配置 -->
             <div class="config-section">
@@ -827,7 +827,8 @@
     <script src="../scripts/battle_system.js"></script>
     <script>
         let battleSystem = null;
-        let playerSelectedSkills = [];
+        let playerSelectedSkills = []; // 当前动物的技能
+        let testAnimalsSkills = {}; // 存储每个测试动物的技能配置 { animalId: [skill1, skill2, ...] }
         let enemySelectedSkills = [];
         let replacingSlotIndex = -1;
         let replacingSide = 'player'; // 'player' 或 'enemy'
@@ -912,6 +913,24 @@
             // 自动暂停战斗
             if (battleSystem.battleInProgress && !battleSystem.battlePaused) {
                 battleSystem.togglePause();
+            }
+            
+            // 加载当前动物的技能配置
+            if (battleSystem.playerData) {
+                const currentAnimalId = battleSystem.playerData.animalId || battleSystem.playerData.id;
+                
+                // 从全局技能配置中加载当前动物的技能
+                if (testAnimalsSkills[currentAnimalId]) {
+                    playerSelectedSkills = [...testAnimalsSkills[currentAnimalId]];
+                } else if (battleSystem.playerData.combatSkills?.equipped) {
+                    // 如果全局配置中没有，从动物数据中加载
+                    playerSelectedSkills = [...battleSystem.playerData.combatSkills.equipped];
+                    testAnimalsSkills[currentAnimalId] = [...playerSelectedSkills];
+                } else {
+                    // 都没有就清空
+                    playerSelectedSkills = [];
+                    testAnimalsSkills[currentAnimalId] = [];
+                }
             }
             
             const modal = document.getElementById('skill-change-modal');
@@ -1071,6 +1090,12 @@
             // 保存到全局变量
             if (isPlayer) {
                 playerSelectedSkills = selectedSkills;
+                
+                // 同步保存当前动物的技能配置
+                if (battleSystem && battleSystem.playerData) {
+                    const currentAnimalId = battleSystem.playerData.animalId || battleSystem.playerData.id;
+                    testAnimalsSkills[currentAnimalId] = [...selectedSkills];
+                }
             } else {
                 enemySelectedSkills = selectedSkills;
             }
@@ -1084,6 +1109,18 @@
                     if (isPlayer) {
                         battleSystem.playerPassiveSkills = battleSystem.getPassiveSkills(targetData);
                         battleSystem.renderSkillsContainer();
+                        
+                        // 同步更新gameState中的对应动物
+                        const testGameState = JSON.parse(localStorage.getItem('gameState') || '{}');
+                        if (testGameState.animals) {
+                            const animalIndex = testGameState.animals.findIndex(a =>
+                                a.id === targetData.id || a.animalId === targetData.animalId
+                            );
+                            if (animalIndex !== -1) {
+                                testGameState.animals[animalIndex].combatSkills.equipped = [...selectedSkills];
+                                localStorage.setItem('gameState', JSON.stringify(testGameState));
+                            }
+                        }
                     } else {
                         battleSystem.opponentPassiveSkills = battleSystem.getPassiveSkills(targetData);
                     }
@@ -1185,11 +1222,16 @@
             document.getElementById('config-modal').style.display = 'none';
             document.getElementById('battle-container').style.display = 'flex';
 
-            // 创建玩家数据
+            // 创建基础ID（不带后缀）
+            const baseId = 'test_player_' + Date.now();
+            const firstAnimalId = baseId + '_0'; // 第一个动物使用 _0 后缀
+
+            // 创建玩家数据（使用 _0 ID）
             const playerData = {
                 name: document.getElementById('config-player-name').value,
-                key: 'test_player_' + Date.now(),
-                animalId: 'test_player_' + Date.now(),
+                key: baseId + '_0',
+                id: firstAnimalId,
+                animalId: firstAnimalId,
                 icon: '🧪',
                 level: 1,
                 element: document.getElementById('config-player-element').value,
@@ -1202,18 +1244,48 @@
                     }
                 },
                 combatSkills: {
-                    equipped: playerSelectedSkills
+                    equipped: [...playerSelectedSkills]
                 },
                 color: 0x3b82f6
             };
             
-            // 将玩家数据添加到 ANIMAL_POOL 以支持切换动物功能
-            let animalPool = JSON.parse(localStorage.getItem('ANIMAL_POOL') || '[]');
-            // 清除之前的测试动物
-            animalPool = animalPool.filter(a => !a.key || !a.key.startsWith('test_'));
-            // 添加当前测试动物
-            animalPool.push(playerData);
-            localStorage.setItem('ANIMAL_POOL', JSON.stringify(animalPool));
+            // 保存第一个动物的技能配置（使用带后缀的ID）
+            testAnimalsSkills[firstAnimalId] = [...playerSelectedSkills];
+            
+            // 创建测试动物池（支持切换动物功能）
+            // 第一个动物已经创建（playerData），创建另外2个
+            const testAnimals = [playerData]; // 第一个动物（已有技能配置）
+            
+            // 生成另外2个测试动物
+            for (let i = 1; i < 3; i++) {
+                const animalId = baseId + '_' + i;
+                const testAnimal = {
+                    ...playerData,
+                    id: animalId,
+                    animalId: animalId,
+                    key: baseId + '_' + i,
+                    name: playerData.name + ` #${i + 1}`,
+                    combatSkills: {
+                        equipped: [] // 其他动物初始为空技能
+                    }
+                };
+                testAnimals.push(testAnimal);
+                
+                // 初始化该动物的技能配置为空
+                testAnimalsSkills[animalId] = [];
+            }
+            
+            // 设置出战队伍数据
+            const battleTeamData = {
+                battleTeam: testAnimals.map(a => a.id)
+            };
+            localStorage.setItem('battleTeamData', JSON.stringify(battleTeamData));
+            
+            // 设置游戏状态（包含所有测试动物）
+            const testGameState = {
+                animals: testAnimals
+            };
+            localStorage.setItem('gameState', JSON.stringify(testGameState));
 
             // 创建敌方数据
             const opponentData = {
@@ -1239,8 +1311,11 @@
             battleSystem.init();
             
             // 提示玩家
-            battleSystem.addLog('🧪 技能测试模式启动！', 'text-cyan-300');
-            battleSystem.addLog('💡 使用"动物"按钮切换参战动物，点击"暂停"开始战斗', 'text-cyan-300');
+            battleSystem.addLog('🧪 战斗测试模式启动！', 'text-cyan-300');
+            battleSystem.addLog('💡 使用"切换技能"按钮配置技能', 'text-cyan-300');
+            battleSystem.addLog('💡 使用"动物"按钮切换参战动物（已生成3个相同配置的测试动物）', 'text-cyan-300');
+            battleSystem.addLog('💡 点击"开始战斗"开始测试', 'text-green-300');
+            battleSystem.addLog('💡 暂不支持在测试器中切换动物（但可以重置后修改动物属性）', 'text-yellow-300');
         }
 
         // 重置战斗
@@ -1261,6 +1336,7 @@
             
             // 重置技能选择
             playerSelectedSkills = [];
+            testAnimalsSkills = {};
             enemySelectedSkills = [];
             replacingSlotIndex = -1;
             replacingSide = 'player';

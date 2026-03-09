@@ -766,20 +766,20 @@
             // 检查是否是联赛战斗，如果是则自动开始
             const leagueBattleQueue = localStorage.getItem('leagueBattleQueue');
             if (leagueBattleQueue) {
-                // 联赛战斗自动开始（延迟1秒让玩家看到界面）
+                // 联赛战斗自动开始（延迟200毫秒让玩家看到界面）
                 setTimeout(() => {
                     battleSystem.startBattle();
-                }, 1000);
+                }, 200);
             } else {
                 // 非联赛战斗：默认手动模式，提示玩家选择
                 battleSystem.addLog('🤚 默认手动战斗模式 - 点击技能释放，或点击"自动战斗"切换模式', 'text-cyan-300');
                 battleSystem.addLog('⏱️ 每回合有10秒时间选择技能', 'text-yellow-300');
                 
-                // 自动开始战斗循环（但不切换到自动模式）
+                // 立即开始战斗循环（不等待）
                 setTimeout(() => {
                     battleSystem.battleInProgress = true;
                     battleSystem.battleLoop();
-                }, 2000);
+                }, 200);
             }
         };
     </script>

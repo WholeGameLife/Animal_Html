@@ -1391,7 +1391,7 @@ class BattleSystem {
             }
             
             this.addLog(`\n━━━ 第 ${this.turnCount} 回合开始 ━━━`, 'text-cyan-400 font-bold');
-            await this.sleep(500);
+            await this.sleep(200);
             await this.waitForUnpause();
             
             // 回合开始：重置属性到基础值
@@ -1539,8 +1539,12 @@ class BattleSystem {
             // 手动模式下
             if (isPlayer) {
                 // 玩家：只释放选中的技能
-                if (this.selectedSkill) {
+                if (this.selectedSkill && this.selectedSkill !== '_animal_switch_') {
                     skillsToTrigger = attackerSkills.filter(s => s.key === this.selectedSkill);
+                } else if (this.selectedSkill === '_animal_switch_') {
+                    // 切换动物，放弃本回合攻击
+                    this.addLog(`${attackerName} 切换了动物，放弃本回合攻击`, 'text-gray-400');
+                    return;
                 } else {
                     // 没有选择技能,放弃行动
                     this.addLog(`${attackerName} 放弃本回合行动`, 'text-gray-400');
@@ -2833,9 +2837,64 @@ class BattleSystem {
             this.togglePause();
         }
         
-        // 获取背包中的动物
-        const animalPool = JSON.parse(localStorage.getItem('ANIMAL_POOL') || '[]');
-        const currentPlayerKey = this.playerData.key || this.playerData.animalId;
+        // 获取出战队伍中的所有动物（游戏中的"背包"实际上是出战队伍）
+        // 尝试从localStorage的battleTeamData获取队伍数据
+        const battleTeamData = JSON.parse(localStorage.getItem('battleTeamData') || '{}');
+        let teamIds = battleTeamData.battleTeam || [];
+        
+        // 获取所有动物数据（从gameState或localStorage）
+        let allAnimals = [];
+        if (typeof gameState !== 'undefined' && gameState.animals) {
+            allAnimals = gameState.animals;
+        } else {
+            // 如果gameState不存在，从localStorage加载
+            const savedGameState = localStorage.getItem('gameState');
+            if (savedGameState) {
+                const parsedState = JSON.parse(savedGameState);
+                allAnimals = parsedState.animals || [];
+            }
+        }
+        
+        // 获取队伍中的动物数据（使用id字段匹配）
+        const teamAnimals = [];
+        teamIds.forEach(animalId => {
+            if (animalId) {
+                const animal = allAnimals.find(a => a.id === animalId);
+                if (animal) {
+                    teamAnimals.push(animal);
+                }
+            }
+        });
+        
+        const currentPlayerKey = this.playerData.key || this.playerData.animalId || this.playerData.id;
+        
+        console.log('battleTeamData:', battleTeamData);
+        console.log('teamIds:', teamIds);
+        console.log('allAnimals count:', allAnimals.length);
+        console.log('teamAnimals:', teamAnimals);
+        console.log('currentPlayerKey:', currentPlayerKey);
+        
+        // 构建显示列表：包括当前出战的动物和队伍中的所有动物（去重）
+        const displayAnimals = [];
+        const addedKeys = new Set();
+        
+        // 先添加当前出战的动物
+        displayAnimals.push(this.playerData);
+        addedKeys.add(currentPlayerKey);
+        
+        // 添加队伍中的其他动物（跳过已添加的）
+        teamAnimals.forEach(animal => {
+            const animalKey = animal.key || animal.animalId || animal.id;
+            if (!addedKeys.has(animalKey) && displayAnimals.length < 6) {
+                displayAnimals.push(animal);
+                addedKeys.add(animalKey);
+            }
+        });
+        
+        console.log('displayAnimals:', displayAnimals);
+        
+        // 固定6个槽位
+        const maxSlots = 6;
         
         // 保存当前技能栏以便恢复
         this.savedSkillsContainer = document.getElementById('skills-container').innerHTML;
@@ -2844,24 +2903,21 @@ class BattleSystem {
         const container = document.getElementById('skills-container');
         container.innerHTML = '';
         
-        if (animalPool.length === 0) {
-            const emptyCard = document.createElement('div');
-            emptyCard.className = 'flex items-center justify-center text-gray-400 text-center';
-            emptyCard.textContent = '背包中没有动物';
-            container.appendChild(emptyCard);
-        } else {
-            // 动物数量决定每个卡片的宽度
-            const cardWidth = animalPool.length <= 4 ? 'calc(25% - 0.75rem)' : 'calc(20% - 0.8rem)';
+        // 计算卡片宽度（每个占25%，一行最多4个）
+        const cardWidth = 'calc(25% - 0.75rem)';
+        
+        // 创建6个槽位
+        for (let i = 0; i < maxSlots; i++) {
+            const animal = displayAnimals[i]; // 按索引取显示列表中的动物
+            const card = document.createElement('div');
+            card.className = 'skill-card';
+            card.style.width = cardWidth;
             
-            animalPool.forEach(animal => {
+            if (animal) {
                 const isCurrent = (animal.key || animal.animalId) === currentPlayerKey;
                 const animalKey = animal.key || animal.animalId;
                 
-                const card = document.createElement('div');
-                card.className = 'skill-card';
-                card.style.width = cardWidth;
-                
-                // 当前动物显示绿色边框
+                // 当前动物显示绿色边框，不能点击
                 if (isCurrent) {
                     card.style.border = '2px solid #22c55e';
                     card.style.boxShadow = '0 0 16px rgba(34, 197, 94, 0.6)';
@@ -2869,7 +2925,7 @@ class BattleSystem {
                 } else {
                     card.style.cursor = 'pointer';
                     card.onclick = () => {
-                        this.switchToAnimal(animalKey, animalPool);
+                        this.switchToAnimal(animalKey, teamAnimals, displayAnimals);
                     };
                 }
                 
@@ -2884,53 +2940,60 @@ class BattleSystem {
                         ${isCurrent ? '当前' : '切换'}
                     </div>
                 `;
-                
-                container.appendChild(card);
-            });
+            } else {
+                // 空槽位
+                card.style.cursor = 'not-allowed';
+                card.innerHTML = `
+                    <div class="skill-icon" style="opacity: 0.3;">🔒</div>
+                    <div class="skill-name" style="color: #6b7280;">空槽</div>
+                `;
+            }
+            
+            container.appendChild(card);
         }
         
-        // 添加返回按钮
-        const returnCard = document.createElement('div');
-        returnCard.className = 'skill-card';
-        returnCard.style.width = cardWidth;
-        returnCard.style.cursor = 'pointer';
-        returnCard.onclick = () => {
-            this.restoreSkillsContainer();
-        };
-        
-        returnCard.innerHTML = `
-            <div class="skill-icon">↩️</div>
-            <div class="skill-name">返回</div>
-            <div class="skill-type" style="background: #6b7280">取消</div>
-        `;
-        
-        container.appendChild(returnCard);
-        
-        this.addLog('💡 点击动物图标切换，点击"返回"图标恢复技能栏', 'text-cyan-300');
+        // 统计实际显示的动物数量（不包括空槽）
+        const actualAnimalCount = Math.min(displayAnimals.length, maxSlots);
+        this.addLog(`💡 背包动物列表（${actualAnimalCount}/${maxSlots}），点击动物切换`, 'text-cyan-300');
     }
     
-    switchToAnimal(animalKey, animalPool) {
-        const animal = animalPool.find(a => (a.key || a.animalId) === animalKey);
+    switchToAnimal(animalKey, teamAnimals, displayAnimals) {
+        const animal = displayAnimals.find(a => (a.key || a.animalId || a.id) === animalKey);
         if (!animal) return;
         
-        // 保存当前战斗状态
+        // 保存当前战斗状态（在showAnimals之前的状态）
+        // 注意：showAnimals可能已经暂停了战斗，所以我们需要记录原始状态
+        // 如果战斗进行中，不管现在是否暂停，切换后都应该恢复战斗
         const wasInBattle = this.battleInProgress;
-        const wasPaused = this.battlePaused;
+        const shouldResumeBattle = wasInBattle; // 只要战斗在进行中，切换后就恢复
+        
+        // 从gameState中获取最新的动物数据（包含已配置的技能）
+        const gameState = JSON.parse(localStorage.getItem('gameState') || '{}');
+        let latestAnimal = animal;
+        if (gameState.animals) {
+            const found = gameState.animals.find(a =>
+                a.id === animal.id || a.animalId === animal.animalId ||
+                a.id === animal.animalId || a.animalId === animal.id
+            );
+            if (found) {
+                latestAnimal = found;
+            }
+        }
         
         // 更新玩家数据
         this.playerData = {
-            ...animal,
-            key: animal.key || animal.animalId,
-            animalId: animal.animalId || animal.key,
-            stamina: animal.stamina || animal.abilities?.combat?.hp || 100,
-            abilities: animal.abilities || {
+            ...latestAnimal,
+            key: latestAnimal.key || latestAnimal.animalId,
+            animalId: latestAnimal.animalId || latestAnimal.key,
+            stamina: latestAnimal.stamina || latestAnimal.abilities?.combat?.hp || 100,
+            abilities: latestAnimal.abilities || {
                 combat: {
                     attack: 10,
                     defense: 5,
                     agility: 8
                 }
             },
-            combatSkills: animal.combatSkills || { equipped: [] }
+            combatSkills: latestAnimal.combatSkills || { equipped: [] }
         };
         
         // 重置战斗状态
@@ -2953,16 +3016,47 @@ class BattleSystem {
         // 更新被动技能
         this.playerPassiveSkills = this.getPassiveSkills(this.playerData);
         
-        // 恢复技能栏并更新UI
-        this.restoreSkillsContainer();
+        // 重新渲染技能栏（而不是恢复保存的HTML）
+        this.savedSkillsContainer = null; // 清除保存的内容，强制重新渲染
+        this.renderSkillsContainer();
         this.renderPlayerInfo();
         this.updateHealthUI();
         
-        this.addLog(`✨ 已切换到 ${animal.name}！`, 'text-green-300');
+        // 显示切换信息，包括技能列表
+        const skillCount = this.playerData.combatSkills?.equipped?.length || 0;
+        this.addLog(`✨ 已切换到 ${this.playerData.name}！（消耗本回合行动）`, 'text-green-300');
+        if (skillCount > 0) {
+            this.addLog(`→ 该动物已配置 ${skillCount} 个技能`, 'text-cyan-300');
+        } else {
+            this.addLog(`→ 该动物尚未配置技能（可通过"切换技能"按钮配置）`, 'text-yellow-300');
+        }
         
-        // 如果之前战斗已暂停,保持暂停状态
-        if (wasInBattle && wasPaused) {
-            this.battlePaused = true;
+        // 切换动物消耗本回合：标记为已选择技能（放弃攻击）
+        this.selectedSkill = '_animal_switch_'; // 特殊标记，表示切换了动物
+        
+        // 清除回合计时器
+        if (this.turnTimeout) {
+            clearTimeout(this.turnTimeout);
+            this.turnTimeout = null;
+        }
+        if (this.countdownInterval) {
+            clearInterval(this.countdownInterval);
+            this.countdownInterval = null;
+        }
+        // 隐藏倒计时
+        if (this.ui.centerCountdown) {
+            this.ui.centerCountdown.textContent = '';
+            this.ui.centerCountdown.classList.remove('show');
+        }
+        // 隐藏回合指示器
+        this.hideTurnIndicator(true);
+        
+        // 如果战斗在进行中，自动恢复战斗（不管是否被暂停）
+        if (shouldResumeBattle && this.battlePaused) {
+            // 恢复战斗
+            this.battlePaused = false;
+            this.ui.btnPause.textContent = '⏸ 暂停';
+            this.ui.btnPause.className = 'control-btn secondary';
         }
     }
     
@@ -3477,6 +3571,9 @@ class BattleSystem {
                 const statusType = params[`${effectKey}_status-type`] || 'poison';
                 const statusChance = params[`${effectKey}_status-chance`] || 100;
                 const statusStacks = params[`${effectKey}_status-stacks`] || 1;
+                // 新增：从技能参数中读取持续时间（可选，留空则使用状态默认值）
+                const skillStatusDuration = params[`${effectKey}_status-duration`]; // 可能是undefined或0
+                const skillStackDuration = params[`${effectKey}_stack-duration`]; // 可能是undefined或0
                 const random = Math.random() * 100;
                 
                 if (random <= statusChance) {
@@ -3491,11 +3588,15 @@ class BattleSystem {
                         // 已有状态，增加层数并重置状态持续时间
                         const maxStacks = statusData?.maxStacks || 99;
                         const oldStacks = existingStatus.stackDurations?.length || 0;
-                        const durationPerStack = statusData?.durationPerStack || 3;
+                        // 优先使用技能指定的每层持续时间，否则使用状态默认值
+                        const durationPerStack = (skillStackDuration !== undefined && skillStackDuration > 0) ?
+                            skillStackDuration : (statusData?.durationPerStack || 3);
                         const canAdd = Math.min(maxStacks - oldStacks, statusStacks);
                         
-                        // 重置状态持续回合（无论是否能添加新层都刷新状态）
-                        const statusDuration = statusData?.isPermanent ? 999 : (statusData?.statusDuration || 10);
+                        // 重置状态持续回合（优先使用技能指定的状态持续时间）
+                        const statusDuration = (skillStatusDuration !== undefined && skillStatusDuration > 0) ?
+                            skillStatusDuration :
+                            (statusData?.isPermanent ? 999 : (statusData?.statusDuration || 10));
                         existingStatus.statusDuration = statusDuration;
                         
                         if (canAdd > 0 && statusData?.hasStacks !== false) {
@@ -3518,7 +3619,10 @@ class BattleSystem {
                         }
                     } else {
                         // 新状态
-                        const statusDuration = statusData?.isPermanent ? 999 : (statusData?.statusDuration || 10);
+                        // 优先使用技能指定的状态持续时间
+                        const statusDuration = (skillStatusDuration !== undefined && skillStatusDuration > 0) ?
+                            skillStatusDuration :
+                            (statusData?.isPermanent ? 999 : (statusData?.statusDuration || 10));
                         const hasStacks = statusData?.hasStacks !== false;
                         
                         const newStatus = {
@@ -3528,7 +3632,10 @@ class BattleSystem {
                         };
                         
                         if (hasStacks) {
-                            const durationPerStack = statusData?.isStackPermanent ? 999 : (statusData?.durationPerStack || 3);
+                            // 优先使用技能指定的每层持续时间
+                            const durationPerStack = (skillStackDuration !== undefined && skillStackDuration > 0) ?
+                                skillStackDuration :
+                                (statusData?.isStackPermanent ? 999 : (statusData?.durationPerStack || 3));
                             const stackDurations = [];
                             for (let i = 0; i < statusStacks; i++) {
                                 stackDurations.push(durationPerStack);
@@ -3557,6 +3664,9 @@ class BattleSystem {
                 const statusType = params[`${effectKey}_status-type`] || 'poison';
                 const statusChance = params[`${effectKey}_status-chance`] || 100;
                 const statusStacks = params[`${effectKey}_status-stacks`] || 1;
+                // 新增：从技能参数中读取持续时间
+                const skillStatusDuration = params[`${effectKey}_status-duration`];
+                const skillStackDuration = params[`${effectKey}_stack-duration`];
                 const random = Math.random() * 100;
                 
                 if (random <= statusChance) {
@@ -3571,11 +3681,15 @@ class BattleSystem {
                         // 已有状态，增加层数并重置状态持续时间
                         const maxStacks = statusData?.maxStacks || 99;
                         const oldStacks = existingStatus.stackDurations?.length || 0;
-                        const durationPerStack = statusData?.durationPerStack || 3;
+                        // 优先使用技能指定的每层持续时间
+                        const durationPerStack = (skillStackDuration !== undefined && skillStackDuration > 0) ?
+                            skillStackDuration : (statusData?.durationPerStack || 3);
                         const canAdd = Math.min(maxStacks - oldStacks, statusStacks);
                         
-                        // 重置状态持续回合（无论是否能添加新层都刷新状态）
-                        const statusDuration = statusData?.isPermanent ? 999 : (statusData?.statusDuration || 10);
+                        // 重置状态持续回合（优先使用技能指定的状态持续时间）
+                        const statusDuration = (skillStatusDuration !== undefined && skillStatusDuration > 0) ?
+                            skillStatusDuration :
+                            (statusData?.isPermanent ? 999 : (statusData?.statusDuration || 10));
                         existingStatus.statusDuration = statusDuration;
                         
                         if (canAdd > 0 && statusData?.hasStacks !== false) {
@@ -3598,7 +3712,10 @@ class BattleSystem {
                         }
                     } else {
                         // 新状态
-                        const statusDuration = statusData?.isPermanent ? 999 : (statusData?.statusDuration || 10);
+                        // 优先使用技能指定的状态持续时间
+                        const statusDuration = (skillStatusDuration !== undefined && skillStatusDuration > 0) ?
+                            skillStatusDuration :
+                            (statusData?.isPermanent ? 999 : (statusData?.statusDuration || 10));
                         const hasStacks = statusData?.hasStacks !== false;
                         
                         const newStatus = {
@@ -3608,7 +3725,10 @@ class BattleSystem {
                         };
                         
                         if (hasStacks) {
-                            const durationPerStack = statusData?.isStackPermanent ? 999 : (statusData?.durationPerStack || 3);
+                            // 优先使用技能指定的每层持续时间
+                            const durationPerStack = (skillStackDuration !== undefined && skillStackDuration > 0) ?
+                                skillStackDuration :
+                                (statusData?.isStackPermanent ? 999 : (statusData?.durationPerStack || 3));
                             const stackDurations = [];
                             for (let i = 0; i < statusStacks; i++) {
                                 stackDurations.push(durationPerStack);

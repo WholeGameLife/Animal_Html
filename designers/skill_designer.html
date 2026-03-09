@@ -859,6 +859,18 @@
                             class="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white text-sm">
                         <p class="text-xs text-gray-500 mt-1">一次施加的状态层数</p></div>`;
                 
+                case 'status-duration':
+                    return `<div><label class="block text-xs font-medium text-gray-400 mb-1">状态持续回合 (可选)</label>
+                        <input type="number" id="${paramId}" min="0" max="999" value="" placeholder="留空=使用状态默认"
+                            class="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white text-sm">
+                        <p class="text-xs text-gray-500 mt-1">覆盖状态设计器的默认持续回合</p></div>`;
+                
+                case 'stack-duration':
+                    return `<div><label class="block text-xs font-medium text-gray-400 mb-1">每层持续回合 (可选)</label>
+                        <input type="number" id="${paramId}" min="0" max="999" value="" placeholder="留空=使用状态默认"
+                            class="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white text-sm">
+                        <p class="text-xs text-gray-500 mt-1">覆盖状态设计器的默认每层持续回合</p></div>`;
+                
                 case 'purify-type':
                     return `<div><label class="block text-xs font-medium text-gray-400 mb-1">驱散目标类型</label>
                         <select id="${paramId}" class="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white text-sm">
@@ -1233,7 +1245,7 @@
                 'buff_attack': ['effect-source', 'bonus', 'target'],
                 'buff_defense': ['effect-source', 'bonus', 'target'],
                 'buff_speed': ['effect-source', 'bonus', 'target'],
-                'buff_status_enemy': ['status-type', 'status-chance', 'status-stacks'],
+                'buff_status_enemy': ['status-type', 'status-chance', 'status-stacks', 'status-duration', 'stack-duration'],
                 'buff_purify': ['target', 'purify-type', 'purify-count'],
                 'buff_heal_amp': ['effect-source', 'bonus', 'target'],
                 'buff_element_damage': ['target', 'element-type', 'damage-bonus'],
@@ -1241,7 +1253,7 @@
                 'debuff_attack': ['effect-source', 'bonus', 'target'],
                 'debuff_defense': ['effect-source', 'bonus', 'target'],
                 'debuff_speed': ['effect-source', 'bonus', 'target'],
-                'debuff_status_self': ['status-type', 'status-chance', 'status-stacks'],
+                'debuff_status_self': ['status-type', 'status-chance', 'status-stacks', 'status-duration', 'stack-duration'],
                 'debuff_no_heal': ['target'],
                 'debuff_heal_reduce': ['target', 'bonus'],
                 'debuff_element_damage': ['target', 'element-type', 'damage-reduce'],
@@ -1364,6 +1376,8 @@
                 'status-type': '状态类型',
                 'status-chance': '施加概率',
                 'status-stacks': '施加层数',
+                'status-duration': '状态持续回合',
+                'stack-duration': '每层持续回合',
                 'purify-type': '驱散类型',
                 'purify-count': '驱散数量',
                 'element-type': '属性类型'
@@ -2560,6 +2574,9 @@
                     const statusType = params[`${effectKey}_status-type`];
                     const statusChance = params[`${effectKey}_status-chance`] || 100;
                     const statusStacks = params[`${effectKey}_status-stacks`] || 1;
+                    // 新增：从技能参数中读取持续时间（可选）
+                    const skillStatusDuration = params[`${effectKey}_status-duration`];
+                    const skillStackDuration = params[`${effectKey}_stack-duration`];
                     const random = Math.random() * 100;
                     
                     if (random <= statusChance) {
@@ -2574,11 +2591,15 @@
                             // 已有状态，增加层数并重置状态持续时间
                             const maxStacks = statusData?.maxStacks || 99;
                             const oldStacks = existingStatus.stackDurations.length;
-                            const durationPerStack = statusData?.durationPerStack || 3;
+                            // 优先使用技能指定的每层持续时间
+                            const durationPerStack = (skillStackDuration !== undefined && skillStackDuration > 0) ?
+                                skillStackDuration : (statusData?.durationPerStack || 3);
                             const canAdd = Math.min(maxStacks - oldStacks, statusStacks);
                             
-                            // 重置状态持续回合（无论是否能添加新层都刷新状态）
-                            const statusDuration = statusData?.isPermanent ? 999 : (statusData?.statusDuration || 10);
+                            // 重置状态持续回合（优先使用技能指定的状态持续时间）
+                            const statusDuration = (skillStatusDuration !== undefined && skillStatusDuration > 0) ?
+                                skillStatusDuration :
+                                (statusData?.isPermanent ? 999 : (statusData?.statusDuration || 10));
                             existingStatus.statusDuration = statusDuration;
                             
                             if (canAdd > 0) {
@@ -2599,19 +2620,32 @@
                                 addLog(`施加异常: 敌方 ${statusName} 持续时间已刷新 (${oldStacks}层)`, 'purple');
                             }
                         } else {
-                            // 新状态（每层独立持续时间）
-                            const durationPerStack = statusData?.durationPerStack || 3;
-                            const stackDurations = [];
-                            
-                            for (let i = 0; i < statusStacks; i++) {
-                                stackDurations.push(durationPerStack);
-                            }
+                            // 新状态（包含状态持续时间和层数持续时间）
+                            // 优先使用技能指定的状态持续时间
+                            const statusDuration = (skillStatusDuration !== undefined && skillStatusDuration > 0) ?
+                                skillStatusDuration :
+                                (statusData?.isPermanent ? 999 : (statusData?.statusDuration || 10));
+                            const hasStacks = statusData?.hasStacks !== false;
                             
                             const newStatus = {
                                 key: statusType,
-                                stackDurations: stackDurations,
+                                statusDuration: statusDuration,
                                 data: statusData
                             };
+                            
+                            if (hasStacks) {
+                                // 优先使用技能指定的每层持续时间
+                                const durationPerStack = (skillStackDuration !== undefined && skillStackDuration > 0) ?
+                                    skillStackDuration :
+                                    (statusData?.isStackPermanent ? 999 : (statusData?.durationPerStack || 3));
+                                const stackDurations = [];
+                                
+                                for (let i = 0; i < statusStacks; i++) {
+                                    stackDurations.push(durationPerStack);
+                                }
+                                
+                                newStatus.stackDurations = stackDurations;
+                            }
                             battleState.enemy.statuses.push(newStatus);
                             addLog(`施加异常: 敌方获得 ${statusName} ×${statusStacks}层，各${durationPerStack}回合 (${statusChance}%概率成功)`, 'purple');
                             
@@ -2633,6 +2667,9 @@
                     const statusType = params[`${effectKey}_status-type`];
                     const statusChance = params[`${effectKey}_status-chance`] || 100;
                     const statusStacks = params[`${effectKey}_status-stacks`] || 1;
+                    // 新增：从技能参数中读取持续时间
+                    const skillStatusDuration = params[`${effectKey}_status-duration`];
+                    const skillStackDuration = params[`${effectKey}_stack-duration`];
                     const random = Math.random() * 100;
                     
                     if (random <= statusChance) {
@@ -2647,11 +2684,15 @@
                             // 已有状态，增加层数并重置状态持续时间
                             const maxStacks = statusData?.maxStacks || 99;
                             const oldStacks = existingStatus.stackDurations.length;
-                            const durationPerStack = statusData?.durationPerStack || 3;
+                            // 优先使用技能指定的每层持续时间
+                            const durationPerStack = (skillStackDuration !== undefined && skillStackDuration > 0) ?
+                                skillStackDuration : (statusData?.durationPerStack || 3);
                             const canAdd = Math.min(maxStacks - oldStacks, statusStacks);
                             
-                            // 重置状态持续回合（无论是否能添加新层都刷新状态）
-                            const statusDuration = statusData?.isPermanent ? 999 : (statusData?.statusDuration || 10);
+                            // 重置状态持续回合（优先使用技能指定的状态持续时间）
+                            const statusDuration = (skillStatusDuration !== undefined && skillStatusDuration > 0) ?
+                                skillStatusDuration :
+                                (statusData?.isPermanent ? 999 : (statusData?.statusDuration || 10));
                             existingStatus.statusDuration = statusDuration;
                             
                             if (canAdd > 0) {
@@ -2673,7 +2714,10 @@
                             }
                         } else {
                             // 新状态（包含状态持续时间和层数持续时间）
-                            const statusDuration = statusData?.isPermanent ? 999 : (statusData?.statusDuration || 10);
+                            // 优先使用技能指定的状态持续时间
+                            const statusDuration = (skillStatusDuration !== undefined && skillStatusDuration > 0) ?
+                                skillStatusDuration :
+                                (statusData?.isPermanent ? 999 : (statusData?.statusDuration || 10));
                             const hasStacks = statusData?.hasStacks !== false; // 默认true兼容旧数据
                             
                             const newStatus = {
@@ -2683,11 +2727,16 @@
                             };
                             
                             let logMessage = `自身异常: 获得 ${statusName}`;
-                            const statusDurationText = statusData?.isPermanent ? '永久' : `${statusDuration}回合`;
+                            const statusDurationText = (skillStatusDuration !== undefined && skillStatusDuration > 0) ?
+                                `${skillStatusDuration}回合(技能覆盖)` :
+                                (statusData?.isPermanent ? '永久' : `${statusDuration}回合`);
                             
                             if (hasStacks) {
                                 // 有层数系统
-                                const durationPerStack = statusData?.isStackPermanent ? 999 : (statusData?.durationPerStack || 3);
+                                // 优先使用技能指定的每层持续时间
+                                const durationPerStack = (skillStackDuration !== undefined && skillStackDuration > 0) ?
+                                    skillStackDuration :
+                                    (statusData?.isStackPermanent ? 999 : (statusData?.durationPerStack || 3));
                                 const stackDurations = [];
                                 
                                 for (let i = 0; i < statusStacks; i++) {
@@ -2695,7 +2744,9 @@
                                 }
                                 
                                 newStatus.stackDurations = stackDurations;
-                                const stackDurationText = statusData?.isStackPermanent ? '层数永久' : `层各${durationPerStack}回合`;
+                                const stackDurationText = (skillStackDuration !== undefined && skillStackDuration > 0) ?
+                                    `层各${durationPerStack}回合(技能覆盖)` :
+                                    (statusData?.isStackPermanent ? '层数永久' : `层各${durationPerStack}回合`);
                                 logMessage += ` (状态${statusDurationText}，×${statusStacks}${stackDurationText})`;
                             } else {
                                 // 无层数系统
