@@ -93,17 +93,6 @@
                     <!-- 状态参数 -->
                     <div class="grid grid-cols-2 gap-4 mb-4">
                         <div>
-                            <label class="block text-sm font-medium text-gray-300 mb-2">
-                                持续时间模式 *
-                            </label>
-                            <select id="duration-mode"
-                                class="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500">
-                                <option value="status">状态整体持续</option>
-                                <option value="stack">每层独立计时</option>
-                            </select>
-                            <p class="text-xs text-gray-500 mt-1">选择持续时间的计算方式</p>
-                        </div>
-                        <div>
                             <label class="block text-sm font-medium text-gray-300 mb-2">层数系统</label>
                             <select id="status-hasStacks"
                                 class="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500">
@@ -112,10 +101,13 @@
                             </select>
                             <p class="text-xs text-gray-500 mt-1">控制、眩晕等状态可不使用层数</p>
                         </div>
+                        <div></div>
                     </div>
+                    <!-- 隐藏的持续时间模式选择器（由层数系统自动控制） -->
+                    <input type="hidden" id="duration-mode" value="stack">
                     
-                    <!-- 状态整体持续配置 -->
-                    <div id="status-duration-params" class="grid grid-cols-2 gap-4 mb-4">
+                    <!-- 状态整体持续配置（无层数时显示） -->
+                    <div id="status-duration-params" class="grid grid-cols-2 gap-4 mb-4" style="display: none;">
                         <div>
                             <label class="block text-sm font-medium text-gray-300 mb-2">状态持续回合 *</label>
                             <div class="space-y-2">
@@ -131,8 +123,8 @@
                         <div></div>
                     </div>
                     
-                    <!-- 每层独立计时配置 -->
-                    <div id="stack-params" class="grid grid-cols-2 gap-4 mb-4" style="display: none;">
+                    <!-- 每层独立计时配置（启用层数时显示） -->
+                    <div id="stack-params" class="grid grid-cols-2 gap-4 mb-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-300 mb-2">每层持续回合 *</label>
                             <div class="space-y-2">
@@ -464,27 +456,7 @@
                 });
             });
             
-            // 持续时间模式选择器
-            document.getElementById('duration-mode').addEventListener('change', (e) => {
-                const mode = e.target.value;
-                const statusDurationParams = document.getElementById('status-duration-params');
-                const stackParams = document.getElementById('stack-params');
-                
-                if (mode === 'status') {
-                    // 状态整体持续模式
-                    statusDurationParams.style.display = 'grid';
-                    stackParams.style.display = 'none';
-                    document.getElementById('status-duration').required = !document.getElementById('status-permanent').checked;
-                    document.getElementById('status-durationPerStack').required = false;
-                } else {
-                    // 每层独立计时模式
-                    statusDurationParams.style.display = 'none';
-                    stackParams.style.display = 'grid';
-                    document.getElementById('status-duration').required = false;
-                    document.getElementById('status-durationPerStack').required = !document.getElementById('status-stackPermanent').checked;
-                }
-                updatePreview();
-            });
+            // 持续时间模式由层数系统自动控制，此处监听器已移除
             
             // 状态永久存在复选框
             document.getElementById('status-permanent').addEventListener('change', (e) => {
@@ -516,26 +488,33 @@
                 updatePreview();
             });
             
-            // 层数系统选择器
+            // 层数系统选择器（同时控制持续时间模式）
             document.getElementById('status-hasStacks').addEventListener('change', (e) => {
                 const hasStacks = e.target.value === 'true';
                 const stackGrowParams = document.getElementById('stack-grow-params');
                 const maxStacksParam = document.getElementById('max-stacks-param');
+                const statusDurationParams = document.getElementById('status-duration-params');
+                const stackParams = document.getElementById('stack-params');
+                const durationModeInput = document.getElementById('duration-mode');
                 
                 if (hasStacks) {
+                    // 有层数：使用每层独立计时模式
+                    durationModeInput.value = 'stack';
+                    statusDurationParams.style.display = 'none';
+                    stackParams.style.display = 'grid';
+                    document.getElementById('status-duration').required = false;
+                    document.getElementById('status-durationPerStack').required = !document.getElementById('status-stackPermanent').checked;
                     stackGrowParams.style.display = 'grid';
                     maxStacksParam.style.display = 'grid';
-                    // 根据持续时间模式决定是否显示相关参数
-                    const mode = document.getElementById('duration-mode').value;
-                    if (mode === 'stack') {
-                        document.getElementById('stack-params').style.display = 'grid';
-                        document.getElementById('status-durationPerStack').required = !document.getElementById('status-stackPermanent').checked;
-                    }
                 } else {
+                    // 无层数：使用状态整体持续模式
+                    durationModeInput.value = 'status';
+                    statusDurationParams.style.display = 'grid';
+                    stackParams.style.display = 'none';
+                    document.getElementById('status-duration').required = !document.getElementById('status-permanent').checked;
+                    document.getElementById('status-durationPerStack').required = false;
                     stackGrowParams.style.display = 'none';
                     maxStacksParam.style.display = 'none';
-                    document.getElementById('stack-params').style.display = 'none';
-                    document.getElementById('status-durationPerStack').required = false;
                 }
                 updatePreview();
             });
@@ -618,32 +597,53 @@
             updatePreview();
         }
 
-        // 生成效果来源选择器HTML
+        // 生成效果来源选择器HTML（拆分为生效对象 + 来源属性两个选择器）
         function getSourceSelectHTML(effectKey) {
             return `
-                <select id="source-${effectKey}" class="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white text-sm">
-                    <optgroup label="施加者属性">
-                        <option value="caster-current-attack">施加者当前攻击力</option>
-                        <option value="caster-base-attack">施加者基础攻击力</option>
-                        <option value="caster-current-defense">施加者当前防御力</option>
-                        <option value="caster-base-defense">施加者基础防御力</option>
-                        <option value="caster-current-agility">施加者当前敏捷</option>
-                        <option value="caster-base-agility">施加者基础敏捷</option>
-                        <option value="caster-max-hp">施加者最大生命</option>
-                    </optgroup>
-                    <optgroup label="承受者属性">
-                        <option value="target-current-attack">承受者当前攻击力</option>
-                        <option value="target-base-attack">承受者基础攻击力</option>
-                        <option value="target-current-defense">承受者当前防御力</option>
-                        <option value="target-base-defense">承受者基础防御力</option>
-                        <option value="target-current-agility">承受者当前敏捷</option>
-                        <option value="target-base-agility">承受者基础敏捷</option>
-                        <option value="target-max-hp" selected>承受者最大生命</option>
-                        <option value="target-current-hp">承受者当前生命</option>
-                        <option value="target-lost-hp">承受者已损失生命</option>
-                    </optgroup>
-                </select>
+                <div class="flex gap-2">
+                    <div class="flex-1">
+                        <label class="block text-xs text-gray-500 mb-1">生效对象</label>
+                        <select id="source-target-${effectKey}" class="w-full bg-gray-700 border border-gray-600 rounded px-2 py-2 text-white text-sm"
+                            onchange="document.getElementById('source-${effectKey}').value = this.value + '-' + document.getElementById('source-attr-${effectKey}').value; ">
+                            <option value="caster">施加者</option>
+                            <option value="target" selected>承受者</option>
+                            <option value="ally-all">全体友方</option>
+                            <option value="enemy-all">全体敌方</option>
+                            <option value="next-ally">下一个出战友方</option>
+                            <option value="next-enemy">下一个出战敌方</option>
+                        </select>
+                    </div>
+                    <div class="flex-1">
+                        <label class="block text-xs text-gray-500 mb-1">来源属性</label>
+                        <select id="source-attr-${effectKey}" class="w-full bg-gray-700 border border-gray-600 rounded px-2 py-2 text-white text-sm"
+                            onchange="document.getElementById('source-${effectKey}').value = document.getElementById('source-target-${effectKey}').value + '-' + this.value; ">
+                            <option value="current-attack">当前攻击力</option>
+                            <option value="base-attack">基础攻击力</option>
+                            <option value="current-defense">当前防御力</option>
+                            <option value="base-defense">基础防御力</option>
+                            <option value="current-agility">当前敏捷</option>
+                            <option value="base-agility">基础敏捷</option>
+                            <option value="max-hp" selected>最大生命</option>
+                            <option value="current-hp">当前生命</option>
+                            <option value="lost-hp">已损失生命</option>
+                        </select>
+                    </div>
+                </div>
+                <input type="hidden" id="source-${effectKey}" value="target-max-hp">
             `;
+        }
+        
+        // 从 source 字符串解析出 target 和 attribute
+        function parseSource(sourceValue) {
+            if (!sourceValue) return { target: 'target', attr: 'max-hp' };
+            // 格式：target-attr（如 target-max-hp, caster-current-attack, next-ally-max-hp）
+            const prefixes = ['next-ally', 'next-enemy', 'ally-all', 'enemy-all', 'caster', 'target'];
+            for (const prefix of prefixes) {
+                if (sourceValue.startsWith(prefix + '-')) {
+                    return { target: prefix, attr: sourceValue.slice(prefix.length + 1) };
+                }
+            }
+            return { target: 'target', attr: sourceValue };
         }
 
         // 更新效果值配置界面
@@ -658,38 +658,42 @@
 
             const html = selectedEffects.map(effect => {
                 const config = EFFECT_CONFIG[effect];
-                if (!config.needsSource && !config.needsValue) return '';
                 
                 let effectHtml = `<div class="border border-gray-600 rounded-lg p-3 bg-gray-700/30 space-y-2">
                     <div class="text-sm font-bold text-blue-300 mb-2">📋 ${config.name}</div>`;
                 
-                // 如果需要效果来源
-                if (config.needsSource) {
-                    effectHtml += `
-                        <div>
-                            <label class="block text-xs text-gray-400 mb-1">⚡ 效果来源</label>
-                            ${getSourceSelectHTML(effect)}
-                            <p class="text-xs text-gray-500 mt-1">效果 = 效果来源 × 数值比例 × 层数</p>
-                        </div>`;
-                }
-                
-                // 如果需要数值配置
-                if (config.needsValue) {
-                    effectHtml += `
-                        <div>
-                            <label class="block text-xs text-gray-400 mb-1">${config.label}</label>
-                            <input type="number" id="value-${effect}"
-                                   value="${config.defaultValue}"
-                                   min="${config.min || 0}"
-                                   max="${config.max || 999}"
-                                   step="${config.step || 0.01}"
-                                   class="w-full bg-gray-700 border border-gray-600 rounded px-3 py-1 text-white text-sm">
-                        </div>`;
+                if (!config.needsSource && !config.needsValue) {
+                    // 无需配置参数的效果（控制类等），显示说明
+                    effectHtml += `<p class="text-xs text-gray-500">此效果无需配置数值，状态存在即生效</p>`;
+                } else {
+                    // 如果需要效果来源
+                    if (config.needsSource) {
+                        effectHtml += `
+                            <div>
+                                <label class="block text-xs text-gray-400 mb-1">⚡ 效果来源</label>
+                                ${getSourceSelectHTML(effect)}
+                                <p class="text-xs text-gray-500 mt-1">效果 = 效果来源 × 数值比例 × 层数</p>
+                            </div>`;
+                    }
+                    
+                    // 如果需要数值配置
+                    if (config.needsValue) {
+                        effectHtml += `
+                            <div>
+                                <label class="block text-xs text-gray-400 mb-1">${config.label}</label>
+                                <input type="number" id="value-${effect}"
+                                       value="${config.defaultValue}"
+                                       min="${config.min || 0}"
+                                       max="${config.max || 999}"
+                                       step="${config.step || 0.01}"
+                                       class="w-full bg-gray-700 border border-gray-600 rounded px-3 py-1 text-white text-sm">
+                            </div>`;
+                    }
                 }
                 
                 effectHtml += `</div>`;
                 return effectHtml;
-            }).filter(h => h).join('');
+            }).join('');
 
             effectValues.innerHTML = html || '<p class="text-xs text-gray-500">所选效果无需配置数值</p>';
             
@@ -697,6 +701,16 @@
             effectValues.querySelectorAll('input, select').forEach(input => {
                 input.addEventListener('input', updatePreview);
                 input.addEventListener('change', updatePreview);
+            });
+            
+            // 初始化隐藏的 source 字段（合并 target + attr）
+            selectedEffects.forEach(effect => {
+                const targetSel = document.getElementById(`source-target-${effect}`);
+                const attrSel = document.getElementById(`source-attr-${effect}`);
+                const sourceHidden = document.getElementById(`source-${effect}`);
+                if (targetSel && attrSel && sourceHidden) {
+                    sourceHidden.value = targetSel.value + '-' + attrSel.value;
+                }
             });
         }
 
@@ -748,18 +762,18 @@
                 iconDisplay = `<div class="w-12 h-12 bg-gray-700 rounded flex items-center justify-center text-2xl flex-shrink-0">❓</div>`;
             }
             
-            // 持续时间显示（根据模式只显示一种）
+            // 持续时间显示（有层数→看层数持续时间，无层数→看状态持续时间）
             let durationText = '';
-            if (durationMode === 'status') {
-                // 状态整体持续模式
+            if (!hasStacks) {
+                // 无层数：显示状态整体持续时间
                 const isPermanent = document.getElementById('status-permanent').checked;
                 const statusDuration = document.getElementById('status-duration').value;
                 durationText = isPermanent ? '状态永久' : `状态${statusDuration}回合`;
             } else {
-                // 每层独立计时模式
+                // 有层数：显示层数持续时间
                 const isStackPermanent = document.getElementById('status-stackPermanent').checked;
                 const durationPerStack = document.getElementById('status-durationPerStack').value;
-                durationText = hasStacks ? (isStackPermanent ? '层数永久' : `每层${durationPerStack}回合`) : '无层数';
+                durationText = isStackPermanent ? '层数永久' : `每层${durationPerStack}回合`;
             }
             
             const maxStacks = document.getElementById('status-maxStacks').value;
@@ -987,34 +1001,14 @@
                 stackGrowParams.style.display = 'none';
             }
             
-            // 判断持续时间模式（根据isPermanent和isStackPermanent判断）
-            let durationMode = 'status'; // 默认状态整体持续
-            if (status.isPermanent && !status.isStackPermanent) {
-                durationMode = 'stack'; // 每层独立计时
-            }
-            document.getElementById('duration-mode').value = durationMode;
-            
-            // 根据模式显示对应的配置
+            // 根据层数系统决定持续时间模式（有层数→看层数持续时间，无层数→看状态持续时间）
             const statusDurationParams = document.getElementById('status-duration-params');
             const stackParams = document.getElementById('stack-params');
+            const durationModeInput = document.getElementById('duration-mode');
             
-            if (durationMode === 'status') {
-                statusDurationParams.style.display = 'grid';
-                stackParams.style.display = 'none';
-                
-                document.getElementById('status-duration').value = status.statusDuration || 10;
-                document.getElementById('status-permanent').checked = status.isPermanent;
-                const statusDurationInput = document.getElementById('status-duration');
-                if (status.isPermanent) {
-                    statusDurationInput.disabled = true;
-                    statusDurationInput.classList.add('opacity-50');
-                    statusDurationInput.required = false;
-                } else {
-                    statusDurationInput.disabled = false;
-                    statusDurationInput.classList.remove('opacity-50');
-                    statusDurationInput.required = true;
-                }
-            } else {
+            if (hasStacks) {
+                // 有层数：使用每层独立计时模式
+                durationModeInput.value = 'stack';
                 statusDurationParams.style.display = 'none';
                 stackParams.style.display = 'grid';
                 
@@ -1029,6 +1023,24 @@
                     stackDurationInput.disabled = false;
                     stackDurationInput.classList.remove('opacity-50');
                     stackDurationInput.required = true;
+                }
+            } else {
+                // 无层数：使用状态整体持续模式
+                durationModeInput.value = 'status';
+                statusDurationParams.style.display = 'grid';
+                stackParams.style.display = 'none';
+                
+                document.getElementById('status-duration').value = status.statusDuration || 10;
+                document.getElementById('status-permanent').checked = status.isPermanent;
+                const statusDurationInput = document.getElementById('status-duration');
+                if (status.isPermanent) {
+                    statusDurationInput.disabled = true;
+                    statusDurationInput.classList.add('opacity-50');
+                    statusDurationInput.required = false;
+                } else {
+                    statusDurationInput.disabled = false;
+                    statusDurationInput.classList.remove('opacity-50');
+                    statusDurationInput.required = true;
                 }
             }
             
@@ -1061,8 +1073,16 @@
                     const config = status.effectConfigs?.[effect];
                     if (config) {
                         if (config.source) {
-                            const sourceSelect = document.getElementById(`source-${effect}`);
-                            if (sourceSelect) sourceSelect.value = config.source;
+                            // 设置隐藏的 source 字段
+                            const sourceHidden = document.getElementById(`source-${effect}`);
+                            if (sourceHidden) sourceHidden.value = config.source;
+                            
+                            // 解析 source，设置拆分的两个选择器
+                            const parsed = parseSource(config.source);
+                            const targetSel = document.getElementById(`source-target-${effect}`);
+                            const attrSel = document.getElementById(`source-attr-${effect}`);
+                            if (targetSel) targetSel.value = parsed.target;
+                            if (attrSel) attrSel.value = parsed.attr;
                         }
                         if (config.value !== undefined) {
                             const valueInput = document.getElementById(`value-${effect}`);
@@ -1146,13 +1166,9 @@
                                 </div>
                                 ${status.description ? `<p class="text-xs text-gray-500 italic mb-1 line-clamp-2">${status.description}</p>` : ''}
                                 <div class="text-xs text-gray-400 mb-1">
-                                    ${status.isPermanent && status.isStackPermanent ?
-                                        '状态永久 · 层数永久' :
-                                        (status.isPermanent ?
-                                            (status.hasStacks === false ? '无层数' : `每层${status.durationPerStack || 3}回合`) :
-                                            (status.isStackPermanent ?
-                                                `状态${status.statusDuration || 10}回合` :
-                                                `状态${status.statusDuration || 10}回合 · 每层${status.durationPerStack || 3}回合`))} ${status.hasStacks !== false && status.maxStacks > 1 ? `· 最多${status.maxStacks}层` : ''} ${status.uniqueEffect ? '· 唯一效果' : ''} ${status.hasStacks !== false && status.autoGrow ? `· 每回合+${status.growRate}层` : ''}
+                                    ${status.hasStacks === false
+                                        ? (status.isPermanent ? '状态永久' : `状态${status.statusDuration || 10}回合`)
+                                        : (status.isStackPermanent ? '层数永久' : `每层${status.durationPerStack || 3}回合`)} ${status.hasStacks !== false && status.maxStacks > 1 ? `· 最多${status.maxStacks}层` : ''} ${status.uniqueEffect ? '· 唯一效果' : ''} ${status.hasStacks !== false && status.autoGrow ? `· 每回合+${status.growRate}层` : ''}
                                 </div>
                                 ${effectLabels ? `<div class="flex flex-wrap gap-1">${effectLabels}</div>` : ''}
                             </div>
@@ -1334,9 +1350,10 @@
             return names[type] || '未知';
         }
 
-        // 辅助函数：获取效果来源显示名称
+        // 辅助函数：获取效果来源显示名称（支持新格式和旧格式）
         function getEffectSourceDisplayName(source) {
-            const names = {
+            // 旧格式兼容
+            const legacyNames = {
                 'caster-current-attack': '施加者当前攻击',
                 'caster-base-attack': '施加者基础攻击',
                 'caster-current-defense': '施加者当前防御',
@@ -1354,7 +1371,38 @@
                 'target-current-hp': '承受者当前生命',
                 'target-lost-hp': '承受者已损失生命'
             };
-            return names[source] || source || '';
+            if (legacyNames[source]) return legacyNames[source];
+            
+            // 新格式：target + attr
+            const targetNames = {
+                'caster': '施加者',
+                'target': '承受者',
+                'ally-all': '全体友方',
+                'enemy-all': '全体敌方',
+                'next-ally': '下一个出战友方',
+                'next-enemy': '下一个出战敌方'
+            };
+            const attrNames = {
+                'current-attack': '当前攻击',
+                'base-attack': '基础攻击',
+                'current-defense': '当前防御',
+                'base-defense': '基础防御',
+                'current-agility': '当前敏捷',
+                'base-agility': '基础敏捷',
+                'max-hp': '最大生命',
+                'current-hp': '当前生命',
+                'lost-hp': '已损失生命'
+            };
+            const prefixes = ['next-ally', 'next-enemy', 'ally-all', 'enemy-all', 'caster', 'target'];
+            for (const prefix of prefixes) {
+                if (source && source.startsWith(prefix + '-')) {
+                    const attr = source.slice(prefix.length + 1);
+                    const targetName = targetNames[prefix] || prefix;
+                    const attrName = attrNames[attr] || attr;
+                    return `${targetName}${attrName}`;
+                }
+            }
+            return source || '';
         }
 
         // 导入状态

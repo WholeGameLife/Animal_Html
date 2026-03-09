@@ -92,41 +92,35 @@ function decreaseStatusDurations(target, battleState, addLog) {
     
     unit.statuses.forEach(status => {
         const statusName = status.data ? status.data.name : status.key;
-        const isPermanent = status.data?.isPermanent;
         const isStackPermanent = status.data?.isStackPermanent;
         const hasStacks = status.data?.hasStacks !== false;
+        const isPermanent = status.data?.isPermanent;
         
-        // 判断持续时间模式
-        if (isPermanent && !isStackPermanent) {
-            // 每层独立计时模式：状态永久，只递减层数时间
-            if (hasStacks && status.stackDurations) {
-                const before = status.stackDurations.join(',');
-                status.stackDurations = status.stackDurations.map(d => d - 1);
-                const after = status.stackDurations.join(',');
-                addLog(`→ ${statusName} 各层: [${before}] → [${after}]`, 'gray');
-            }
-        } else if (!isPermanent && isStackPermanent) {
-            // 状态整体持续模式：层数永久，只递减状态时间
-            if (status.statusDuration !== undefined && status.statusDuration > 0) {
-                const before = status.statusDuration;
-                status.statusDuration = status.statusDuration - 1;
-                addLog(`→ ${statusName} 状态: ${before} → ${status.statusDuration}回合`, 'gray');
-            }
-        } else if (!isPermanent && !isStackPermanent) {
-            // 双重计时模式（兼容旧数据）：同时递减
-            if (status.statusDuration !== undefined && status.statusDuration > 0) {
-                const before = status.statusDuration;
-                status.statusDuration = status.statusDuration - 1;
-                addLog(`→ ${statusName} 状态: ${before} → ${status.statusDuration}回合`, 'gray');
-            }
-            if (hasStacks && status.stackDurations) {
-                const before = status.stackDurations.join(',');
-                status.stackDurations = status.stackDurations.map(d => d - 1);
-                const after = status.stackDurations.join(',');
-                addLog(`→ ${statusName} 各层: [${before}] → [${after}]`, 'gray');
-            }
+        // 跳过刚刚传递来的状态（本回合不递减，标记清除后下一回合正常计时）
+        if (status.justTransferred) {
+            delete status.justTransferred;
+            addLog(`→ ${statusName} 刚传递，本回合跳过递减`, 'gray');
+            return;
         }
-        // 双永久模式（isPermanent && isStackPermanent）：什么都不递减
+        
+        if (hasStacks) {
+            // 有层数：递减层数时间（每层独立计时）
+            if (!isStackPermanent && status.stackDurations) {
+                const before = status.stackDurations.join(',');
+                status.stackDurations = status.stackDurations.map(d => d - 1);
+                const after = status.stackDurations.join(',');
+                addLog(`→ ${statusName} 各层: [${before}] → [${after}]`, 'gray');
+            }
+            // 层数永久（isStackPermanent）：不递减
+        } else {
+            // 无层数：递减状态持续时间
+            if (!isPermanent && status.statusDuration !== undefined && status.statusDuration > 0) {
+                const before = status.statusDuration;
+                status.statusDuration = status.statusDuration - 1;
+                addLog(`→ ${statusName} 状态: ${before} → ${status.statusDuration}回合`, 'gray');
+            }
+            // 状态永久（isPermanent）：不递减
+        }
     });
 }
 
@@ -154,11 +148,12 @@ function processStatuses(target, battleState, addLog, applyStatusEffectFn) {
         const hasStacks = statusData?.hasStacks !== false;
         
         if (hasStacks) {
-            // 自增长判断：只要层数不是永久的，且状态还在生效，就可以自增长
-            if (statusData?.autoGrow && !statusData?.isStackPermanent && status.statusDuration > 0) {
+            // 自增长判断：只要层数不是永久的，且层数还存在，就可以自增长
+            const existingStacks = status.stackDurations ? status.stackDurations.length : 0;
+            if (statusData?.autoGrow && !statusData?.isStackPermanent && existingStacks > 0) {
                 const growRate = statusData.growRate || 1;
                 const maxStacks = statusData.maxStacks || 99;
-                const currentStacks = status.stackDurations ? status.stackDurations.length : 0;
+                const currentStacks = existingStacks;
                 const canAdd = Math.min(maxStacks - currentStacks, growRate);
                 
                 if (canAdd > 0) {
@@ -185,18 +180,33 @@ function processStatuses(target, battleState, addLog, applyStatusEffectFn) {
         }
     });
     
-    // 移除过期状态
+    // 移除过期状态（有层数→层数全部消完时移除；无层数→状态持续时间结束时移除）
     const beforeCount = unit.statuses.length;
     unit.statuses = unit.statuses.filter(status => {
-        if (status.data?.isPermanent) return true;
+        const hasStacks = status.data?.hasStacks !== false;
+        const statusName = status.data ? status.data.name : status.key;
         
-        const statusDuration = status.statusDuration !== undefined ? status.statusDuration : 999;
-        if (statusDuration <= 0) {
-            const statusName = status.data ? status.data.name : status.key;
-            addLog(`× ${statusName} 状态持续时间结束`, 'gray');
-            return false;
+        if (hasStacks) {
+            // 有层数：层数全部过期时移除状态
+            const isStackPermanent = status.data?.isStackPermanent;
+            if (isStackPermanent) return true; // 层数永久，不移除
+            const remainingStacks = status.stackDurations ? status.stackDurations.length : 0;
+            if (remainingStacks <= 0) {
+                addLog(`× ${statusName} 所有层数已过期`, 'gray');
+                return false;
+            }
+            return true;
+        } else {
+            // 无层数：状态持续时间结束时移除
+            const isPermanent = status.data?.isPermanent;
+            if (isPermanent) return true; // 状态永久，不移除
+            const statusDuration = status.statusDuration !== undefined ? status.statusDuration : 999;
+            if (statusDuration <= 0) {
+                addLog(`× ${statusName} 状态持续时间结束`, 'gray');
+                return false;
+            }
+            return true;
         }
-        return true;
     });
     
     if (beforeCount !== unit.statuses.length) {
@@ -212,24 +222,16 @@ function processStatuses(target, battleState, addLog, applyStatusEffectFn) {
         const isStackPermanent = statusData?.isStackPermanent;
         
         if (hasStacks) {
-            const stacks = status.stackDurations?.length || 0;
-            if (stacks === 0) return;
-            
-            // 根据模式只显示对应的持续时间
-            let durationInfo = '';
-            if (isPermanent && !isStackPermanent) {
-                // 每层独立计时模式
-                durationInfo = `×${stacks}层 回合:[${status.stackDurations.join(',')}]`;
-            } else if (!isPermanent && isStackPermanent) {
-                // 状态整体持续模式
-                durationInfo = `状态${status.statusDuration}回合 ×${stacks}层`;
-            } else if (isPermanent && isStackPermanent) {
-                // 双永久
-                durationInfo = `永久 ×${stacks}层`;
-            } else {
-                // 双重计时（兼容旧数据）
-                durationInfo = `状态${status.statusDuration}回合 ×${stacks}层 回合:[${status.stackDurations.join(',')}]`;
-            }
+        const stacks = status.stackDurations?.length || 0;
+        if (stacks === 0) return;
+        
+        // 有层数：只显示层数持续时间
+        let durationInfo = '';
+        if (isStackPermanent) {
+            durationInfo = `永久 ×${stacks}层`;
+        } else {
+            durationInfo = `×${stacks}层 回合:[${status.stackDurations.join(',')}]`;
+        }
             
             addLog(`[${statusName}] ${durationInfo}`, 'yellow');
         } else {
@@ -259,8 +261,57 @@ function applyStatusEffect(target, status, effectKey, battleState, addLog) {
     
     if (stacks === 0) return;
     
+    // 解析 source 字符串，支持新的 target 前缀格式
+    const parseSourceTarget = (source) => {
+        if (!source) return { targetUnit: unit, isDeferred: false };
+        const prefixes = ['next-ally', 'next-enemy', 'ally-all', 'enemy-all', 'caster', 'target'];
+        for (const prefix of prefixes) {
+            if (source.startsWith(prefix + '-')) {
+                if (prefix === 'caster') return { targetUnit: otherUnit, isDeferred: false };
+                if (prefix === 'target') return { targetUnit: unit, isDeferred: false };
+                if (prefix === 'ally-all') return { targetUnit: unit, isDeferred: false, isAllyAll: true };
+                if (prefix === 'enemy-all') return { targetUnit: otherUnit, isDeferred: false, isEnemyAll: true };
+                if (prefix === 'next-ally') return { targetUnit: unit, isDeferred: true, isNextAlly: true };
+                if (prefix === 'next-enemy') return { targetUnit: otherUnit, isDeferred: true, isNextEnemy: true };
+            }
+        }
+        // 兼容旧格式
+        if (source.startsWith('caster-')) return { targetUnit: otherUnit, isDeferred: false };
+        return { targetUnit: unit, isDeferred: false };
+    };
+    
     const getSourceValue = (source) => {
-        const mapping = {
+        const sourceInfo = parseSourceTarget(source);
+        const sourceUnit = sourceInfo.targetUnit;
+        
+        // 提取属性部分（去掉前缀）
+        const prefixes = ['next-ally', 'next-enemy', 'ally-all', 'enemy-all', 'caster', 'target'];
+        let attr = source;
+        for (const prefix of prefixes) {
+            if (source.startsWith(prefix + '-')) {
+                attr = source.slice(prefix.length + 1);
+                break;
+            }
+        }
+        
+        const attrMapping = {
+            'current-attack': sourceUnit.attack,
+            'base-attack': sourceUnit.baseAttack,
+            'current-defense': sourceUnit.defense,
+            'base-defense': sourceUnit.baseDefense,
+            'current-agility': sourceUnit.agility,
+            'base-agility': sourceUnit.baseAgility,
+            'max-hp': sourceUnit.maxHp,
+            'current-hp': sourceUnit.hp,
+            'lost-hp': sourceUnit.maxHp - sourceUnit.hp,
+            // 兼容旧格式的完整 key
+            'current-attack-old': sourceUnit.attack,
+        };
+        
+        if (attrMapping[attr] !== undefined) return attrMapping[attr];
+        
+        // 兼容旧格式（caster-current-attack 等）
+        const legacyMapping = {
             'caster-current-attack': otherUnit.attack,
             'caster-base-attack': otherUnit.baseAttack,
             'caster-current-defense': otherUnit.defense,
@@ -278,10 +329,29 @@ function applyStatusEffect(target, status, effectKey, battleState, addLog) {
             'target-current-hp': unit.hp,
             'target-lost-hp': unit.maxHp - unit.hp
         };
-        return mapping[source] || 0;
+        return legacyMapping[source] || 0;
     };
     
     const statusName = statusData.name;
+    
+    // 检查效果来源是否是延迟生效（下一个出战动物）
+    const sourceInfo = parseSourceTarget(effectConfig.source);
+    if (sourceInfo.isDeferred) {
+        // 延迟效果：将整个状态传递给下一个出战的动物
+        // 注意：此处仅用于"状态仍在当前动物 statuses 中，尚未传递"的情况（旧路径）
+        // 对于已通过 switchToAnimal 传递并修改了 source 前缀的状态，不会进入此分支
+        const isAlly = sourceInfo.isNextAlly;
+        if (!battleState.pendingStatusTransfer) battleState.pendingStatusTransfer = { ally: [], enemy: [] };
+        const pendingList = isAlly ? battleState.pendingStatusTransfer.ally : battleState.pendingStatusTransfer.enemy;
+        
+        // 检查是否已经记录了这个状态（避免重复记录）
+        const alreadyRecorded = pendingList.some(s => s === status || s.key === status.key);
+        if (!alreadyRecorded) {
+            pendingList.push(status);
+            addLog(`→ ${statusName}: 状态将传递给${isAlly ? '下一个出战友方' : '下一个出战敌方'}`, 'cyan');
+        }
+        return;
+    }
     
     switch(effectKey) {
         case 'dot-damage': {
@@ -513,14 +583,14 @@ const EFFECT_PARAMS_CONFIG = {
     'buff_attack': { name: '增攻', params: ['effect-source', 'target', 'bonus'] },
     'buff_defense': { name: '增防', params: ['effect-source', 'target', 'bonus'] },
     'buff_speed': { name: '增速', params: ['effect-source', 'target', 'bonus'] },
-    'buff_status_enemy': { name: '为敌方附加异常', params: ['status-type', 'status-chance', 'status-stacks'] },
+    'buff_status_enemy': { name: '为敌方附加异常', params: ['status-type', 'status-chance', 'status-stacks', 'status-duration', 'stack-duration'] },
     'buff_purify': { name: '净化', params: ['target', 'purify-type', 'purify-count'] },
     'buff_heal_amp': { name: '增加治疗量', params: ['effect-source', 'target', 'bonus'] },
     'buff_element_damage': { name: '属性增伤', params: ['target', 'element-type', 'damage-bonus'] },
     'debuff_attack': { name: '减攻', params: ['effect-source', 'target', 'bonus'] },
     'debuff_defense': { name: '减防', params: ['effect-source', 'target', 'bonus'] },
     'debuff_speed': { name: '减速', params: ['effect-source', 'target', 'bonus'] },
-    'debuff_status_self': { name: '为自身附加异常', params: ['status-type', 'status-chance', 'status-stacks'] },
+    'debuff_status_self': { name: '为自身附加异常', params: ['status-type', 'status-chance', 'status-stacks', 'status-duration', 'stack-duration'] },
     'debuff_no_heal': { name: '禁疗', params: ['target'] },
     'debuff_heal_reduce': { name: '减疗', params: ['effect-source', 'target', 'bonus'] },
     'debuff_element_damage': { name: '属性减伤', params: ['target', 'element-type', 'damage-reduce'] },
@@ -653,6 +723,9 @@ class BattleSystem {
         this.renderOpponentInfo();
         this.renderSkillsContainer();
         this.setupEventListeners();
+        
+        // 初始化属性数值显示（使用实际配置值，而非 HTML 硬编码默认值）
+        this.updateHealthUI();
         
         // 检查是否是联赛战斗，初始化比分显示
         const queueData = JSON.parse(localStorage.getItem('leagueBattleQueue') || 'null');
@@ -909,30 +982,31 @@ class BattleSystem {
                     tooltip += `${status.data.description}\n\n`;
                 }
                 
-                // 添加持续时间信息
-                const isPermanent = status.data?.isPermanent;
-                const isStackPermanent = status.data?.isStackPermanent;
+                // 添加持续时间信息（有层数→看层数，无层数→看状态）
                 const hasStacks = status.data?.hasStacks !== false;
+                const isStackPermanent = status.data?.isStackPermanent;
+                const isPermanent = status.data?.isPermanent;
                 
-                if (isPermanent && isStackPermanent) {
-                    tooltip += `持续时间: 永久\n`;
-                } else if (isPermanent && !isStackPermanent) {
-                    tooltip += `状态: 永久\n`;
-                } else if (!isPermanent && isStackPermanent) {
-                    tooltip += `状态持续: ${status.statusDuration || 0}回合\n`;
-                } else {
-                    tooltip += `状态持续: ${status.statusDuration || 0}回合\n`;
-                }
-                
-                // 添加层数信息
-                if (hasStacks && status.stackDurations) {
-                    const stacks = status.stackDurations.length;
-                    tooltip += `当前层数: ${stacks}层\n`;
-                    if (!isStackPermanent) {
-                        tooltip += `各层剩余: [${status.stackDurations.join(', ')}]回合\n`;
+                if (hasStacks) {
+                    // 有层数：显示层数持续时间
+                    if (status.stackDurations && status.stackDurations.length > 0) {
+                        const stacks = status.stackDurations.length;
+                        tooltip += `当前层数: ${stacks}层\n`;
+                        if (isStackPermanent) {
+                            tooltip += `层数: 永久\n`;
+                        } else {
+                            tooltip += `各层剩余: [${status.stackDurations.join(', ')}]回合\n`;
+                        }
+                        if (status.data?.maxStacks) {
+                            tooltip += `最大层数: ${status.data.maxStacks}层\n`;
+                        }
                     }
-                    if (status.data?.maxStacks) {
-                        tooltip += `最大层数: ${status.data.maxStacks}层\n`;
+                } else {
+                    // 无层数：显示状态持续时间
+                    if (isPermanent) {
+                        tooltip += `状态持续: 永久\n`;
+                    } else {
+                        tooltip += `状态持续: ${status.statusDuration || 0}回合\n`;
                     }
                 }
                 
@@ -1032,30 +1106,31 @@ class BattleSystem {
                     tooltip += `${status.data.description}\n\n`;
                 }
                 
-                // 添加持续时间信息
-                const isPermanent = status.data?.isPermanent;
-                const isStackPermanent = status.data?.isStackPermanent;
+                // 添加持续时间信息（有层数→看层数，无层数→看状态）
                 const hasStacks = status.data?.hasStacks !== false;
+                const isStackPermanent = status.data?.isStackPermanent;
+                const isPermanent = status.data?.isPermanent;
                 
-                if (isPermanent && isStackPermanent) {
-                    tooltip += `持续时间: 永久\n`;
-                } else if (isPermanent && !isStackPermanent) {
-                    tooltip += `状态: 永久\n`;
-                } else if (!isPermanent && isStackPermanent) {
-                    tooltip += `状态持续: ${status.statusDuration || 0}回合\n`;
-                } else {
-                    tooltip += `状态持续: ${status.statusDuration || 0}回合\n`;
-                }
-                
-                // 添加层数信息
-                if (hasStacks && status.stackDurations) {
-                    const stacks = status.stackDurations.length;
-                    tooltip += `当前层数: ${stacks}层\n`;
-                    if (!isStackPermanent) {
-                        tooltip += `各层剩余: [${status.stackDurations.join(', ')}]回合\n`;
+                if (hasStacks) {
+                    // 有层数：显示层数持续时间
+                    if (status.stackDurations && status.stackDurations.length > 0) {
+                        const stacks = status.stackDurations.length;
+                        tooltip += `当前层数: ${stacks}层\n`;
+                        if (isStackPermanent) {
+                            tooltip += `层数: 永久\n`;
+                        } else {
+                            tooltip += `各层剩余: [${status.stackDurations.join(', ')}]回合\n`;
+                        }
+                        if (status.data?.maxStacks) {
+                            tooltip += `最大层数: ${status.data.maxStacks}层\n`;
+                        }
                     }
-                    if (status.data?.maxStacks) {
-                        tooltip += `最大层数: ${status.data.maxStacks}层\n`;
+                } else {
+                    // 无层数：显示状态持续时间
+                    if (isPermanent) {
+                        tooltip += `状态持续: 永久\n`;
+                    } else {
+                        tooltip += `状态持续: ${status.statusDuration || 0}回合\n`;
                     }
                 }
                 
@@ -2300,33 +2375,17 @@ class BattleSystem {
                     const display = this.getStatusDisplay(s.key);
                     const hasStacks = s.data?.hasStacks !== false;
                     
-                    // 判断持续时间模式
-                    const isPermanent = s.data?.isPermanent;
-                    const isStackPermanent = s.data?.isStackPermanent;
-                    
                     if (hasStacks) {
+                        // 有层数：显示层数持续时间
                         if (!s.stackDurations || s.stackDurations.length === 0) return '';
                         const stacks = s.stackDurations.length;
-                        
-                        // 根据模式显示不同的持续时间信息
-                        let durationText = '';
-                        if (isPermanent && !isStackPermanent) {
-                            // 每层独立计时模式
-                            const minDuration = Math.min(...s.stackDurations);
-                            durationText = minDuration;
-                        } else if (!isPermanent && isStackPermanent) {
-                            // 状态整体持续模式
-                            durationText = s.statusDuration || '?';
-                        } else if (isPermanent && isStackPermanent) {
-                            // 双永久
-                            durationText = '永久';
-                        } else {
-                            // 其他情况（兼容旧数据）
-                            durationText = `${s.statusDuration || '?'}/${Math.min(...s.stackDurations)}`;
-                        }
-                        
-                        return `<span class="bg-red-500/30 text-red-300 px-2 py-0.5 rounded text-xs inline-flex items-center gap-1" title="各层剩余回合: ${s.stackDurations.join(',')}\n状态剩余回合: ${s.statusDuration}">${display} ×${stacks} (${durationText})</span>`;
+                        const isStackPermanent = s.data?.isStackPermanent;
+                        const minDuration = Math.min(...s.stackDurations);
+                        const durationText = isStackPermanent ? '永久' : minDuration;
+                        return `<span class="bg-red-500/30 text-red-300 px-2 py-0.5 rounded text-xs inline-flex items-center gap-1" title="各层剩余回合: ${s.stackDurations.join(',')}">${display} ×${stacks} (${durationText})</span>`;
                     } else {
+                        // 无层数：显示状态整体持续时间
+                        const isPermanent = s.data?.isPermanent;
                         const statusDuration = isPermanent ? '永久' : (s.statusDuration || '?');
                         return `<span class="bg-red-500/30 text-red-300 px-2 py-0.5 rounded text-xs inline-flex items-center gap-1" title="状态持续回合: ${statusDuration}">${display} (${statusDuration})</span>`;
                     }
@@ -2344,33 +2403,17 @@ class BattleSystem {
                     const display = this.getStatusDisplay(s.key);
                     const hasStacks = s.data?.hasStacks !== false;
                     
-                    // 判断持续时间模式
-                    const isPermanent = s.data?.isPermanent;
-                    const isStackPermanent = s.data?.isStackPermanent;
-                    
                     if (hasStacks) {
+                        // 有层数：显示层数持续时间
                         if (!s.stackDurations || s.stackDurations.length === 0) return '';
                         const stacks = s.stackDurations.length;
-                        
-                        // 根据模式显示不同的持续时间信息
-                        let durationText = '';
-                        if (isPermanent && !isStackPermanent) {
-                            // 每层独立计时模式
-                            const minDuration = Math.min(...s.stackDurations);
-                            durationText = minDuration;
-                        } else if (!isPermanent && isStackPermanent) {
-                            // 状态整体持续模式
-                            durationText = s.statusDuration || '?';
-                        } else if (isPermanent && isStackPermanent) {
-                            // 双永久
-                            durationText = '永久';
-                        } else {
-                            // 其他情况（兼容旧数据）
-                            durationText = `${s.statusDuration || '?'}/${Math.min(...s.stackDurations)}`;
-                        }
-                        
-                        return `<span class="bg-red-500/30 text-red-300 px-2 py-0.5 rounded text-xs inline-flex items-center gap-1" title="各层剩余回合: ${s.stackDurations.join(',')}\n状态剩余回合: ${s.statusDuration}">${display} ×${stacks} (${durationText})</span>`;
+                        const isStackPermanent = s.data?.isStackPermanent;
+                        const minDuration = Math.min(...s.stackDurations);
+                        const durationText = isStackPermanent ? '永久' : minDuration;
+                        return `<span class="bg-red-500/30 text-red-300 px-2 py-0.5 rounded text-xs inline-flex items-center gap-1" title="各层剩余回合: ${s.stackDurations.join(',')}">${display} ×${stacks} (${durationText})</span>`;
                     } else {
+                        // 无层数：显示状态整体持续时间
+                        const isPermanent = s.data?.isPermanent;
                         const statusDuration = isPermanent ? '永久' : (s.statusDuration || '?');
                         return `<span class="bg-red-500/30 text-red-300 px-2 py-0.5 rounded text-xs inline-flex items-center gap-1" title="状态持续回合: ${statusDuration}">${display} (${statusDuration})</span>`;
                     }
@@ -3016,6 +3059,42 @@ class BattleSystem {
         // 更新被动技能
         this.playerPassiveSkills = this.getPassiveSkills(this.playerData);
         
+        // 将"传递给下一个出战友方"的状态从旧动物迁移给新动物
+        const statusesToTransfer = [];
+        if (this.pendingStatusTransfer && this.pendingStatusTransfer.ally) {
+            this.pendingStatusTransfer.ally.forEach(statusRef => {
+                statusesToTransfer.push(statusRef);
+            });
+            this.pendingStatusTransfer.ally = []; // 清空传递列表
+        }
+        
+        if (statusesToTransfer.length > 0) {
+            this.addLog(`✨ 传递给新出战动物 ${this.playerData.name} 的状态:`, 'text-cyan-300');
+            statusesToTransfer.forEach(statusToTransfer => {
+                // 深度克隆状态对象，并将 effectConfigs 中的延迟前缀替换为即时前缀
+                // next-ally-xxx → target-xxx（效果作用于当前单位自身）
+                // next-enemy-xxx → caster-xxx（效果作用于对方单位）
+                const transferredStatus = JSON.parse(JSON.stringify(statusToTransfer));
+                if (transferredStatus.data && transferredStatus.data.effectConfigs) {
+                    Object.keys(transferredStatus.data.effectConfigs).forEach(ek => {
+                        const ec = transferredStatus.data.effectConfigs[ek];
+                        if (ec && ec.source) {
+                            if (ec.source.startsWith('next-ally-')) {
+                                ec.source = 'target-' + ec.source.slice('next-ally-'.length);
+                            } else if (ec.source.startsWith('next-enemy-')) {
+                                ec.source = 'caster-' + ec.source.slice('next-enemy-'.length);
+                            }
+                        }
+                    });
+                }
+                // 标记为刚传递，避免本回合开始时被 decreaseStatusDurations 提前递减
+                transferredStatus.justTransferred = true;
+                this.playerStats.statuses.push(transferredStatus);
+                this.addLog(`→ [${transferredStatus.data?.name || transferredStatus.key}] 状态已迁移，剩余持续时间保留`, 'text-cyan-300');
+            });
+            this.playerCurrentHealth = this.playerStats.hp;
+        }
+        
         // 重新渲染技能栏（而不是恢复保存的HTML）
         this.savedSkillsContainer = null; // 清除保存的内容，强制重新渲染
         this.renderSkillsContainer();
@@ -3581,6 +3660,55 @@ class BattleSystem {
                     const statusData = statusPool.find(s => s.key === statusType);
                     const statusName = statusData ? statusData.name : statusType;
                     
+                    // 检查该状态的所有效果是否都是延迟生效（next-ally 或 next-enemy）
+                    // 如果是，则不立即添加到当前动物的 statuses，而是直接加入 pendingStatusTransfer
+                    const allEffectsDeferred = statusData && statusData.effects && statusData.effects.length > 0 &&
+                        statusData.effects.every(ek => {
+                            const ec = statusData.effectConfigs?.[ek];
+                            return ec && ec.source && (ec.source.startsWith('next-ally-') || ec.source.startsWith('next-enemy-'));
+                        });
+                    
+                    if (allEffectsDeferred) {
+                        // 状态完全延迟生效：直接加入 pendingStatusTransfer，不添加到当前动物
+                        // 构建状态对象（供传递时使用）
+                        const statusDuration = (skillStatusDuration !== undefined && skillStatusDuration > 0) ?
+                            skillStatusDuration :
+                            (statusData?.isPermanent ? 999 : (statusData?.statusDuration || 10));
+                        const hasStacks = statusData?.hasStacks !== false;
+                        const newStatus = {
+                            key: statusType,
+                            statusDuration: statusDuration,
+                            data: statusData
+                        };
+                        if (hasStacks) {
+                            const durationPerStack = (skillStackDuration !== undefined && skillStackDuration > 0) ?
+                                skillStackDuration :
+                                (statusData?.isStackPermanent ? 999 : (statusData?.durationPerStack || 3));
+                            const stackDurations = [];
+                            for (let i = 0; i < statusStacks; i++) {
+                                stackDurations.push(durationPerStack);
+                            }
+                            newStatus.stackDurations = stackDurations;
+                        }
+                        // 检查是否效果目标为 next-enemy（敌方的下一个）
+                        const firstEffectKey = statusData.effects[0];
+                        const firstEffectConfig = statusData.effectConfigs?.[firstEffectKey];
+                        const isNextEnemy = firstEffectConfig?.source?.startsWith('next-enemy-');
+                        
+                        if (!this.pendingStatusTransfer) this.pendingStatusTransfer = { ally: [], enemy: [] };
+                        const targetSide = isNextEnemy ? 'enemy' : 'ally'; // 对敌方施加 → 传给敌方下一个
+                        // 注意：buff_status_enemy 是施加给 defenderStats，
+                        // 目标动物是 "敌方的下一个出战"（isNextEnemy）或 "我方下一个出战"（isNextAlly）
+                        // source 中 next-enemy 表示效果作用于"敌方下一个"，即 defenderStats 所在阵营
+                        const pendingList = isNextEnemy ? this.pendingStatusTransfer.enemy : this.pendingStatusTransfer.ally;
+                        const alreadyRecorded = pendingList.some(s => s.key === newStatus.key);
+                        if (!alreadyRecorded) {
+                            pendingList.push(newStatus);
+                        }
+                        this.addLog(`施加异常: ${statusName} 将在${isNextEnemy ? '敌方' : '我方'}下一个出战动物出场后生效`, 'text-purple-300');
+                        break;
+                    }
+                    
                     // 查找是否已有此状态
                     const existingStatus = defenderStats.statuses.find(s => s.key === statusType);
                     
@@ -3673,6 +3801,52 @@ class BattleSystem {
                     const statusPool = JSON.parse(localStorage.getItem('STATUS_POOL') || '[]');
                     const statusData = statusPool.find(s => s.key === statusType);
                     const statusName = statusData ? statusData.name : statusType;
+                    
+                    // 检查该状态的所有效果是否都是延迟生效（next-ally 或 next-enemy）
+                    // 如果是，则不立即添加到当前动物的 statuses，而是直接加入 pendingStatusTransfer
+                    const allEffectsDeferred = statusData && statusData.effects && statusData.effects.length > 0 &&
+                        statusData.effects.every(ek => {
+                            const ec = statusData.effectConfigs?.[ek];
+                            return ec && ec.source && (ec.source.startsWith('next-ally-') || ec.source.startsWith('next-enemy-'));
+                        });
+                    
+                    if (allEffectsDeferred) {
+                        // 状态完全延迟生效：直接加入 pendingStatusTransfer，不添加到当前动物
+                        const statusDuration = (skillStatusDuration !== undefined && skillStatusDuration > 0) ?
+                            skillStatusDuration :
+                            (statusData?.isPermanent ? 999 : (statusData?.statusDuration || 10));
+                        const hasStacks = statusData?.hasStacks !== false;
+                        const newStatus = {
+                            key: statusType,
+                            statusDuration: statusDuration,
+                            data: statusData
+                        };
+                        if (hasStacks) {
+                            const durationPerStack = (skillStackDuration !== undefined && skillStackDuration > 0) ?
+                                skillStackDuration :
+                                (statusData?.isStackPermanent ? 999 : (statusData?.durationPerStack || 3));
+                            const stackDurations = [];
+                            for (let i = 0; i < statusStacks; i++) {
+                                stackDurations.push(durationPerStack);
+                            }
+                            newStatus.stackDurations = stackDurations;
+                        }
+                        // 检查是否效果目标为 next-ally（己方的下一个）
+                        const firstEffectKey = statusData.effects[0];
+                        const firstEffectConfig = statusData.effectConfigs?.[firstEffectKey];
+                        const isNextAlly = firstEffectConfig?.source?.startsWith('next-ally-');
+                        
+                        if (!this.pendingStatusTransfer) this.pendingStatusTransfer = { ally: [], enemy: [] };
+                        // debuff_status_self 是给施法方（攻击方）自身施加状态
+                        // next-ally 表示传给己方下一个出战动物
+                        const pendingList = isNextAlly ? this.pendingStatusTransfer.ally : this.pendingStatusTransfer.enemy;
+                        const alreadyRecorded = pendingList.some(s => s.key === newStatus.key);
+                        if (!alreadyRecorded) {
+                            pendingList.push(newStatus);
+                        }
+                        this.addLog(`自身异常: ${statusName} 将在${isNextAlly ? '我方' : '敌方'}下一个出战动物出场后生效`, 'text-purple-300');
+                        break;
+                    }
                     
                     // 查找是否已有此状态
                     const existingStatus = attackerStats.statuses.find(s => s.key === statusType);
@@ -4067,9 +4241,13 @@ class BattleSystem {
     
     // 处理状态效果（调用全局函数）
     processStatuses(isPlayer) {
+        // 确保 pendingStatusTransfer 存在于 BattleSystem 实例上
+        if (!this.pendingStatusTransfer) this.pendingStatusTransfer = { ally: [], enemy: [] };
+        
         const battleState = {
             self: this.playerStats,
-            enemy: this.opponentStats
+            enemy: this.opponentStats,
+            pendingStatusTransfer: this.pendingStatusTransfer  // 共享 pendingStatusTransfer 引用
         };
         const target = isPlayer ? 'self' : 'enemy';
         window.processStatuses(target, battleState,

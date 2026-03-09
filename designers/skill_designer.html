@@ -676,10 +676,52 @@
                             updatePreview();
                         });
                     }
+                    
+                    // 初始化状态类型相关参数的显示（有层数/无层数的动态控制）
+                    const config = EFFECT_PARAMS_CONFIG[effectKey];
+                    if (config && config.params && config.params.includes('status-type')) {
+                        initStatusTypeDisplay(effectKey);
+                    }
                 });
             }
         }
 
+        // 当状态类型选择器变化时，动态显示/隐藏层数相关参数
+        function onStatusTypeChange(selectEl, effectName) {
+            const statusKey = selectEl.value;
+            const statusPool = JSON.parse(localStorage.getItem('STATUS_POOL') || '[]');
+            const statusData = statusPool.find(s => s.key === statusKey);
+            const hasStacks = statusData ? (statusData.hasStacks !== false) : true;
+            
+            // 控制"施加层数"的显示
+            const stacksContainer = document.getElementById(`stacks-container-${effectName}`);
+            if (stacksContainer) {
+                stacksContainer.style.display = hasStacks ? 'block' : 'none';
+            }
+            
+            // 控制"状态持续回合"的显示（无层数时显示，有层数时隐藏）
+            const statusDurationContainer = document.getElementById(`status-duration-container-${effectName}`);
+            if (statusDurationContainer) {
+                statusDurationContainer.style.display = hasStacks ? 'none' : 'block';
+            }
+            
+            // 控制"每层持续回合"的显示（有层数时显示，无层数时隐藏）
+            const stackDurationContainer = document.getElementById(`stack-duration-container-${effectName}`);
+            if (stackDurationContainer) {
+                stackDurationContainer.style.display = hasStacks ? 'block' : 'none';
+            }
+            
+            updatePreview();
+        }
+        
+        // 初始化状态参数显示（生成动态参数后调用）
+        function initStatusTypeDisplay(effectName) {
+            const selectEl = document.getElementById(`param-${effectName}-status-type`);
+            if (selectEl && selectEl.value) {
+                onStatusTypeChange(selectEl, effectName);
+            }
+        }
+        
         // 更新参数说明文本
         function updateParamDescriptions(effectKey) {
             const sourceSelect = document.getElementById(`param-${effectKey}-effect-source`);
@@ -841,7 +883,8 @@
                 
                 case 'status-type':
                     return `<div><label class="block text-xs font-medium text-gray-400 mb-1">异常状态类型</label>
-                        <select id="${paramId}" class="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white text-sm">
+                        <select id="${paramId}" class="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white text-sm"
+                            onchange="onStatusTypeChange(this, '${effectName}')">
                             ${getStatusOptions()}
                         </select>
                         <p class="text-xs text-gray-500 mt-1">来自状态池 | <a href='../designers/status_designer.html' class="text-blue-400 hover:text-blue-300" target="_blank">创建新状态</a></p>
@@ -854,19 +897,19 @@
                         <p class="text-xs text-gray-500 mt-1">成功施加状态的概率</p></div>`;
                 
                 case 'status-stacks':
-                    return `<div><label class="block text-xs font-medium text-gray-400 mb-1">施加层数</label>
+                    return `<div id="stacks-container-${effectName}"><label class="block text-xs font-medium text-gray-400 mb-1">施加层数</label>
                         <input type="number" id="${paramId}" min="1" max="99" value="1"
                             class="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white text-sm">
                         <p class="text-xs text-gray-500 mt-1">一次施加的状态层数</p></div>`;
                 
                 case 'status-duration':
-                    return `<div><label class="block text-xs font-medium text-gray-400 mb-1">状态持续回合 (可选)</label>
+                    return `<div id="status-duration-container-${effectName}"><label class="block text-xs font-medium text-gray-400 mb-1">状态持续回合 (可选)</label>
                         <input type="number" id="${paramId}" min="0" max="999" value="" placeholder="留空=使用状态默认"
                             class="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white text-sm">
                         <p class="text-xs text-gray-500 mt-1">覆盖状态设计器的默认持续回合</p></div>`;
                 
                 case 'stack-duration':
-                    return `<div><label class="block text-xs font-medium text-gray-400 mb-1">每层持续回合 (可选)</label>
+                    return `<div id="stack-duration-container-${effectName}"><label class="block text-xs font-medium text-gray-400 mb-1">每层持续回合 (可选)</label>
                         <input type="number" id="${paramId}" min="0" max="999" value="" placeholder="留空=使用状态默认"
                             class="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white text-sm">
                         <p class="text-xs text-gray-500 mt-1">覆盖状态设计器的默认每层持续回合</p></div>`;
@@ -1169,6 +1212,11 @@
             skill.effects.forEach(effectKey => {
                 updateParamDescriptions(effectKey);
                 updateCounterParamDescriptions(effectKey);
+                // 初始化状态类型相关参数的显示（有层数/无层数的动态控制）
+                const config = EFFECT_PARAMS_CONFIG[effectKey];
+                if (config && config.params && config.params.includes('status-type')) {
+                    initStatusTypeDisplay(effectKey);
+                }
             });
             
             // 更新UI
@@ -2001,33 +2049,17 @@
                     const display = getStatusDisplay(s.key);
                     const hasStacks = s.data?.hasStacks !== false;
                     
-                    // 判断持续时间模式
-                    const isPermanent = s.data?.isPermanent;
-                    const isStackPermanent = s.data?.isStackPermanent;
-                    
                     if (hasStacks) {
+                        // 有层数：显示层数持续时间
                         if (!s.stackDurations || s.stackDurations.length === 0) return '';
                         const stacks = s.stackDurations.length;
-                        
-                        // 根据模式显示不同的持续时间信息
-                        let durationText = '';
-                        if (isPermanent && !isStackPermanent) {
-                            // 每层独立计时模式
-                            const minDuration = Math.min(...s.stackDurations);
-                            durationText = minDuration;
-                        } else if (!isPermanent && isStackPermanent) {
-                            // 状态整体持续模式
-                            durationText = s.statusDuration || '?';
-                        } else if (isPermanent && isStackPermanent) {
-                            // 双永久
-                            durationText = '永久';
-                        } else {
-                            // 其他情况（兼容旧数据）
-                            durationText = `${s.statusDuration || '?'}/${Math.min(...s.stackDurations)}`;
-                        }
-                        
-                        return `<span class="bg-red-500/30 text-red-300 px-2 py-0.5 rounded text-xs inline-flex items-center gap-1" title="各层剩余回合: ${s.stackDurations.join(',')}\n状态剩余回合: ${s.statusDuration}">${display} ×${stacks} (${durationText})</span>`;
+                        const isStackPermanent = s.data?.isStackPermanent;
+                        const minDuration = Math.min(...s.stackDurations);
+                        const durationText = isStackPermanent ? '永久' : minDuration;
+                        return `<span class="bg-red-500/30 text-red-300 px-2 py-0.5 rounded text-xs inline-flex items-center gap-1" title="各层剩余回合: ${s.stackDurations.join(',')}">${display} ×${stacks} (${durationText})</span>`;
                     } else {
+                        // 无层数：显示状态整体持续时间
+                        const isPermanent = s.data?.isPermanent;
                         const statusDuration = isPermanent ? '永久' : (s.statusDuration || '?');
                         return `<span class="bg-red-500/30 text-red-300 px-2 py-0.5 rounded text-xs inline-flex items-center gap-1" title="状态持续回合: ${statusDuration}">${display} (${statusDuration})</span>`;
                     }
@@ -2052,33 +2084,17 @@
                     const display = getStatusDisplay(s.key);
                     const hasStacks = s.data?.hasStacks !== false;
                     
-                    // 判断持续时间模式
-                    const isPermanent = s.data?.isPermanent;
-                    const isStackPermanent = s.data?.isStackPermanent;
-                    
                     if (hasStacks) {
+                        // 有层数：显示层数持续时间
                         if (!s.stackDurations || s.stackDurations.length === 0) return '';
                         const stacks = s.stackDurations.length;
-                        
-                        // 根据模式显示不同的持续时间信息
-                        let durationText = '';
-                        if (isPermanent && !isStackPermanent) {
-                            // 每层独立计时模式
-                            const minDuration = Math.min(...s.stackDurations);
-                            durationText = minDuration;
-                        } else if (!isPermanent && isStackPermanent) {
-                            // 状态整体持续模式
-                            durationText = s.statusDuration || '?';
-                        } else if (isPermanent && isStackPermanent) {
-                            // 双永久
-                            durationText = '永久';
-                        } else {
-                            // 其他情况（兼容旧数据）
-                            durationText = `${s.statusDuration || '?'}/${Math.min(...s.stackDurations)}`;
-                        }
-                        
-                        return `<span class="bg-red-500/30 text-red-300 px-2 py-0.5 rounded text-xs inline-flex items-center gap-1" title="各层剩余回合: ${s.stackDurations.join(',')}\n状态剩余回合: ${s.statusDuration}">${display} ×${stacks} (${durationText})</span>`;
+                        const isStackPermanent = s.data?.isStackPermanent;
+                        const minDuration = Math.min(...s.stackDurations);
+                        const durationText = isStackPermanent ? '永久' : minDuration;
+                        return `<span class="bg-red-500/30 text-red-300 px-2 py-0.5 rounded text-xs inline-flex items-center gap-1" title="各层剩余回合: ${s.stackDurations.join(',')}">${display} ×${stacks} (${durationText})</span>`;
                     } else {
+                        // 无层数：显示状态整体持续时间
+                        const isPermanent = s.data?.isPermanent;
                         const statusDuration = isPermanent ? '永久' : (s.statusDuration || '?');
                         return `<span class="bg-red-500/30 text-red-300 px-2 py-0.5 rounded text-xs inline-flex items-center gap-1" title="状态持续回合: ${statusDuration}">${display} (${statusDuration})</span>`;
                     }
