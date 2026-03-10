@@ -817,7 +817,7 @@
                             <strong>联赛规则：</strong>20位参赛者，38轮双循环赛（主客各一次），胜利得2分，失败得0分
                         </p>
                         <p style="color: #cbd5e1; margin-bottom: 10px;">
-                            <strong>比赛形式：</strong>每场比赛双方各选5只动物进行1v1对战，每场限时1分钟，击败数多者获胜
+                            <strong>比赛形式：</strong>每场比赛双方各选6只动物进行1v1对战，每场限时1分钟，击败数多者获胜
                         </p>
                         <p style="color: #cbd5e1; margin-bottom: 10px;">
                             <strong>夏季联赛：</strong>登记25只动物参赛 | <strong>冬季联赛：</strong>登记25只未养成动物参赛
@@ -1032,7 +1032,7 @@
                     
                     <div class="info-box warning">
                         <h3>⚠️ 动物名单登记</h3>
-                        <p>请登记参赛动物（最少5只，建议25只）作为本赛季的参赛名单。</p>
+                        <p>请登记参赛动物（最少6只，建议25只）作为本赛季的参赛名单。</p>
                     </div>
                     
                     <div class="form-group">
@@ -1525,21 +1525,17 @@
         
         // 检查是否从战斗系统返回
         async function checkBattleReturn() {
-            // 检查是否有比赛结果（5v5全部结束）
+            // 检查是否有联赛比赛结果（6v6战斗结束）
             const matchResult = localStorage.getItem('leagueMatchResult');
             if (matchResult) {
-                await processLeagueMatchResult(JSON.parse(matchResult));
+                const resultData = JSON.parse(matchResult);
                 localStorage.removeItem('leagueMatchResult');
+                await processLeagueMatchResult(resultData);
                 return;
             }
             
-            // 检查是否有进行中的队列（单场战斗结束）
-            const queueData = JSON.parse(localStorage.getItem('leagueBattleQueue'));
-            if (queueData) {
-                // 如果队列还有数据，说明是从单场战斗返回，但这应该由battle_system处理
-                // 这里只需要等待，battle_system会处理继续逻辑
-                return;
-            }
+            // 清除残留的战斗队列数据（防止污染）
+            localStorage.removeItem('leagueBattleQueue');
         }
 
         function loadPlayerAnimals() {
@@ -1724,9 +1720,9 @@
         }
 
         async function completeRegistration() {
-            // 修改：最少5只动物
-            if (selectedAnimals.length < 5) {
-                await showMessage('请至少选择5只动物！', '⚠️', 'warning');
+            // 修改：最少6只动物
+            if (selectedAnimals.length < 6) {
+                await showMessage('请至少选择6只动物！', '⚠️', 'warning');
                 return;
             }
 
@@ -1754,8 +1750,8 @@
             }
             
             // 检查是否已选择参战动物
-            if (!window.selectedBattleAnimals || window.selectedBattleAnimals.filter(a => a).length < 5) {
-                await showMessage('⚠️ 请先在战斗准备界面选择5只参战动物！', '⚠️', 'warning');
+            if (!window.selectedBattleAnimals || window.selectedBattleAnimals.filter(a => a).length < 6) {
+                await showMessage('⚠️ 请先在战斗准备界面选择6只参战动物！', '⚠️', 'warning');
                 switchTab('battle-preparation');
                 return;
             }
@@ -1813,7 +1809,7 @@
             return null;
         }
         
-        // 启动联赛战斗
+        // 启动联赛战斗（6v6：双方各6只动物，可随时切换，谁的6只先全灭谁输）
         async function startLeagueBattle(matchInfo) {
             const playerTeam = leagueSystem.getPlayerTeam();
             
@@ -1824,78 +1820,48 @@
                 matchInfo: matchInfo
             }));
             
-            // 保存返回URL
+            // 保存返回URL（用于战斗系统判断是否联赛战斗）
             localStorage.setItem('battleReturnUrl', 'league.html');
             
-            // 准备5v5战斗队列
-            // 优先使用战斗准备界面选中的动物，其次使用已登记的动物
-            const playerAnimals = playerTeam.selectedBattleAnimals || window.selectedBattleAnimals?.filter(a => a) || playerTeam.registeredAnimals.slice(0, 5);
-            const opponentAnimals = matchInfo.opponent.registeredAnimals?.slice(0, 5) || [];
+            // 获取我方参战动物（6只）
+            const playerAnimals = playerTeam.selectedBattleAnimals || window.selectedBattleAnimals?.filter(a => a) || playerTeam.registeredAnimals.slice(0, 6);
+            const opponentAnimals = matchInfo.opponent.registeredAnimals?.slice(0, 6) || [];
             
-            if (playerAnimals.length < 5) {
-                await showMessage('⚠️ 参战动物不足5只！', '⚠️', 'warning');
+            if (playerAnimals.length < 6) {
+                await showMessage('⚠️ 参战动物不足6只！', '⚠️', 'warning');
                 return;
             }
             
-            if (opponentAnimals.length < 5) {
+            if (opponentAnimals.length < 6) {
                 await showMessage('⚠️ 对手数据异常！', '⚠️', 'error');
                 return;
             }
             
-            // 保存战斗队列
-            localStorage.setItem('leagueBattleQueue', JSON.stringify({
-                playerAnimals: playerAnimals,
-                opponentAnimals: opponentAnimals,
-                currentBattle: 0,
-                playerWins: 0,
-                opponentWins: 0
-            }));
-            
-            // 开始第一场战斗
-            startNextBattleInQueue();
-        }
-        
-        // 开始队列中的下一场战斗
-        async function startNextBattleInQueue() {
-            const queueData = JSON.parse(localStorage.getItem('leagueBattleQueue'));
-            if (!queueData) {
-                await showMessage('战斗队列数据丢失！', '❌', 'error');
-                return;
-            }
-            
-            const currentIndex = queueData.currentBattle;
-            
-            // 检查是否已完成所有战斗
-            if (currentIndex >= 5 || queueData.playerWins >= 3 || queueData.opponentWins >= 3) {
-                finishLeagueMatch(queueData);
-                return;
-            }
-            
-            // 准备当前战斗的数据
-            const playerAnimal = queueData.playerAnimals[currentIndex];
-            const opponentAnimal = queueData.opponentAnimals[currentIndex];
+            // 选取第一只出战的动物（玩家控制）
+            const firstPlayerAnimal = playerAnimals[0];
+            const firstOpponentAnimal = opponentAnimals[0];
             
             // 转换为战斗系统需要的格式
             const battlePlayerAnimal = {
-                ...playerAnimal.originalAnimal || playerAnimal,
-                stamina: playerAnimal.hp || playerAnimal.originalAnimal?.maxStamina || 300,
+                ...firstPlayerAnimal.originalAnimal || firstPlayerAnimal,
+                stamina: firstPlayerAnimal.hp || firstPlayerAnimal.originalAnimal?.maxStamina || 300,
                 abilities: {
                     combat: {
-                        attack: playerAnimal.attack || 50,
-                        defense: playerAnimal.defense || 50,
-                        agility: playerAnimal.agility || 50
+                        attack: firstPlayerAnimal.attack || 50,
+                        defense: firstPlayerAnimal.defense || 50,
+                        agility: firstPlayerAnimal.agility || 50
                     }
                 }
             };
             
             const battleOpponent = {
-                ...opponentAnimal,
-                stamina: opponentAnimal.hp || 300,
+                ...firstOpponentAnimal,
+                stamina: firstOpponentAnimal.hp || 300,
                 abilities: {
                     combat: {
-                        attack: opponentAnimal.attack || 50,
-                        defense: opponentAnimal.defense || 50,
-                        agility: opponentAnimal.agility || 50
+                        attack: firstOpponentAnimal.attack || 50,
+                        defense: firstOpponentAnimal.defense || 50,
+                        agility: firstOpponentAnimal.agility || 50
                     }
                 },
                 isWild: false // 联赛对手不是野生动物
@@ -1904,38 +1870,20 @@
             // 保存到 localStorage 供战斗系统使用
             localStorage.setItem('battlePlayerAnimal', JSON.stringify(battlePlayerAnimal));
             localStorage.setItem('battleOpponent', JSON.stringify(battleOpponent));
-            localStorage.setItem('battleReturnUrl', 'league.html');
+            
+            // 同步battleTeamData，使战斗系统的"我方动物"面板能正确显示全部6只动物
+            localStorage.setItem('battleTeamData', JSON.stringify({
+                battleTeam: playerAnimals.map(a => a.id || a.originalAnimal?.id).filter(Boolean)
+            }));
+            
+            // 清除旧的战斗队列数据（联赛战斗不再使用多场队列）
+            localStorage.removeItem('leagueBattleQueue');
             
             // 跳转到战斗场景
             window.location.href = '../pages/battle.html';
         }
         
-        // 完成联赛比赛（5v5结束后）
-        async function finishLeagueMatch(queueData) {
-            const playerWins = queueData.playerWins;
-            const opponentWins = queueData.opponentWins;
-            
-            // 清除队列数据
-            localStorage.removeItem('leagueBattleQueue');
-            
-            // 确定胜负
-            const playerWon = playerWins > opponentWins;
-            
-            // 保存比赛结果
-            localStorage.setItem('leagueMatchResult', JSON.stringify({
-                playerWins: playerWins,
-                opponentWins: opponentWins,
-                result: playerWon ? 'win' : 'loss'
-            }));
-            
-            // 显示结果并处理联赛逻辑
-            await showMessage(`⚔️ 5v5比赛结束！\n\n我方: ${playerWins} 胜\n对方: ${opponentWins} 胜\n\n结果: ${playerWon ? '🎉 胜利！' : '💀 失败...'}`, playerWon ? '🎉' : '💀', playerWon ? 'success' : 'warning');
-            
-            // 处理联赛结果
-            await processLeagueMatchResult(playerWon);
-        }
-        
-        // 处理联赛比赛结果
+        // 处理联赛比赛结果（6v6战斗结束后调用）
         async function processLeagueMatchResult(matchResultData) {
             const playerTeam = leagueSystem.getPlayerTeam();
             const league = leagueSystem.getLeagueInfo(playerTeam.region, playerTeam.league);
@@ -1945,16 +1893,24 @@
                 return;
             }
             
-            const matchResult = matchResultData || JSON.parse(localStorage.getItem('leagueMatchResult'));
-            
-            if (!matchResult) {
+            if (!matchResultData) {
                 console.error('没有比赛结果数据！');
                 return;
             }
             
+            // 获取本场比赛胜负结果（新格式：{ result: 'win' | 'loss' }）
+            const playerWon = matchResultData.result === 'win';
+            
+            // 显示战斗结果
+            await showMessage(
+                `⚔️ 联赛6v6对战结束！\n\n${playerWon ? '🎉 我方6只动物全部存活，对手全部阵亡！\n\n获胜！' : '💀 我方6只动物全部阵亡...\n\n失败'}`,
+                playerWon ? '🎉' : '💀',
+                playerWon ? 'success' : 'warning'
+            );
+            
             try {
-                // 调用playRound处理联赛常规赛
-                const result = leagueSystem.playRound(playerTeam.region, playerTeam.league);
+                // 调用playRound处理联赛常规赛轮次（传入playerWon让联赛系统记录正确的胜负）
+                const result = leagueSystem.playRound(playerTeam.region, playerTeam.league, playerWon);
                 
                 if (result.error) {
                     await showMessage(result.error, '❌', 'error');
@@ -1963,9 +1919,6 @@
 
                 await saveData();
                 updateAllTabs();
-                
-                // 清除比赛结果
-                localStorage.removeItem('leagueMatchResult');
                 
                 if (result.completed) {
                     await showMessage('🏁 赛季已结束！查看排名确定大陆赛事参赛资格。', '🏁', 'success');
@@ -2174,7 +2127,7 @@
             
             if (battleHint) {
                 const selectedCount = window.selectedBattleAnimals?.filter(a => a).length || 0;
-                battleHint.textContent = `已选择 ${selectedCount}/5 只参战动物`;
+                battleHint.textContent = `已选择 ${selectedCount}/6 只参战动物`;
             }
             
             if (rosterHint) {
@@ -2284,7 +2237,7 @@
             };
             
             let html = '';
-            opponentAnimals.slice(0, 5).forEach((animal, i) => {
+            opponentAnimals.slice(0, 6).forEach((animal, i) => {
                 const elementIcon = ELEMENT_ICONS[animal.element] || ELEMENT_ICONS['默认'];
                 const rarityColor = rarityColors[animal.rarity] || '#ef4444';
                 const colorHex = animal.color ? '#' + animal.color.toString(16).padStart(6, '0') : '#ff4444';
@@ -2324,8 +2277,8 @@
                 `;
             });
             
-            // 如果对手动物少于5个，填充空位
-            for (let i = opponentAnimals.length; i < 5; i++) {
+            // 如果对手动物少于6个，填充空位
+            for (let i = opponentAnimals.length; i < 6; i++) {
                 html += `
                     <div style="background: rgba(51, 65, 85, 0.3); border: 2px dashed rgba(239, 68, 68, 0.3); border-radius: 12px; padding: 20px; min-height: 180px; display: flex; align-items: center; justify-content: center; opacity: 0.5;">
                         <div style="text-align: center; color: #64748b;">
@@ -2441,10 +2394,10 @@
                     
                     <div style="border-top: 1px solid rgba(148, 163, 184, 0.2); padding-top: 12px;">
                         <div style="color: #94a3b8; font-size: 0.85em; margin-bottom: 8px; text-align: center;">对手常用动物</div>
-                        <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px;">`;
+                        <div style="display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px;">`;
                 
                 const opponentAnimals = getOpponentAnimals(opponentTeam);
-                opponentAnimals.slice(0, 5).forEach(animal => {
+                opponentAnimals.slice(0, 6).forEach(animal => {
                     html += `
                         <div style="background: rgba(51, 65, 85, 0.6); border: 1px solid rgba(148, 163, 184, 0.3); border-radius: 8px; padding: 10px; text-align: center; transition: all 0.2s;" onmouseover="this.style.background='rgba(71, 85, 105, 0.8)'; this.style.borderColor='rgba(124, 58, 237, 0.5)';" onmouseout="this.style.background='rgba(51, 65, 85, 0.6)'; this.style.borderColor='rgba(148, 163, 184, 0.3)';">
                             <div style="color: #e0e7ff; font-size: 0.9em; font-weight: bold; margin-bottom: 4px;">${animal.name}</div>
@@ -2470,7 +2423,7 @@
         function getOpponentAnimals(opponentTeam) {
             // 如果对手有登记的动物，返回前5个
             if (opponentTeam && opponentTeam.registeredAnimals && opponentTeam.registeredAnimals.length > 0) {
-                return opponentTeam.registeredAnimals.slice(0, 5);
+                return opponentTeam.registeredAnimals.slice(0, 6);
             }
             
             // 如果没有动物数据，返回空数组（不显示）
@@ -2561,8 +2514,8 @@
                 '星芒': '#fbbf24'
             };
             
-            // 战斗准备界面显示5个格子（从registeredAnimals中选择参战动物）
-            const slotCount = 5;
+            // 战斗准备界面显示6个格子（从registeredAnimals中选择参战动物）
+            const slotCount = 6;
             
             let html = '';
             
@@ -2637,7 +2590,7 @@
             slotsContainer.innerHTML = html;
         }
         
-        // 初始化选中的战斗动物数组
+        // 初始化选中的战斗动物数组（在页面加载时，loadPlayerAnimals 之后会调用 restoreBattleTeamFromStorage）
         window.selectedBattleAnimals = window.selectedBattleAnimals || [];
         
         async function openAnimalSelector(slotIndex) {
@@ -4108,7 +4061,7 @@
             let html = `
                 <div class="info-box warning" style="max-width: 1200px; margin: 0 auto 30px;">
                     <h3>⚠️ 动物名单登记</h3>
-                    <p style="font-size: 1.1em;">请登记参赛动物（最少5只，建议25只）作为本赛季的参赛名单。</p>
+                    <p style="font-size: 1.1em;">请登记参赛动物（最少6只，建议25只）作为本赛季的参赛名单。</p>
                     <p style="color: #cbd5e1; margin-top: 10px;">💡 每个新赛季都需要重新登记动物。每3轮可轮换2只，第19轮后可轮换12只。</p>
                 </div>
                 
@@ -4217,9 +4170,9 @@
         
         // 完成动物登记（从动物登记页面）
         async function completeRosterRegistration() {
-            // 修改：最少5只动物
-            if (selectedAnimals.length < 5) {
-                await showMessage('请至少选择5只动物！', '⚠️', 'warning');
+            // 修改：最少6只动物
+            if (selectedAnimals.length < 6) {
+                await showMessage('请至少选择6只动物！', '⚠️', 'warning');
                 return;
             }
 
@@ -4533,12 +4486,12 @@
                         
                         <div style="border-top: 1px solid rgba(148, 163, 184, 0.2); padding-top: 12px;">
                             <div style="color: #94a3b8; font-size: 0.85em; margin-bottom: 8px; text-align: center;">对手常用动物</div>
-                            <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px;">
+                            <div style="display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px;">
                 `;
                 
                 const opponentAnimals = getOpponentAnimals(nextOpponent);
                 if (opponentAnimals.length > 0) {
-                    opponentAnimals.slice(0, 5).forEach(animal => {
+                    opponentAnimals.slice(0, 6).forEach(animal => {
                         html += `
                             <div style="background: rgba(51, 65, 85, 0.6); border: 1px solid rgba(148, 163, 184, 0.3); border-radius: 8px; padding: 10px; text-align: center; transition: all 0.2s;" onmouseover="this.style.background='rgba(71, 85, 105, 0.8)'; this.style.borderColor='rgba(124, 58, 237, 0.5)';" onmouseout="this.style.background='rgba(51, 65, 85, 0.6)'; this.style.borderColor='rgba(148, 163, 184, 0.3)';">
                                 <div style="color: #e0e7ff; font-size: 0.9em; font-weight: bold; margin-bottom: 4px;">${animal.name}</div>

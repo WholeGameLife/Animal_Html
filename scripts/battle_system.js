@@ -692,6 +692,10 @@ class BattleSystem {
         this.playerPassiveSkills = this.getPassiveSkills(playerData);
         this.opponentPassiveSkills = this.getPassiveSkills(opponentData);
         
+        // 各动物的技能冷却存档（key: animalKey, value: skillCooldowns对象）
+        // 用于切换动物时保存/恢复每个动物的冷却状态
+        this.animalCooldownsArchive = {};
+        
         // 战斗状态
         this.battleInProgress = false;
         this.battlePaused = false;
@@ -1503,20 +1507,29 @@ class BattleSystem {
             await this.sleep(300);
             await this.waitForUnpause();
             
+            // 重置敌方切换标志
+            this.enemySwitchedThisTurn = false;
+            
             await this.executeTurn(firstAttacker);
             if (!this.battleInProgress) break;
             
             await this.sleep(800);
             await this.waitForUnpause();
             
-            // 第二个攻击者行动
-            const secondName = secondAttacker === 'player' ? this.playerData.name : this.opponentData.name;
-            this.addLog(`${secondName} 反击！`, 'text-orange-300');
-            await this.sleep(300);
-            await this.waitForUnpause();
-            
-            await this.executeTurn(secondAttacker);
-            if (!this.battleInProgress) break;
+            // 如果本回合敌方动物被击倒并切换，新登场的敌方动物本回合不行动
+            if (this.enemySwitchedThisTurn && secondAttacker === 'opponent') {
+                this.addLog(`⚔️ 新登场的 ${this.opponentData.name} 本回合不行动！`, 'text-gray-400');
+                this.enemySwitchedThisTurn = false;
+            } else {
+                // 第二个攻击者行动
+                const secondName = secondAttacker === 'player' ? this.playerData.name : this.opponentData.name;
+                this.addLog(`${secondName} 反击！`, 'text-orange-300');
+                await this.sleep(300);
+                await this.waitForUnpause();
+                
+                await this.executeTurn(secondAttacker);
+                if (!this.battleInProgress) break;
+            }
             
             // 更新buff持续时间（旧系统兼容）
             this.updateBuffs();
@@ -2175,6 +2188,20 @@ class BattleSystem {
             }
         }
         
+        // 同时更新存档中所有不在场动物的技能冷却（使未出战动物的CD也继续递减）
+        if (this.animalCooldownsArchive) {
+            const currentAnimalKey = this.playerData.key || this.playerData.animalId || this.playerData.id;
+            for (const [archiveAnimalKey, cooldowns] of Object.entries(this.animalCooldownsArchive)) {
+                if (archiveAnimalKey === currentAnimalKey) continue; // 跳过当前出战的动物（已在上方递减）
+                for (const [skillKey, cooldown] of Object.entries(cooldowns)) {
+                    cooldowns[skillKey]--;
+                    if (cooldowns[skillKey] <= 0) {
+                        delete cooldowns[skillKey];
+                    }
+                }
+            }
+        }
+        
         // 更新对手技能冷却
         for (const [skillKey, cooldown] of Object.entries(this.opponentStats.skillCooldowns)) {
             this.opponentStats.skillCooldowns[skillKey]--;
@@ -2437,6 +2464,22 @@ class BattleSystem {
                 return false;
             }
             
+            // 联赛战斗：检查敌方是否还有其他动物可以上场
+            const battleReturnUrl = localStorage.getItem('battleReturnUrl') || '';
+            const isLeagueBattle = battleReturnUrl.includes('league');
+            if (isLeagueBattle) {
+                const availableEnemyAnimals = this.getAvailableEnemyTeamAnimals();
+                if (availableEnemyAnimals.length > 0) {
+                    // 敌方还有动物，自动切换到下一只
+                    this.addLog(`💀 ${this.opponentData.name} 已倒下！敌方切换下一只动物...`, 'text-orange-400 font-bold');
+                    await this.sleep(800);
+                    await this.forceSwithToEnemyAnimal(availableEnemyAnimals[0]);
+                    // 标记：本回合发生了敌方切换，跳过本回合剩余的敌方行动
+                    this.enemySwitchedThisTurn = true;
+                    return false; // 继续战斗
+                }
+            }
+            
             this.battleInProgress = false;
             await this.handleVictory();
             return true;
@@ -2516,6 +2559,75 @@ class BattleSystem {
         });
         
         return availableAnimals;
+    }
+    
+    // 获取敌方队伍中其他可用（存活）的动物（联赛6v6专用）
+    getAvailableEnemyTeamAnimals() {
+        const leagueBattleInfo = JSON.parse(localStorage.getItem('leagueBattleInfo') || '{}');
+        const matchInfo = leagueBattleInfo.matchInfo;
+        if (!matchInfo) return [];
+        
+        const opponentTeam = matchInfo.opponent;
+        if (!opponentTeam || !opponentTeam.registeredAnimals) return [];
+        
+        // 已阵亡的敌方动物id列表（当前出战的动物已阵亡）
+        if (!this.defeatedEnemyIds) this.defeatedEnemyIds = new Set();
+        const currentEnemyId = this.opponentData.id || this.opponentData.animalId || this.opponentData.name;
+        this.defeatedEnemyIds.add(currentEnemyId);
+        
+        // 找出还未阵亡的敌方动物（最多6只）
+        const enemyAnimals = opponentTeam.registeredAnimals.slice(0, 6);
+        const available = enemyAnimals.filter(animal => {
+            const id = animal.id || animal.animalId || animal.name;
+            return !this.defeatedEnemyIds.has(id);
+        });
+        
+        return available;
+    }
+    
+    // 强制切换到敌方下一只动物（联赛6v6专用）
+    async forceSwithToEnemyAnimal(animal) {
+        // 更新敌方数据
+        this.opponentData = {
+            ...animal,
+            stamina: animal.hp || animal.originalAnimal?.maxStamina || 300,
+            abilities: {
+                combat: {
+                    attack: animal.attack || 50,
+                    defense: animal.defense || 50,
+                    agility: animal.agility || 50
+                }
+            },
+            isWild: false
+        };
+        
+        // 重置敌方战斗状态（满血上场）
+        this.opponentStats.hp = this.opponentData.stamina;
+        this.opponentStats.maxHp = this.opponentData.stamina;
+        this.opponentStats.attack = this.opponentData.abilities.combat.attack;
+        this.opponentStats.defense = this.opponentData.abilities.combat.defense;
+        this.opponentStats.agility = this.opponentData.abilities.combat.agility;
+        this.opponentStats.baseAttack = this.opponentData.abilities.combat.attack;
+        this.opponentStats.baseDefense = this.opponentData.abilities.combat.defense;
+        this.opponentStats.baseAgility = this.opponentData.abilities.combat.agility;
+        this.opponentStats.element = this.opponentData.element || 'fire';
+        this.opponentStats.statuses = [];
+        this.opponentStats.buffs = {};
+        this.opponentStats.skillCooldowns = {};
+        this.opponentStats.rebirthPercent = 0;
+        
+        this.opponentCurrentHealth = this.opponentData.stamina;
+        
+        // 更新敌方被动技能
+        this.opponentPassiveSkills = this.getPassiveSkills(this.opponentData);
+        
+        // 重新渲染敌方信息
+        this.renderOpponentInfo();
+        this.renderOpponentSkillSlots();
+        this.updateHealthUI();
+        
+        this.addLog(`⚔️ 敌方派出 ${this.opponentData.name}！`, 'text-red-300 font-bold');
+        await this.sleep(500);
     }
     
     // 处理玩家当前动物死亡，强制要求切换
@@ -2803,10 +2915,11 @@ class BattleSystem {
     async handleVictory() {
         this.addLog(`\n🎉 胜利！你击败了 ${this.opponentData.name}！`, 'text-green-400 font-bold text-lg');
         
-        // 检查是否是联赛战斗
-        const queueData = JSON.parse(localStorage.getItem('leagueBattleQueue') || 'null');
-        if (queueData) {
-            await this.handleLeagueVictory(queueData);
+        // 通过 battleReturnUrl 判断是否是联赛战斗（避免普通战斗误触发联赛逻辑）
+        const battleReturnUrl = localStorage.getItem('battleReturnUrl') || '';
+        const isLeagueBattle = battleReturnUrl.includes('league');
+        if (isLeagueBattle) {
+            await this.handleLeagueVictory();
             return;
         }
         
@@ -2829,10 +2942,11 @@ class BattleSystem {
     async handleDefeat() {
         this.addLog(`\n💀 战败...你被 ${this.opponentData.name} 击败了...`, 'text-red-400 font-bold text-lg');
         
-        // 检查是否是联赛战斗
-        const queueData = JSON.parse(localStorage.getItem('leagueBattleQueue') || 'null');
-        if (queueData) {
-            await this.handleLeagueDefeat(queueData);
+        // 通过 battleReturnUrl 判断是否是联赛战斗（避免普通战斗误触发联赛逻辑）
+        const battleReturnUrl = localStorage.getItem('battleReturnUrl') || '';
+        const isLeagueBattle = battleReturnUrl.includes('league');
+        if (isLeagueBattle) {
+            await this.handleLeagueDefeat();
             return;
         }
         
@@ -2840,116 +2954,54 @@ class BattleSystem {
         this.showReturnButton("战斗失败，返回主场景");
     }
     
-    async handleLeagueVictory(queueData) {
+    async handleLeagueVictory() {
+        // 联赛6v6战斗胜利：对方6只动物全部阵亡
+        // 双方可以随时切换动物，谁的6只先全灭谁输
         await this.sleep(1500);
         
-        // 记录当前比赛的结果（使用当前的currentBattle作为索引）
-        if (!queueData.matchHistory) {
-            queueData.matchHistory = [];
-        }
-        queueData.matchHistory[queueData.currentBattle] = 'win';
-        
-        // 更新队列数据
-        queueData.playerWins++;
-        queueData.currentBattle++;
-        
-        // 更新显示
-        this.renderScoreCircles(queueData);
-        
-        // 保存到localStorage
-        localStorage.setItem('leagueBattleQueue', JSON.stringify(queueData));
-        
-        // 显示当前比分
-        this.addLog(`\n📊 当前比分: 我方 ${queueData.playerWins} : ${queueData.opponentWins} 对方`, 'text-yellow-300 font-bold');
-        await this.sleep(1500);
-        
-        // 检查是否提前结束（一方赢得3场）
-        if (queueData.playerWins >= 3) {
-            this.addLog(`\n🏆 恭喜！你以 ${queueData.playerWins}:${queueData.opponentWins} 赢得了这场比赛！`, 'text-green-400 font-bold text-lg');
-            await this.sleep(2000);
-            this.finishLeagueMatch(queueData);
-            return;
-        }
-        
-        // 检查是否完成所有5场
-        if (queueData.currentBattle >= 5) {
-            this.finishLeagueMatch(queueData);
-            return;
-        }
-        
-        // 自动继续下一场（不需要玩家点击）
-        this.addLog(`\n⏱️ 3秒后自动开始第${queueData.currentBattle + 1}场战斗...`, 'text-cyan-300');
-        await this.sleep(3000);
-        location.reload();
-    }
-    
-    async handleLeagueDefeat(queueData) {
-        await this.sleep(1500);
-        
-        // 记录当前比赛的结果（使用当前的currentBattle作为索引）
-        if (!queueData.matchHistory) {
-            queueData.matchHistory = [];
-        }
-        queueData.matchHistory[queueData.currentBattle] = 'loss';
-        
-        // 更新队列数据
-        queueData.opponentWins++;
-        queueData.currentBattle++;
-        
-        // 更新显示
-        this.renderScoreCircles(queueData);
-        
-        // 保存到localStorage
-        localStorage.setItem('leagueBattleQueue', JSON.stringify(queueData));
-        
-        // 显示当前比分
-        this.addLog(`\n📊 当前比分: 我方 ${queueData.playerWins} : ${queueData.opponentWins} 对方`, 'text-yellow-300 font-bold');
-        await this.sleep(1500);
-        
-        // 检查是否提前结束（对方赢得3场）
-        if (queueData.opponentWins >= 3) {
-            this.addLog(`\n💔 遗憾！你以 ${queueData.playerWins}:${queueData.opponentWins} 输掉了这场比赛...`, 'text-red-400 font-bold text-lg');
-            await this.sleep(2000);
-            this.finishLeagueMatch(queueData);
-            return;
-        }
-        
-        // 检查是否完成所有5场
-        if (queueData.currentBattle >= 5) {
-            this.finishLeagueMatch(queueData);
-            return;
-        }
-        
-        // 自动继续下一场（不需要玩家点击）
-        this.addLog(`\n⏱️ 3秒后自动开始第${queueData.currentBattle + 1}场战斗...`, 'text-cyan-300');
-        await this.sleep(3000);
-        location.reload();
-    }
-    
-    
-    finishLeagueMatch(queueData) {
-        const playerWins = queueData.playerWins;
-        const opponentWins = queueData.opponentWins;
-        const playerWon = playerWins > opponentWins;
-        
-        // 最后一次更新比分显示，确保所有圈都正确显示
-        this.renderScoreCircles(queueData);
-        
-        // 保存最终结果
+        // 保存联赛战斗结果（胜利）
         localStorage.setItem('leagueMatchResult', JSON.stringify({
-            playerWins: playerWins,
-            opponentWins: opponentWins,
-            result: playerWon ? 'win' : 'loss'
+            result: 'win'
         }));
         
-        // 清除队列
+        // 清除联赛队列
         localStorage.removeItem('leagueBattleQueue');
         
         this.addLog(`\n━━━━━━━━━━━━━━━━━━━━━━`, 'text-gray-400');
-        this.addLog(`🏁 比赛结束！最终比分: ${playerWins} : ${opponentWins}`, 'text-yellow-400 font-bold text-lg');
-        this.addLog(`${playerWon ? '🎉 恭喜获胜！' : '💔 遗憾落败...'}`, playerWon ? 'text-green-400 font-bold' : 'text-red-400 font-bold');
+        this.addLog(`🏆 联赛比赛胜利！对方6只动物全部阵亡！`, 'text-green-400 font-bold text-lg');
+        this.addLog(`🎉 恭喜获胜！`, 'text-green-400 font-bold');
         this.addLog(`━━━━━━━━━━━━━━━━━━━━━━`, 'text-gray-400');
         
+        await this.sleep(2000);
+        this.finishLeagueMatch(true);
+    }
+    
+    async handleLeagueDefeat() {
+        // 联赛6v6战斗失败：我方6只动物全部阵亡
+        // 双方可以随时切换动物，谁的6只先全灭谁输
+        await this.sleep(1500);
+        
+        // 保存联赛战斗结果（失败）
+        localStorage.setItem('leagueMatchResult', JSON.stringify({
+            result: 'loss'
+        }));
+        
+        // 清除联赛队列
+        localStorage.removeItem('leagueBattleQueue');
+        
+        this.addLog(`\n━━━━━━━━━━━━━━━━━━━━━━`, 'text-gray-400');
+        this.addLog(`💔 联赛比赛失败！我方6只动物全部阵亡...`, 'text-red-400 font-bold text-lg');
+        this.addLog(`💔 遗憾落败...`, 'text-red-400 font-bold');
+        this.addLog(`━━━━━━━━━━━━━━━━━━━━━━`, 'text-gray-400');
+        
+        await this.sleep(2000);
+        this.finishLeagueMatch(false);
+    }
+    
+    
+    finishLeagueMatch(playerWon) {
+        // playerWon: true=我方获胜，false=我方失败
+        // 联赛6v6：一场战斗决定胜负（谁的6只动物先全灭谁输）
         const actionPanel = document.querySelector('.controls');
         if (!actionPanel) return;
         actionPanel.innerHTML = '';
@@ -2961,6 +3013,8 @@ class BattleSystem {
             const returnUrl = localStorage.getItem('battleReturnUrl') || 'league.html';
             localStorage.removeItem('battleOpponent');
             localStorage.removeItem('battlePlayerAnimal');
+            localStorage.removeItem('battleReturnUrl');
+            localStorage.removeItem('leagueBattleQueue');
             window.location.href = returnUrl;
         };
         
@@ -3120,6 +3174,26 @@ class BattleSystem {
                     this.ui.centerCountdown.classList.remove('show');
                 }
                 this.addLog('⏱️ 超时！放弃本回合行动', 'text-gray-400');
+                
+                // 如果超时时仍在显示动物面板，恢复技能栏并恢复战斗
+                if (this.isShowingAnimals) {
+                    this.isShowingAnimals = false;
+                    this.pausedForAnimals = false;
+                    this.savedSkillsContainer = null;
+                    this.renderSkillsContainer();
+                    if (this.ui.btnAnimals) {
+                        this.ui.btnAnimals.textContent = '🐾 我方动物';
+                    }
+                    // 恢复战斗
+                    if (this.battlePaused) {
+                        this.battlePaused = false;
+                        if (this.ui.btnPause) {
+                            this.ui.btnPause.textContent = '⏸ 暂停';
+                            this.ui.btnPause.className = 'control-btn secondary';
+                        }
+                    }
+                }
+                
                 resolve();
             }, 10000);
         });
@@ -3377,6 +3451,12 @@ class BattleSystem {
         const wasInBattle = this.battleInProgress;
         const shouldResumeBattle = wasInBattle; // 只要战斗在进行中，切换后就恢复
         
+        // 保存当前动物的技能冷却状态（以便切换回来时恢复）
+        const currentAnimalKey = this.playerData.key || this.playerData.animalId || this.playerData.id;
+        if (currentAnimalKey) {
+            this.animalCooldownsArchive[currentAnimalKey] = Object.assign({}, this.playerStats.skillCooldowns);
+        }
+        
         // 从gameState中获取最新的动物数据（包含已配置的技能）
         const gameState = JSON.parse(localStorage.getItem('gameState') || '{}');
         let latestAnimal = animal;
@@ -3406,7 +3486,11 @@ class BattleSystem {
             combatSkills: latestAnimal.combatSkills || { equipped: [] }
         };
         
-        // 重置战斗状态
+        // 恢复目标动物的技能冷却状态（如果之前保存过）
+        const targetAnimalKey = this.playerData.key || this.playerData.animalId || this.playerData.id;
+        const restoredCooldowns = this.animalCooldownsArchive[targetAnimalKey] || {};
+        
+        // 重置战斗状态（保留技能冷却）
         this.playerStats.hp = this.playerData.stamina;
         this.playerStats.maxHp = this.playerData.stamina;
         this.playerStats.attack = this.playerData.abilities.combat.attack;
@@ -3418,7 +3502,7 @@ class BattleSystem {
         this.playerStats.element = this.playerData.element || 'water';
         this.playerStats.statuses = [];
         this.playerStats.buffs = {};
-        this.playerStats.skillCooldowns = {};
+        this.playerStats.skillCooldowns = restoredCooldowns; // 恢复该动物之前的冷却状态
         this.playerStats.rebirthPercent = 0;
         
         this.playerCurrentHealth = this.playerData.stamina;
@@ -4367,6 +4451,8 @@ class BattleSystem {
                 // 禁疗
                 const target = params[`${effectKey}_target`];
                 if (target === 'enemy-single' || target === 'enemy-all') {
+                    // 兼容新旧格式（status为旧格式数组，statuses为新格式）
+                    if (!defenderStats.status) defenderStats.status = [];
                     if (!defenderStats.status.includes('no-heal')) {
                         defenderStats.status.push('no-heal');
                         this.addLog(`禁疗: ${defenderName}无法恢复生命`, 'text-purple-300');
@@ -4380,6 +4466,8 @@ class BattleSystem {
                 const target = params[`${effectKey}_target`];
                 const bonus = params[`${effectKey}_bonus`] || 0.5;
                 if (target === 'enemy-single' || target === 'enemy-all') {
+                    // 兼容新旧格式（status为旧格式数组，statuses为新格式）
+                    if (!defenderStats.status) defenderStats.status = [];
                     if (!defenderStats.status.includes('heal-reduce')) {
                         defenderStats.status.push('heal-reduce');
                         this.addLog(`减疗: ${defenderName}治疗效果降低 ${Math.round(bonus * 100)}%`, 'text-purple-300');

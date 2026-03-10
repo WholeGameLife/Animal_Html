@@ -763,13 +763,19 @@
             const battleSystem = new BattleSystem(playerData, opponentData);
             battleSystem.init();
             
-            // 检查是否是联赛战斗，如果是则自动开始
-            const leagueBattleQueue = localStorage.getItem('leagueBattleQueue');
-            if (leagueBattleQueue) {
-                // 联赛战斗自动开始（延迟200毫秒让玩家看到界面）
+            // 检查是否是联赛战斗（通过 battleReturnUrl 判断，不依赖已废弃的 leagueBattleQueue）
+            const battleReturnUrl = localStorage.getItem('battleReturnUrl') || '';
+            const isLeagueBattle = battleReturnUrl.includes('league');
+            
+            if (isLeagueBattle) {
+                // 联赛战斗：6v6模式，显示提示后自动开始
+                battleSystem.addLog('⚔️ 联赛6v6对战！双方各6只动物，你可以随时切换动物，谁的6只先全灭谁输！', 'text-yellow-300');
+                battleSystem.addLog('💡 点击"🐾 动物"切换队伍中的其他动物', 'text-cyan-300');
+                // 延迟200毫秒让玩家看到界面，然后自动开始战斗
                 setTimeout(() => {
-                    battleSystem.startBattle();
-                }, 200);
+                    battleSystem.battleInProgress = true;
+                    battleSystem.battleLoop();
+                }, 500);
             } else {
                 // 非联赛战斗：默认手动模式，提示玩家选择
                 battleSystem.addLog('🤚 默认手动战斗模式 - 点击技能释放，或点击"自动战斗"切换模式', 'text-cyan-300');
