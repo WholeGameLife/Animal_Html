@@ -805,6 +805,24 @@
                 </div>
             </div>
 
+            <!-- AI难度选择 -->
+            <div class="bg-purple-900/20 border border-purple-600 rounded-lg p-3 mt-4">
+                <div class="flex items-center gap-3">
+                    <span class="text-lg">🤖</span>
+                    <div class="flex-1 flex items-center gap-3">
+                        <span class="text-sm font-bold text-purple-300 whitespace-nowrap">敌方AI难度：</span>
+                        <select id="config-ai-difficulty"
+                            class="flex-1 bg-gray-700 border border-purple-600 rounded-lg px-3 py-1.5 text-white text-sm">
+                            <option value="none">❌ 不使用AI（随机选技能）</option>
+                            <option value="easy">🟢 简单AI（随机+偶尔发呆）</option>
+                            <option value="medium">🟡 中级AI（状态感知+克制优先）</option>
+                            <option value="hard">🔴 困难AI（完整策略评分）</option>
+                        </select>
+                        <span class="text-xs text-purple-300 whitespace-nowrap">测试技能强度用</span>
+                    </div>
+                </div>
+            </div>
+
             <!-- 按钮 -->
             <div class="flex gap-4 justify-center mt-4">
                 <button id="start-test-btn" onclick="startBattle()" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-8 rounded-lg transition-colors">
@@ -922,8 +940,10 @@
     </div>
 
     <script src="../scripts/battle_system.js"></script>
+    <script src="../scripts/battle_ai.js"></script>
     <script>
         let battleSystem = null;
+        let currentAIDifficulty = 'none'; // 当前选择的AI难度
         let playerSelectedSkills = []; // 当前我方动物的技能
         let testAnimalsSkills = {}; // 存储每个我方测试动物的技能配置 { animalId: [skill1, skill2, ...] }
         let testEnemyAnimalsSkills = {}; // 存储每个敌方测试动物的技能配置 { animalId: [skill1, skill2, ...] }
@@ -1674,12 +1694,62 @@
             // 为战斗系统注入敌方动物切换支持
             _injectEnemyAnimalSwitching(battleSystem);
             
+            // ── AI难度注入 ──
+            const aiSelect = document.getElementById('config-ai-difficulty');
+            currentAIDifficulty = aiSelect ? aiSelect.value : 'none';
+            if (currentAIDifficulty && currentAIDifficulty !== 'none') {
+                setupBattleTesterAI(battleSystem, currentAIDifficulty);
+            }
+            
+            // 在底部控制区添加实时AI切换下拉框
+            const controlsEl = document.querySelector('.controls');
+            // 先移除已有的AI切换行（避免重置时重复添加）
+            const existingAIRow = document.getElementById('ai-switch-row');
+            if (existingAIRow) existingAIRow.remove();
+            if (controlsEl) {
+                const aiRow = document.createElement('div');
+                aiRow.id = 'ai-switch-row';
+                aiRow.style.cssText = 'grid-column: 1 / -1; display: flex; align-items: center; gap: 0.5rem;';
+                aiRow.innerHTML = `
+                    <span style="font-size:0.75rem; color:#c4b5fd; white-space:nowrap;">🤖 AI:</span>
+                    <select id="ai-difficulty-select" style="
+                        flex:1; background:#1f2937; border:1px solid #7c3aed;
+                        border-radius:8px; color:white; padding:0.3rem 0.4rem;
+                        font-size:0.75rem; cursor:pointer;
+                    ">
+                        <option value="none">随机</option>
+                        <option value="easy">简单</option>
+                        <option value="medium">中级</option>
+                        <option value="hard">困难</option>
+                    </select>
+                `;
+                controlsEl.insertBefore(aiRow, controlsEl.firstChild);
+                
+                // 恢复初始选择
+                const liveSelect = document.getElementById('ai-difficulty-select');
+                if (liveSelect) {
+                    liveSelect.value = currentAIDifficulty;
+                    liveSelect.addEventListener('change', function() {
+                        currentAIDifficulty = this.value;
+                        setupBattleTesterAI(battleSystem, currentAIDifficulty);
+                        if (currentAIDifficulty === 'none') {
+                            battleSystem.addLog('━━━ 已切换回随机选技（无AI） ━━━', 'text-gray-400');
+                        }
+                    });
+                }
+            }
+            
             // 提示玩家
             battleSystem.addLog('🧪 战斗测试模式启动！', 'text-cyan-300');
             battleSystem.addLog(`💡 我方: ${testAnimals.length}个动物 | 敌方: ${testEnemyAnimals.length}个动物`, 'text-cyan-300');
             battleSystem.addLog('💡 使用"切换技能"按钮为各动物配置技能（支持切换不同动物单独配置）', 'text-cyan-300');
             battleSystem.addLog('💡 使用"动物"按钮切换我方上场动物', 'text-cyan-300');
-            battleSystem.addLog('💡 点击"开始战斗"开始测试', 'text-green-300');
+            if (currentAIDifficulty && currentAIDifficulty !== 'none') {
+                const diffNames = { easy: '简单', medium: '中级', hard: '困难' };
+                battleSystem.addLog(`🤖 敌方由${diffNames[currentAIDifficulty] || currentAIDifficulty}AI控制（可在左下角实时切换）`, 'text-purple-300');
+            } else {
+                battleSystem.addLog('💡 点击"开始战斗"开始测试', 'text-green-300');
+            }
         }
         
         // 注入敌方动物切换功能到战斗系统
@@ -1750,6 +1820,11 @@
         // 重置战斗
         function resetBattle() {
             if (battleSystem) {
+                // 移除AI注入
+                if (typeof removeAIFromBattleSystem === 'function') {
+                    removeAIFromBattleSystem(battleSystem);
+                }
+                
                 battleSystem.battleInProgress = false;
                 battleSystem.battlePaused = false;
                 battleSystem.turnCount = 0;

@@ -748,6 +748,7 @@
     <!-- 引入图像库和战斗系统 -->
     <script src="../scripts/image_library.js"></script>
     <script src="../scripts/battle_system.js"></script>
+    <script src="../scripts/battle_ai.js"></script>
     <script>
         window.onload = function() {
             const opponentData = JSON.parse(localStorage.getItem('battleOpponent'));
@@ -762,11 +763,86 @@
             // 初始化战斗系统
             const battleSystem = new BattleSystem(playerData, opponentData);
             battleSystem.init();
-            
+
+            // ── 为 battleSystem 注入 AI 换人接口 ──
+            // switchToEnemyAnimal(animalIdOrObj)：供困难AI主动换人使用
+            // 支持传 id 字符串 或 动物对象
+            battleSystem.switchToEnemyAnimal = function(animalIdOrObj) {
+                const retUrl = localStorage.getItem('battleReturnUrl') || '';
+                if (retUrl.includes('league')) {
+                    // 联赛模式：从可用队伍中找到动物然后切换
+                    const available = this.getAvailableEnemyTeamAnimals();
+                    let target;
+                    if (typeof animalIdOrObj === 'object') {
+                        // 传入了动物对象，直接用
+                        target = animalIdOrObj;
+                    } else {
+                        // 传入了 id 字符串，查找对应动物
+                        target = available.find(a =>
+                            (a.id || a.animalId || a.name) === animalIdOrObj
+                        );
+                    }
+                    if (target) {
+                        this.forceSwithToEnemyAnimal(target);
+                    }
+                }
+                // 非联赛普通对战：无队伍，不换人
+            };
+
+            // ── AI难度注入 ──
+            const savedAIDiff = localStorage.getItem('battleAIDifficulty') || 'none';
+            if (savedAIDiff && savedAIDiff !== 'none') {
+                setupBattleTesterAI(battleSystem, savedAIDiff);
+                // 说明换人能力
+                if (savedAIDiff === 'hard') {
+                    const retUrl = localStorage.getItem('battleReturnUrl') || '';
+                    if (retUrl.includes('league')) {
+                        battleSystem.addLog('🧠 困难AI：联赛模式，具备主动换人能力', 'text-purple-300');
+                    } else {
+                        battleSystem.addLog('🧠 困难AI：普通对战（单动物），无法换人，但具备完整评分策略', 'text-purple-300');
+                    }
+                }
+            }
+
+            // ── 在控制区添加 AI 难度选择器 ──
+            const controlsEl = document.querySelector('.controls');
+            if (controlsEl) {
+                const aiRow = document.createElement('div');
+                aiRow.id = 'ai-difficulty-row';
+                aiRow.style.cssText = 'grid-column: 1 / -1; display: flex; align-items: center; gap: 0.5rem; padding: 0.25rem 0;';
+                aiRow.innerHTML = `
+                    <span style="font-size:0.75rem; color:#c4b5fd; white-space:nowrap;">🤖 对手AI：</span>
+                    <select id="ai-difficulty-select" style="
+                        flex:1; background:#1f2937; border:1px solid #7c3aed;
+                        border-radius:8px; color:white; padding:0.35rem 0.5rem;
+                        font-size:0.8rem; cursor:pointer;
+                    ">
+                        <option value="none">随机（默认）</option>
+                        <option value="easy">🟢 简单AI</option>
+                        <option value="medium">🟡 中级AI</option>
+                        <option value="hard">🔴 困难AI</option>
+                    </select>
+                `;
+                controlsEl.insertBefore(aiRow, controlsEl.firstChild);
+
+                // 恢复上次选择
+                document.getElementById('ai-difficulty-select').value = savedAIDiff;
+
+                // 监听实时切换
+                document.getElementById('ai-difficulty-select').addEventListener('change', function() {
+                    const diff = this.value;
+                    localStorage.setItem('battleAIDifficulty', diff);
+                    setupBattleTesterAI(battleSystem, diff);
+                    if (diff === 'none') {
+                        battleSystem.addLog('━━━ 已切换回随机选技（无AI） ━━━', 'text-gray-400');
+                    }
+                });
+            }
+
             // 检查是否是联赛战斗（通过 battleReturnUrl 判断，不依赖已废弃的 leagueBattleQueue）
             const battleReturnUrl = localStorage.getItem('battleReturnUrl') || '';
             const isLeagueBattle = battleReturnUrl.includes('league');
-            
+
             if (isLeagueBattle) {
                 // 联赛战斗：6v6模式，显示提示后自动开始
                 battleSystem.addLog('⚔️ 联赛6v6对战！双方各6只动物，你可以随时切换动物，谁的6只先全灭谁输！', 'text-yellow-300');
@@ -778,9 +854,16 @@
                 }, 500);
             } else {
                 // 非联赛战斗：默认手动模式，提示玩家选择
-                battleSystem.addLog('🤚 默认手动战斗模式 - 点击技能释放，或点击"自动战斗"切换模式', 'text-cyan-300');
+                battleSystem.addLog('🤚 默认手动战斗模式 - 点击技能释放', 'text-cyan-300');
                 battleSystem.addLog('⏱️ 每回合有10秒时间选择技能', 'text-yellow-300');
-                
+                if (savedAIDiff && savedAIDiff !== 'none') {
+                    const diffNames = { easy: '简单', medium: '中级', hard: '困难' };
+                    battleSystem.addLog(
+                        `🤖 敌方由${diffNames[savedAIDiff] || savedAIDiff}AI控制`,
+                        'text-purple-300'
+                    );
+                }
+
                 // 立即开始战斗循环（不等待）
                 setTimeout(() => {
                     battleSystem.battleInProgress = true;
