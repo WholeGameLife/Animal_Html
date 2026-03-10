@@ -416,10 +416,10 @@
             background: rgba(17, 24, 39, 0.95);
             border: 2px solid rgba(75, 85, 99, 0.8);
             border-radius: 16px;
-            padding: 2rem;
+            padding: 1.25rem;
             max-width: 1200px;
-            width: 90%;
-            max-height: 90vh;
+            width: 92%;
+            max-height: 95vh;
             overflow-y: auto;
         }
 
@@ -427,8 +427,8 @@
             background: rgba(31, 41, 55, 0.6);
             border: 1px solid rgba(75, 85, 99, 0.5);
             border-radius: 12px;
-            padding: 1.5rem;
-            margin-bottom: 1.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
         }
 
         .skill-selector {
@@ -520,19 +520,25 @@
 <body>
     <!-- 技能切换模态框 -->
     <div class="config-modal" id="skill-change-modal" style="display: none;">
-        <div class="config-panel" style="max-width: 1000px;">
+        <div class="config-panel" style="max-width: 1100px;">
             <h2 class="text-2xl font-bold text-white mb-6 text-center">🔄 切换技能</h2>
             
             <div class="grid grid-cols-2 gap-6">
                 <!-- 我方技能 -->
                 <div class="bg-blue-900/20 border border-blue-600 rounded-lg p-4">
-                    <h3 class="text-lg font-bold text-blue-300 mb-3">👤 我方技能</h3>
+                    <div class="flex items-center justify-between mb-3">
+                        <h3 class="text-lg font-bold text-blue-300">👤 我方技能</h3>
+                        <div class="flex gap-2" id="player-animal-tabs"></div>
+                    </div>
                     <div id="current-player-skills" class="space-y-2"></div>
                 </div>
                 
                 <!-- 敌方技能 -->
                 <div class="bg-red-900/20 border border-red-600 rounded-lg p-4">
-                    <h3 class="text-lg font-bold text-red-300 mb-3">👹 敌方技能</h3>
+                    <div class="flex items-center justify-between mb-3">
+                        <h3 class="text-lg font-bold text-red-300">👹 敌方技能</h3>
+                        <div class="flex gap-2" id="enemy-animal-tabs"></div>
+                    </div>
                     <div id="current-enemy-skills" class="space-y-2"></div>
                 </div>
             </div>
@@ -607,12 +613,13 @@
     <!-- 配置模态框 -->
     <div class="config-modal" id="config-modal">
         <div class="config-panel">
-            <h2 class="text-3xl font-bold text-white mb-6 text-center">⚙️ 战斗测试器配置</h2>
+            <h2 class="text-2xl font-bold text-white mb-4 text-center">⚙️ 战斗测试器配置</h2>
             
+            <div class="grid grid-cols-2 gap-4">
             <!-- 我方配置 -->
-            <div class="config-section">
-                <h3 class="text-xl font-bold text-blue-300 mb-4">👤 我方设置</h3>
-                <div class="grid grid-cols-2 gap-6">
+            <div class="config-section" style="margin-bottom: 0;">
+                <h3 class="text-base font-bold text-blue-300 mb-3">👤 我方设置</h3>
+                <div class="grid grid-cols-2 gap-3">
                     <div>
                         <label class="block text-sm text-gray-300 mb-2">名称</label>
                         <input type="text" id="config-player-name" value="测试者" 
@@ -654,17 +661,28 @@
             </div>
 
             <!-- 敌方配置 -->
-            <div class="config-section">
-                <h3 class="text-xl font-bold text-red-300 mb-4">👹 敌方设置</h3>
-                <div class="grid grid-cols-2 gap-6">
+            <div class="config-section" style="margin-bottom: 0;">
+                <div class="flex items-center justify-between mb-3">
+                    <h3 class="text-base font-bold text-red-300">👹 敌方设置</h3>
+                    <div class="flex gap-2" id="enemy-config-tabs">
+                        <button onclick="switchEnemyConfigTab(0)" id="enemy-tab-0"
+                            class="px-3 py-1 rounded text-sm font-bold bg-red-600 text-white">敌方1</button>
+                        <button onclick="switchEnemyConfigTab(1)" id="enemy-tab-1"
+                            class="px-3 py-1 rounded text-sm font-bold bg-gray-600 text-white">敌方2</button>
+                        <button onclick="switchEnemyConfigTab(2)" id="enemy-tab-2"
+                            class="px-3 py-1 rounded text-sm font-bold bg-gray-600 text-white">敌方3</button>
+                    </div>
+                </div>
+                <!-- 敌方动物1 -->
+                <div id="enemy-config-panel-0" class="grid grid-cols-2 gap-3">
                     <div>
                         <label class="block text-sm text-gray-300 mb-2">名称</label>
-                        <input type="text" id="config-enemy-name" value="测试假人" 
+                        <input type="text" id="config-enemy-name-0" value="测试假人"
                             class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white">
                     </div>
                     <div>
                         <label class="block text-sm text-gray-300 mb-2">系别</label>
-                        <select id="config-enemy-element"
+                        <select id="config-enemy-element-0"
                             class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white">
                             <option value="water">💧 水系</option>
                             <option value="fire" selected>🔥 火系</option>
@@ -676,45 +694,124 @@
                     </div>
                     <div>
                         <label class="block text-sm text-gray-300 mb-2">生命值</label>
-                        <input type="number" id="config-enemy-hp" value="800" min="1"
+                        <input type="number" id="config-enemy-hp-0" value="800" min="1"
                             class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white">
                     </div>
                     <div>
                         <label class="block text-sm text-gray-300 mb-2">攻击力</label>
-                        <input type="number" id="config-enemy-attack" value="90" min="0"
+                        <input type="number" id="config-enemy-attack-0" value="90" min="0"
                             class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white">
                     </div>
                     <div>
                         <label class="block text-sm text-gray-300 mb-2">防御力</label>
-                        <input type="number" id="config-enemy-defense" value="40" min="0"
+                        <input type="number" id="config-enemy-defense-0" value="40" min="0"
                             class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white">
                     </div>
                     <div>
                         <label class="block text-sm text-gray-300 mb-2">敏捷</label>
-                        <input type="number" id="config-enemy-agility" value="70" min="0"
+                        <input type="number" id="config-enemy-agility-0" value="70" min="0"
+                            class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white">
+                    </div>
+                </div>
+                <!-- 敌方动物2 -->
+                <div id="enemy-config-panel-1" class="grid grid-cols-2 gap-3" style="display:none;">
+                    <div>
+                        <label class="block text-sm text-gray-300 mb-2">名称</label>
+                        <input type="text" id="config-enemy-name-1" value="测试假人 #2"
+                            class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white">
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-300 mb-2">系别</label>
+                        <select id="config-enemy-element-1"
+                            class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white">
+                            <option value="water">💧 水系</option>
+                            <option value="fire" selected>🔥 火系</option>
+                            <option value="grass">🌿 草系</option>
+                            <option value="wind">💨 风系</option>
+                            <option value="metal">🪙 金系</option>
+                            <option value="earth">🪨 土系</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-300 mb-2">生命值</label>
+                        <input type="number" id="config-enemy-hp-1" value="800" min="1"
+                            class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white">
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-300 mb-2">攻击力</label>
+                        <input type="number" id="config-enemy-attack-1" value="90" min="0"
+                            class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white">
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-300 mb-2">防御力</label>
+                        <input type="number" id="config-enemy-defense-1" value="40" min="0"
+                            class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white">
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-300 mb-2">敏捷</label>
+                        <input type="number" id="config-enemy-agility-1" value="70" min="0"
+                            class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white">
+                    </div>
+                </div>
+                <!-- 敌方动物3 -->
+                <div id="enemy-config-panel-2" class="grid grid-cols-2 gap-3" style="display:none;">
+                    <div>
+                        <label class="block text-sm text-gray-300 mb-2">名称</label>
+                        <input type="text" id="config-enemy-name-2" value="测试假人 #3"
+                            class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white">
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-300 mb-2">系别</label>
+                        <select id="config-enemy-element-2"
+                            class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white">
+                            <option value="water">💧 水系</option>
+                            <option value="fire" selected>🔥 火系</option>
+                            <option value="grass">🌿 草系</option>
+                            <option value="wind">💨 风系</option>
+                            <option value="metal">🪙 金系</option>
+                            <option value="earth">🪨 土系</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-300 mb-2">生命值</label>
+                        <input type="number" id="config-enemy-hp-2" value="800" min="1"
+                            class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white">
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-300 mb-2">攻击力</label>
+                        <input type="number" id="config-enemy-attack-2" value="90" min="0"
+                            class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white">
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-300 mb-2">防御力</label>
+                        <input type="number" id="config-enemy-defense-2" value="40" min="0"
+                            class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white">
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-300 mb-2">敏捷</label>
+                        <input type="number" id="config-enemy-agility-2" value="70" min="0"
                             class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white">
                     </div>
                 </div>
             </div>
+            </div><!-- 关闭 grid grid-cols-2 -->
             
-            <div class="bg-yellow-900/20 border border-yellow-600 rounded-lg p-4 mt-6">
-                <div class="flex items-start gap-3">
-                    <span class="text-2xl">💡</span>
-                    <div class="flex-1 text-sm text-yellow-200">
-                        <p class="font-bold mb-1">提示：</p>
-                        <p>• 技能将在开始测试后通过"切换技能"按钮配置</p>
-                        <p>• 战斗中可随时切换技能组合进行测试</p>
+            <div class="bg-yellow-900/20 border border-yellow-600 rounded-lg p-3 mt-4">
+                <div class="flex items-start gap-2">
+                    <span class="text-lg">💡</span>
+                    <div class="flex-1 text-xs text-yellow-200">
+                        <p class="font-bold mb-1">提示：技能在开始测试后通过"切换技能"按钮配置 | 我方/敌方各有3个动物，可独立配置技能和属性 | 战斗中可通过"我方/敌方动物"按钮切换上场动物</p>
                     </div>
                 </div>
             </div>
 
             <!-- 按钮 -->
-            <div class="flex gap-4 justify-center mt-6">
-                <button id="start-test-btn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-lg transition-colors">
+            <div class="flex gap-4 justify-center mt-4">
+                <button id="start-test-btn" onclick="startBattle()" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-8 rounded-lg transition-colors">
                     ✨ 开始测试
                 </button>
                 <button onclick="window.location.href='../designers/skill_designer.html'" 
-                    class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 px-8 rounded-lg transition-colors">
+                    class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-8 rounded-lg transition-colors">
                     ← 返回技能设计器
                 </button>
             </div>
@@ -803,7 +900,7 @@
 
             <div class="controls">
                 <button id="btn-animals" class="control-btn secondary">
-                    🐾 动物
+                    🐾 我方动物
                 </button>
                 <button id="btn-change-skill" class="control-btn secondary">
                     🔄 切换技能
@@ -811,8 +908,8 @@
                 <button id="btn-pause" class="control-btn primary">
                     ▶ 开始战斗
                 </button>
-                <button id="btn-items" class="control-btn secondary" style="display: none;">
-                    🎒 道具
+                <button id="btn-enemy-animals" class="control-btn secondary" style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); border-color: #ef4444;">
+                    👹 敌方动物
                 </button>
                 <button id="btn-reset" class="control-btn secondary">
                     🔄 重置
@@ -827,11 +924,32 @@
     <script src="../scripts/battle_system.js"></script>
     <script>
         let battleSystem = null;
-        let playerSelectedSkills = []; // 当前动物的技能
-        let testAnimalsSkills = {}; // 存储每个测试动物的技能配置 { animalId: [skill1, skill2, ...] }
-        let enemySelectedSkills = [];
+        let playerSelectedSkills = []; // 当前我方动物的技能
+        let testAnimalsSkills = {}; // 存储每个我方测试动物的技能配置 { animalId: [skill1, skill2, ...] }
+        let testEnemyAnimalsSkills = {}; // 存储每个敌方测试动物的技能配置 { animalId: [skill1, skill2, ...] }
+        let enemySelectedSkills = []; // 当前敌方动物的技能
         let replacingSlotIndex = -1;
         let replacingSide = 'player'; // 'player' 或 'enemy'
+        
+        // 技能切换模态框中，当前查看/编辑的动物ID
+        let skillModalPlayerAnimalId = null; // 当前在模态框中查看的我方动物ID
+        let skillModalEnemyAnimalId = null;  // 当前在模态框中查看的敌方动物ID
+        
+        // 当前配置界面选中的敌方动物Tab索引
+        let currentEnemyConfigTabIndex = 0;
+        
+        // 切换敌方配置Tab
+        function switchEnemyConfigTab(index) {
+            for (let i = 0; i < 3; i++) {
+                const panel = document.getElementById(`enemy-config-panel-${i}`);
+                const tab = document.getElementById(`enemy-tab-${i}`);
+                if (panel) panel.style.display = i === index ? 'grid' : 'none';
+                if (tab) {
+                    tab.className = `px-3 py-1 rounded text-sm font-bold ${i === index ? 'bg-red-600' : 'bg-gray-600'} text-white`;
+                }
+            }
+            currentEnemyConfigTabIndex = index;
+        }
         
         // 技能效果中文映射（从battle_system.js同步）
         const EFFECT_NAME_MAP = {
@@ -904,6 +1022,88 @@
             if (btnCancelChange) {
                 btnCancelChange.onclick = closeSkillChangeModal;
             }
+            
+            // 敌方动物切换按钮
+            const btnEnemyAnimals = document.getElementById('btn-enemy-animals');
+            if (btnEnemyAnimals) {
+                btnEnemyAnimals.onclick = showEnemyAnimals;
+            }
+        }
+        
+        // 显示敌方动物切换面板
+        function showEnemyAnimals() {
+            if (!battleSystem) return;
+            
+            // 暂停战斗
+            if (battleSystem.battleInProgress && !battleSystem.battlePaused) {
+                battleSystem.togglePause();
+            }
+            
+            const enemyTeamData = JSON.parse(localStorage.getItem('enemyBattleTeamData') || '{}');
+            const teamIds = enemyTeamData.battleTeam || [];
+            
+            const savedEnemyState = JSON.parse(localStorage.getItem('enemyGameState') || '{}');
+            const allEnemies = savedEnemyState.animals || [];
+            
+            const currentEnemyKey = battleSystem.opponentData?.animalId || battleSystem.opponentData?.id;
+            
+            // 保存当前技能栏内容
+            battleSystem.savedSkillsContainer = document.getElementById('skills-container').innerHTML;
+            
+            const container = document.getElementById('skills-container');
+            container.innerHTML = '';
+            
+            const cardWidth = 'calc(25% - 0.75rem)';
+            const maxSlots = 6;
+            
+            for (let i = 0; i < maxSlots; i++) {
+                const animalId = teamIds[i];
+                const card = document.createElement('div');
+                card.className = 'skill-card';
+                card.style.width = cardWidth;
+                
+                if (animalId) {
+                    const enemy = allEnemies.find(a => a.id === animalId || a.animalId === animalId);
+                    const isCurrent = animalId === currentEnemyKey;
+                    
+                    if (isCurrent) {
+                        card.style.border = '2px solid #ef4444';
+                        card.style.boxShadow = '0 0 16px rgba(239, 68, 68, 0.6)';
+                        card.style.cursor = 'not-allowed';
+                    } else {
+                        card.style.cursor = 'pointer';
+                        card.onclick = () => {
+                            if (battleSystem.switchToEnemyAnimal) {
+                                battleSystem.switchToEnemyAnimal(animalId);
+                            }
+                            battleSystem.restoreSkillsContainer();
+                        };
+                    }
+                    
+                    const skillCount = testEnemyAnimalsSkills[animalId]?.length || 0;
+                    card.innerHTML = `
+                        <div class="skill-icon">${enemy?.icon || '🎯'}</div>
+                        <div class="skill-name">${enemy?.name || '敌方' + (i + 1)}</div>
+                        <div class="skill-stats">
+                            <span>Lv.${enemy?.level || 1}</span>
+                            <span>HP:${enemy?.stamina || 800}</span>
+                        </div>
+                        <div class="skill-type" style="background: ${isCurrent ? '#ef4444' : '#6b7280'}">
+                            ${isCurrent ? '当前' : (skillCount > 0 ? skillCount + '技能' : '切换')}
+                        </div>
+                    `;
+                } else {
+                    card.style.cursor = 'not-allowed';
+                    card.innerHTML = `
+                        <div class="skill-icon" style="opacity: 0.3;">🔒</div>
+                        <div class="skill-name" style="color: #6b7280;">空槽</div>
+                    `;
+                }
+                
+                container.appendChild(card);
+            }
+            
+            battleSystem.addLog(`👹 敌方动物列表（${teamIds.length}个），点击切换当前对手`, 'text-red-300');
         }
 
         // 打开技能切换模态框
@@ -915,21 +1115,35 @@
                 battleSystem.togglePause();
             }
             
-            // 加载当前动物的技能配置
+            // 初始化我方动物ID（默认当前上场动物）
             if (battleSystem.playerData) {
                 const currentAnimalId = battleSystem.playerData.animalId || battleSystem.playerData.id;
+                skillModalPlayerAnimalId = currentAnimalId;
                 
-                // 从全局技能配置中加载当前动物的技能
                 if (testAnimalsSkills[currentAnimalId]) {
                     playerSelectedSkills = [...testAnimalsSkills[currentAnimalId]];
                 } else if (battleSystem.playerData.combatSkills?.equipped) {
-                    // 如果全局配置中没有，从动物数据中加载
                     playerSelectedSkills = [...battleSystem.playerData.combatSkills.equipped];
                     testAnimalsSkills[currentAnimalId] = [...playerSelectedSkills];
                 } else {
-                    // 都没有就清空
                     playerSelectedSkills = [];
                     testAnimalsSkills[currentAnimalId] = [];
+                }
+            }
+            
+            // 初始化敌方动物ID（默认当前上场敌方动物）
+            if (battleSystem.opponentData) {
+                const currentEnemyId = battleSystem.opponentData.animalId || battleSystem.opponentData.id;
+                skillModalEnemyAnimalId = currentEnemyId;
+                
+                if (testEnemyAnimalsSkills[currentEnemyId]) {
+                    enemySelectedSkills = [...testEnemyAnimalsSkills[currentEnemyId]];
+                } else if (battleSystem.opponentData.combatSkills?.equipped) {
+                    enemySelectedSkills = [...battleSystem.opponentData.combatSkills.equipped];
+                    testEnemyAnimalsSkills[currentEnemyId] = [...enemySelectedSkills];
+                } else {
+                    enemySelectedSkills = [];
+                    testEnemyAnimalsSkills[currentEnemyId] = [];
                 }
             }
             
@@ -938,12 +1152,120 @@
             
             const skillPool = JSON.parse(localStorage.getItem('SKILL_POOL') || '[]');
             
-            // 渲染我方技能
+            // 渲染动物切换标签
+            renderAnimalTabs('player');
+            renderAnimalTabs('enemy');
+            // 渲染技能列表
             renderCurrentSkills('player', skillPool);
-            // 渲染敌方技能
             renderCurrentSkills('enemy', skillPool);
             
             renderReplacementSkillSelector();
+        }
+        
+        // 渲染动物标签（用于技能切换模态框中切换不同动物）
+        function renderAnimalTabs(side) {
+            const container = document.getElementById(`${side}-animal-tabs`);
+            if (!container) return;
+            
+            let teamIds = [];
+            if (side === 'player') {
+                const battleTeamData = JSON.parse(localStorage.getItem('battleTeamData') || '{}');
+                teamIds = battleTeamData.battleTeam || [];
+            } else {
+                const enemyTeamData = JSON.parse(localStorage.getItem('enemyBattleTeamData') || '{}');
+                teamIds = enemyTeamData.battleTeam || [];
+            }
+            
+            // 获取动物数据用于显示名称
+            const stateKey = side === 'player' ? 'gameState' : 'enemyGameState';
+            const savedState = JSON.parse(localStorage.getItem(stateKey) || '{}');
+            const allAnimals = savedState.animals || [];
+            
+            if (teamIds.length === 0) {
+                container.innerHTML = '';
+                return;
+            }
+            
+            const currentId = side === 'player' ? skillModalPlayerAnimalId : skillModalEnemyAnimalId;
+            const activeBg = side === 'player' ? 'bg-blue-600' : 'bg-red-600';
+            
+            container.innerHTML = teamIds.map((animalId, index) => {
+                const animal = allAnimals.find(a => a.id === animalId || a.animalId === animalId);
+                const label = animal ? (animal.name.length > 5 ? animal.name.substring(0, 5) + '…' : animal.name) : `#${index + 1}`;
+                const isActive = animalId === currentId;
+                return `<button onclick="switchSkillModalAnimal('${side}', '${animalId}')"
+                    class="px-2 py-1 rounded text-xs font-bold ${isActive ? activeBg : 'bg-gray-600'} text-white transition-colors">
+                    ${label}
+                </button>`;
+            }).join('');
+        }
+        
+        // 在技能切换模态框中切换查看的动物
+        function switchSkillModalAnimal(side, animalId) {
+            const skillPool = JSON.parse(localStorage.getItem('SKILL_POOL') || '[]');
+            
+            if (side === 'player') {
+                // 保存当前编辑的技能
+                if (skillModalPlayerAnimalId) {
+                    testAnimalsSkills[skillModalPlayerAnimalId] = [...playerSelectedSkills];
+                    // 同步到gameState
+                    _syncAnimalSkillsToState(skillModalPlayerAnimalId, playerSelectedSkills, 'gameState');
+                }
+                skillModalPlayerAnimalId = animalId;
+                
+                // 加载目标动物的技能
+                if (testAnimalsSkills[animalId]) {
+                    playerSelectedSkills = [...testAnimalsSkills[animalId]];
+                } else {
+                    const savedState = JSON.parse(localStorage.getItem('gameState') || '{}');
+                    const animal = (savedState.animals || []).find(a => a.id === animalId || a.animalId === animalId);
+                    playerSelectedSkills = animal?.combatSkills?.equipped ? [...animal.combatSkills.equipped] : [];
+                    testAnimalsSkills[animalId] = [...playerSelectedSkills];
+                }
+            } else {
+                // 保存当前敌方动物技能
+                if (skillModalEnemyAnimalId) {
+                    testEnemyAnimalsSkills[skillModalEnemyAnimalId] = [...enemySelectedSkills];
+                    // 同步到enemyGameState
+                    _syncAnimalSkillsToState(skillModalEnemyAnimalId, enemySelectedSkills, 'enemyGameState');
+                }
+                skillModalEnemyAnimalId = animalId;
+                
+                // 加载目标敌方动物的技能
+                if (testEnemyAnimalsSkills[animalId]) {
+                    enemySelectedSkills = [...testEnemyAnimalsSkills[animalId]];
+                } else {
+                    const savedEnemyState = JSON.parse(localStorage.getItem('enemyGameState') || '{}');
+                    const animal = (savedEnemyState.animals || []).find(a => a.id === animalId || a.animalId === animalId);
+                    enemySelectedSkills = animal?.combatSkills?.equipped ? [...animal.combatSkills.equipped] : [];
+                    testEnemyAnimalsSkills[animalId] = [...enemySelectedSkills];
+                }
+            }
+            
+            // 重置替换槽位
+            replacingSlotIndex = -1;
+            
+            // 刷新标签和技能显示
+            renderAnimalTabs(side);
+            renderCurrentSkills(side, skillPool);
+            renderReplacementSkillSelector();
+        }
+        
+        // 辅助函数：同步动物技能到localStorage状态
+        function _syncAnimalSkillsToState(animalId, skills, stateKey) {
+            const state = JSON.parse(localStorage.getItem(stateKey) || '{}');
+            if (state.animals) {
+                const animalIndex = state.animals.findIndex(a =>
+                    a.id === animalId || a.animalId === animalId
+                );
+                if (animalIndex !== -1) {
+                    if (!state.animals[animalIndex].combatSkills) {
+                        state.animals[animalIndex].combatSkills = { equipped: [] };
+                    }
+                    state.animals[animalIndex].combatSkills.equipped = [...skills];
+                    localStorage.setItem(stateKey, JSON.stringify(state));
+                }
+            }
         }
 
         // 渲染当前技能列表
@@ -952,6 +1274,18 @@
             const selectedSkills = side === 'player' ? playerSelectedSkills : enemySelectedSkills;
             const borderColor = side === 'player' ? 'border-blue-600' : 'border-red-600';
             const btnColor = side === 'player' ? 'bg-blue-600 hover:bg-blue-700' : 'bg-red-600 hover:bg-red-700';
+            
+            // 显示当前动物名称
+            const stateKey = side === 'player' ? 'gameState' : 'enemyGameState';
+            const editingId = side === 'player' ? skillModalPlayerAnimalId : skillModalEnemyAnimalId;
+            if (editingId) {
+                const savedState = JSON.parse(localStorage.getItem(stateKey) || '{}');
+                const animal = (savedState.animals || []).find(a => a.id === editingId || a.animalId === editingId);
+                if (animal) {
+                    const headerEl = document.querySelector(`#current-${side}-skills`).closest('.rounded-lg')?.querySelector('h3');
+                    // 不修改标题，标签按钮已经表明了选中哪个动物
+                }
+            }
             
             container.innerHTML = selectedSkills.map((skillKey, index) => {
                 const skill = skillPool.find(s => s.key === skillKey);
@@ -1087,54 +1421,57 @@
                 selectedSkills[replacingSlotIndex] = skillKey;
             }
             
-            // 保存到全局变量
+            // 保存到全局变量，并同步到对应动物ID
             if (isPlayer) {
-                playerSelectedSkills = selectedSkills;
-                
-                // 同步保存当前动物的技能配置
-                if (battleSystem && battleSystem.playerData) {
-                    const currentAnimalId = battleSystem.playerData.animalId || battleSystem.playerData.id;
-                    testAnimalsSkills[currentAnimalId] = [...selectedSkills];
+                playerSelectedSkills = [...selectedSkills];
+                // 保存到当前模态框查看的动物
+                const editingAnimalId = skillModalPlayerAnimalId;
+                if (editingAnimalId) {
+                    testAnimalsSkills[editingAnimalId] = [...selectedSkills];
+                    // 同步到gameState
+                    _syncAnimalSkillsToState(editingAnimalId, selectedSkills, 'gameState');
                 }
             } else {
-                enemySelectedSkills = selectedSkills;
-            }
-            
-            // 更新战斗系统中的技能
-            if (battleSystem) {
-                const targetData = isPlayer ? battleSystem.playerData : battleSystem.opponentData;
-                if (targetData) {
-                    targetData.combatSkills.equipped = selectedSkills;
-                    
-                    if (isPlayer) {
-                        battleSystem.playerPassiveSkills = battleSystem.getPassiveSkills(targetData);
-                        battleSystem.renderSkillsContainer();
-                        
-                        // 同步更新gameState中的对应动物
-                        const testGameState = JSON.parse(localStorage.getItem('gameState') || '{}');
-                        if (testGameState.animals) {
-                            const animalIndex = testGameState.animals.findIndex(a =>
-                                a.id === targetData.id || a.animalId === targetData.animalId
-                            );
-                            if (animalIndex !== -1) {
-                                testGameState.animals[animalIndex].combatSkills.equipped = [...selectedSkills];
-                                localStorage.setItem('gameState', JSON.stringify(testGameState));
-                            }
-                        }
-                    } else {
-                        battleSystem.opponentPassiveSkills = battleSystem.getPassiveSkills(targetData);
-                    }
-                    
-                    if (battleSystem.addLog) {
-                        const skillPool = JSON.parse(localStorage.getItem('SKILL_POOL') || '[]');
-                        const skill = skillPool.find(s => s.key === skillKey);
-                        const sideName = isPlayer ? '我方' : '敌方';
-                        battleSystem.addLog(`✨ 已替换${sideName}槽位${replacingSlotIndex + 1}的技能为：${skill?.name || skillKey}`, 'text-green-300');
-                    }
+                enemySelectedSkills = [...selectedSkills];
+                // 保存到当前模态框查看的敌方动物
+                const editingEnemyId = skillModalEnemyAnimalId;
+                if (editingEnemyId) {
+                    testEnemyAnimalsSkills[editingEnemyId] = [...selectedSkills];
+                    // 同步到enemyGameState
+                    _syncAnimalSkillsToState(editingEnemyId, selectedSkills, 'enemyGameState');
                 }
             }
             
-            // 刷新显示并关闭
+            // 更新战斗系统中当前上场动物的技能（如果编辑的是当前上场动物）
+            if (battleSystem) {
+                if (isPlayer) {
+                    const currentPlayerId = battleSystem.playerData?.animalId || battleSystem.playerData?.id;
+                    if (currentPlayerId === skillModalPlayerAnimalId) {
+                        battleSystem.playerData.combatSkills.equipped = [...selectedSkills];
+                        battleSystem.playerPassiveSkills = battleSystem.getPassiveSkills(battleSystem.playerData);
+                        battleSystem.renderSkillsContainer();
+                    }
+                } else {
+                    const currentEnemyId = battleSystem.opponentData?.animalId || battleSystem.opponentData?.id;
+                    if (currentEnemyId === skillModalEnemyAnimalId) {
+                        battleSystem.opponentData.combatSkills.equipped = [...selectedSkills];
+                        battleSystem.opponentPassiveSkills = battleSystem.getPassiveSkills(battleSystem.opponentData);
+                    }
+                }
+                
+                if (battleSystem.addLog) {
+                    const skillPool = JSON.parse(localStorage.getItem('SKILL_POOL') || '[]');
+                    const skill = skillPool.find(s => s.key === skillKey);
+                    const sideName = isPlayer ? '我方' : '敌方';
+                    const animalState = isPlayer ? JSON.parse(localStorage.getItem('gameState') || '{}') : JSON.parse(localStorage.getItem('enemyGameState') || '{}');
+                    const editId = isPlayer ? skillModalPlayerAnimalId : skillModalEnemyAnimalId;
+                    const animal = (animalState.animals || []).find(a => a.id === editId || a.animalId === editId);
+                    const animalName = animal ? animal.name : (isPlayer ? '我方' : '敌方');
+                    battleSystem.addLog(`✨ 已为 [${animalName}] 替换槽位${replacingSlotIndex + 1}的技能为：${skill?.name || skillKey}`, 'text-green-300');
+                }
+            }
+            
+            // 刷新显示
             const skillPool2 = JSON.parse(localStorage.getItem('SKILL_POOL') || '[]');
             renderCurrentSkills('player', skillPool2);
             renderCurrentSkills('enemy', skillPool2);
@@ -1214,7 +1551,8 @@
 
         // 开始战斗
         function startBattle() {
-            // 初始化技能列表为空（通过切换技能按钮添加）
+            console.log('startBattle called!');
+            // 初始化技能列表
             if (!playerSelectedSkills) playerSelectedSkills = [];
             if (!enemySelectedSkills) enemySelectedSkills = [];
 
@@ -1222,16 +1560,17 @@
             document.getElementById('config-modal').style.display = 'none';
             document.getElementById('battle-container').style.display = 'flex';
 
-            // 创建基础ID（不带后缀）
-            const baseId = 'test_player_' + Date.now();
-            const firstAnimalId = baseId + '_0'; // 第一个动物使用 _0 后缀
+            const timestamp = Date.now();
+            
+            // ============ 我方动物池 ============
+            const playerBaseId = 'test_player_' + timestamp;
+            const firstPlayerAnimalId = playerBaseId + '_0';
 
-            // 创建玩家数据（使用 _0 ID）
             const playerData = {
                 name: document.getElementById('config-player-name').value,
-                key: baseId + '_0',
-                id: firstAnimalId,
-                animalId: firstAnimalId,
+                key: playerBaseId + '_0',
+                id: firstPlayerAnimalId,
+                animalId: firstPlayerAnimalId,
                 icon: '🧪',
                 level: 1,
                 element: document.getElementById('config-player-element').value,
@@ -1249,73 +1588,163 @@
                 color: 0x3b82f6
             };
             
-            // 保存第一个动物的技能配置（使用带后缀的ID）
-            testAnimalsSkills[firstAnimalId] = [...playerSelectedSkills];
+            testAnimalsSkills[firstPlayerAnimalId] = [...playerSelectedSkills];
             
-            // 创建测试动物池（支持切换动物功能）
-            // 第一个动物已经创建（playerData），创建另外2个
-            const testAnimals = [playerData]; // 第一个动物（已有技能配置）
-            
-            // 生成另外2个测试动物
+            const testAnimals = [playerData];
             for (let i = 1; i < 3; i++) {
-                const animalId = baseId + '_' + i;
+                const animalId = playerBaseId + '_' + i;
                 const testAnimal = {
                     ...playerData,
                     id: animalId,
                     animalId: animalId,
-                    key: baseId + '_' + i,
+                    key: playerBaseId + '_' + i,
                     name: playerData.name + ` #${i + 1}`,
-                    combatSkills: {
-                        equipped: [] // 其他动物初始为空技能
-                    }
+                    combatSkills: { equipped: [] }
                 };
                 testAnimals.push(testAnimal);
-                
-                // 初始化该动物的技能配置为空
                 testAnimalsSkills[animalId] = [];
             }
             
-            // 设置出战队伍数据
-            const battleTeamData = {
-                battleTeam: testAnimals.map(a => a.id)
-            };
-            localStorage.setItem('battleTeamData', JSON.stringify(battleTeamData));
+            localStorage.setItem('battleTeamData', JSON.stringify({ battleTeam: testAnimals.map(a => a.id) }));
+            localStorage.setItem('gameState', JSON.stringify({ animals: testAnimals }));
             
-            // 设置游戏状态（包含所有测试动物）
-            const testGameState = {
-                animals: testAnimals
-            };
-            localStorage.setItem('gameState', JSON.stringify(testGameState));
-
-            // 创建敌方数据
-            const opponentData = {
-                name: document.getElementById('config-enemy-name').value,
-                level: 1,
-                element: document.getElementById('config-enemy-element').value,
-                stamina: parseInt(document.getElementById('config-enemy-hp').value),
-                abilities: {
-                    combat: {
-                        attack: parseInt(document.getElementById('config-enemy-attack').value),
-                        defense: parseInt(document.getElementById('config-enemy-defense').value),
-                        agility: parseInt(document.getElementById('config-enemy-agility').value)
-                    }
-                },
-                combatSkills: {
-                    equipped: enemySelectedSkills
-                },
-                color: 0xef4444
-            };
+            // ============ 敌方动物池 ============
+            const enemyBaseId = 'test_enemy_' + timestamp;
+            const firstEnemyAnimalId = enemyBaseId + '_0';
+            
+            // 读取3个敌方动物的配置
+            const enemyConfigs = [];
+            for (let i = 0; i < 3; i++) {
+                enemyConfigs.push({
+                    name: document.getElementById(`config-enemy-name-${i}`)?.value || `测试假人 #${i + 1}`,
+                    element: document.getElementById(`config-enemy-element-${i}`)?.value || 'fire',
+                    hp: parseInt(document.getElementById(`config-enemy-hp-${i}`)?.value) || 800,
+                    attack: parseInt(document.getElementById(`config-enemy-attack-${i}`)?.value) || 90,
+                    defense: parseInt(document.getElementById(`config-enemy-defense-${i}`)?.value) || 40,
+                    agility: parseInt(document.getElementById(`config-enemy-agility-${i}`)?.value) || 70
+                });
+            }
+            
+            const testEnemyAnimals = [];
+            for (let i = 0; i < 3; i++) {
+                const cfg = enemyConfigs[i];
+                const animalId = enemyBaseId + '_' + i;
+                const enemyAnimal = {
+                    name: cfg.name,
+                    key: enemyBaseId + '_' + i,
+                    id: animalId,
+                    animalId: animalId,
+                    icon: '🎯',
+                    level: 1,
+                    element: cfg.element,
+                    stamina: cfg.hp,
+                    abilities: {
+                        combat: {
+                            attack: cfg.attack,
+                            defense: cfg.defense,
+                            agility: cfg.agility
+                        }
+                    },
+                    combatSkills: {
+                        equipped: i === 0 ? [...enemySelectedSkills] : []
+                    },
+                    color: 0xef4444
+                };
+                testEnemyAnimals.push(enemyAnimal);
+                testEnemyAnimalsSkills[animalId] = i === 0 ? [...enemySelectedSkills] : [];
+            }
+            
+            localStorage.setItem('enemyBattleTeamData', JSON.stringify({ battleTeam: testEnemyAnimals.map(a => a.id) }));
+            localStorage.setItem('enemyGameState', JSON.stringify({ animals: testEnemyAnimals }));
+            
+            // 第一个敌方动物作为初始对手
+            const opponentData = testEnemyAnimals[0];
 
             // 初始化战斗系统
             battleSystem = new BattleSystem(playerData, opponentData);
+            
+            // 扩展战斗系统的showAnimals方法，支持查看敌方动物列表
+            const origShowAnimals = battleSystem.showAnimals.bind(battleSystem);
+            battleSystem.showAnimals = function() {
+                origShowAnimals();
+            };
+            
             battleSystem.init();
+            
+            // 为战斗系统注入敌方动物切换支持
+            _injectEnemyAnimalSwitching(battleSystem);
             
             // 提示玩家
             battleSystem.addLog('🧪 战斗测试模式启动！', 'text-cyan-300');
-            battleSystem.addLog('💡 使用"切换技能"按钮配置技能', 'text-cyan-300');
-            battleSystem.addLog('💡 使用"动物"按钮切换参战动物（已生成3个相同配置的测试动物）', 'text-cyan-300');
+            battleSystem.addLog(`💡 我方: ${testAnimals.length}个动物 | 敌方: ${testEnemyAnimals.length}个动物`, 'text-cyan-300');
+            battleSystem.addLog('💡 使用"切换技能"按钮为各动物配置技能（支持切换不同动物单独配置）', 'text-cyan-300');
+            battleSystem.addLog('💡 使用"动物"按钮切换我方上场动物', 'text-cyan-300');
             battleSystem.addLog('💡 点击"开始战斗"开始测试', 'text-green-300');
-            battleSystem.addLog('💡 暂不支持在测试器中切换动物（但可以重置后修改动物属性）', 'text-yellow-300');
+        }
+        
+        // 注入敌方动物切换功能到战斗系统
+        function _injectEnemyAnimalSwitching(bs) {
+            // 覆写 showAnimals，增加敌方动物切换面板入口
+            const _origShowAnimals = bs.showAnimals.bind(bs);
+            bs.showAnimals = function() {
+                _origShowAnimals();
+                // 在底部面板额外显示敌方切换按钮（可选，取决于战场UI支持）
+            };
+            
+            // 提供一个敌方动物切换方法
+            bs.switchToEnemyAnimal = function(enemyAnimalId) {
+                const savedEnemyState = JSON.parse(localStorage.getItem('enemyGameState') || '{}');
+                const allEnemies = savedEnemyState.animals || [];
+                const latestEnemy = allEnemies.find(a => a.id === enemyAnimalId || a.animalId === enemyAnimalId);
+                if (!latestEnemy) return;
+                
+                // 同步最新技能配置
+                if (testEnemyAnimalsSkills[enemyAnimalId]) {
+                    latestEnemy.combatSkills = { equipped: [...testEnemyAnimalsSkills[enemyAnimalId]] };
+                }
+                
+                // 更新 opponentData 和 opponentStats
+                this.opponentData = {
+                    ...latestEnemy,
+                    key: latestEnemy.key || latestEnemy.animalId,
+                    animalId: latestEnemy.animalId || latestEnemy.key,
+                    stamina: latestEnemy.stamina || 100,
+                    abilities: latestEnemy.abilities || { combat: { attack: 10, defense: 5, agility: 8 } },
+                    combatSkills: latestEnemy.combatSkills || { equipped: [] }
+                };
+                
+                this.opponentStats.hp = this.opponentData.stamina;
+                this.opponentStats.maxHp = this.opponentData.stamina;
+                this.opponentStats.attack = this.opponentData.abilities.combat.attack;
+                this.opponentStats.defense = this.opponentData.abilities.combat.defense;
+                this.opponentStats.agility = this.opponentData.abilities.combat.agility;
+                this.opponentStats.baseAttack = this.opponentData.abilities.combat.attack;
+                this.opponentStats.baseDefense = this.opponentData.abilities.combat.defense;
+                this.opponentStats.baseAgility = this.opponentData.abilities.combat.agility;
+                this.opponentStats.element = this.opponentData.element || 'fire';
+                this.opponentStats.statuses = [];
+                this.opponentStats.buffs = {};
+                this.opponentStats.skillCooldowns = {};
+                this.opponentStats.rebirthPercent = 0;
+                
+                this.opponentCurrentHealth = this.opponentData.stamina;
+                this.opponentPassiveSkills = this.getPassiveSkills(this.opponentData);
+                
+                this.renderOpponentInfo();
+                this.updateHealthUI();
+                
+                const skillCount = this.opponentData.combatSkills?.equipped?.length || 0;
+                this.addLog(`👹 敌方切换为 [${this.opponentData.name}]！`, 'text-red-300');
+                if (skillCount > 0) {
+                    this.addLog(`→ 该敌方动物已配置 ${skillCount} 个技能`, 'text-cyan-300');
+                } else {
+                    this.addLog(`→ 该敌方动物尚未配置技能（通过"切换技能"按钮配置）`, 'text-yellow-300');
+                }
+                
+                // 同步 skillModalEnemyAnimalId
+                skillModalEnemyAnimalId = enemyAnimalId;
+                enemySelectedSkills = [...(testEnemyAnimalsSkills[enemyAnimalId] || [])];
+            };
         }
 
         // 重置战斗
@@ -1337,9 +1766,16 @@
             // 重置技能选择
             playerSelectedSkills = [];
             testAnimalsSkills = {};
+            testEnemyAnimalsSkills = {};
             enemySelectedSkills = [];
             replacingSlotIndex = -1;
             replacingSide = 'player';
+            skillModalPlayerAnimalId = null;
+            skillModalEnemyAnimalId = null;
+            
+            // 清理战斗数据
+            localStorage.removeItem('enemyBattleTeamData');
+            localStorage.removeItem('enemyGameState');
             
             // 显示配置模态框
             document.getElementById('config-modal').style.display = 'flex';

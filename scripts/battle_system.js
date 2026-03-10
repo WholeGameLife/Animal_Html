@@ -1398,7 +1398,7 @@ class BattleSystem {
             this.ui.btnItems.addEventListener('click', () => this.showItems());
         }
         if (this.ui.btnAnimals) {
-            this.ui.btnAnimals.addEventListener('click', () => this.showAnimals());
+            this.ui.btnAnimals.addEventListener('click', () => this.toggleAnimalsPanel());
         }
         if (this.ui.btnFlee) {
             this.ui.btnFlee.addEventListener('click', () => this.flee());
@@ -2456,12 +2456,348 @@ class BattleSystem {
                 return false;
             }
             
+            // 检查队伍中是否还有其他存活的动物
+            const availableAnimals = this.getAvailableTeamAnimals();
+            if (availableAnimals.length > 0) {
+                // 还有其他动物可以上场，触发强制切换
+                this.addLog(`💀 ${this.playerData.name} 已倒下！请选择下一个上场的动物（10秒内）`, 'text-red-400 font-bold');
+                await this.sleep(500);
+                const switched = await this.handlePlayerAnimalDead(availableAnimals);
+                if (switched) {
+                    return false; // 已切换动物，继续战斗
+                }
+                // 玩家没有选择（超时），随机切换第一个可用动物
+                this.addLog(`⏱️ 超时！自动切换到 ${availableAnimals[0].name || '下一个动物'}`, 'text-orange-400');
+                await this.forceSwithToAnimal(availableAnimals[0]);
+                return false;
+            }
+            
+            // 没有更多动物了，战败
             this.battleInProgress = false;
             await this.handleDefeat();
             return true;
         }
         
         return false;
+    }
+    
+    // 获取队伍中其他可用（存活）的动物
+    getAvailableTeamAnimals() {
+        const battleTeamData = JSON.parse(localStorage.getItem('battleTeamData') || '{}');
+        const teamIds = battleTeamData.battleTeam || [];
+        
+        // 获取所有动物数据
+        let allAnimals = [];
+        if (typeof gameState !== 'undefined' && gameState.animals) {
+            allAnimals = gameState.animals;
+        } else {
+            const savedGameState = localStorage.getItem('gameState');
+            if (savedGameState) {
+                const parsedState = JSON.parse(savedGameState);
+                allAnimals = parsedState.animals || [];
+            }
+        }
+        
+        // 当前出战动物的key/id
+        const currentKey = this.playerData.key || this.playerData.animalId || this.playerData.id;
+        
+        // 获取队伍中其他动物（排除当前动物）
+        const availableAnimals = [];
+        teamIds.forEach(animalId => {
+            if (animalId) {
+                const animal = allAnimals.find(a => a.id === animalId);
+                if (animal) {
+                    const animalKey = animal.key || animal.animalId || animal.id;
+                    if (animalKey !== currentKey) {
+                        availableAnimals.push(animal);
+                    }
+                }
+            }
+        });
+        
+        return availableAnimals;
+    }
+    
+    // 处理玩家当前动物死亡，强制要求切换
+    async handlePlayerAnimalDead(availableAnimals) {
+        // 标记等待强制切换状态
+        this.waitingForForcedSwitch = true;
+        this.forcedSwitchDone = false;
+        
+        // 显示动物选择界面（包含当前已倒下的动物）
+        this.showForcedAnimalSwitch(availableAnimals, this.playerData);
+        
+        // 等待玩家选择（最多10秒）
+        let remainingTime = 10;
+        
+        // 清除之前可能存在的interval
+        if (this.countdownInterval) {
+            clearInterval(this.countdownInterval);
+            this.countdownInterval = null;
+        }
+        
+        // 显示中心倒计时
+        if (this.ui.centerCountdown) {
+            this.ui.centerCountdown.classList.add('show');
+        }
+        
+        const timeoutPromise = new Promise((resolve) => {
+            this.countdownInterval = setInterval(() => {
+                if (this.ui.centerCountdown) {
+                    this.ui.centerCountdown.textContent = remainingTime;
+                }
+                remainingTime--;
+                if (remainingTime < 0) {
+                    clearInterval(this.countdownInterval);
+                    this.countdownInterval = null;
+                }
+            }, 1000);
+            
+            this.turnTimeout = setTimeout(() => {
+                if (this.countdownInterval) {
+                    clearInterval(this.countdownInterval);
+                    this.countdownInterval = null;
+                }
+                if (this.ui.centerCountdown) {
+                    this.ui.centerCountdown.textContent = '';
+                    this.ui.centerCountdown.classList.remove('show');
+                }
+                resolve(false); // 超时，未选择
+            }, 10000);
+        });
+        
+        const selectionPromise = new Promise((resolve) => {
+            const checkInterval = setInterval(() => {
+                if (this.forcedSwitchDone) {
+                    clearInterval(checkInterval);
+                    clearTimeout(this.turnTimeout);
+                    this.turnTimeout = null;
+                    if (this.countdownInterval) {
+                        clearInterval(this.countdownInterval);
+                        this.countdownInterval = null;
+                    }
+                    if (this.ui.centerCountdown) {
+                        this.ui.centerCountdown.textContent = '';
+                        this.ui.centerCountdown.classList.remove('show');
+                    }
+                    resolve(true); // 已选择
+                }
+            }, 100);
+            
+            setTimeout(() => {
+                clearInterval(checkInterval);
+            }, 10000);
+        });
+        
+        const result = await Promise.race([timeoutPromise, selectionPromise]);
+        this.waitingForForcedSwitch = false;
+        return result;
+    }
+    
+    // 显示强制切换动物的界面（含已倒下的动物，显示耗尽标签）
+    showForcedAnimalSwitch(availableAnimals, deadAnimal) {
+        // 保存当前技能栏
+        this.savedSkillsContainer = document.getElementById('skills-container').innerHTML;
+        
+        const container = document.getElementById('skills-container');
+        container.innerHTML = '';
+        
+        const cardWidth = 'calc(25% - 0.75rem)';
+        const maxSlots = 6;
+        
+        // 构建完整显示列表：先放已倒下的动物，再放可用动物
+        const displayList = [];
+        const addedKeys = new Set();
+        
+        // 先加入已倒下的当前动物
+        if (deadAnimal) {
+            displayList.push({ animal: deadAnimal, isDead: true });
+            addedKeys.add(deadAnimal.key || deadAnimal.animalId || deadAnimal.id);
+        }
+        
+        // 再加入可用动物
+        availableAnimals.forEach(a => {
+            const k = a.key || a.animalId || a.id;
+            if (!addedKeys.has(k)) {
+                displayList.push({ animal: a, isDead: false });
+                addedKeys.add(k);
+            }
+        });
+        
+        for (let i = 0; i < maxSlots; i++) {
+            const entry = displayList[i];
+            const card = document.createElement('div');
+            card.className = 'skill-card';
+            card.style.width = cardWidth;
+            
+            if (entry) {
+                const { animal, isDead } = entry;
+                
+                if (isDead) {
+                    // 已倒下的动物：灰色显示，不可点击，加"耗尽"标签
+                    card.style.cursor = 'not-allowed';
+                    card.style.opacity = '0.6';
+                    card.style.border = '2px solid #ef4444';
+                    card.style.filter = 'grayscale(80%)';
+                    card.innerHTML = `
+                        <div class="skill-icon">${animal.icon || '🐾'}</div>
+                        <div class="skill-name">${animal.name}</div>
+                        <div class="skill-stats">
+                            <span>Lv.${animal.level || 1}</span>
+                            <span style="color:#ef4444">HP:0</span>
+                        </div>
+                        <div class="skill-type" style="background: #7f1d1d; color: #fca5a5;">💀 耗尽</div>
+                    `;
+                } else {
+                    // 可用动物：高亮显示，可点击
+                    card.style.cursor = 'pointer';
+                    card.style.border = '2px solid #f59e0b';
+                    card.style.boxShadow = '0 0 12px rgba(245, 158, 11, 0.6)';
+                    card.onclick = () => {
+                        const animalKey = animal.key || animal.animalId || animal.id;
+                        this.forcedSwitchToAnimal(animalKey, availableAnimals);
+                    };
+                    
+                    card.innerHTML = `
+                        <div class="skill-icon">${animal.icon || '🐾'}</div>
+                        <div class="skill-name">${animal.name}</div>
+                        <div class="skill-stats">
+                            <span>Lv.${animal.level || 1}</span>
+                            <span>HP:${animal.stamina || 100}</span>
+                        </div>
+                        <div class="skill-type" style="background: #f59e0b">上场</div>
+                    `;
+                }
+            } else {
+                card.style.cursor = 'not-allowed';
+                card.innerHTML = `
+                    <div class="skill-icon" style="opacity: 0.3;">🔒</div>
+                    <div class="skill-name" style="color: #6b7280;">空槽</div>
+                `;
+            }
+            
+            container.appendChild(card);
+        }
+        
+        this.addLog(`💡 选择下一个上场的动物（${availableAnimals.length}只可用）`, 'text-orange-300');
+    }
+    
+    // 强制切换到指定动物（死亡后切换）
+    forcedSwitchToAnimal(animalKey, availableAnimals) {
+        const animal = availableAnimals.find(a => (a.key || a.animalId || a.id) === animalKey);
+        if (!animal) return;
+        
+        // 从gameState中获取最新的动物数据
+        const gameStateData = JSON.parse(localStorage.getItem('gameState') || '{}');
+        let latestAnimal = animal;
+        if (gameStateData.animals) {
+            const found = gameStateData.animals.find(a =>
+                a.id === animal.id || a.animalId === animal.animalId ||
+                a.id === animal.animalId || a.animalId === animal.id
+            );
+            if (found) {
+                latestAnimal = found;
+            }
+        }
+        
+        // 更新玩家数据
+        this.playerData = {
+            ...latestAnimal,
+            key: latestAnimal.key || latestAnimal.animalId,
+            animalId: latestAnimal.animalId || latestAnimal.key,
+            stamina: latestAnimal.stamina || latestAnimal.abilities?.combat?.hp || 100,
+            abilities: latestAnimal.abilities || {
+                combat: { attack: 10, defense: 5, agility: 8 }
+            },
+            combatSkills: latestAnimal.combatSkills || { equipped: [] }
+        };
+        
+        // 重置战斗状态（满血上场）
+        this.playerStats.hp = this.playerData.stamina;
+        this.playerStats.maxHp = this.playerData.stamina;
+        this.playerStats.attack = this.playerData.abilities.combat.attack;
+        this.playerStats.defense = this.playerData.abilities.combat.defense;
+        this.playerStats.agility = this.playerData.abilities.combat.agility;
+        this.playerStats.baseAttack = this.playerData.abilities.combat.attack;
+        this.playerStats.baseDefense = this.playerData.abilities.combat.defense;
+        this.playerStats.baseAgility = this.playerData.abilities.combat.agility;
+        this.playerStats.element = this.playerData.element || 'water';
+        this.playerStats.statuses = [];
+        this.playerStats.buffs = {};
+        this.playerStats.skillCooldowns = {};
+        this.playerStats.rebirthPercent = 0;
+        
+        this.playerCurrentHealth = this.playerData.stamina;
+        
+        // 更新被动技能
+        this.playerPassiveSkills = this.getPassiveSkills(this.playerData);
+        
+        // 传递待传递的状态
+        const statusesToTransfer = [];
+        if (this.pendingStatusTransfer && this.pendingStatusTransfer.ally) {
+            this.pendingStatusTransfer.ally.forEach(statusRef => {
+                statusesToTransfer.push(statusRef);
+            });
+            this.pendingStatusTransfer.ally = [];
+        }
+        
+        if (statusesToTransfer.length > 0) {
+            this.addLog(`✨ 传递给新出战动物 ${this.playerData.name} 的状态:`, 'text-cyan-300');
+            statusesToTransfer.forEach(statusToTransfer => {
+                const transferredStatus = JSON.parse(JSON.stringify(statusToTransfer));
+                if (transferredStatus.data && transferredStatus.data.effectConfigs) {
+                    Object.keys(transferredStatus.data.effectConfigs).forEach(ek => {
+                        const ec = transferredStatus.data.effectConfigs[ek];
+                        if (ec && ec.source) {
+                            if (ec.source.startsWith('next-ally-')) {
+                                ec.source = 'target-' + ec.source.slice('next-ally-'.length);
+                            } else if (ec.source.startsWith('next-enemy-')) {
+                                ec.source = 'caster-' + ec.source.slice('next-enemy-'.length);
+                            }
+                        }
+                    });
+                }
+                transferredStatus.justTransferred = true;
+                this.playerStats.statuses.push(transferredStatus);
+                this.addLog(`→ [${transferredStatus.data?.name || transferredStatus.key}] 状态已迁移`, 'text-cyan-300');
+            });
+            this.playerCurrentHealth = this.playerStats.hp;
+        }
+        
+        // 重新渲染UI
+        this.savedSkillsContainer = null;
+        this.renderSkillsContainer();
+        this.renderPlayerInfo();
+        this.updateHealthUI();
+        
+        this.addLog(`✨ ${this.playerData.name} 登场！`, 'text-green-300');
+        
+        // 标记强制切换完成
+        this.forcedSwitchDone = true;
+        
+        // 清除计时器
+        if (this.turnTimeout) {
+            clearTimeout(this.turnTimeout);
+            this.turnTimeout = null;
+        }
+        if (this.countdownInterval) {
+            clearInterval(this.countdownInterval);
+            this.countdownInterval = null;
+        }
+        if (this.ui.centerCountdown) {
+            this.ui.centerCountdown.textContent = '';
+            this.ui.centerCountdown.classList.remove('show');
+        }
+    }
+    
+    // 强制切换到指定动物对象（超时时调用）
+    async forceSwithToAnimal(animal) {
+        const animalKey = animal.key || animal.animalId || animal.id;
+        const availableAnimals = this.getAvailableTeamAnimals();
+        // 将当前动物也加入列表以便查找
+        const allAnimals = [...availableAnimals, animal];
+        this.forcedSwitchToAnimal(animalKey, allAnimals);
+        await this.sleep(500);
     }
 
     async handleVictory() {
@@ -2874,9 +3210,40 @@ class BattleSystem {
         alert('道具功能正在开发中，敬请期待！');
     }
     
+    // 切换显示动物面板/技能面板
+    toggleAnimalsPanel() {
+        // 如果正在强制切换（动物死亡），不允许切换回技能栏
+        if (this.waitingForForcedSwitch) return;
+        
+        if (this.isShowingAnimals) {
+            // 当前显示的是动物面板，切换回技能栏
+            this.isShowingAnimals = false;
+            this.savedSkillsContainer = null; // 强制重新渲染
+            this.renderSkillsContainer();
+            if (this.ui.btnAnimals) {
+                this.ui.btnAnimals.textContent = '🐾 我方动物';
+            }
+            this.addLog('↩️ 已返回技能界面', 'text-gray-400');
+            // 如果战斗是因为显示动物而暂停的，恢复战斗
+            if (this.pausedForAnimals && this.battlePaused) {
+                this.togglePause();
+                this.pausedForAnimals = false;
+            }
+        } else {
+            // 显示动物面板
+            this.showAnimals();
+        }
+    }
+    
     showAnimals() {
-        // 暂停战斗
+        this.isShowingAnimals = true;
+        if (this.ui.btnAnimals) {
+            this.ui.btnAnimals.textContent = '🗡️ 返回技能';
+        }
+        
+        // 暂停战斗（记录是因为显示动物而暂停的）
         if (this.battleInProgress && !this.battlePaused) {
+            this.pausedForAnimals = true;
             this.togglePause();
         }
         
@@ -3108,6 +3475,13 @@ class BattleSystem {
             this.addLog(`→ 该动物已配置 ${skillCount} 个技能`, 'text-cyan-300');
         } else {
             this.addLog(`→ 该动物尚未配置技能（可通过"切换技能"按钮配置）`, 'text-yellow-300');
+        }
+        
+        // 重置动物面板状态，恢复按钮文字
+        this.isShowingAnimals = false;
+        this.pausedForAnimals = false;
+        if (this.ui.btnAnimals) {
+            this.ui.btnAnimals.textContent = '🐾 我方动物';
         }
         
         // 切换动物消耗本回合：标记为已选择技能（放弃攻击）
